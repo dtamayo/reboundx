@@ -1,30 +1,29 @@
 import rebound
 import reboundxf
+import math
 
-gamma=1.5
-Rc=80.
-podot=0.01
-G = 4*math.pi**2
-rebound.G = G
+#gamma=1.5
+#Rc=80.
+#podot=0.01
+rebound.G = 4*math.pi**2
 starmass = 0.55
 mass = 5.5e-4
 
-rebound.add_particle(m=starmass)
+rebound.add(m=starmass)
 
-alpha = G*starmass/Rc/Rc*podot/(1.-gamma/2.)
+#alpha = G*starmass/Rc/Rc*podot/(1.-gamma/2.)
 a0s = [46.,77.3]
 
 for a in a0s:
     #vcirc = math.sqrt(G*starmass/a + alpha*Rc*(Rc/a)**(gamma-1.))*1.05
-    rebound.add_particle(rebound.Particle(m=mass,a=a,e=0.))
+    rebound.add(m=mass,a=a,e=0.)
 
-reboundXF.init(rebound.N)
-rebound.set_additional_forces(reboundXF.forces())
-reboundXF.set_e_damping([1.e2,1.e2,1.e2])
-reboundXF.set_peri_precession(gamma,Rc,podot)
-reboundXF.set_migration([0.,-1.e6,0.])
+rebound.additional_forces = reboundxf.forces()
+reboundxf.set_e_damping([1.e2,1.e2,1.e2])
+#reboundxf.set_peri_precession(gamma,Rc,podot)
+reboundxf.set_migration([0.,-1.e6,0.])
 
-rebound.set_integrator("ias15")
+rebound.integrator = "ias15"
 rebound.integrate(1.)
 
 '''

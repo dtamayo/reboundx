@@ -22,37 +22,27 @@ struct particle {
 #endif // TREE
 };
 
-int N = 0; // private versions to make sure we don't overwrite/change what's in simulation
+//static int N = 0; // private version to make sure we don't overwrite/change what's in simulation
 
-// Hanno: Not sure it makes sense to have a struct if you only have on of it.
-struct disk{
-	double gamma;
-	double Rc;
-	double m;
-	double alpha;
-	double podot; // pericenter precession at r = Rc
-};
-
-struct disk dsk; // structure to hold disk parameters for pericenter precession
+//disk parameters for precession
+double gam;
+double Rc;
+double diskmass;
+double alpha_over_GM0;
+double podot; // pericenter precession at r = Rc
 
 // pointers for damping timescales
 double *tau_a = NULL;
 double *tau_e = NULL;
 double *tau_i = NULL;
 
-double e_damping_p; // p parameter from Goldreich & Schlichting 2014 for how e-damping
+//not yet implemented
+//double e_damping_p; // p parameter from Goldreich & Schlichting 2014 for how e-damping
 // contributes to a-damping at order e^2
 // p = 3 : e-damping at const angular momentum.  p = 0 : no contribution to a-damping
 
 
-void init(int _N){
-	N = _N;
-	if(tau_a == NULL){	tau_a = calloc(sizeof(double),N);}
-	if(tau_e == NULL){	tau_e = calloc(sizeof(double),N);}
-	if(tau_i == NULL){	tau_i = calloc(sizeof(double),N);}
-}
-
-void move_to_com(struct particle* particles){
+void move_to_com(struct particle* particles, int _N){
 	double m = 0;
 	double x = 0;
 	double y = 0;
@@ -60,7 +50,7 @@ void move_to_com(struct particle* particles){
 	double vx = 0;
 	double vy = 0;
 	double vz = 0;
-	for (int i=0;i<N;i++){
+	for (int i=0;i<_N;i++){
 		struct particle p = particles[i];
 		m  += p.m;
 		x  += p.x*p.m;
@@ -76,7 +66,7 @@ void move_to_com(struct particle* particles){
 	vx /= m;
 	vy /= m;
 	vz /= m;
-	for (int i=0;i<N;i++){
+	for (int i=0;i<_N;i++){
 		particles[i].x  -= x;
 		particles[i].y  -= y;
 		particles[i].z  -= z;
@@ -105,10 +95,10 @@ struct particle get_com(struct particle p1, struct particle p2){
 	return p1;
 }
 
-void disk_forces(struct particle* particles, double t, double dt, double G, int N, int N_megno){	
-	printf("Hi\n");
+void disk_forces(struct particle* particles, double t, double dt, double G, int _N, int N_megno){	
+	printf("%d\n", _N);
 	struct particle com = particles[0]; // calculate add. forces w.r.t. center of mass
-	for(int i=1;i<N;i++){
+	for(int i=1;i<_N;i++){
 		struct particle* p = &(particles[i]);
 		const double dvx = p->vx - com.vx;
 		const double dvy = p->vy - com.vy;
@@ -120,7 +110,7 @@ void disk_forces(struct particle* particles, double t, double dt, double G, int 
 			p->az -=  dvz/(2.*tau_a[i]);
 		}
 
-		if (tau_e[i] != 0. || tau_i[i]!= 0. || dsk.m != 0.){ 	// need h and e vectors for both types
+		if (tau_e[i] != 0. || tau_i[i]!= 0. || diskmass != 0.){ 	// need h and e vectors for both types
 			const double mu = G*(com.m + p->m);
 			const double dx = p->x-com.x;
 			const double dy = p->y-com.y;
@@ -157,8 +147,8 @@ void disk_forces(struct particle* particles, double t, double dt, double G, int 
 				p->ay += prefac*dvy;
 				p->az += prefac*dvz;
 			}
-			if (dsk.m != 0.) {
-				double a_over_r = -dsk.alpha*pow(dsk.Rc/r,dsk.gamma)/r + G*dsk.m/r/r/r; 	// radial disk force after removing piece from adding the disk into the sun
+			if (diskmass != 0.) {
+				double a_over_r = -G*particles[0].m*alpha_over_GM0*pow(Rc/r,gam)/r + G*diskmass/r/r/r; 	// radial disk force after removing piece from adding the disk into the sun
 				p->ax += a_over_r*dx;									// rhat has components x/r xhat + y/r yhat + z/r zhat
 				p->ay += a_over_r*dy;
 				p->az += a_over_r*dz;
@@ -170,46 +160,72 @@ void disk_forces(struct particle* particles, double t, double dt, double G, int 
 		}
 		com = get_com(com,particles[i]);
 	}
-	move_to_com(particles);
+	move_to_com(particles, _N);
 }
 
-void set_migration(double *_tau_a){
-	for(int i=0; i<N; ++i){
+void set_migration(double *_tau_a, int _N){
+	/*if(N > 0 && N != _N){
+		printf("A previous call to reboundxf used a different number of particles, which is not supported in the current implementation.  Please improve me!\n");
+		exit(1);
+	}*/
+	
+	//N = _N;
+	if(tau_a == NULL){	tau_a = calloc(sizeof(double),_N);}
+	
+	for(int i=0; i<_N; ++i){
 		tau_a[i] = _tau_a[i];
 	}
 }
 
-void set_e_damping(double *_tau_e){
-	for(int i=0; i<N; ++i){
+void set_e_damping(double *_tau_e, int _N){
+	/*if(N > 0 && N != _N){
+		printf("A previous call to reboundxf used a different number of particles, which is not supported in the current implementation.  Please improve me!\n");
+		exit(1);
+	}*/
+	
+	//N = _N;
+	if(tau_e == NULL){	tau_e = calloc(sizeof(double),_N);}
+	for(int i=0; i<_N; ++i){
 		tau_e[i] = _tau_e[i];
 	}
 }
 
-void set_i_damping(double *_tau_i){
-	for(int i=0; i<N; ++i){
+void set_i_damping(double *_tau_i, int _N){
+	/*if(N > 0 && N != _N){
+		printf("A previous call to reboundxf used a different number of particles, which is not supported in the current implementation.  Please improve me!\n");
+		exit(1);
+	}*/
+	
+	//N = _N;
+	if(tau_i == NULL){	tau_i = calloc(sizeof(double),_N);}
+	for(int i=0; i<_N; ++i){
 		tau_i[i] = _tau_i[i];
 	}
 }
+/* not yet implemented
+void set_peri_precession(double _gam, double _Rc, double _podot){
+	Rc = _Rc;
+	gam = _gam;
+	podot = _podot; // as a fraction of the mean motion
 
-void set_peri_precession(double gam, double Rc, double podot){
-	dsk.Rc = Rc;
-	dsk.gamma = gam;
-	dsk.podot = podot; // as a fraction of the mean motion
-
-	// Hanno: I'd calculate these variable in the disk_forces() function
-	// dsk.alpha = G*particles[0].m/Rc/Rc*podot/(1.-gam/2.);
-	// dsk.m = 3.65557*particles[0].m*podot;
-	//
-	// Hanno: Hm. Are you sure you want to change the mass of the particle?
-	// particles[0].m += dsk.m;
+	alpha_over_GM0 = Rc/Rc*podot/(1.-gam/2.);
+	diskmass = 3.65557*particles[0].m*podot;
+	
+	particles[0].m += diskmass;
 }
-
-void migration_reset(){
+*/
+void reboundxf_reset(){
 	free(tau_a);
 	tau_a = NULL;
 	free(tau_e);
 	tau_e = NULL;
 	free(tau_i);
 	tau_i = NULL;
+	Rc=0.;
+	gam = 0.;
+	podot = 0.;
+	alpha_over_GM0 = 0.;
+	diskmass = 0.;
+
 }
 
