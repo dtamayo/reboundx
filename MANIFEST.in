@@ -1,0 +1,3 @@
+include cext/libreboundxf.c
+include README.rst
+include LICENSE
