@@ -95,9 +95,16 @@ struct particle get_com(struct particle p1, struct particle p2){
 	return p1;
 }
 
-void disk_forces(struct particle* particles, double t, double dt, double G, int _N, int N_megno){	
-	printf("%d\n", _N);
+void forces(struct particle* particles, double t, double dt, double G, int _N, int N_megno){	
 	struct particle com = particles[0]; // calculate add. forces w.r.t. center of mass
+	/*printf("In forces\n");
+	for(int i=0;i<_N;i++){
+		printf("%d\n",i);
+		printf("%f\t%f\t%f\n", particles[i].x, particles[i].y, particles[i].z);
+		printf("%f\t%f\t%f\n", particles[i].vx, particles[i].vy, particles[i].vz);
+		printf("%f\t%f\t%f\n", particles[i].ax, particles[i].ay, particles[i].az);
+		printf("%f\n",particles[i].m);
+	}*/
 	for(int i=1;i<_N;i++){
 		struct particle* p = &(particles[i]);
 		const double dvx = p->vx - com.vx;
@@ -160,9 +167,16 @@ void disk_forces(struct particle* particles, double t, double dt, double G, int 
 		}
 		com = get_com(com,particles[i]);
 	}
-	move_to_com(particles, _N);
+	//move_to_com(particles, _N);
 }
 
+static void xf_init(int _N){ // only used internally
+	printf("%d\n", COLLISIONS_NONE);
+	if(tau_a == NULL){	tau_a = calloc(sizeof(double),_N);}
+	if(tau_e == NULL){	tau_e = calloc(sizeof(double),_N);}
+	if(tau_i == NULL){	tau_i = calloc(sizeof(double),_N);}
+}
+	
 void set_migration(double *_tau_a, int _N){
 	/*if(N > 0 && N != _N){
 		printf("A previous call to reboundxf used a different number of particles, which is not supported in the current implementation.  Please improve me!\n");
@@ -170,8 +184,8 @@ void set_migration(double *_tau_a, int _N){
 	}*/
 	
 	//N = _N;
-	if(tau_a == NULL){	tau_a = calloc(sizeof(double),_N);}
-	
+
+	xf_init(_N);
 	for(int i=0; i<_N; ++i){
 		tau_a[i] = _tau_a[i];
 	}
@@ -184,7 +198,7 @@ void set_e_damping(double *_tau_e, int _N){
 	}*/
 	
 	//N = _N;
-	if(tau_e == NULL){	tau_e = calloc(sizeof(double),_N);}
+	xf_init(_N);
 	for(int i=0; i<_N; ++i){
 		tau_e[i] = _tau_e[i];
 	}
@@ -197,13 +211,15 @@ void set_i_damping(double *_tau_i, int _N){
 	}*/
 	
 	//N = _N;
+	xf_init(_N);
 	if(tau_i == NULL){	tau_i = calloc(sizeof(double),_N);}
 	for(int i=0; i<_N; ++i){
 		tau_i[i] = _tau_i[i];
 	}
 }
 /* not yet implemented
-void set_peri_precession(double _gam, double _Rc, double _podot){
+void set_peri_precession(double _gam, double _Rc, double _podot, int _N){
+	xf_init(_N);
 	Rc = _Rc;
 	gam = _gam;
 	podot = _podot; // as a fraction of the mean motion
@@ -214,7 +230,7 @@ void set_peri_precession(double _gam, double _Rc, double _podot){
 	particles[0].m += diskmass;
 }
 */
-void reboundxf_reset(){
+void reset(){
 	free(tau_a);
 	tau_a = NULL;
 	free(tau_e);

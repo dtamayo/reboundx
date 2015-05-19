@@ -10,7 +10,7 @@ except:
     raise
 
 def forces():
-    return clibreboundxf.disk_forces
+    return clibreboundxf.forces
 
 def set_migration(tau_a):
     arr = (c_double * len(tau_a))(*tau_a)

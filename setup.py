@@ -8,6 +8,7 @@ import os
 reboundxfmodule = Extension('reboundxf',
                     sources = [ 'cext/libreboundxf.c',
                                 ],
+                    define_macros=[ ('COLLISIONS_NONE',None) ],
                     extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native'],
                                     )
 

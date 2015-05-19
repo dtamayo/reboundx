@@ -1,13 +1,13 @@
 import rebound
 import reboundxf
-import math
+import numpy as np 
 
 #gamma=1.5
 #Rc=80.
 #podot=0.01
-rebound.G = 4*math.pi**2
+rebound.G = 4*np.pi**2
 starmass = 0.55
-mass = 5.5e-4
+mass = 1.e-3 
 
 rebound.add(m=starmass)
 
@@ -18,16 +18,30 @@ for a in a0s:
     #vcirc = math.sqrt(G*starmass/a + alpha*Rc*(Rc/a)**(gamma-1.))*1.05
     rebound.add(m=mass,a=a,e=0.)
 
+rebound.status()
+
 rebound.additional_forces = reboundxf.forces()
-reboundxf.set_e_damping([1.e2,1.e2,1.e2])
+reboundxf.set_e_damping([1.e6,1.e6,1.e6])
 #reboundxf.set_peri_precession(gamma,Rc,podot)
-reboundxf.set_migration([0.,-1.e6,0.])
+reboundxf.set_migration([0.,-1.e5,0.])
 
 rebound.integrator = "ias15"
-rebound.integrate(1.)
 
-'''
-particles = rebound.particles_get()
+tmax = 1.e6
+times = np.linspace(0.,tmax,100)
+rs = np.zeros((3,100))
+
+rebound.move_to_com()
+
+rebound.dt = 10.
+for i,t in enumerate(times):
+    rebound.integrate(t)
+    print(rebound.dt)
+    for j,p in enumerate(rebound.particles):
+        rs[j,i] = np.sqrt(p.x**2 + p.y**2 + p.z**2) 
+        print("p = {0}\t r = {1}\t t = {2}".format(j,rs[j,i],t))
+
+'''particles = rebound.particles_get()
 
 tmax = 1000000.
 
