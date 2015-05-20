@@ -36,8 +36,7 @@ double *tau_a = NULL;
 double *tau_e = NULL;
 double *tau_i = NULL;
 
-//not yet implemented
-//double e_damping_p; // p parameter from Goldreich & Schlichting 2014 for how e-damping
+double e_damping_p; // p parameter from Goldreich & Schlichting 2014 for how e-damping
 // contributes to a-damping at order e^2
 // p = 3 : e-damping at const angular momentum.  p = 0 : no contribution to a-damping
 
@@ -97,14 +96,6 @@ struct particle get_com(struct particle p1, struct particle p2){
 
 void forces(struct particle* particles, double t, double dt, double G, int _N, int N_megno){	
 	struct particle com = particles[0]; // calculate add. forces w.r.t. center of mass
-	/*printf("In forces\n");
-	for(int i=0;i<_N;i++){
-		printf("%d\n",i);
-		printf("%f\t%f\t%f\n", particles[i].x, particles[i].y, particles[i].z);
-		printf("%f\t%f\t%f\n", particles[i].vx, particles[i].vy, particles[i].vz);
-		printf("%f\t%f\t%f\n", particles[i].ax, particles[i].ay, particles[i].az);
-		printf("%f\n",particles[i].m);
-	}*/
 	for(int i=1;i<_N;i++){
 		struct particle* p = &(particles[i]);
 		const double dvx = p->vx - com.vx;
@@ -133,19 +124,19 @@ void forces(struct particle* particles, double t, double dt, double G, int _N, i
 			const double ex = 1./mu*( (v*v-mu/r)*dx - r*vr*dvx );
 			const double ey = 1./mu*( (v*v-mu/r)*dy - r*vr*dvy );
 			const double ez = 1./mu*( (v*v-mu/r)*dz - r*vr*dvz );
-			//const double e = sqrt( ex*ex + ey*ey + ez*ez );		// eccentricity
+			const double e = sqrt( ex*ex + ey*ey + ez*ez );		// eccentricity
 
 			if (tau_e[i] != 0.){	// Eccentricity damping
-				//const double a = -mu/( v*v - 2.*mu/r );			// semi major axis
-				//const double prefac1 = 1./tau_e[i]/1.5*(1.+e_damping_p/2.*e*e);
-				//const double prefac2 = 1./(r*h) * sqrt(mu/a/(1.-e*e))/tau_e[i]/1.5;
+				const double a = -mu/( v*v - 2.*mu/r );			// semi major axis
+				const double prefac1 = 1./tau_e[i]/1.5*(1.+e_damping_p/2.*e*e);
+				const double prefac2 = 1./(r*h) * sqrt(mu/a/(1.-e*e))/tau_e[i]/1.5;
 
-				p->ax += -2/tau_e[i]*vr*dx/r;
-				p->ay += -2/tau_e[i]*vr*dy/r;
-				p->az += -2/tau_e[i]*vr*dz/r;
-				/*p->ax += -dvx*prefac1 + (hy*dz-hz*dy)*prefac2;
+				//p->ax += -2/tau_e[i]*vr*dx/r;
+				//p->ay += -2/tau_e[i]*vr*dy/r;
+				//p->az += -2/tau_e[i]*vr*dz/r;
+				p->ax += -dvx*prefac1 + (hy*dz-hz*dy)*prefac2;
 				p->ay += -dvy*prefac1 + (hz*dx-hx*dz)*prefac2;
-				p->az += -dvz*prefac1 + (hx*dy-hy*dx)*prefac2;*/
+				p->az += -dvz*prefac1 + (hx*dy-hy*dx)*prefac2;
 			}
 			if (tau_i[i]!=0){		// Inclination damping
 				p->az += -2.*dvz/tau_i[i];
