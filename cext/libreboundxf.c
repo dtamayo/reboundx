@@ -167,11 +167,10 @@ void forces(struct particle* particles, double t, double dt, double G, int _N, i
 		}
 		com = get_com(com,particles[i]);
 	}
-	//move_to_com(particles, _N);
+	move_to_com(particles, _N);
 }
 
 static void xf_init(int _N){ // only used internally
-	printf("%d\n", COLLISIONS_NONE);
 	if(tau_a == NULL){	tau_a = calloc(sizeof(double),_N);}
 	if(tau_e == NULL){	tau_e = calloc(sizeof(double),_N);}
 	if(tau_i == NULL){	tau_i = calloc(sizeof(double),_N);}

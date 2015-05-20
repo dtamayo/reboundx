@@ -2,45 +2,44 @@ import rebound
 import reboundxf
 import numpy as np 
 
-#gamma=1.5
-#Rc=80.
-#podot=0.01
+rebound.integrator = "ias15"
 rebound.G = 4*np.pi**2
-starmass = 0.55
-mass = 1.e-3 
+tmax = 1.e4 # years
 
-rebound.add(m=starmass)
-
-#alpha = G*starmass/Rc/Rc*podot/(1.-gamma/2.)
-a0s = [46.,77.3]
-
-for a in a0s:
-    #vcirc = math.sqrt(G*starmass/a + alpha*Rc*(Rc/a)**(gamma-1.))*1.05
-    rebound.add(m=mass,a=a,e=0.)
-
-rebound.status()
+rebound.add(m=1.)
+rebound.add(m=1e-6,a=1.,e=0.5)
+#rebound.add(m=1e-6,a=2.,e=0.5)
+rebound.move_to_com() # Moves to the center of momentum frame
 
 rebound.additional_forces = reboundxf.forces()
-reboundxf.set_e_damping([1.e6,1.e6,1.e6])
-#reboundxf.set_peri_precession(gamma,Rc,podot)
-reboundxf.set_migration([0.,-1.e5,0.])
+reboundxf.set_e_damping([0.,tmax/10.])#,tmax])
+reboundxf.set_migration([0.,0.])#,tmax])
 
-rebound.integrator = "ias15"
+Nout = 1000
+e1,e2,a1,a2 = np.zeros(Nout), np.zeros(Nout), np.zeros(Nout), np.zeros(Nout)
+times = np.linspace(0.,tmax,Nout)
+for i,time in enumerate(times):
+    rebound.integrate(time)
+    orbits = rebound.calculate_orbits()
+    e1[i] = orbits[0].e
+    #e2[i] = orbits[1].e
+    a1[i] = orbits[0].a
+    #a2[i] = orbits[1].a
 
-tmax = 1.e6
-times = np.linspace(0.,tmax,100)
-rs = np.zeros((3,100))
+import matplotlib.pyplot as plt
+fig = plt.figure(figsize=(15,5))
+ax = plt.subplot(111)
+ax.set_yscale('log')
+plt.plot(times,e1)
+#plt.plot(times,e2)
 
-rebound.move_to_com()
+fig = plt.figure(figsize=(15,5))
+ax = plt.subplot(111)
+ax.set_yscale('log')
+plt.plot(times,a1)
+#plt.plot(times,a2)
 
-rebound.dt = 10.
-for i,t in enumerate(times):
-    rebound.integrate(t)
-    print(rebound.dt)
-    for j,p in enumerate(rebound.particles):
-        rs[j,i] = np.sqrt(p.x**2 + p.y**2 + p.z**2) 
-        print("p = {0}\t r = {1}\t t = {2}".format(j,rs[j,i],t))
-
+plt.show()
 '''particles = rebound.particles_get()
 
 tmax = 1000000.
