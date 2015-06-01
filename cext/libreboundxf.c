@@ -125,18 +125,18 @@ void forces(struct particle* particles, double t, double dt, double G, int _N, i
 			const double ey = 1./mu*( (v*v-mu/r)*dy - r*vr*dvy );
 			const double ez = 1./mu*( (v*v-mu/r)*dz - r*vr*dvz );
 			const double e = sqrt( ex*ex + ey*ey + ez*ez );		// eccentricity
-
+			printf("%.14f\t%.2e\n", vr/v, e);
 			if (tau_e[i] != 0.){	// Eccentricity damping
-				const double a = -mu/( v*v - 2.*mu/r );			// semi major axis
+				/*const double a = -mu/( v*v - 2.*mu/r );			// semi major axis
 				const double prefac1 = 1./tau_e[i]/1.5*(1.+e_damping_p/2.*e*e);
-				const double prefac2 = 1./(r*h) * sqrt(mu/a/(1.-e*e))/tau_e[i]/1.5;
+				const double prefac2 = 1./(r*h) * sqrt(mu/a/(1.-e*e))/tau_e[i]/1.5;*/
 
-				//p->ax += -2/tau_e[i]*vr*dx/r;
-				//p->ay += -2/tau_e[i]*vr*dy/r;
-				//p->az += -2/tau_e[i]*vr*dz/r;
-				p->ax += -dvx*prefac1 + (hy*dz-hz*dy)*prefac2;
+				p->ax += -2/tau_e[i]*vr*dx/r;
+				p->ay += -2/tau_e[i]*vr*dy/r;
+				p->az += -2/tau_e[i]*vr*dz/r;
+				/*p->ax += -dvx*prefac1 + (hy*dz-hz*dy)*prefac2;
 				p->ay += -dvy*prefac1 + (hz*dx-hx*dz)*prefac2;
-				p->az += -dvz*prefac1 + (hx*dy-hy*dx)*prefac2;
+				p->az += -dvz*prefac1 + (hx*dy-hy*dx)*prefac2;*/
 			}
 			if (tau_i[i]!=0){		// Inclination damping
 				p->az += -2.*dvz/tau_i[i];

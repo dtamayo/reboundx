@@ -12,8 +12,8 @@ rebound.add(m=1e-6,a=1.,e=0.5)
 rebound.move_to_com() # Moves to the center of momentum frame
 
 rebound.additional_forces = reboundxf.forces()
-reboundxf.set_e_damping([0.,tmax/10.])#,tmax])
-reboundxf.set_migration([0.,0.])#,tmax])
+reboundxf.set_e_damping([0.,tmax/100.])#,tmax])
+#reboundxf.set_migration([0.,0.])#,tmax])
 
 Nout = 1000
 e1,e2,a1,a2 = np.zeros(Nout), np.zeros(Nout), np.zeros(Nout), np.zeros(Nout)
