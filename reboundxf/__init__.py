@@ -9,6 +9,9 @@ except:
     print("Cannot find library 'libreboundxf.so'.")
     raise
 
+def forces_el():
+    return clibreboundxf.forces_el
+
 def forces():
     return clibreboundxf.forces
 
