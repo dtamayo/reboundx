@@ -4,7 +4,7 @@
 #include "libreboundxf.h"
 
 #ifndef M_PI
-#define M_PI 
+#define M_PI 3.1415926535879323846 
 #endif
 
 void xftools_inertial_to_jacobi_posvel(void);

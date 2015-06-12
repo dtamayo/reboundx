@@ -1,6 +1,8 @@
 #ifndef _LIBREBOUNDXF_H
 #define _LIBREBOUNDXF_H
-
+#ifndef M_PI 
+#define M_PI 3.1415926535879323846
+#endif
 /**
  * Particle structure.
  * @details This structure is used to represent one particle. Additional particle

@@ -133,6 +133,7 @@ static void xf_init(int N){ // only used internally
 	if(tau_e == NULL){	tau_e = calloc(sizeof(double),N);}
 	if(tau_i == NULL){	tau_i = calloc(sizeof(double),N);}
 	if(tau_po == NULL){  tau_po = calloc(sizeof(double),N);}
+	printf("end of init\n");
 }
 	
 void set_migration(double *_tau_a, int N){
@@ -147,6 +148,8 @@ void set_migration(double *_tau_a, int N){
 	for(int i=0; i<N; ++i){
 		tau_a[i] = _tau_a[i];
 	}
+	printf("end of set_migration\n");
+	
 }
 
 void set_e_damping(double *_tau_e, int N){
