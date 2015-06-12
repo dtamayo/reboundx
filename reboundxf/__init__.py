@@ -9,11 +9,14 @@ except:
     print("Cannot find library 'libreboundxf.so'.")
     raise
 
-def forces_el():
-    return clibreboundxf.forces_el
+def modify_elements():
+    return clibreboundxf.modify_elements
 
 def forces():
     return clibreboundxf.forces
+
+def set_e_damping_p(value):
+    clibreboundxf.set_e_damping_p(c_double(value))
 
 def set_migration(tau_a):
     arr = (c_double * len(tau_a))(*tau_a)

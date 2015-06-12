@@ -1,39 +1,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
-
-struct orbit {
-	double a;
-	double r;	// Radial distance from central object
-	double h;	// Angular momentum
-	double P;	// Orbital period
-	double l;
-	double e;
-	double inc;
-	double Omega; 	// longitude of ascending node
-	double omega; 	// argument of perihelion
-	double f; 	// true anomaly
-};
-
-struct particle {
-	double x;	/**< x-position of the particle. */
-	double y;	/**< y-position of the particle. */
-	double z;	/**< z-position of the particle. */
-	double vx;	/**< x-velocity of the particle. */
-	double vy;	/**< y-velocity of the particle. */
-	double vz;	/**< z-velocity of the particle. */
-	double ax;	/**< x-acceleration of the particle. */
-	double ay;	/**< y-acceleration of the particle. */
-	double az;	/**< z-acceleration of the particle. */
-	double m;	/**< Mass of the particle. */
-/*#ifndef COLLISIONSNONE
-	double r; 	
-	double lastcollision;
-#endif // COLLISIONSNONE*/
-};
-
-//static int N = 0; // private version to make sure we don't overwrite/change what's in simulation
-
+#include "libreboundxf.h"
+#include "xftools.h"
+        
 //disk parameters for precession
 double gam;
 double Rc;
@@ -47,194 +17,17 @@ double *tau_e = NULL;
 double *tau_i = NULL;
 double *tau_po = NULL;
 
-double e_damping_p; // p parameter from Goldreich & Schlichting 2014 for how e-damping
-// contributes to a-damping at order e^2
-// p = 3 : e-damping at const angular momentum.  p = 0 : no contribution to a-damping
+static double e_damping_p = 0; // p parameter from Deck & Batygin (2015) for how e-damping
+// is coupled to a-damping at order e^2
+// p = 1 : e-damping at const angular momentum.  p = 0 : no contribution to a-damping
+// equal to p/3 with p defined as in Goldreich & Schlichting 2014
 
-struct orbit orbit_nan(){
-	struct orbit o;
-	o.a = NAN;
-	o.r = NAN;
-	o.h = NAN;
-	o.P = NAN;
-	o.l = NAN;
-	o.e = NAN;
-	o.inc = NAN;
-	o.Omega = NAN;
-	o.omega = NAN;
-	o.f = NAN;
-	return o;
-}
-#define MIN_REL_ERROR 1.0e-12
-#define TINTY 1.E-308
-
-struct orbit tools_p2orbit(double G, struct particle p, struct particle primary){
-	struct orbit o;
-	double h0,h1,h2,e0,e1,e2,n0,n1,n,er,vr,mu,ea;
-	mu = G*(p.m+primary.m);
-	p.x -= primary.x;
-	p.y -= primary.y;
-	p.z -= primary.z;
-	p.vx -= primary.vx;
-	p.vy -= primary.vy;
-	p.vz -= primary.vz;
-	h0 = (p.y*p.vz - p.z*p.vy); 			//angular momentum vector
-	h1 = (p.z*p.vx - p.x*p.vz);
-	h2 = (p.x*p.vy - p.y*p.vx);
-	o.h = sqrt ( h0*h0 + h1*h1 + h2*h2 );		// abs value of angular moment 
-	double v = sqrt ( p.vx*p.vx + p.vy*p.vy + p.vz*p.vz );
-	o.r = sqrt ( p.x*p.x + p.y*p.y + p.z*p.z );
-	if (o.h/(o.r*v) <= MIN_REL_ERROR){
-		return orbit_nan();
-	}
-	vr = (p.x*p.vx + p.y*p.vy + p.z*p.vz)/o.r;
-	e0 = 1./mu*( (v*v-mu/o.r)*p.x - o.r*vr*p.vx );
-	e1 = 1./mu*( (v*v-mu/o.r)*p.y - o.r*vr*p.vy );
-	e2 = 1./mu*( (v*v-mu/o.r)*p.z - o.r*vr*p.vz );
- 	o.e = sqrt( e0*e0 + e1*e1 + e2*e2 );		// eccentricity
-	o.a = -mu/( v*v - 2.*mu/o.r );			// semi major axis
-	o.P = o.a/fabs(o.a)*2.*M_PI*sqrt(fabs(o.a*o.a*o.a/mu));		// period (negative if hyperbolic)
-	o.inc = acos( h2/o.h ) ;				// inclination (wrt xy-plane)   -  Note if pi/2 < i < pi then the orbit is retrograde
-	n0 = -h1;					// vector of nodes lies in xy plane => no z component
-	n1 =  h0;		
-	n = sqrt( n0*n0 + n1*n1 );
-	er = p.x*e0 + p.y*e1 + p.z*e2;
-	if (n/(o.r*v) <= MIN_REL_ERROR || o.inc <= MIN_REL_ERROR){			// we are in the xy plane
-		o.Omega=0.;
-		if (o.e <= MIN_REL_ERROR){              // omega not defined for circular orbit
-			o.omega = 0.;
-		}
-		else{
-			if (e1>=0.){
-				o.omega=acos(e0/o.e);
-			}
-			else{
-				o.omega = 2.*M_PI-acos(e0/o.e);
-			}
-		}
-	}
-	else{
-		if (o.e <= MIN_REL_ERROR){
-			o.omega = 0.;
-		}
-		else{
-			if (e2>=0.){                        // omega=0 if perictr at asc node
-				o.omega=acos(( n0*e0 + n1*e1 )/(n*o.e));
-			}
-			else{
-				o.omega=2.*M_PI-acos(( n0*e0 + n1*e1 )/(n*o.e));
-			}
-		}
-
-		if (n1>=0.){
-			o.Omega = acos(n0/n);
-		}
-		else{
-			o.Omega=2.*M_PI-acos(n0/n); // Omega=longitude of asc node
-		}								// taken in xy plane from x axis
-	}	
-	if (o.e<=MIN_REL_ERROR){            // circular orbit
-		o.f=0.;                         // f has no meaning
-		o.l=0.;
-	}
-	else{
-		double cosf = er/(o.e*o.r);
-		double cosea = (1.-o.r/o.a)/o.e;
-		
-		if (-1.<=cosf && cosf<=1.){     // failsafe
-			o.f = acos(cosf);
-		}
-		else{
-			o.f = M_PI/2.*(1.-cosf);
-		}
-		
-		if (-1.<=cosea && cosea<=1.){
-			ea  = acos(cosea);
-		}
-		else{
-			ea = M_PI/2.*(1.-cosea);
-		}
-		
-		if (vr<0.){
-			o.f=2.*M_PI-o.f;
-			ea =2.*M_PI-ea;
-		}
-		
-		o.l = ea -o.e*sin(ea) + o.omega+ o.Omega;  // mean longitude
-	}
-	return o;
+double get_e_damping_p(void){
+	return e_damping_p;
 }
 
-void orbit2p(struct particle *p, double G, struct particle *com, struct orbit o){ 
-	double r = o.a*(1-o.e*o.e)/(1 + o.e*cos(o.f));
-
-	// Murray & Dermott Eq 2.122
-	p->x  = com->x + r*(cos(o.Omega)*cos(o.omega+o.f) - sin(o.Omega)*sin(o.omega+o.f)*cos(o.inc));
-	p->y  = com->y + r*(sin(o.Omega)*cos(o.omega+o.f) + cos(o.Omega)*sin(o.omega+o.f)*cos(o.inc));
-	p->z  = com->z + r*sin(o.omega+o.f)*sin(o.inc);
-
-	double n = sqrt(G*(p->m+com->m)/(o.a*o.a*o.a));
-
-	// Murray & Dermott Eq. 2.36 after applying the 3 rotation matrices from Sec. 2.8 to the velo.incties in the orbital plane
-	p->vx = com->vx + (n*o.a/sqrt(1-o.e*o.e))*((o.e+cos(o.f))*(-cos(o.inc)*cos(o.omega)*sin(o.Omega) - cos(o.Omega)*sin(o.omega)) - sin(o.f)*(cos(o.omega)*cos(o.Omega) - cos(o.inc)*sin(o.omega)*sin(o.Omega)));
-	p->vy = com->vy + (n*o.a/sqrt(1-o.e*o.e))*((o.e+cos(o.f))*(cos(o.inc)*cos(o.omega)*cos(o.Omega) - sin(o.omega)*sin(o.Omega)) - sin(o.f)*(cos(o.omega)*sin(o.Omega) + cos(o.inc)*cos(o.Omega)*sin(o.omega)));
-	p->vz = com->vz + (n*o.a/sqrt(1-o.e*o.e))*((o.e+cos(o.f))*cos(o.omega)*sin(o.inc) - sin(o.f)*sin(o.inc)*sin(o.omega));
-
-	//printf("%f\n", n*n*o.a*o.a/(1.-o.e*o.e)*(1.+o.e*o.e+2.*o.e*cos(o.f))-(p->vx*p->vx + p->vy*p->vy + p->vz*p->vz)); 
-
-}
-
-void move_to_com(struct particle* particles, int N){
-	double m = 0;
-	double x = 0;
-	double y = 0;
-	double z = 0;
-	double vx = 0;
-	double vy = 0;
-	double vz = 0;
-	for (int i=0;i<N;i++){
-		struct particle p = particles[i];
-		m  += p.m;
-		x  += p.x*p.m;
-		y  += p.y*p.m;
-		z  += p.z*p.m;
-		vx += p.vx*p.m;
-		vy += p.vy*p.m;
-		vz += p.vz*p.m;
-	}
-	x /= m;
-	y /= m;
-	z /= m;
-	vx /= m;
-	vy /= m;
-	vz /= m;
-	for (int i=0;i<N;i++){
-		particles[i].x  -= x;
-		particles[i].y  -= y;
-		particles[i].z  -= z;
-		particles[i].vx -= vx;
-		particles[i].vy -= vy;
-		particles[i].vz -= vz;
-	}
-}
-
-struct particle get_com(struct particle p1, struct particle p2){
-	p1.x   = p1.x*p1.m + p2.x*p2.m;		
-	p1.y   = p1.y*p1.m + p2.y*p2.m;
-	p1.z   = p1.z*p1.m + p2.z*p2.m;
-	p1.vx  = p1.vx*p1.m + p2.vx*p2.m;
-	p1.vy  = p1.vy*p1.m + p2.vy*p2.m;
-	p1.vz  = p1.vz*p1.m + p2.vz*p2.m;
-	p1.m  += p2.m;
-	if (p1.m>0.){
-		p1.x  /= p1.m;
-		p1.y  /= p1.m;
-		p1.z  /= p1.m;
-		p1.vx /= p1.m;
-		p1.vy /= p1.m;
-		p1.vz /= p1.m;
-	}
-	return p1;
+void set_e_damping_p(double val){
+	e_damping_p = val;
 }
 
 void forces(struct particle* particles, double t, double dt, double G, int N, int N_megno){	
@@ -256,8 +49,7 @@ void forces(struct particle* particles, double t, double dt, double G, int N, in
 			const double dx = p->x-com.x;
 			const double dy = p->y-com.y;
 			const double dz = p->z-com.z;
-
-			const double hx = dy*dvz - dz*dvy;
+const double hx = dy*dvz - dz*dvy;
 			const double hy = dz*dvx - dx*dvz;
 			const double hz = dx*dvy - dy*dvx;
 			const double h = sqrt ( hx*hx + hy*hy + hz*hz );
@@ -299,38 +91,40 @@ void forces(struct particle* particles, double t, double dt, double G, int N, in
 				particles[0].az -= p->m/particles[0].m*a_over_r*dz;
 			}
 		}
-		com = get_com(com,particles[i]);
+		com = xftools_get_com(com,particles[i]);
 	}
-	move_to_com(particles, N);
+	xftools_move_to_com(particles, N);
 }
 
-void forces_el(struct particle* particles, double t, double dt, double G, int N, int N_megno){	
+void modify_elements(struct particle* particles, double t, double dt, double G, int N, int N_megno){	
 	struct particle com = particles[0];
 	for(int i=1;i<N;i++){
 		struct particle *p = &(particles[i]);
-		struct orbit o = tools_p2orbit(G, particles[i], com);
-	
-		if(i==2){
-			printf("%f\n", o.a);
-		}
+		struct orbit o = xftools_p2orbit(G, particles[i], com);
+	    double da = 0.;
+		double de = 0.;
+		double dpo = 0.;	
 		if (tau_a[i] != 0.){
-			double da = -o.a*dt/tau_a[i];
-			o.a += da;
-			//printf("%f\t%f\n", da, o.a);
+			da += -o.a*dt/tau_a[i]; 
 		}
 		
 		if (tau_e[i] != 0.){
-			double de = -o.e*dt/tau_e[i];
-			o.e += de;
+			de += -o.e*dt/tau_e[i];
+			da += -2.*o.a*o.e*o.e*e_damping_p*dt/tau_e[i];
+			printf("%f\t%f\n", e_damping_p, da);
 		}
 
 		if (tau_po[i] != 0.){
-			double dpo = 2*M_PI*dt/tau_po[i];
-			o.omega += dpo;
+			dpo += 2*M_PI*dt/tau_po[i];
 		}
 
-		orbit2p(&particles[i], G, &com, o); 
-		com = get_com(com, particles[i]);
+		o.a += da;
+		o.e += de;
+		o.omega += dpo;
+
+		xftools_orbit2p(&particles[i], G, &com, o); 
+
+		com = xftools_get_com(com, particles[i]);
 	}
 }
 
