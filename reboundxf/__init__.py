@@ -34,8 +34,12 @@ def set_e_damping(tau_e):
 def set_i_damping(tau_i):
     arr = (c_double * len(tau_i))(*tau_i)
     clibreboundxf.set_i_damping(byref(arr),c_int(len(tau_i)))
-    
-'''not yet implemented
+
+def set_peri_precession(tau_po):
+    arr = (c_double * len(tau_po))(*tau_po)
+    clibreboundxf.set_peri_precession(byref(arr), c_int(len(tau_po)))
+
+'''    
 def set_peri_precession(gamma, Rc, podot):
     clibreboundxf.set_peri_precession(c_double(gamma), c_double(Rc), c_double(podot))
 '''
