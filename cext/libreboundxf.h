@@ -20,6 +20,7 @@ struct particle {
 	double ay;	/**< y-acceleration of the particle. */
 	double az;	/**< z-acceleration of the particle. */
 	double m;	/**< Mass of the particle. */
+	int ID;		/**< Particle ID. */
 };
 
 /**

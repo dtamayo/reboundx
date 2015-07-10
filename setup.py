@@ -18,7 +18,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='reboundxf',
-    version='0.0.1',
+    version='0.0.3',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
     url='http://github.com/dtamayo/reboundxf',
