@@ -33,8 +33,8 @@
 	p_j[N_megno].vz = s_vz * Mtotali;
 }*/
 
-struct orbit xftools_orbit_nan(void){
-	struct orbit o;
+struct reb_orbit xftools_orbit_nan(void){
+	struct reb_orbit o;
 	o.a = NAN;
 	o.r = NAN;
 	o.h = NAN;
@@ -50,8 +50,8 @@ struct orbit xftools_orbit_nan(void){
 #define MIN_REL_ERROR 1.0e-12
 #define TINTY 1.E-308
 
-struct orbit xftools_p2orbit(double G, struct particle p, struct particle primary){
-	struct orbit o;
+struct reb_orbit xftools_p2orbit(double G, struct reb_particle p, struct reb_particle primary){
+	struct reb_orbit o;
 	double h0,h1,h2,e0,e1,e2,n0,n1,n,er,vr,mu,ea,dx,dy,dz,dvx,dvy,dvz,v,cosf,cosea;
 	mu = G*(p.m+primary.m);
 	dx = p.x - primary.x;
@@ -148,7 +148,7 @@ struct orbit xftools_p2orbit(double G, struct particle p, struct particle primar
 	return o;
 }
 
-void xftools_orbit2p(struct particle *p, double G, struct particle *com, struct orbit o){ 
+void xftools_orbit2p(struct reb_particle* p, double G, struct reb_particle* com, struct reb_orbit o){ 
 	double r = o.a*(1-o.e*o.e)/(1 + o.e*cos(o.f));
 
 	// Murray & Dermott Eq 2.122
@@ -167,7 +167,7 @@ void xftools_orbit2p(struct particle *p, double G, struct particle *com, struct 
 
 }
 
-void xftools_move_to_com(struct particle* particles, int N){
+void xftools_move_to_com(struct reb_particle* particles, int N){
 	double m = 0;
 	double x = 0;
 	double y = 0;
@@ -176,7 +176,7 @@ void xftools_move_to_com(struct particle* particles, int N){
 	double vy = 0;
 	double vz = 0;
 	for (int i=0;i<N;i++){
-		struct particle p = particles[i];
+		struct reb_particle p = particles[i];
 		m  += p.m;
 		x  += p.x*p.m;
 		y  += p.y*p.m;
@@ -201,7 +201,7 @@ void xftools_move_to_com(struct particle* particles, int N){
 	}
 }
 
-struct particle xftools_get_com(struct particle p1, struct particle p2){
+struct reb_particle xftools_get_com(struct reb_particle p1, struct reb_particle p2){
 	p1.x   = p1.x*p1.m + p2.x*p2.m;		
 	p1.y   = p1.y*p1.m + p2.y*p2.m;
 	p1.z   = p1.z*p1.m + p2.z*p2.m;

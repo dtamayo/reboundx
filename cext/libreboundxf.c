@@ -3,12 +3,13 @@
 #include <stdio.h>
 #include "libreboundxf.h"
 #include "xftools.h"
-        
+#include "rebound.h"
+
 //disk parameters for precession
 double gam;
 double Rc;
 double diskmass;
-double alpha_over_GM0;
+double alpha_over_rGM0;
 double podot; // pericenter precession at r = Rc
 
 // pointers for damping timescales
@@ -30,10 +31,10 @@ void set_e_damping_p(double val){
 	e_damping_p = val;
 }
 
-void forces(struct particle* particles, double t, double dt, double G, int N, int N_megno){	
-	struct particle com = particles[0]; // calculate add. forces w.r.t. center of mass
-	for(int i=1;i<N;i++){
-		struct particle* p = &(particles[i]);
+void forces(struct reb_simulation* const sim){
+	struct reb_particle com = sim->particles[0]; // calculate add. forces w.r.t. center of mass
+	for(int i=1;i<sim->N;i++){
+		struct reb_particle* p = &(sim->particles[i]);
 		const double dvx = p->vx - com.vx;
 		const double dvy = p->vy - com.vy;
 		const double dvz = p->vz - com.vz;
@@ -45,11 +46,11 @@ void forces(struct particle* particles, double t, double dt, double G, int N, in
 		}
 
 		if (tau_e[i] != 0. || tau_i[i]!= 0. || diskmass != 0.){ 	// need h and e vectors for both types
-			const double mu = G*(com.m + p->m);
+			const double mu = sim->G*(com.m + p->m);
 			const double dx = p->x-com.x;
 			const double dy = p->y-com.y;
 			const double dz = p->z-com.z;
-const double hx = dy*dvz - dz*dvy;
+			const double hx = dy*dvz - dz*dvy;
 			const double hy = dz*dvx - dx*dvz;
 			const double hz = dx*dvy - dy*dvx;
 			const double h = sqrt ( hx*hx + hy*hy + hz*hz );
@@ -81,49 +82,49 @@ const double hx = dy*dvz - dz*dvy;
 				p->az += prefac*dvz;
 			}
 			if (diskmass != 0.) {
-				double a_over_r = -G*particles[0].m*alpha_over_GM0*pow(Rc/r,gam)/r + G*diskmass/r/r/r; 	// radial disk force after removing piece from adding the disk into the sun
+				double a_over_r = -sim->G*sim->particles[0].m*alpha_over_rGM0*pow(Rc/r,gam)/r + sim->G*diskmass/r/r/r; 	// radial disk force after removing piece from adding the disk into the sun
 				p->ax += a_over_r*dx;									// rhat has components x/r xhat + y/r yhat + z/r zhat
 				p->ay += a_over_r*dy;
 				p->az += a_over_r*dz;
 
-				particles[0].ax -= p->m/particles[0].m*a_over_r*dx;		// add back reactions onto the star (if forces are equal, accelerations differ by -mass ratio)
-				particles[0].ay -= p->m/particles[0].m*a_over_r*dy;
-				particles[0].az -= p->m/particles[0].m*a_over_r*dz;
+				sim->particles[0].ax -= p->m/sim->particles[0].m*a_over_r*dx;		// add back reactions onto the star (if forces are equal, accelerations differ by -mass ratio)
+				sim->particles[0].ay -= p->m/sim->particles[0].m*a_over_r*dy;
+				sim->particles[0].az -= p->m/sim->particles[0].m*a_over_r*dz;
 			}
 		}
-		com = xftools_get_com(com,particles[i]);
+		com = xftools_get_com(com,sim->particles[i]);
 	}
-	xftools_move_to_com(particles, N);
+	xftools_move_to_com(sim->particles, sim->N);
 }
 
-void modify_elements(struct particle* particles, double t, double dt, double G, int N, int N_megno){	
-	struct particle com = particles[0];
-	for(int i=1;i<N;i++){
-		struct particle *p = &(particles[i]);
-		struct orbit o = xftools_p2orbit(G, particles[i], com);
+void modify_elements(struct reb_simulation* const sim){
+	struct reb_particle com = sim->particles[0];
+	for(int i=1;i<sim->N;i++){
+		struct reb_particle *p = &(sim->particles[i]);
+		struct reb_orbit o = xftools_p2orbit(sim->G, sim->particles[i], com);
 	    double da = 0.;
 		double de = 0.;
 		double dpo = 0.;	
 		if (tau_a[i] != 0.){
-			da += -o.a*dt/tau_a[i]; 
+			da += -o.a*sim->dt/tau_a[i]; 
 		}
 		
 		if (tau_e[i] != 0.){
-			de += -o.e*dt/tau_e[i];
-			da += -2.*o.a*o.e*o.e*e_damping_p*dt/tau_e[i];
+			de += -o.e*sim->dt/tau_e[i];
+			da += -2.*o.a*o.e*o.e*e_damping_p*sim->dt/tau_e[i];
 		}
 
 		if (tau_po[i] != 0.){
-			dpo += 2*M_PI*dt/tau_po[i];
+			dpo += 2*M_PI*sim->dt/tau_po[i];
 		}
 
 		o.a += da;
 		o.e += de;
 		o.omega += dpo;
 
-		xftools_orbit2p(&particles[i], G, &com, o); 
+		xftools_orbit2p(&sim->particles[i], sim->G, &com, o); 
 
-		com = xftools_get_com(com, particles[i]);
+		com = xftools_get_com(com, sim->particles[i]);
 	}
 }
 
@@ -189,10 +190,10 @@ void set_peri_precession(double _gam, double _Rc, double _podot, int N){
 	gam = _gam;
 	podot = _podot; // as a fraction of the mean motion
 
-	alpha_over_GM0 = Rc/Rc*podot/(1.-gam/2.);
-	diskmass = 3.65557*particles[0].m*podot;
+	alpha_over_rGM0 = Rc/Rc*podot/(1.-gam/2.);
+	diskmass = 3.65557*sim->particles[0].m*podot;
 	
-	particles[0].m += diskmass;
+	sim->particles[0].m += diskmass;
 }
 */
 void reset(){
@@ -205,7 +206,7 @@ void reset(){
 	Rc=0.;
 	gam = 0.;
 	podot = 0.;
-	alpha_over_GM0 = 0.;
+	alpha_over_rGM0 = 0.;
 	diskmass = 0.;
 
 }
