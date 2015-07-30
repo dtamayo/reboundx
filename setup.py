@@ -5,11 +5,12 @@ except ImportError:
 from codecs import open
 import os
 
-reboundxfmodule = Extension('reboundxf',
+libreboundxfmodule = Extension('libreboundxf',
                     sources = [ 'cext/libreboundxf.c',
                                 'cext/xftools.c'
                                 ],
                     include_dirs = ['cext'],
+                    define_macros=[ ('LIBREBOUNDXF', None) ],
                     extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native'],
                                     )
 
@@ -49,5 +50,5 @@ setup(name='reboundxf',
     keywords='astronomy astrophysics nbody integrator',
     packages=['reboundxf'],
     install_requires=[],
-    ext_modules = [reboundxfmodule],
+    ext_modules = [libreboundxfmodule],
     zip_safe=False)

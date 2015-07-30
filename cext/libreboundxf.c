@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include "libreboundxf.h"
 #include "xftools.h"
-#include "rebound.h"
 
 //disk parameters for precession
 double gam;
@@ -31,7 +30,7 @@ void set_e_damping_p(double val){
 	e_damping_p = val;
 }
 
-void forces(struct reb_simulation* const sim){
+void reboundxf_forces(struct reb_simulation* const sim){
 	struct reb_particle com = sim->particles[0]; // calculate add. forces w.r.t. center of mass
 	for(int i=1;i<sim->N;i++){
 		struct reb_particle* p = &(sim->particles[i]);
@@ -97,7 +96,7 @@ void forces(struct reb_simulation* const sim){
 	xftools_move_to_com(sim->particles, sim->N);
 }
 
-void modify_elements(struct reb_simulation* const sim){
+void reboundxf_modify_elements(struct reb_simulation* const sim){
 	struct reb_particle com = sim->particles[0];
 	for(int i=1;i<sim->N;i++){
 		struct reb_particle *p = &(sim->particles[i]);

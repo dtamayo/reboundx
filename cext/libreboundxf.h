@@ -3,6 +3,12 @@
 #ifndef M_PI 
 #define M_PI 3.1415926535879323846
 #endif
+#include "rebound.h"
+
+void reboundxf_forces(struct reb_simulation* const sim);
+
+void reboundxf_modify_elements(struct reb_simulation* const sim);
+
 /**
  * Structure representing one REBOUND particle.
  */
