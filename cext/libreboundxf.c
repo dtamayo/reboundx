@@ -22,11 +22,11 @@ static double e_damping_p = 0; // p parameter from Deck & Batygin (2015) for how
 // p = 1 : e-damping at const angular momentum.  p = 0 : no contribution to a-damping
 // equal to p/3 with p defined as in Goldreich & Schlichting 2014
 
-double get_e_damping_p(void){
+double reboundxf_get_e_damping_p(void){
 	return e_damping_p;
 }
 
-void set_e_damping_p(double val){
+void reboundxf_set_e_damping_p(double val){
 	e_damping_p = val;
 }
 
@@ -114,7 +114,7 @@ void reboundxf_modify_elements(struct reb_simulation* const sim){
 		}
 
 		if (tau_po[i] != 0.){
-			dpo += 2*M_PI*sim->dt/tau_po[i];
+			dpo += 2*M_PI*sim->dt/tau_po[i]*(1.+sin(o.omega));
 		}
 
 		o.a += da;
@@ -122,9 +122,9 @@ void reboundxf_modify_elements(struct reb_simulation* const sim){
 		o.omega += dpo;
 
 		xftools_orbit2p(&sim->particles[i], sim->G, &com, o); 
-
 		com = xftools_get_com(com, sim->particles[i]);
 	}
+	xftools_move_to_com(sim->particles, sim->N);
 }
 
 static void xf_init(int N){ // only used internally
@@ -134,7 +134,7 @@ static void xf_init(int N){ // only used internally
 	if(tau_po == NULL){  tau_po = calloc(sizeof(double),N);}
 }
 	
-void set_migration(double *_tau_a, int N){
+void reboundxf_set_migration(double *_tau_a, int N){
 	/*if(N > 0 && N != N){
 		printf("A previous call to reboundxf used a different number of particles, which is not supported in the current implementation.  Please improve me!\n");
 		exit(1);
@@ -148,7 +148,7 @@ void set_migration(double *_tau_a, int N){
 	}
 }
 
-void set_e_damping(double *_tau_e, int N){
+void reboundxf_set_e_damping(double *_tau_e, int N){
 	/*if(N > 0 && N != N){
 		printf("A previous call to reboundxf used a different number of particles, which is not supported in the current implementation.  Please improve me!\n");
 		exit(1);
@@ -161,7 +161,7 @@ void set_e_damping(double *_tau_e, int N){
 	}
 }
 
-void set_i_damping(double *_tau_i, int N){
+void reboundxf_set_i_damping(double *_tau_i, int N){
 	/*if(N > 0 && N != N){
 		printf("A previous call to reboundxf used a different number of particles, which is not supported in the current implementation.  Please improve me!\n");
 		exit(1);
@@ -175,7 +175,7 @@ void set_i_damping(double *_tau_i, int N){
 	}
 }
 
-void set_peri_precession(double *_tau_po, int N){
+void reboundxf_set_peri_precession(double *_tau_po, int N){
 	xf_init(N);
 	for(int i=0; i<N; ++i){
 		tau_po[i] = _tau_po[i];
@@ -195,7 +195,7 @@ void set_peri_precession(double _gam, double _Rc, double _podot, int N){
 	sim->particles[0].m += diskmass;
 }
 */
-void reset(){
+void reboundxf_reset(){
 	free(tau_a);
 	tau_a = NULL;
 	free(tau_e);

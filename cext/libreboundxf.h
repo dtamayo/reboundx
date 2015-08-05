@@ -9,6 +9,14 @@ void reboundxf_forces(struct reb_simulation* const sim);
 
 void reboundxf_modify_elements(struct reb_simulation* const sim);
 
+double reboundxf_get_e_damping_p(void);
+void reboundxf_set_e_damping_p(double val);
+
+void reboundxf_set_migration(double *_tau_a, int N);
+void reboundxf_set_e_damping(double *_tau_e, int N);
+void reboundxf_set_i_damping(double *_tau_i, int N);
+void reboundxf_set_peri_precession(double *_tau_po, int N);
+
 /**
  * Structure representing one REBOUND particle.
  */
