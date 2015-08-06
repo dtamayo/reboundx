@@ -1,5 +1,8 @@
 from ctypes import *
 import os
+import sys
+sys.path.append('../../rebound/rebound/')
+import rebound
 
 #Find the migration C library
 pymodulespath = os.path.dirname(__file__)
@@ -15,7 +18,10 @@ def modify_elements():
 def forces():
     return clibreboundxf.rebxf_forces
 
-def set_e_damping_p(value):
+def addxf(sim):
+    clibreboundxf.rebxf_addxf(sim.simulation)
+    
+'''def set_e_damping_p(value):
     clibreboundxf.rebxf_set_e_damping_p(c_double(value))
 
 def set_migration(tau_a):
@@ -38,8 +44,7 @@ def set_i_damping(tau_i):
 def set_peri_precession(tau_po):
     arr = (c_double * len(tau_po))(*tau_po)
     clibreboundxf.rebxf_set_peri_precession(byref(arr), c_int(len(tau_po)))
-
-'''    
+   
 def set_peri_precession(gamma, Rc, podot):
     clibreboundxf.set_peri_precession(c_double(gamma), c_double(Rc), c_double(podot))
 '''

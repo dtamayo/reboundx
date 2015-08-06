@@ -120,7 +120,7 @@ struct reb_orbit {
 	double r;	///< Radial distance from central object
 	double h;	///< Angular momentum
 	double P;	///< Orbital period
-	double l;	///< Longitude
+	double l;	///< Mean longitude
 	double e;	///< Eccentricity
 	double inc;	///< Inclination
 	double Omega; 	///< Longitude of ascending node
@@ -436,7 +436,7 @@ struct reb_simulation {
 	 * @brief Available gravity routines
 	 */
 	enum {
-		REB_GRAVITY_NONE = 0,		///< Do not calculate graviational forces
+		REB_GRAVITY_NONE = 0,		///< Do not calculate gravitational forces
 		REB_GRAVITY_BASIC = 1,		///< Basic O(N^2) direct summation algorithm, choose this for shearing sheet and periodic boundary conditions
 		REB_GRAVITY_COMPENSATED = 2,	///< Direct summation algorithm O(N^2) but with compensated summation, slightly slower than BASIC but more accurate
 		REB_GRAVITY_TREE = 3,		///< Use the tree to calculate gravity, O(N log(N)), set opening_angle2 to adjust accuracy.
@@ -483,6 +483,16 @@ struct reb_simulation {
 	 * @brief Resolve collision within this function. By default it is NULL, assuming hard sphere model.
 	 */
 	void (*collision_resolve) (struct reb_simulation* const r, struct reb_collision);
+	/** @} */
+
+	/**
+	 * \name Hooks for external libraries
+	 * @{
+	 */
+	/**
+	 * @brief Pointer to parameters for (optional) extra forces from the reboundxf library
+	 */
+	void* xf_params;
 	/** @} */
 	
 };

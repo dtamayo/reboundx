@@ -17,14 +17,12 @@ struct rebxf_params {
 	// is coupled to a-damping at order e^2
 	// p = 1 : e-damping at const angular momentum.  p = 0 : no contribution to a-damping
 	// equal to p/3 with p defined as in Goldreich & Schlichting 2014
-
-	struct reb_simulation* sim;
 };
 
-struct rebxf_params* rebxf_addxf(struct reb_simulation* const sim);
+struct rebxf_params* rebxf_addxf(struct reb_simulation* sim);
 
-void rebxf_forces(struct rebxf_params* const xf);
+void rebxf_forces(struct reb_simulation* const sim);
 
-void rebxf_modify_elements(struct rebxf_params* const xf);
+void rebxf_modify_elements(struct reb_simulation* const sim);
 
 #endif
