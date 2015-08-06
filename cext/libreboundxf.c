@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include <stdio.h>
 #include "libreboundxf.h"
@@ -13,38 +14,82 @@ double podot; // pericenter precession at r = Rc
 */
 // pointers for damping timescales
 
+void rebxf_check_N(struct reb_simulation* sim){
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	if(xf->allocatedN < sim->N) {
+		xf->allocatedN = sim->N;
+		xf->tau_a = realloc(xf->tau_a, sizeof(double)*xf->allocatedN);
+		xf->tau_e = realloc(xf->tau_e, sizeof(double)*xf->allocatedN);
+		xf->tau_inc = realloc(xf->tau_inc, sizeof(double)*xf->allocatedN);
+		xf->tau_pomega = realloc(xf->tau_pomega, sizeof(double)*xf->allocatedN);
+	}
+}
+
+double* rebxf_get_tau_a(struct reb_simulation* sim){
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	return xf->tau_a;	
+}
+
+void rebxf_set_tau_a(struct reb_simulation* sim, double* tau_a){
+	rebxf_check_N(sim);
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	memcpy(xf->tau_a, tau_a, sizeof(double)*sim->N);	
+}
+
+double* rebxf_get_tau_e(struct reb_simulation* sim){
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	return xf->tau_e;	
+}
+
+void rebxf_set_tau_e(struct reb_simulation* sim, double* tau_e){
+	rebxf_check_N(sim);
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	memcpy(xf->tau_e, tau_e, sizeof(double)*sim->N);	
+}
+
+double* rebxf_get_tau_inc(struct reb_simulation* sim){
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	return xf->tau_inc;	
+}
+
+void rebxf_set_tau_inc(struct reb_simulation* sim, double* tau_inc){
+	rebxf_check_N(sim);
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	memcpy(xf->tau_inc, tau_inc, sizeof(double)*sim->N);	
+}
+
+double* rebxf_get_tau_pomega(struct reb_simulation* sim){
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	return xf->tau_pomega;	
+}
+
+void rebxf_set_tau_pomega(struct reb_simulation* sim, double* tau_pomega){
+	rebxf_check_N(sim);
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	memcpy(xf->tau_pomega, tau_pomega, sizeof(double)*sim->N);	
+}
+
 struct rebxf_params* rebxf_addxf(struct reb_simulation* sim){
 	struct rebxf_params* xf = (struct rebxf_params*) malloc(sizeof(struct rebxf_params));
 	xf->tau_a = NULL;
 	xf->tau_e = NULL;
-	xf->tau_i = NULL;
-	xf->tau_po = NULL;
+	xf->tau_inc = NULL;
+	xf->tau_pomega = NULL;
 
 	xf->e_damping_p = 0.;
 
 	xf->allocatedN = sim->N;
 	xf->tau_a = calloc(xf->allocatedN, sizeof(double));
 	xf->tau_e = calloc(xf->allocatedN, sizeof(double));
-	xf->tau_i = calloc(xf->allocatedN, sizeof(double));
-	xf->tau_po = calloc(xf->allocatedN, sizeof(double));
+	xf->tau_inc = calloc(xf->allocatedN, sizeof(double));
+	xf->tau_pomega = calloc(xf->allocatedN, sizeof(double));
 
 	sim->xf_params = (struct rebxf_params*) xf;
 	return (struct rebxf_params*)sim->xf_params;
 }
 
-void rebxf_checkN(struct reb_simulation* sim){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	if(xf->allocatedN < sim->N) {
-		xf->allocatedN = sim->N;
-		xf->tau_a = realloc(xf->tau_a, sizeof(double)*xf->allocatedN);
-		xf->tau_e = realloc(xf->tau_e, sizeof(double)*xf->allocatedN);
-		xf->tau_i = realloc(xf->tau_i, sizeof(double)*xf->allocatedN);
-		xf->tau_po = realloc(xf->tau_po, sizeof(double)*xf->allocatedN);
-	}
-}
-
 void rebxf_forces(struct reb_simulation* const sim){
-	rebxf_checkN(sim);
+	rebxf_check_N(sim);
 	struct rebxf_params* xf = (struct rebxf_params*)xf;
 	struct reb_particle com = sim->particles[0]; // calculate add. forces w.r.t. center of mass
 	for(int i=1;i<sim->N;i++){
@@ -59,7 +104,7 @@ void rebxf_forces(struct reb_simulation* const sim){
 			p->az -=  dvz/(2.*xf->tau_a[i]);
 		}
 
-		if (xf->tau_e[i] != 0. || xf->tau_i[i]!= 0.){// || diskmass != 0.){ 	// need h and e vectors for both types
+		if (xf->tau_e[i] != 0. || xf->tau_inc[i]!= 0.){// || diskmass != 0.){ 	// need h and e vectors for both types
 			const double mu = sim->G*(com.m + p->m);
 			const double dx = p->x-com.x;
 			const double dy = p->y-com.y;
@@ -88,9 +133,9 @@ void rebxf_forces(struct reb_simulation* const sim){
 				p->ay += -dvy*prefac1 + (hz*dx-hx*dz)*prefac2;
 				p->az += -dvz*prefac1 + (hx*dy-hy*dx)*prefac2;*/
 			}
-			if (xf->tau_i[i]!=0){		// Inclination damping
-				p->az += -2.*dvz/xf->tau_i[i];
-				const double prefac = (hx*hx + hy*hy)/h/h/xf->tau_i[i];
+			if (xf->tau_inc[i]!=0){		// Inclination damping
+				p->az += -2.*dvz/xf->tau_inc[i];
+				const double prefac = (hx*hx + hy*hy)/h/h/xf->tau_inc[i];
 				p->ax += prefac*dvx;
 				p->ay += prefac*dvy;
 				p->az += prefac*dvz;
@@ -112,7 +157,7 @@ void rebxf_forces(struct reb_simulation* const sim){
 }
 
 void rebxf_modify_elements(struct reb_simulation* const sim){
-	rebxf_checkN(sim);
+	rebxf_check_N(sim);
 	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
 	struct reb_particle com = sim->particles[0];
 	for(int i=1;i<sim->N;i++){
@@ -130,8 +175,8 @@ void rebxf_modify_elements(struct reb_simulation* const sim){
 			da += -2.*o.a*o.e*o.e*xf->e_damping_p*sim->dt/xf->tau_e[i];
 		}
 
-		if (xf->tau_po[i] != 0.){
-			dpo += 2*M_PI*sim->dt/xf->tau_po[i]*(1.+sin(o.omega));
+		if (xf->tau_pomega[i] != 0.){
+			dpo += 2*M_PI*sim->dt/xf->tau_pomega[i]*(1.+sin(o.omega));
 		}
 
 		o.a += da;
