@@ -5,47 +5,59 @@
 #include "xftools.h"
 
 //disk parameters for precession
-double gam;
+/*double gam;
 double Rc;
 double diskmass;
 double alpha_over_rGM0;
 double podot; // pericenter precession at r = Rc
-
+*/
 // pointers for damping timescales
-double *tau_a = NULL;
-double *tau_e = NULL;
-double *tau_i = NULL;
-double *tau_po = NULL;
 
-static double e_damping_p = 0; // p parameter from Deck & Batygin (2015) for how e-damping
-// is coupled to a-damping at order e^2
-// p = 1 : e-damping at const angular momentum.  p = 0 : no contribution to a-damping
-// equal to p/3 with p defined as in Goldreich & Schlichting 2014
+struct rebxf_params* rebxf_addxf(struct reb_simulation* const sim){
+	struct rebxf_params* xf = calloc(1, sizeof(struct rebxf_params));
+	xf->tau_a = NULL;
+	xf->tau_e = NULL;
+	xf->tau_i = NULL;
+	xf->tau_po = NULL;
 
-double reboundxf_get_e_damping_p(void){
-	return e_damping_p;
+	xf->e_damping_p = 0.;
+	xf->sim = sim;
+
+	xf->allocatedN = 128;
+	xf->tau_a = calloc(xf->allocatedN, sizeof(double));
+	xf->tau_e = calloc(xf->allocatedN, sizeof(double));
+	xf->tau_i = calloc(xf->allocatedN, sizeof(double));
+	xf->tau_po = calloc(xf->allocatedN, sizeof(double));
+
+	return xf;
 }
 
-void reboundxf_set_e_damping_p(double val){
-	e_damping_p = val;
+inline void rebxf_checkN(struct rebxf_params* const xf){
+	if(xf->allocatedN <= xf->sim->N) {
+		xf->allocatedN += 128;
+		xf->tau_a = realloc(xf->tau_a, sizeof(double)*xf->allocatedN);
+		xf->tau_e = realloc(xf->tau_e, sizeof(double)*xf->allocatedN);
+		xf->tau_i = realloc(xf->tau_i, sizeof(double)*xf->allocatedN);
+		xf->tau_po = realloc(xf->tau_po, sizeof(double)*xf->allocatedN);
+	}
 }
 
-void reboundxf_forces(struct reb_simulation* const sim){
-	struct reb_particle com = sim->particles[0]; // calculate add. forces w.r.t. center of mass
-	for(int i=1;i<sim->N;i++){
-		struct reb_particle* p = &(sim->particles[i]);
+void rebxf_forces(struct rebxf_params* const xf){
+	struct reb_particle com = xf->sim->particles[0]; // calculate add. forces w.r.t. center of mass
+	for(int i=1;i<xf->sim->N;i++){
+		struct reb_particle* p = &(xf->sim->particles[i]);
 		const double dvx = p->vx - com.vx;
 		const double dvy = p->vy - com.vy;
 		const double dvz = p->vz - com.vz;
 
-		if (tau_a[i] != 0.){
-			p->ax -=  dvx/(2.*tau_a[i]);
-			p->ay -=  dvy/(2.*tau_a[i]);
-			p->az -=  dvz/(2.*tau_a[i]);
+		if (xf->tau_a[i] != 0.){
+			p->ax -=  dvx/(2.*xf->tau_a[i]);
+			p->ay -=  dvy/(2.*xf->tau_a[i]);
+			p->az -=  dvz/(2.*xf->tau_a[i]);
 		}
 
-		if (tau_e[i] != 0. || tau_i[i]!= 0. || diskmass != 0.){ 	// need h and e vectors for both types
-			const double mu = sim->G*(com.m + p->m);
+		if (xf->tau_e[i] != 0. || xf->tau_i[i]!= 0.){// || diskmass != 0.){ 	// need h and e vectors for both types
+			const double mu = xf->sim->G*(com.m + p->m);
 			const double dx = p->x-com.x;
 			const double dy = p->y-com.y;
 			const double dz = p->z-com.z;
@@ -61,152 +73,68 @@ void reboundxf_forces(struct reb_simulation* const sim){
 			const double ez = 1./mu*( (v*v-mu/r)*dz - r*vr*dvz );
 			const double e = sqrt( ex*ex + ey*ey + ez*ez );		// eccentricity
 			//printf("%.14f\t%.2e\n", vr/v, e);
-			if (tau_e[i] != 0.){	// Eccentricity damping
+			if (xf->tau_e[i] != 0.){	// Eccentricity damping
 				/*const double a = -mu/( v*v - 2.*mu/r );			// semi major axis
-				const double prefac1 = 1./tau_e[i]/1.5*(1.+e_damping_p/2.*e*e);
-				const double prefac2 = 1./(r*h) * sqrt(mu/a/(1.-e*e))/tau_e[i]/1.5;*/
+				const double prefac1 = 1./xf->tau_e[i]/1.5*(1.+e_damping_p/2.*e*e);
+				const double prefac2 = 1./(r*h) * sqrt(mu/a/(1.-e*e))/xf->tau_e[i]/1.5;*/
 
-				p->ax += -2/tau_e[i]*vr*dx/r;
-				p->ay += -2/tau_e[i]*vr*dy/r;
-				p->az += -2/tau_e[i]*vr*dz/r;
+				p->ax += -2/xf->tau_e[i]*vr*dx/r;
+				p->ay += -2/xf->tau_e[i]*vr*dy/r;
+				p->az += -2/xf->tau_e[i]*vr*dz/r;
 				/*p->ax += -dvx*prefac1 + (hy*dz-hz*dy)*prefac2;
 				p->ay += -dvy*prefac1 + (hz*dx-hx*dz)*prefac2;
 				p->az += -dvz*prefac1 + (hx*dy-hy*dx)*prefac2;*/
 			}
-			if (tau_i[i]!=0){		// Inclination damping
-				p->az += -2.*dvz/tau_i[i];
-				const double prefac = (hx*hx + hy*hy)/h/h/tau_i[i];
+			if (xf->tau_i[i]!=0){		// Inclination damping
+				p->az += -2.*dvz/xf->tau_i[i];
+				const double prefac = (hx*hx + hy*hy)/h/h/xf->tau_i[i];
 				p->ax += prefac*dvx;
 				p->ay += prefac*dvy;
 				p->az += prefac*dvz;
 			}
-			if (diskmass != 0.) {
-				double a_over_r = -sim->G*sim->particles[0].m*alpha_over_rGM0*pow(Rc/r,gam)/r + sim->G*diskmass/r/r/r; 	// radial disk force after removing piece from adding the disk into the sun
+			/*if (diskmass != 0.) {
+				double a_over_r = -xf->sim->G*xf->sim->particles[0].m*alpha_over_rGM0*pow(Rc/r,gam)/r + xf->sim->G*diskmass/r/r/r; 	// radial disk force after removing piece from adding the disk into the sun
 				p->ax += a_over_r*dx;									// rhat has components x/r xhat + y/r yhat + z/r zhat
 				p->ay += a_over_r*dy;
 				p->az += a_over_r*dz;
 
-				sim->particles[0].ax -= p->m/sim->particles[0].m*a_over_r*dx;		// add back reactions onto the star (if forces are equal, accelerations differ by -mass ratio)
-				sim->particles[0].ay -= p->m/sim->particles[0].m*a_over_r*dy;
-				sim->particles[0].az -= p->m/sim->particles[0].m*a_over_r*dz;
-			}
+				xf->sim->particles[0].ax -= p->m/xf->sim->particles[0].m*a_over_r*dx;		// add back reactions onto the star (if forces are equal, accelerations differ by -mass ratio)
+				xf->sim->particles[0].ay -= p->m/xf->sim->particles[0].m*a_over_r*dy;
+				xf->sim->particles[0].az -= p->m/xf->sim->particles[0].m*a_over_r*dz;
+			}*/
 		}
-		com = xftools_get_com(com,sim->particles[i]);
+		com = xftools_get_com(com,xf->sim->particles[i]);
 	}
-	xftools_move_to_com(sim->particles, sim->N);
+	xftools_move_to_com(xf->sim->particles, xf->sim->N);
 }
 
-void reboundxf_modify_elements(struct reb_simulation* const sim){
-	struct reb_particle com = sim->particles[0];
-	for(int i=1;i<sim->N;i++){
-		struct reb_particle *p = &(sim->particles[i]);
-		struct reb_orbit o = xftools_p2orbit(sim->G, sim->particles[i], com);
+void rebxf_modify_elements(struct rebxf_params* const xf){
+	struct reb_particle com = xf->sim->particles[0];
+	for(int i=1;i<xf->sim->N;i++){
+		struct reb_particle *p = &(xf->sim->particles[i]);
+		struct reb_orbit o = xftools_p2orbit(xf->sim->G, xf->sim->particles[i], com);
 	    double da = 0.;
 		double de = 0.;
 		double dpo = 0.;	
-		if (tau_a[i] != 0.){
-			da += -o.a*sim->dt/tau_a[i]; 
+		if (xf->tau_a[i] != 0.){
+			da += -o.a*xf->sim->dt/xf->tau_a[i]; 
 		}
 		
-		if (tau_e[i] != 0.){
-			de += -o.e*sim->dt/tau_e[i];
-			da += -2.*o.a*o.e*o.e*e_damping_p*sim->dt/tau_e[i];
+		if (xf->tau_e[i] != 0.){
+			de += -o.e*xf->sim->dt/xf->tau_e[i];
+			da += -2.*o.a*o.e*o.e*xf->e_damping_p*xf->sim->dt/xf->tau_e[i];
 		}
 
-		if (tau_po[i] != 0.){
-			dpo += 2*M_PI*sim->dt/tau_po[i]*(1.+sin(o.omega));
+		if (xf->tau_po[i] != 0.){
+			dpo += 2*M_PI*xf->sim->dt/xf->tau_po[i]*(1.+sin(o.omega));
 		}
 
 		o.a += da;
 		o.e += de;
 		o.omega += dpo;
 
-		xftools_orbit2p(&sim->particles[i], sim->G, &com, o); 
-		com = xftools_get_com(com, sim->particles[i]);
+		xftools_orbit2p(&xf->sim->particles[i], xf->sim->G, &com, o); 
+		com = xftools_get_com(com, xf->sim->particles[i]);
 	}
-	xftools_move_to_com(sim->particles, sim->N);
+	xftools_move_to_com(xf->sim->particles, xf->sim->N);
 }
-
-static void xf_init(int N){ // only used internally
-	if(tau_a == NULL){	tau_a = calloc(sizeof(double),N);}
-	if(tau_e == NULL){	tau_e = calloc(sizeof(double),N);}
-	if(tau_i == NULL){	tau_i = calloc(sizeof(double),N);}
-	if(tau_po == NULL){  tau_po = calloc(sizeof(double),N);}
-}
-	
-void reboundxf_set_migration(double *_tau_a, int N){
-	/*if(N > 0 && N != N){
-		printf("A previous call to reboundxf used a different number of particles, which is not supported in the current implementation.  Please improve me!\n");
-		exit(1);
-	}*/
-	
-	//N = N;
-
-	xf_init(N);
-	for(int i=0; i<N; ++i){
-		tau_a[i] = _tau_a[i];
-	}
-}
-
-void reboundxf_set_e_damping(double *_tau_e, int N){
-	/*if(N > 0 && N != N){
-		printf("A previous call to reboundxf used a different number of particles, which is not supported in the current implementation.  Please improve me!\n");
-		exit(1);
-	}*/
-	
-	//N = N;
-	xf_init(N);
-	for(int i=0; i<N; ++i){
-		tau_e[i] = _tau_e[i];
-	}
-}
-
-void reboundxf_set_i_damping(double *_tau_i, int N){
-	/*if(N > 0 && N != N){
-		printf("A previous call to reboundxf used a different number of particles, which is not supported in the current implementation.  Please improve me!\n");
-		exit(1);
-	}*/
-	
-	//N = N;
-	xf_init(N);
-	if(tau_i == NULL){	tau_i = calloc(sizeof(double),N);}
-	for(int i=0; i<N; ++i){
-		tau_i[i] = _tau_i[i];
-	}
-}
-
-void reboundxf_set_peri_precession(double *_tau_po, int N){
-	xf_init(N);
-	for(int i=0; i<N; ++i){
-		tau_po[i] = _tau_po[i];
-	}
-}
-
-/* not yet implemented
-void set_peri_precession(double _gam, double _Rc, double _podot, int N){
-	xf_init(N);
-	Rc = _Rc;
-	gam = _gam;
-	podot = _podot; // as a fraction of the mean motion
-
-	alpha_over_rGM0 = Rc/Rc*podot/(1.-gam/2.);
-	diskmass = 3.65557*sim->particles[0].m*podot;
-	
-	sim->particles[0].m += diskmass;
-}
-*/
-void reboundxf_reset(){
-	free(tau_a);
-	tau_a = NULL;
-	free(tau_e);
-	tau_e = NULL;
-	free(tau_i);
-	tau_i = NULL;
-	Rc=0.;
-	gam = 0.;
-	podot = 0.;
-	alpha_over_rGM0 = 0.;
-	diskmass = 0.;
-
-}
-
