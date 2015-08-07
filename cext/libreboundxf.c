@@ -151,7 +151,7 @@ void rebxf_forces(struct reb_simulation* const sim){
 				sim->particles[0].az -= p->m/sim->particles[0].m*a_over_r*dz;
 			}*/
 		}
-		com = xftools_get_com(com,sim->particles[i]);
+		com = xftools_get_com_of_pair(com,sim->particles[i]);
 	}
 	xftools_move_to_com(sim->particles, sim->N);
 }

@@ -17,6 +17,7 @@ void xftools_orbit2p(struct reb_particle* p, double G, struct reb_particle* com,
 
 void xftools_move_to_com(struct reb_particle* particles, int N);
 
-struct reb_particle xftools_get_com(struct reb_particle p1, struct reb_particle p2);
+struct reb_particle xftools_get_com_of_pair(struct reb_particle p1, struct reb_particle p2);
 
+struct reb_particle xftools_get_com(struct reb_simulation* r);
 #endif

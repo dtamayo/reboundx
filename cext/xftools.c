@@ -201,7 +201,7 @@ void xftools_move_to_com(struct reb_particle* particles, int N){
 	}
 }
 
-struct reb_particle xftools_get_com(struct reb_particle p1, struct reb_particle p2){
+struct reb_particle xftools_get_com_of_pair(struct reb_particle p1, struct reb_particle p2){
 	p1.x   = p1.x*p1.m + p2.x*p2.m;		
 	p1.y   = p1.y*p1.m + p2.y*p2.m;
 	p1.z   = p1.z*p1.m + p2.z*p2.m;
@@ -219,3 +219,14 @@ struct reb_particle xftools_get_com(struct reb_particle p1, struct reb_particle 
 	}
 	return p1;
 }
+
+struct reb_particle xftools_get_com(struct reb_simulation* r){
+	struct reb_particle com = {.m=0, .x=0, .y=0, .z=0, .vx=0, .vy=0, .vz=0};
+	const int N = r->N;
+	struct reb_particle* restrict const particles = r->particles;
+	for (int i=0;i<N;i++){
+		com = xftools_get_com_of_pair(com, particles[i]);
+	}
+	return com;
+}
+
