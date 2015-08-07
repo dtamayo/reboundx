@@ -186,5 +186,5 @@ void rebxf_modify_elements(struct reb_simulation* const sim){
 		xftools_orbit2p(&sim->particles[i], sim->G, &com, o); 
 		com = xftools_get_com(com, sim->particles[i]);
 	}
-	xftools_move_to_com(sim->particles, sim->N);
+	//xftools_move_to_com(sim->particles, sim->N);
 }

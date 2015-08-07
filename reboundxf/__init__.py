@@ -12,6 +12,14 @@ except:
     print("Cannot find library 'libreboundxf.so'.")
     raise
 
+class rebxf_params(Structure):
+    _fields_ = [("allocatedN", c_int),
+                        ("tau_a", POINTER(c_double)),
+                        ("tau_e", POINTER(c_double)),
+                        ("tau_inc", POINTER(c_double)),
+                        ("tau_pomega", POINTER(c_double)),
+                        ("e_damping_p", c_double)]                     
+
 def modify_elements():
     return clibreboundxf.rebxf_modify_elements
 
@@ -23,15 +31,17 @@ def addxf(sim):
 
 class Params(object):
     simulation = None
+    params = None
+
     def __init__(self, sim):
         self.simulation = sim.simulation
-        clibreboundxf.rebxf_addxf(self.simulation)
+        clibreboundxf.rebxf_addxf.restype = POINTER(rebxf_params)
+        self.params = clibreboundxf.rebxf_addxf(self.simulation)
 
+    #TODO: find a way to set individual elements from python, e.g., xf.tau_a[2] = 1.e3
     @property
     def tau_a(self):
-        clibreboundxf.rebxf_get_tau_a.restype = POINTER(c_double)
-        tau_a = clibreboundxf.rebxf_get_tau_a(self.simulation) 
-        return [tau_a[i] for i in range(self.simulation.contents.N)]
+        return [self.params.contents.tau_a[i] for i in range(self.simulation.contents.N)]
     @tau_a.setter
     def tau_a(self, tau_a):
         if len(tau_a) is not self.simulation.contents.N:
@@ -41,9 +51,7 @@ class Params(object):
 
     @property
     def tau_e(self):
-        clibreboundxf.rebxf_get_tau_e.restype = POINTER(c_double)
-        tau_e = clibreboundxf.rebxf_get_tau_e(self.simulation) 
-        return [tau_e[i] for i in range(self.simulation.contents.N)]
+        return [self.params.contents.tau_e[i] for i in range(self.simulation.contents.N)]
     @tau_e.setter
     def tau_e(self, tau_e):
         if len(tau_e) is not self.simulation.contents.N:
@@ -53,9 +61,7 @@ class Params(object):
 
     @property
     def tau_inc(self):
-        clibreboundxf.rebxf_get_tau_inc.restype = POINTER(c_double)
-        tau_inc = clibreboundxf.rebxf_get_tau_inc(self.simulation) 
-        return [tau_inc[i] for i in range(self.simulation.contents.N)]
+        return [self.params.contents.tau_inc[i] for i in range(self.simulation.contents.N)]
     @tau_inc.setter
     def tau_inc(self, tau_inc):
         if len(tau_inc) is not self.simulation.contents.N:
@@ -65,9 +71,7 @@ class Params(object):
 
     @property
     def tau_pomega(self):
-        clibreboundxf.rebxf_get_tau_pomega.restype = POINTER(c_double)
-        tau_pomega = clibreboundxf.rebxf_get_tau_pomega(self.simulation) 
-        return [tau_pomega[i] for i in range(self.simulation.contents.N)]
+        return [self.params.contents.tau_pomega[i] for i in range(self.simulation.contents.N)]
     @tau_pomega.setter
     def tau_pomega(self, tau_pomega):
         if len(tau_pomega) is not self.simulation.contents.N:
