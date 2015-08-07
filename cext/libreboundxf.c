@@ -159,7 +159,7 @@ void rebxf_forces(struct reb_simulation* const sim){
 void rebxf_modify_elements(struct reb_simulation* const sim){
 	rebxf_check_N(sim);
 	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	struct reb_particle com = sim->particles[0];
+	struct reb_particle com = xftools_get_com(sim);
 	for(int i=1;i<sim->N;i++){
 		struct reb_particle *p = &(sim->particles[i]);
 		struct reb_orbit o = xftools_p2orbit(sim->G, sim->particles[i], com);
@@ -184,7 +184,6 @@ void rebxf_modify_elements(struct reb_simulation* const sim){
 		o.omega += dpo;
 
 		xftools_orbit2p(&sim->particles[i], sim->G, &com, o); 
-		com = xftools_get_com(com, sim->particles[i]);
 	}
-	//xftools_move_to_com(sim->particles, sim->N);
+	xftools_move_to_com(sim->particles, sim->N);
 }
