@@ -1,8 +1,5 @@
 from ctypes import *
 import os
-import sys
-sys.path.append('../../rebound/rebound/')
-import rebound
 
 #Find the migration C library
 pymodulespath = os.path.dirname(__file__)
@@ -21,10 +18,12 @@ class rebxf_params(Structure):
                         ("e_damping_p", c_double)]                     
 
 def modify_elements():
-    return clibreboundxf.rebxf_modify_elements
+    func_address = cast(clibreboundxf.rebxf_modify_elements, c_void_p).value
+    return func_address
 
 def forces():
-    return clibreboundxf.rebxf_forces
+    func_address = cast(clibreboundxf.rebxf_forces, c_void_p).value
+    return func_address
 
 def addxf(sim):
     clibreboundxf.rebxf_addxf(sim.simulation)
