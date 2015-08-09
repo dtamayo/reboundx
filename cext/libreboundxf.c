@@ -14,6 +14,13 @@ double podot; // pericenter precession at r = Rc
 */
 // pointers for damping timescales
 
+void rebxf_free_xfparams(struct rebxf_params* const xf){
+	free(xf->tau_a);
+	free(xf->tau_e);
+	free(xf->tau_inc);
+	free(xf->tau_pomega);
+}
+
 void rebxf_check_N(struct reb_simulation* sim){
 	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
 	if(xf->allocatedN < sim->N) {

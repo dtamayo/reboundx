@@ -39,6 +39,9 @@ class Params(object):
         self.params = clibreboundxf.rebxf_addxf(self.simulation)
 
     #TODO: find a way to set individual elements from python, e.g., xf.tau_a[2] = 1.e3
+    def __del__(self):
+        clibreboundxf.rebxf_free_xfparams(self.params)
+
     @property
     def tau_a(self):
         return [self.params.contents.tau_a[i] for i in range(self.simulation.contents.N)]
