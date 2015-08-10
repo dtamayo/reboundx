@@ -17,6 +17,8 @@ class rebxf_params(Structure):
                         ("tau_pomega", POINTER(c_double)),
                         ("e_damping_p", c_double)]                     
 
+def mod_test():
+    return clibreboundxf.rebxf_modify_elements
 def modify_elements():
     func_address = cast(clibreboundxf.rebxf_modify_elements, c_void_p).value
     return func_address

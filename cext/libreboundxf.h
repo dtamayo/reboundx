@@ -5,6 +5,8 @@
 #endif
 #include "rebound.h"
 
+typedef void (*xfptr)(struct reb_simulation* const r);
+
 enum REBXFS {
 	REBXF_MODIFY_ELEMENTS_FORCES 	= 0,
 	REBXF_MODIFY_ELEMENTS_DIRECT 	= 1,
@@ -24,11 +26,13 @@ struct rebxf_params {
 	// p = 1 : e-damping at const angular momentum.  p = 0 : no contribution to a-damping
 	// equal to p/3 with p defined as in Goldreich & Schlichting 2014
 	
-	void** forces;
-	void* ptm;
+	xfptr* forces;
+	xfptr* ptm;
 	int Nforces;
 	int Nptm;
 };
+
+struct rebxf_params* rebxf_init(struct reb_simulation* sim);
 
 double* rebxf_get_tau_a(struct reb_simulation* sim);
 void rebxf_set_tau_a(struct reb_simulation* sim, double* tau_a);

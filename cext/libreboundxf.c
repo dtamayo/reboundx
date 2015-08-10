@@ -64,17 +64,19 @@ void rebxf_add_element_timescales(struct reb_simulation* sim){
 	xf->tau_inc = calloc(xf->allocatedN, sizeof(double));
 	xf->tau_pomega = calloc(xf->allocatedN, sizeof(double));
 }
-void test(void){
-	printf("Hi\n");
+void test(struct reb_simulation* sim){
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	printf("%d\n", xf->Nforces);
 }
 void rebxf_add_modify_elements_forces(struct reb_simulation* sim){
 	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
 	rebxf_add_element_timescales(sim);
 	xf->Nforces++;
-	xf->forces = malloc(sizeof(void*));
-	//xf->forces = realloc(xf->forces, sizeof(void*)*xf->Nforces);
+	//xf->forces = malloc(sizeof(xfptr));
+	
+	xf->forces = realloc(xf->forces, sizeof(xfptr)*xf->Nforces);
 	xf->forces[xf->Nforces-1] = test;
-	xf->forces[xf->Nforces-1];
+	xf->forces[xf->Nforces-1](sim);
 }
 
 void rebxf_add_modify_elements_direct(struct reb_simulation* sim){
