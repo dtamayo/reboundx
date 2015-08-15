@@ -4,6 +4,10 @@
 #define M_PI 3.1415926535879323846
 #endif
 #include "rebound.h"
+#include "xftools.h"
+#include "modify_elements_direct.h"
+#include "modify_elements_forces.h"
+#include "gr.h"
 
 typedef void (*xfptr)(struct reb_simulation* const r);
 
@@ -48,5 +52,17 @@ void rebxf_set_tau_pomega(struct reb_simulation* sim, double* tau_pomega);
 
 struct rebxf_params* rebxf_init(struct reb_simulation* sim);
 void rebxf_add(struct reb_simulation* sim, enum REBXFS perturbation);
+
+/**
+ * @cond PRIVATE
+ * Internal functions used by reboundxf.  User would not call these.
+ */
+void rebxf_add_element_timescales(struct reb_simulation* sim);
+void rebxf_add_modify_elements_forces(struct reb_simulation* sim);
+void rebxf_add_modify_elements_direct(struct reb_simulation* sim);
+void rebxf_add_gr(struct reb_simulation* sim);
+void rebxf_forces(struct reb_simulation* sim);
+void rebxf_ptm(struct reb_simulation* sim);
+void test(struct reb_simulation* sim);
 
 #endif

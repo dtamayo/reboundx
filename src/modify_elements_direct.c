@@ -1,5 +1,8 @@
-void rebxf_modify_elements(struct reb_simulation* const sim){
-	rebxf_check_N(sim);
+#include "modify_elements_direct.h"
+#include <stdio.h>
+void rebxf_modify_elements_direct(struct reb_simulation* const sim){
+	printf("rebxf_modify_elements_direct\n");
+	/*rebxf_check_N(sim);
 	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
 	struct reb_particle com = xftools_get_com(sim);
 	for(int i=1;i<sim->N;i++){
@@ -27,6 +30,6 @@ void rebxf_modify_elements(struct reb_simulation* const sim){
 
 		xftools_orbit2p(&sim->particles[i], sim->G, &com, o); 
 	}
-	xftools_move_to_com(sim->particles, sim->N);
+	xftools_move_to_com(sim->particles, sim->N);*/
 }
 

@@ -1,6 +1,6 @@
 OPT+= -fPIC -DLIBREBOUNDXF
 
-SOURCES=libreboundxf.c xftools.c
+SOURCES=libreboundxf.c xftools.c modify_elements_direct.c modify_elements_forces.c gr.c
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=$(SOURCES:.c=.h)
 
@@ -13,7 +13,7 @@ all: $(SOURCES) libreboundxf.so
 libreboundxf.so: $(OBJECTS)
 	@echo ""        
 	@echo "Linking shared library $@ ..."
-	$(CC) $(OPT) -shared $(OBJECTS) $(LIB) -o $@ 
+	$(CC) $(OPT) -shared  $(OBJECTS) $(LIB) -o $@ 
 	
 	@echo ""        
 	@echo "The shared library $< has been created successfully."

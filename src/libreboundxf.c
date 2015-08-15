@@ -3,7 +3,6 @@
 #include <math.h>
 #include <stdio.h>
 #include "libreboundxf.h"
-#include "xftools.h"
 
 //disk parameters for precession
 /*double gam;
@@ -14,9 +13,11 @@ double podot; // pericenter precession at r = Rc
 */
 // pointers for damping timescales
 
-void rebxf_add_modify_elements_forces(struct reb_simulation* sim);
-void rebxf_add_modify_elements_direct(struct reb_simulation* sim);
-void rebxf_add_gr(struct reb_simulation* sim);
+
+void test(struct reb_simulation* sim){
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	printf("%d\n", xf->Nforces);
+}
 
 struct rebxf_params* rebxf_init(struct reb_simulation* sim){
 	struct rebxf_params* xf = (struct rebxf_params*) malloc(sizeof(struct rebxf_params));
@@ -55,44 +56,72 @@ void rebxf_add(struct reb_simulation* sim, enum REBXFS perturbation){
 	}
 }
 
+void rebxf_forces(struct reb_simulation* sim){
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	printf("Doing forces\n");
+	for(int i=0;i<xf->Nforces;i++){
+		xf->forces[i](sim);
+	}
+}
+
+void rebxf_ptm(struct reb_simulation* sim){
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	printf("Doing ptm\n");
+	for(int i=0;i<xf->Nptm;i++){
+		xf->ptm[i](sim);
+	}
+}
+
+/* adder/setup functions*/
 void rebxf_add_element_timescales(struct reb_simulation* sim){
 	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	
+
+	if(xf->tau_a){
+		fprintf(stderr, "Some combination of modify_elements_forces and modify_elements_direct has been added more than once.  Timescales in reboundxf have been reset to 0.\n");
+	}
 	xf->allocatedN = sim->N;
 	xf->tau_a = calloc(xf->allocatedN, sizeof(double));
 	xf->tau_e = calloc(xf->allocatedN, sizeof(double));
 	xf->tau_inc = calloc(xf->allocatedN, sizeof(double));
 	xf->tau_pomega = calloc(xf->allocatedN, sizeof(double));
 }
-void test(struct reb_simulation* sim){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	printf("%d\n", xf->Nforces);
-}
+
 void rebxf_add_modify_elements_forces(struct reb_simulation* sim){
 	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
 	rebxf_add_element_timescales(sim);
 	xf->Nforces++;
-	//xf->forces = malloc(sizeof(xfptr));
-	
 	xf->forces = realloc(xf->forces, sizeof(xfptr)*xf->Nforces);
-	xf->forces[xf->Nforces-1] = test;
-	xf->forces[xf->Nforces-1](sim);
+	xf->forces[xf->Nforces-1] = rebxf_modify_elements_forces;
+	sim->additional_forces = rebxf_forces;
 }
 
 void rebxf_add_modify_elements_direct(struct reb_simulation* sim){
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
 	rebxf_add_element_timescales(sim);
+	xf->Nptm++;
+	xf->ptm = realloc(xf->ptm, sizeof(xfptr)*xf->Nptm);
+	xf->ptm[xf->Nptm-1] = rebxf_modify_elements_direct;
+	sim->post_timestep_modifications = rebxf_ptm;
 }
 
 void rebxf_add_gr(struct reb_simulation* sim){
-	printf("gr\n");
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	xf->Nforces++;
+	xf->forces = realloc(xf->forces, sizeof(xfptr)*xf->Nforces);
+	xf->forces[xf->Nforces-1] = rebxf_gr;
+	sim->additional_forces = rebxf_forces;
+
 }
 
+/* Garbage collection */
 void rebxf_free_xfparams(struct rebxf_params* const xf){
 	free(xf->tau_a);
 	free(xf->tau_e);
 	free(xf->tau_inc);
 	free(xf->tau_pomega);
 }
+
+/*Getter/setters*/
 
 void rebxf_check_N(struct reb_simulation* sim){
 	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
