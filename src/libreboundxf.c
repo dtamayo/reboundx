@@ -21,21 +21,29 @@ void test(struct reb_simulation* sim){
 
 struct rebxf_params* rebxf_init(struct reb_simulation* sim){
 	struct rebxf_params* xf = (struct rebxf_params*) malloc(sizeof(struct rebxf_params));
-	xf->tau_a = NULL;
-	xf->tau_e = NULL;
-	xf->tau_inc = NULL;
-	xf->tau_pomega = NULL;
-
-	xf->e_damping_p = 0.;
-
-	xf->allocatedN = 0; 
+	sim->xf_params = (struct rebxf_params*) xf;
+	xf->sim = sim;
 
 	xf->forces = NULL;
 	xf->Nforces = 0;
 	xf->ptm = NULL;
 	xf->Nptm = 0;
+	
+	xf->elem_forces.allocatedN = 0; 
+	xf->elem_forces->tau_a = NULL;
+	xf->elem_forces->tau_e = NULL;
+	xf->elem_forces->tau_inc = NULL;
+	xf->elem_forces->tau_pomega = NULL;
+	xf->elem_forces.e_damping_p = 0.;
+	
+	xf->elem_direct.allocatedN = 0; 
+	xf->elem_direct->tau_a = NULL;
+	xf->elem_direct->tau_e = NULL;
+	xf->elem_direct->tau_inc = NULL;
+	xf->elem_direct->tau_pomega = NULL;
+	xf->elem_direct.e_damping_p = 0.;
 
-	sim->xf_params = (struct rebxf_params*) xf;
+	xf->gr.all_bodies = 0.;
 	return (struct rebxf_params*)sim->xf_params;
 }
 
