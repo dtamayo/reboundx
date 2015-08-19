@@ -1,6 +1,6 @@
 OPT+= -fPIC -DLIBREBOUNDXF
 
-SOURCES=libreboundxf.c xftools.c modify_elements_direct.c modify_elements_forces.c gr.c
+SOURCES=reboundxf.c xftools.c elements_direct.c elements_forces.c gr.c
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=$(SOURCES:.c=.h)
 
