@@ -3,7 +3,7 @@
 void rebxf_elements_forces(struct reb_simulation* const sim){
 	printf("modify_elements_forces\n");
 	/*rebxf_check_N(sim);
-	struct rebxf_params* xf = (struct rebxf_params*)xf;
+	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
 	struct reb_particle com = sim->particles[0]; // calculate add. forces w.r.t. center of mass
 	for(int i=1;i<sim->N;i++){
 		struct reb_particle* p = &(sim->particles[i]);
