@@ -17,7 +17,7 @@ typedef void (*xfptr)(struct reb_simulation* const r);
 	REBXF_GR						= 2,
 };*/
 
-struct rebxf_mod_elements_forces {
+struct rebxf_param_elements_forces {
 	int allocatedN;
 	double* tau_a;
 	double* tau_e;
@@ -29,7 +29,7 @@ struct rebxf_mod_elements_forces {
 	// equal to p/3 with p defined as in Goldreich & Schlichting 2014
 };
 
-struct rebxf_mod_elements_direct {
+struct rebxf_param_elements_direct {
 	int allocatedN;
 	double* tau_a;
 	double* tau_e;
@@ -38,7 +38,7 @@ struct rebxf_mod_elements_direct {
 	double e_damping_p;
 };
 
-struct rebxf_mod_gr {
+struct rebxf_param_gr {
 	int all_bodies;
 };
 
@@ -49,9 +49,9 @@ struct rebxf_params {
 	int Nforces;
 	int Nptm;
 
-	struct rebxf_mod_elements_forces elements_forces;
-	struct rebxf_mod_elements_direct elements_direct;
-	struct rebxf_mod_gr gr;
+	struct rebxf_param_elements_forces elements_forces;
+	struct rebxf_param_elements_direct elements_direct;
+	struct rebxf_param_gr gr;
 };
 
 struct rebxf_params* rebxf_init(struct reb_simulation* sim);

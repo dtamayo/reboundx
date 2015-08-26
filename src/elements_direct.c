@@ -1,35 +1,40 @@
 #include "elements_direct.h"
+#include "reboundxf.h"
+#include "xftools.h"
 #include <stdio.h>
+#include <stdlib.h>
+
 void rebxf_elements_direct(struct reb_simulation* const sim){
-	printf("rebxf_modify_elements_direct\n");
-	/*rebxf_check_N(sim);
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	struct reb_particle com = xftools_get_com(sim);
+	//rebxf_check_N(sim);
+	struct rebxf_params* xf = sim->xf_params;
+	struct rebxf_param_elements_direct* xfparams = &xf->elements_direct;
+	struct reb_particle com = sim->particles[0];
 	for(int i=1;i<sim->N;i++){
 		struct reb_particle *p = &(sim->particles[i]);
-		struct reb_orbit o = xftools_p2orbit(sim->G, sim->particles[i], com);
+		int* err = malloc(sizeof(int)); // dummy
+		struct reb_orbit o = xftools_particle_to_orbit(sim->G, sim->particles[i], com, err);
 	    double da = 0.;
 		double de = 0.;
-		double dpo = 0.;	
-		if (xf->tau_a[i] != 0.){
-			da += -o.a*sim->dt/xf->tau_a[i]; 
+		double dom = 0.;	
+		if (xfparams->tau_a[i] != 0.){
+			da += -o.a*sim->dt/xfparams->tau_a[i]; 
 		}
-		
-		if (xf->tau_e[i] != 0.){
-			de += -o.e*sim->dt/xf->tau_e[i];
-			da += -2.*o.a*o.e*o.e*xf->e_damping_p*sim->dt/xf->tau_e[i];
+	
+		if (xfparams->tau_e[i] != 0.){
+			de += -o.e*sim->dt/xfparams->tau_e[i];
+			da += -2.*o.a*o.e*o.e*xfparams->e_damping_p*sim->dt/xfparams->tau_e[i];
 		}
 
-		if (xf->tau_pomega[i] != 0.){
-			dpo += 2*M_PI*sim->dt/xf->tau_pomega[i]*(1.+sin(o.omega));
+		if (xfparams->tau_omega[i] != 0.){
+			dom += 2*M_PI*sim->dt/xfparams->tau_omega[i];
 		}
 
 		o.a += da;
 		o.e += de;
-		o.omega += dpo;
+		o.omega += dom;
 
-		xftools_orbit2p(&sim->particles[i], sim->G, &com, o); 
+		xftools_orbit2p(sim->G, &sim->particles[i], &com, o); 
 	}
-	xftools_move_to_com(sim->particles, sim->N);*/
+	xftools_move_to_com(sim);
 }
 
