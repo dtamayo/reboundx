@@ -13,7 +13,7 @@ all: $(SOURCES) libreboundx.so
 libreboundx.so: $(OBJECTS)
 	@echo ""        
 	@echo "Linking shared library $@ ..."
-	$(CC) $(OPT) -shared  $(OBJECTS) $(LIB) -o $@ 
+	$(CC) $(OPT) -shared  $(OBJECTS) -L$(REB_DIR)/src/ -lrebound $(LIB) -o $@ 
 	
 	@echo ""        
 	@echo "The shared library $< has been created successfully."
