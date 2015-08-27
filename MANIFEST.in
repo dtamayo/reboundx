@@ -1,3 +1,3 @@
-include cext/libreboundxf.c
+include src/reboundxf.c
 include README.rst
 include LICENSE
