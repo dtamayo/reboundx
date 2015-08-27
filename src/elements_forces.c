@@ -1,6 +1,7 @@
+#include <stdio.h>
+#include <math.h>
 #include "elements_forces.h"
 #include "reboundxf.h"
-#include <stdio.h>
 
 void rebxf_elements_forces(struct reb_simulation* const sim){
 	//rebxf_check_N(sim);

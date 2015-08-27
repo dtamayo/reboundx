@@ -22,6 +22,7 @@ int main(int argc, char* argv[]){
 	// Setup constants
 	r->dt 		= 0.012;		// initial timestep.
 	r->integrator	= REB_INTEGRATOR_WHFAST;
+	//r->integrator	= REB_INTEGRATOR_IAS15;
 
 	struct reb_particle p = {0}; 
 	p.m  	= 1.;	
