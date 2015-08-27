@@ -6,6 +6,7 @@ include $(REB_DIR)src/Makefile.defs
 
 librebound:
 	@echo "Creating link for shared library librebound.so ..."
+	@-rm -f libreboundxf.so
 	@ln -s $(REB_DIR)src/librebound.so .
 
 all: librebound libreboundxf

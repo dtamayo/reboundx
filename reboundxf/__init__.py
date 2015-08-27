@@ -31,6 +31,7 @@ class rebxf_param_gr(Structure):
 
 class rebxf_params(Structure):
     _fields_ = [("sim", reb_simulation)
+                ("forces", CFUNCTYPE(None, POINTER(reb_simulation)))
 
 def mod_test():
     return clibreboundxf.rebxf_modify_elements
