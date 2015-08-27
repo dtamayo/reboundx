@@ -1,10 +1,9 @@
 /**
- * Velocity dependent drag force
- *
- * This is a very simple example on how to implement a velocity 
- * dependent drag force. The example uses the IAS15 integrator, which 
- * is ideally suited to handle non-conservative forces.
- * No gravitational forces or collisions are present.
+ * Post-Newtonian correction from general relativity
+ * 
+ * This example shows how to add post-newtonian corrections to REBOUND simulations with reboundx.
+ * If you have GLUT installed for the visualization, press 'w' and/or 'c' for a clearer view of
+ * the whole orbit.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,14 +12,12 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-void heartbeat(struct reb_simulation* const r);
-
-double tmax = 1.e6;
+double tmax = 1.;
 
 int main(int argc, char* argv[]){
 	struct reb_simulation* r = reb_create_simulation();
 	// Setup constants
-	r->dt 		= 0.012;		// initial timestep.
+	r->dt 		= 1.e-8;		// timestep.
 	r->integrator	= REB_INTEGRATOR_WHFAST;
 	//r->integrator	= REB_INTEGRATOR_IAS15;
 
@@ -28,25 +25,19 @@ int main(int argc, char* argv[]){
 	p.m  	= 1.;	
 	reb_add(r, p); 
 
-	struct reb_particle p1 = reb_tools_orbit2d_to_particle(r->G, p,  1.e-8, 1.0, 0.4, 0., 0.);	
+	double m = 0.;
+	double a = 1.e-4; // put planet close to enhance precession (this would put planet inside the Sun!)
+	double e = 0.2;
+	double omega = 0.;
+	double f = 0.;
+
+	struct reb_particle p1 = reb_tools_orbit2d_to_particle(r->G, p, m, a, e, omega, f);
 	reb_add(r,p1);
-
-	struct rebx_extras* rebx = rebx_init(r);
-
-	rebx_add_gr(r,10000.);
-	rebx->gr.c /=100.; // enhance precession
-
 	reb_move_to_com(r);
-
-	reb_integrate(r, tmax);
-}
-
-void heartbeat(struct reb_simulation* const r){
-	// Output some information to the screen every 100th timestep
-	if(reb_output_check(r, 100.*r->dt)){
-		//struct reb_orbit o1 = reb_tools_p2orbit(r->G, r->particles[1], r->particles[0]);
-		//struct reb_orbit o2 = reb_tools_p2orbit(r->G, r->particles[2], r->particles[0]);
-		//printf("%f\t%f\t%f\n", r->t, o1.a, o2.a);
-		//reb_output_timing(r, tmax);
-	}
+	
+	rebx_init(r); // initialize reboundx
+	double c = C_DEFAULT; // Have to set the speed of light in appropriate units (set by G and your initial conditions).  Here we use the value in default units of AU/(yr/2pi)	
+	rebx_add_gr(r,c); // add postnewtonian correction.  
+	
+	reb_integrate(r, tmax); 
 }

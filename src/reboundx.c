@@ -38,7 +38,7 @@ struct rebx_extras* rebx_init(struct reb_simulation* sim){
 	rebx->modify_orbits_direct.tau_omega = NULL;
 	rebx->modify_orbits_direct.e_damping_p = 0.;
 
-	rebx->gr.c = 10064.9150404; // speed of light in units of AU/(yr/2pi)
+	rebx->gr.c = C_DEFAULT; // speed of light in default units of AU/(yr/2pi)
 	return (struct rebx_extras*)sim->extras;
 }
 
