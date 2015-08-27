@@ -1,14 +1,12 @@
 export OPENGL=1
 
-REB_DIR=/Users/rein/git/rebound/
-
-include $(REB_DIR)src/Makefile.defs
+include $(REB_DIR)/src/Makefile.defs
 
 
 all: librebound libreboundxf
 	@echo ""
 	@echo "Compiling problem file ..."
-	$(CC) -g -I../../src/ -I$(REB_DIR)src/ -Wl,-rpath,./ $(OPT) $(PREDEF) problem.c -L. -lreboundxf -lrebound $(LIB) -o rebound
+	$(CC) -g -I../../src/ -I$(REB_DIR)/src/ -Wl,-rpath,./ $(OPT) $(PREDEF) problem.c -L. -lreboundxf -lrebound $(LIB) -o rebound
 	@echo ""
 	@echo "Problem file compiled successfully."
 
@@ -19,9 +17,9 @@ librebound:
 
 libreboundxf: 
 	@echo "Compiling shared library libreboundxf.so ..."
-	$(MAKE) -C ../../../reboundxf/src/
+	$(MAKE) -C ../../src/
 	@-rm -f libreboundxf.so
-	@ln -s ../../../reboundxf/src/libreboundxf.so .
+	@ln -s ../../src/libreboundxf.so .
 
 clean:
 	@echo "Cleaning up shared library librebound.so ..."

@@ -10,9 +10,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
+#include <sys/time.h>
 #include "rebound.h"
 #include "reboundxf.h"
-#include "time.h"
 
 void heartbeat(struct reb_simulation* const r);
 
