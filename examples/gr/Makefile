@@ -2,7 +2,6 @@ export OPENGL=1
 
 include $(REB_DIR)/src/Makefile.defs
 
-
 all: librebound libreboundxf
 	@echo ""
 	@echo "Compiling problem file ..."
@@ -11,9 +10,11 @@ all: librebound libreboundxf
 	@echo "Problem file compiled successfully."
 
 librebound:
+	@echo "Compiling shared library libreboundxf.so ..."
+	$(MAKE) -C $(REB_DIR)/src/
 	@echo "Creating link for shared library librebound.so ..."
 	@-rm -f librebound.so
-	@ln -s $(REB_DIR)src/librebound.so .
+	@ln -s $(REB_DIR)/src/librebound.so .
 
 libreboundxf: 
 	@echo "Compiling shared library libreboundxf.so ..."
@@ -24,6 +25,7 @@ libreboundxf:
 clean:
 	@echo "Cleaning up shared library librebound.so ..."
 	@-rm -f librebound.so
+	$(MAKE) -C $(REB_DIR)/src/ clean
 	@-rm -f libreboundxf.so
 	$(MAKE) -C ../../src/ clean
 	@echo "Cleaning up local directory ..."
