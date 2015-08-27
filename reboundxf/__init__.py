@@ -31,8 +31,8 @@ class rebxf_param_gr(Structure):
 
 class rebxf_params(Structure):
     _fields_ = [("sim", reb_simulation),
-                ("forces", CFUNCTYPE(None, POINTER(reb_simulation))),
-                ("ptm", CFUNCTYPE(None, POINTER(reb_simulation))),
+                ("forces", POINTER(CFUNCTYPE(None, POINTER(reb_simulation)))),
+                ("ptm", POINTER(CFUNCTYPE(None, POINTER(reb_simulation)))),
                 ("Nforces", c_int),
                 ("Nptm", c_int),
                 ("elements_forces", rebxf_param_elements_forces),
