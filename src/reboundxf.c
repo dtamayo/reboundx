@@ -90,6 +90,7 @@ void rebxf_add_elements_forces(struct reb_simulation* sim){
 	xf->forces = realloc(xf->forces, sizeof(xfptr)*xf->Nforces);
 	xf->forces[xf->Nforces-1] = rebxf_elements_forces;
 	sim->additional_forces = rebxf_forces;
+	sim->force_is_velocity_dependent = 1;
 }
 
 void rebxf_add_elements_direct(struct reb_simulation* sim){
@@ -113,6 +114,7 @@ void rebxf_add_gr(struct reb_simulation* sim, double c){
 	xf->forces = realloc(xf->forces, sizeof(xfptr)*xf->Nforces);
 	xf->forces[xf->Nforces-1] = rebxf_gr;
 	sim->additional_forces = rebxf_forces;
+	sim->force_is_velocity_dependent = 1;
 }
 
 /* Garbage collection */
