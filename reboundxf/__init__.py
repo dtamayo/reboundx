@@ -30,8 +30,14 @@ class rebxf_param_gr(Structure):
     _fields_ = [("c", c_double)]
 
 class rebxf_params(Structure):
-    _fields_ = [("sim", reb_simulation)
-                ("forces", CFUNCTYPE(None, POINTER(reb_simulation)))
+    _fields_ = [("sim", reb_simulation),
+                ("forces", CFUNCTYPE(None, POINTER(reb_simulation))),
+                ("ptm", CFUNCTYPE(None, POINTER(reb_simulation))),
+                ("Nforces", c_int),
+                ("Nptm", c_int),
+                ("elements_forces", rebxf_param_elements_forces),
+                ("elements_direct", rebxf_param_elements_direct),
+                ("gr", rebxf_param_gr)]
 
 def mod_test():
     return clibreboundxf.rebxf_modify_elements
