@@ -8,7 +8,7 @@ all: $(SOURCES) libreboundx.so
 
 %.o: %.c $(HEADERS)
 	@echo "Compiling source file $< ..."
-	$(CC) -g -c $(OPT) $(PREDEF) -o $@ $<
+	$(CC) -g -c $(OPT) -I$(REB_DIR)/src $(PREDEF) -o $@ $<
 
 libreboundx.so: $(OBJECTS)
 	@echo ""        
