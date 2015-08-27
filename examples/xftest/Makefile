@@ -1,5 +1,9 @@
 export OPENGL=1
 
+ifndef REB_DIR
+$(error Must set environment variable for the path to your rebound directory, e.g., export REB_DIR=/Users/dtamayo/rebound.  See https://github.com/dtamayo/reboundx/blob/master/README.rst)
+endif
+
 include $(REB_DIR)/src/Makefile.defs
 
 all: librebound libreboundx
@@ -30,5 +34,3 @@ clean:
 	$(MAKE) -C ../../src/ clean
 	@echo "Cleaning up local directory ..."
 	@-rm -vf rebound
-
-

@@ -2,15 +2,15 @@ from ctypes import *
 import os
 import rebound
 
-#Find the migration C library
+#Find the reboundx C library
 pymodulespath = os.path.dirname(__file__)
 try:
-    clibreboundxf = CDLL(pymodulespath + '/../libreboundxf.so', RTLD_GLOBAL)
+    clibreboundx = CDLL(pymodulespath + '/../libreboundx.so', RTLD_GLOBAL)
 except:
-    print("Cannot find library 'libreboundxf.so'.")
+    print("Cannot find library 'libreboundx.so'.")
     raise
 
-class rebxf_param_elements_forces(Structure):
+class rebx_params_modify_orbits_forces(Structure):
     _fields_ = [("allocatedN", c_int),
                 ("tau_a", POINTER(c_double)),
                 ("tau_e", POINTER(c_double)),
@@ -18,7 +18,7 @@ class rebxf_param_elements_forces(Structure):
                 ("tau_omega", POINTER(c_double)),
                 ("e_damping_p", c_double)]                     
 
-class rebxf_param_elements_direct(Structure):
+class rebx_params_modify_orbits_direct(Structure):
     _fields_ = [("allocatedN", c_int),
                 ("tau_a", POINTER(c_double)),
                 ("tau_e", POINTER(c_double)),
@@ -26,31 +26,31 @@ class rebxf_param_elements_direct(Structure):
                 ("tau_omega", POINTER(c_double)),
                 ("e_damping_p", c_double)]                     
 
-class rebxf_param_gr(Structure):
+class rebx_params_gr(Structure):
     _fields_ = [("c", c_double)]
 
-class rebxf_params(Structure):
+class rebx_extras(Structure):
     _fields_ = [("sim", reb_simulation),
                 ("forces", POINTER(CFUNCTYPE(None, POINTER(reb_simulation)))),
                 ("ptm", POINTER(CFUNCTYPE(None, POINTER(reb_simulation)))),
                 ("Nforces", c_int),
                 ("Nptm", c_int),
-                ("elements_forces", rebxf_param_elements_forces),
-                ("elements_direct", rebxf_param_elements_direct),
-                ("gr", rebxf_param_gr)]
+                ("modify_orbits_forces", rebx_param_elements_forces),
+                ("modify_orbits_direct", rebx_param_elements_direct),
+                ("gr", rebx_param_gr)]
 
 def mod_test():
-    return clibreboundxf.rebxf_modify_elements
+    return clibreboundx.rebx_modify_elements
 def modify_elements():
-    func_address = cast(clibreboundxf.rebxf_modify_elements, c_void_p).value
+    func_address = cast(clibreboundx.rebx_modify_elements, c_void_p).value
     return func_address
 
 def forces():
-    func_address = cast(clibreboundxf.rebxf_forces, c_void_p).value
+    func_address = cast(clibreboundx.rebx_forces, c_void_p).value
     return func_address
 
-def addxf(sim):
-    clibreboundxf.rebxf_addxf(sim.simulation)
+def addx(sim):
+    clibreboundx.rebx_addx(sim.simulation)
 
 class Params(object):
     simulation = None
@@ -58,12 +58,12 @@ class Params(object):
 
     def __init__(self, sim):
         self.simulation = sim.simulation
-        clibreboundxf.rebxf_addxf.restype = POINTER(rebxf_params)
-        self.params = clibreboundxf.rebxf_addxf(self.simulation)
+        clibreboundx.rebx_addx.restype = POINTER(rebx_params)
+        self.params = clibreboundx.rebx_addx(self.simulation)
 
-    #TODO: find a way to set individual elements from python, e.g., xf.tau_a[2] = 1.e3
+    #TODO: find a way to set individual elements from python, e.g., x.tau_a[2] = 1.e3
     def __del__(self):
-        clibreboundxf.rebxf_free_xfparams(self.params)
+        clibreboundx.rebx_free_xparams(self.params)
 
     @property
     def tau_a(self):
@@ -73,7 +73,7 @@ class Params(object):
         if len(tau_a) is not self.simulation.contents.N:
             raise AttributeError('You must pass an array of timescales with as many elements as there are particles in the simulation')
         arr = (c_double * len(tau_a))(*tau_a)
-        clibreboundxf.rebxf_set_tau_a(self.simulation, byref(arr))
+        clibreboundx.rebx_set_tau_a(self.simulation, byref(arr))
 
     @property
     def tau_e(self):
@@ -83,7 +83,7 @@ class Params(object):
         if len(tau_e) is not self.simulation.contents.N:
             raise AttributeError('You must pass an array of timescales with as many elements as there are particles in the simulation')
         arr = (c_double * len(tau_e))(*tau_e)
-        clibreboundxf.rebxf_set_tau_e(self.simulation, byref(arr))
+        clibreboundx.rebx_set_tau_e(self.simulation, byref(arr))
 
     @property
     def tau_inc(self):
@@ -93,7 +93,7 @@ class Params(object):
         if len(tau_inc) is not self.simulation.contents.N:
             raise AttributeError('You must pass an array of timescales with as many elements as there are particles in the simulation')
         arr = (c_double * len(tau_inc))(*tau_inc)
-        clibreboundxf.rebxf_set_tau_inc(self.simulation, byref(arr))
+        clibreboundx.rebx_set_tau_inc(self.simulation, byref(arr))
 
     @property
     def tau_pomega(self):
@@ -103,33 +103,33 @@ class Params(object):
         if len(tau_pomega) is not self.simulation.contents.N:
             raise AttributeError('You must pass an array of timescales with as many elements as there are particles in the simulation')
         arr = (c_double * len(tau_pomega))(*tau_pomega)
-        clibreboundxf.rebxf_set_tau_pomega(self.simulation, byref(arr))
+        clibreboundx.rebx_set_tau_pomega(self.simulation, byref(arr))
 
 '''def set_e_damping_p(value):
-    clibreboundxf.rebxf_set_e_damping_p(c_double(value))
+    clibreboundx.rebx_set_e_damping_p(c_double(value))
 
 def set_migration(tau_a):
     arr = (c_double * len(tau_a))(*tau_a)
-    clibreboundxf.rebxf_set_migration(byref(arr),c_int(len(tau_a)))
+    clibreboundx.rebx_set_migration(byref(arr),c_int(len(tau_a)))
 
 def set_e_damping(tau_e, p=0.):
-    c_double.in_dll(libreboundxf, "e_damping_p").value = p
+    c_double.in_dll(libreboundx, "e_damping_p").value = p
     arr = (c_double * len(tau_e))(*tau_e)
-    clibreboundxf.rebxf_set_e_damping(byref(arr),c_int(len(tau_e)))
+    clibreboundx.rebx_set_e_damping(byref(arr),c_int(len(tau_e)))
     
 def set_e_damping(tau_e):
     arr = (c_double * len(tau_e))(*tau_e)
-    clibreboundxf.rebxf_set_e_damping(byref(arr),c_int(len(tau_e)))
+    clibreboundx.rebx_set_e_damping(byref(arr),c_int(len(tau_e)))
     
 def set_i_damping(tau_i):
     arr = (c_double * len(tau_i))(*tau_i)
-    clibreboundxf.rebxf_set_i_damping(byref(arr),c_int(len(tau_i)))
+    clibreboundx.rebx_set_i_damping(byref(arr),c_int(len(tau_i)))
 
 def set_peri_precession(tau_po):
     arr = (c_double * len(tau_po))(*tau_po)
-    clibreboundxf.rebxf_set_peri_precession(byref(arr), c_int(len(tau_po)))
+    clibreboundx.rebx_set_peri_precession(byref(arr), c_int(len(tau_po)))
    
 def set_peri_precession(gamma, Rc, podot):
-    clibreboundxf.set_peri_precession(c_double(gamma), c_double(Rc), c_double(podot))
+    clibreboundx.set_peri_precession(c_double(gamma), c_double(Rc), c_double(podot))
 '''
 

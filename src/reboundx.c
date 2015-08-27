@@ -42,22 +42,22 @@ struct rebx_extras* rebx_init(struct reb_simulation* sim){
 	return (struct rebx_extras*)sim->extras;
 }
 
-/*void rebx_add(struct reb_simulation* sim, enum REBx_MODS perturbation){
-	switch(perturbation){
-		case REBx_MODIFY_modify_orbits_forces:
-			rebx_add_modify_modify_orbits_forces(sim);
+void rebx_add(struct reb_simulation* sim, enum REBX_EXTRAS extra){
+	switch(extra){
+		case REBX_MODIFY_ORBITS_FORCES:
+			rebx_add_modify_orbits_forces(sim);
 			break;
-		case REBx_MODIFY_modify_orbits_direct:
-			rebx_add_modify_modify_orbits_direct(sim);
+		case REBX_MODIFY_ORBITS_DIRECT:
+			rebx_add_modify_orbits_direct(sim);
 			break;
-		case REBx_GR:
-			rebx_add_gr(sim);
+		case REBX_GR:
+			rebx_add_gr(sim, C_DEFAULT);
 			break;
 		default:
 			fprintf(stderr, "Perturbation passed to rebx_add not recognized.\n");
 			exit(1);
 	}
-}*/
+}
 
 void rebx_forces(struct reb_simulation* sim){
 	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
