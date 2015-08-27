@@ -42,7 +42,7 @@ struct rebx_extras* rebx_init(struct reb_simulation* sim){
 	return (struct rebx_extras*)sim->extras;
 }
 
-void rebx_add(struct reb_simulation* sim, enum REBX_EXTRAS extra){
+/*void rebx_add(struct reb_simulation* sim, enum REBX_EXTRAS extra){
 	switch(extra){
 		case REBX_MODIFY_ORBITS_FORCES:
 			rebx_add_modify_orbits_forces(sim);
@@ -57,7 +57,7 @@ void rebx_add(struct reb_simulation* sim, enum REBX_EXTRAS extra){
 			fprintf(stderr, "Perturbation passed to rebx_add not recognized.\n");
 			exit(1);
 	}
-}
+}*/
 
 void rebx_forces(struct reb_simulation* sim){
 	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;

@@ -7,12 +7,13 @@ import os
 
 libreboundxmodule = Extension('libreboundx',
                     sources = [ 'src/reboundx.c',
-                                'src/xtools.c',
-                                'src/elements_direct.c',
-                                'src/elements_forces.c',
-                                'src/gr.c'
+                                'src/rebxtools.c',
+                                'src/modify_orbits_direct.c',
+                                'src/modify_orbits_forces.c',
+                                'src/gr.c',
+                                os.environ['REB_DIR'] + '/src/tools.c'
                                 ],
-                    include_dirs = ['src'],
+                    include_dirs = ['src', os.environ['REB_DIR'] + '/src'],
                     define_macros=[ ('LIBREBOUNDx', None) ],
                     extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-DLIBREBOUND', '-D_GNU_SOURCE', '-fPIC'],
                                     )

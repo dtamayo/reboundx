@@ -12,7 +12,7 @@
 #include <math.h>
 #include <sys/time.h>
 #include "rebound.h"
-#include "reboundxf.h"
+#include "reboundx.h"
 
 void heartbeat(struct reb_simulation* const r);
 

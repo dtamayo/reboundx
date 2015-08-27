@@ -13,11 +13,11 @@
 
 typedef void (*xptr)(struct reb_simulation* const r);
 
-enum REBX_EXTRAS {
+/*enum REBX_EXTRAS {
 	REBX_MODIFY_ORBITS_FORCES	= 0,
 	REBX_MODIFY_ORBITS_DIRECT	= 1,
 	REBX_GR						= 2,
-};
+};*/
 
 struct rebx_params_modify_orbits_forces {
 	int allocatedN;
@@ -74,7 +74,7 @@ void rebx_set_tau_inc(struct reb_simulation* sim, double* tau_inc);
 double* rebx_get_tau_omega(struct reb_simulation* sim);
 void rebx_set_tau_omega(struct reb_simulation* sim, double* tau_omega);
 
-void rebx_add(struct reb_simulation* sim, enum REBX_EXTRAS extra);
+//void rebx_add(struct reb_simulation* sim, enum REBX_EXTRAS extra);
 
 /**
  * @cond PRIVATE

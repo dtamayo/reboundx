@@ -29,37 +29,11 @@ class rebx_params_modify_orbits_direct(Structure):
 class rebx_params_gr(Structure):
     _fields_ = [("c", c_double)]
 
-class rebx_extras(Structure):
-    _fields_ = [("sim", reb_simulation),
-                ("forces", POINTER(CFUNCTYPE(None, POINTER(reb_simulation)))),
-                ("ptm", POINTER(CFUNCTYPE(None, POINTER(reb_simulation)))),
-                ("Nforces", c_int),
-                ("Nptm", c_int),
-                ("modify_orbits_forces", rebx_param_elements_forces),
-                ("modify_orbits_direct", rebx_param_elements_direct),
-                ("gr", rebx_param_gr)]
-
-def mod_test():
-    return clibreboundx.rebx_modify_elements
-def modify_elements():
-    func_address = cast(clibreboundx.rebx_modify_elements, c_void_p).value
-    return func_address
-
-def forces():
-    func_address = cast(clibreboundx.rebx_forces, c_void_p).value
-    return func_address
-
-def addx(sim):
-    clibreboundx.rebx_addx(sim.simulation)
-
-class Params(object):
-    simulation = None
-    params = None
-
+class Extras(Structure):
     def __init__(self, sim):
-        self.simulation = sim.simulation
-        clibreboundx.rebx_addx.restype = POINTER(rebx_params)
-        self.params = clibreboundx.rebx_addx(self.simulation)
+        self.simulation = sim
+        #clibreboundx.rebx_addx.restype = POINTER(rebx_params)
+        clibreboundx.rebx_init(self.simulation)
 
     #TODO: find a way to set individual elements from python, e.g., x.tau_a[2] = 1.e3
     def __del__(self):
@@ -105,6 +79,16 @@ class Params(object):
         arr = (c_double * len(tau_pomega))(*tau_pomega)
         clibreboundx.rebx_set_tau_pomega(self.simulation, byref(arr))
 
+# Need to put fields after class definition because of self-referencing
+Extras._fields_ = [("sim", reb_simulation),
+                ("forces", POINTER(CFUNCTYPE(None, POINTER(reb_simulation)))),
+                ("ptm", POINTER(CFUNCTYPE(None, POINTER(reb_simulation)))),
+                ("Nforces", c_int),
+                ("Nptm", c_int),
+                ("modify_orbits_forces", rebx_params_modify_orbits_forces),
+                ("modify_orbits_direct", rebx_params_modify_orbits_direct),
+                ("gr", rebx_param_gr)]
+
 '''def set_e_damping_p(value):
     clibreboundx.rebx_set_e_damping_p(c_double(value))
 
@@ -132,4 +116,3 @@ def set_peri_precession(tau_po):
 def set_peri_precession(gamma, Rc, podot):
     clibreboundx.set_peri_precession(c_double(gamma), c_double(Rc), c_double(podot))
 '''
-

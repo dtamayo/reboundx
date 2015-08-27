@@ -1,6 +1,7 @@
 #include "modify_orbits_direct.h"
 #include "reboundx.h"
 #include "rebxtools.h"
+#include "rebound.h"
 #include <stdio.h>
 #include <stdlib.h>
 
