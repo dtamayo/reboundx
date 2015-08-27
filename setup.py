@@ -5,15 +5,15 @@ except ImportError:
 from codecs import open
 import os
 
-libreboundxfmodule = Extension('libreboundxf',
-                    sources = [ 'src/reboundxf.c',
-                                'src/xftools.c',
+libreboundxmodule = Extension('libreboundx',
+                    sources = [ 'src/reboundx.c',
+                                'src/xtools.c',
                                 'src/elements_direct.c',
                                 'src/elements_forces.c',
                                 'src/gr.c'
                                 ],
                     include_dirs = ['src'],
-                    define_macros=[ ('LIBREBOUNDXF', None) ],
+                    define_macros=[ ('LIBREBOUNDx', None) ],
                     extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-DLIBREBOUND', '-D_GNU_SOURCE', '-fPIC'],
                                     )
 
@@ -21,11 +21,11 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-setup(name='reboundxf',
+setup(name='reboundx',
     version='1.0',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
-    url='http://github.com/dtamayo/reboundxf',
+    url='http://github.com/dtamayo/reboundx',
     author='Daniel Tamayo',
     author_email='tamayo.daniel@gmail.com',
     license='GPL',
@@ -51,7 +51,7 @@ setup(name='reboundxf',
         'Programming Language :: Python :: 3',
     ],
     keywords='astronomy astrophysics nbody integrator',
-    packages=['reboundxf'],
-    install_requires=[],
-    ext_modules = [libreboundxfmodule],
+    packages=['reboundx'],
+    install_requires=['rebound'],
+    ext_modules = [libreboundxmodule],
     zip_safe=False)
