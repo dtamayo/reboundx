@@ -1,8 +1,8 @@
 #include <math.h>
 #include <stdlib.h>
-#include "xftools.h"
+#include "rebxtools.h"
 
-/*void xftools_inertial_to_jacobi_posvel(void){
+/*void rebxtools_inertial_to_jacobi_posvel(void){
 	double s_x = particles[N_megno].m * particles[N_megno].x;
 	double s_y = particles[N_megno].m * particles[N_megno].y;
 	double s_z = particles[N_megno].m * particles[N_megno].z;
@@ -34,7 +34,7 @@
 	p_j[N_megno].vz = s_vz * Mtotali;
 }*/
 
-struct reb_orbit xftools_orbit_nan(void){
+struct reb_orbit rebxtools_orbit_nan(void){
 	struct reb_orbit o;
 	o.a = NAN;
 	o.r = NAN;
@@ -75,7 +75,7 @@ static double acos2(double num, double denom, double disambiguator){
 	return val;
 }
 
-struct reb_orbit xftools_particle_to_orbit(double G, struct reb_particle p, struct reb_particle primary, int* err){
+struct reb_orbit rebxtools_particle_to_orbit(double G, struct reb_particle p, struct reb_particle primary, int* err){
 	struct reb_orbit o;
 	if (primary.m <= TINY){	
 		*err = 1;			// primary has no mass.
@@ -168,9 +168,9 @@ struct reb_orbit xftools_particle_to_orbit(double G, struct reb_particle p, stru
 	return o;
 }
 
-void xftools_orbit2p(double G, struct reb_particle* p, struct reb_particle* primary, struct reb_orbit o){
+void rebxtools_orbit2p(double G, struct reb_particle* p, struct reb_particle* primary, struct reb_orbit o){
 	int* err = malloc(sizeof(int));
-	struct reb_particle p2 = xftools_orbit_to_particle(G,*primary, p->m, o.a, o.e, o.inc, o.Omega, o.omega, o.f, err);
+	struct reb_particle p2 = rebxtools_orbit_to_particle(G,*primary, p->m, o.a, o.e, o.inc, o.Omega, o.omega, o.f, err);
 	p->x = p2.x;
 	p->y = p2.y;
 	p->z = p2.z;
@@ -181,7 +181,7 @@ void xftools_orbit2p(double G, struct reb_particle* p, struct reb_particle* prim
 
 static const struct reb_particle reb_particle_nan = {.x = NAN, .y = NAN, .z = NAN, .vx = NAN, .vy = NAN, .vz = NAN, .ax = NAN, .ay = NAN, .az = NAN, .m = NAN, .r = NAN, .lastcollision = NAN, .c = 0, .id = NAN};
 
-struct reb_particle xftools_orbit_to_particle(double G, struct reb_particle primary, double m, double a, double e, double inc, double Omega, double omega, double f, int* err){
+struct reb_particle rebxtools_orbit_to_particle(double G, struct reb_particle primary, double m, double a, double e, double inc, double Omega, double omega, double f, int* err){
 	if(e == 1.){
 		*err = 1; 		// Can't initialize a radial orbit with orbital elements.
 		return reb_particle_nan;
@@ -236,10 +236,10 @@ struct reb_particle xftools_orbit_to_particle(double G, struct reb_particle prim
 	return p;
 }
 
-void xftools_move_to_com(struct reb_simulation* const r){
+void rebxtools_move_to_com(struct reb_simulation* const r){
 	const int N = r->N;
 	struct reb_particle* restrict const particles = r->particles;
-	struct reb_particle com = xftools_get_com(r);
+	struct reb_particle com = rebxtools_get_com(r);
 	for(int i=0; i<N; i++){
 		particles[i].x -= com.x;
 		particles[i].y -= com.y;
@@ -250,7 +250,7 @@ void xftools_move_to_com(struct reb_simulation* const r){
 	}
 }
 
-struct reb_particle xftools_get_com_of_pair(struct reb_particle p1, struct reb_particle p2){
+struct reb_particle rebxtools_get_com_of_pair(struct reb_particle p1, struct reb_particle p2){
 	p1.x   = p1.x*p1.m + p2.x*p2.m;		
 	p1.y   = p1.y*p1.m + p2.y*p2.m;
 	p1.z   = p1.z*p1.m + p2.z*p2.m;
@@ -269,12 +269,12 @@ struct reb_particle xftools_get_com_of_pair(struct reb_particle p1, struct reb_p
 	return p1;
 }
 
-struct reb_particle xftools_get_com(struct reb_simulation* const r){
+struct reb_particle rebxtools_get_com(struct reb_simulation* const r){
 	struct reb_particle com = {.m=0, .x=0, .y=0, .z=0, .vx=0, .vy=0, .vz=0};
 	const int N = r->N;
 	struct reb_particle* restrict const particles = r->particles;
 	for (int i=0;i<N;i++){
-		com = xftools_get_com_of_pair(com, particles[i]);
+		com = rebxtools_get_com_of_pair(com, particles[i]);
 	}
 	return com;
 }

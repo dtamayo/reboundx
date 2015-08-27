@@ -3,6 +3,6 @@
 
 #include "rebound.h"
 
-void rebxf_gr(struct reb_simulation* const sim);
+void rebx_gr(struct reb_simulation* const sim);
 
 #endif

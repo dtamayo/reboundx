@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <math.h>
 #include "rebound.h"
-#include "reboundxf.h"
+#include "reboundx.h"
 #include "gr.h"
 
-void rebxf_gr(struct reb_simulation* const sim){
-	struct rebxf_param_gr xfparams = ((struct rebxf_params*)(sim->xf_params))->gr;
-	const double C = xfparams.c;
+void rebx_gr(struct reb_simulation* const sim){
+	struct rebx_params_gr* rebxparams = &((struct rebx_extras*)(sim->extras))->gr;
+	const double C = rebxparams->c;
 	const int _N_real = sim->N - sim->N_var;
 	const double G = sim->G;
 	struct reb_particle* const particles = sim->particles;

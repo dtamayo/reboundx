@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <math.h>
 #include "rebound.h"
-#include "reboundxf.h"
+#include "reboundx.h"
 
 void heartbeat(struct reb_simulation* const r);
 
@@ -31,10 +31,10 @@ int main(int argc, char* argv[]){
 	struct reb_particle p1 = reb_tools_orbit2d_to_particle(r->G, p,  1.e-8, 1.0, 0.4, 0., 0.);	
 	reb_add(r,p1);
 
-	struct rebxf_params* xf = rebxf_init(r);
+	struct rebx_extras* rebx = rebx_init(r);
 
-	rebxf_add_gr(r,10000.);
-	xf->gr.c /=100.; // enhance precession
+	rebx_add_gr(r,10000.);
+	rebx->gr.c /=100.; // enhance precession
 
 	reb_move_to_com(r);
 

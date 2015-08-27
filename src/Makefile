@@ -1,16 +1,16 @@
-OPT+= -fPIC -DLIBREBOUNDXF
+OPT+= -fPIC -DLIBREBOUNDX
 
-SOURCES=reboundxf.c xftools.c elements_direct.c elements_forces.c gr.c
+SOURCES=reboundx.c rebxtools.c modify_orbits_direct.c modify_orbits_forces.c gr.c
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=$(SOURCES:.c=.h)
 
-all: $(SOURCES) libreboundxf.so 
+all: $(SOURCES) libreboundx.so 
 
 %.o: %.c $(HEADERS)
 	@echo "Compiling source file $< ..."
 	$(CC) -g -c $(OPT) $(PREDEF) -o $@ $<
 
-libreboundxf.so: $(OBJECTS)
+libreboundx.so: $(OBJECTS)
 	@echo ""        
 	@echo "Linking shared library $@ ..."
 	$(CC) $(OPT) -shared  $(OBJECTS) $(LIB) -o $@ 
@@ -22,6 +22,6 @@ libreboundxf.so: $(OBJECTS)
 clean:
 	@echo "Removing object files *.o ..."
 	@-rm -f *.o
-	@echo "Removing shared library libreboundxf.so ..."
+	@echo "Removing shared library libreboundx.so ..."
 	@-rm -f *.so
 	

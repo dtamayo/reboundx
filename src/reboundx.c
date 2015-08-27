@@ -2,7 +2,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
-#include "reboundxf.h"
+#include "reboundx.h"
 
 //disk parameters for precession
 /*double gam;
@@ -14,171 +14,166 @@ double podot; // pericenter precession at r = Rc
 // pointers for damping timescales
 
 
-void test(struct reb_simulation* sim){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	printf("%d\n", xf->Nforces);
+struct rebx_extras* rebx_init(struct reb_simulation* sim){
+	struct rebx_extras* rebx = (struct rebx_extras*) malloc(sizeof(struct rebx_extras));
+	sim->extras = (struct rebx_extras*) rebx;
+	rebx->sim = sim;
+
+	rebx->forces = NULL;
+	rebx->Nforces = 0;
+	rebx->ptm = NULL;
+	rebx->Nptm = 0;
+	
+	rebx->modify_orbits_forces.allocatedN = 0; 
+	rebx->modify_orbits_forces.tau_a = NULL;
+	rebx->modify_orbits_forces.tau_e = NULL;
+	rebx->modify_orbits_forces.tau_inc = NULL;
+	rebx->modify_orbits_forces.tau_omega = NULL;
+	rebx->modify_orbits_forces.e_damping_p = 0.;
+	
+	rebx->modify_orbits_direct.allocatedN = 0; 
+	rebx->modify_orbits_direct.tau_a = NULL;
+	rebx->modify_orbits_direct.tau_e = NULL;
+	rebx->modify_orbits_direct.tau_inc = NULL;
+	rebx->modify_orbits_direct.tau_omega = NULL;
+	rebx->modify_orbits_direct.e_damping_p = 0.;
+
+	rebx->gr.c = 10064.9150404; // speed of light in units of AU/(yr/2pi)
+	return (struct rebx_extras*)sim->extras;
 }
 
-struct rebxf_params* rebxf_init(struct reb_simulation* sim){
-	struct rebxf_params* xf = (struct rebxf_params*) malloc(sizeof(struct rebxf_params));
-	sim->xf_params = (struct rebxf_params*) xf;
-	xf->sim = sim;
-
-	xf->forces = NULL;
-	xf->Nforces = 0;
-	xf->ptm = NULL;
-	xf->Nptm = 0;
-	
-	xf->elements_forces.allocatedN = 0; 
-	xf->elements_forces.tau_a = NULL;
-	xf->elements_forces.tau_e = NULL;
-	xf->elements_forces.tau_inc = NULL;
-	xf->elements_forces.tau_omega = NULL;
-	xf->elements_forces.e_damping_p = 0.;
-	
-	xf->elements_direct.allocatedN = 0; 
-	xf->elements_direct.tau_a = NULL;
-	xf->elements_direct.tau_e = NULL;
-	xf->elements_direct.tau_inc = NULL;
-	xf->elements_direct.tau_omega = NULL;
-	xf->elements_direct.e_damping_p = 0.;
-
-	xf->gr.c = 10064.9150404; // speed of light in units of AU/(yr/2pi)
-	return (struct rebxf_params*)sim->xf_params;
-}
-
-/*void rebxf_add(struct reb_simulation* sim, enum REBXF_MODS perturbation){
+/*void rebx_add(struct reb_simulation* sim, enum REBx_MODS perturbation){
 	switch(perturbation){
-		case REBXF_MODIFY_ELEMENTS_FORCES:
-			rebxf_add_modify_elements_forces(sim);
+		case REBx_MODIFY_modify_orbits_forces:
+			rebx_add_modify_modify_orbits_forces(sim);
 			break;
-		case REBXF_MODIFY_ELEMENTS_DIRECT:
-			rebxf_add_modify_elements_direct(sim);
+		case REBx_MODIFY_modify_orbits_direct:
+			rebx_add_modify_modify_orbits_direct(sim);
 			break;
-		case REBXF_GR:
-			rebxf_add_gr(sim);
+		case REBx_GR:
+			rebx_add_gr(sim);
 			break;
 		default:
-			fprintf(stderr, "Perturbation passed to rebxf_add not recognized.\n");
+			fprintf(stderr, "Perturbation passed to rebx_add not recognized.\n");
 			exit(1);
 	}
 }*/
 
-void rebxf_forces(struct reb_simulation* sim){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	for(int i=0;i<xf->Nforces;i++){
-		xf->forces[i](sim);
+void rebx_forces(struct reb_simulation* sim){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	for(int i=0;i<rebx->Nforces;i++){
+		rebx->forces[i](sim);
 	}
 }
 
-void rebxf_ptm(struct reb_simulation* sim){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	for(int i=0;i<xf->Nptm;i++){
-		xf->ptm[i](sim);
+void rebx_ptm(struct reb_simulation* sim){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	for(int i=0;i<rebx->Nptm;i++){
+		rebx->ptm[i](sim);
 	}
 }
 
-void rebxf_add_elements_forces(struct reb_simulation* sim){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	xf->elements_forces.allocatedN = sim->N;
-	xf->elements_forces.tau_a = calloc(xf->elements_forces.allocatedN, sizeof(double));
-	xf->elements_forces.tau_e = calloc(xf->elements_forces.allocatedN, sizeof(double));
-	xf->elements_forces.tau_inc = calloc(xf->elements_forces.allocatedN, sizeof(double));
-	xf->elements_forces.tau_omega = calloc(xf->elements_forces.allocatedN, sizeof(double));
+void rebx_add_modify_orbits_forces(struct reb_simulation* sim){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	rebx->modify_orbits_forces.allocatedN = sim->N;
+	rebx->modify_orbits_forces.tau_a = calloc(rebx->modify_orbits_forces.allocatedN, sizeof(double));
+	rebx->modify_orbits_forces.tau_e = calloc(rebx->modify_orbits_forces.allocatedN, sizeof(double));
+	rebx->modify_orbits_forces.tau_inc = calloc(rebx->modify_orbits_forces.allocatedN, sizeof(double));
+	rebx->modify_orbits_forces.tau_omega = calloc(rebx->modify_orbits_forces.allocatedN, sizeof(double));
 	
-	xf->Nforces++;
-	xf->forces = realloc(xf->forces, sizeof(xfptr)*xf->Nforces);
-	xf->forces[xf->Nforces-1] = rebxf_elements_forces;
-	sim->additional_forces = rebxf_forces;
+	rebx->Nforces++;
+	rebx->forces = realloc(rebx->forces, sizeof(xptr)*rebx->Nforces);
+	rebx->forces[rebx->Nforces-1] = rebx_modify_orbits_forces;
+	sim->additional_forces = rebx_forces;
 	sim->force_is_velocity_dependent = 1;
 }
 
-void rebxf_add_elements_direct(struct reb_simulation* sim){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	xf->elements_direct.allocatedN = sim->N;
-	xf->elements_direct.tau_a = calloc(xf->elements_direct.allocatedN, sizeof(double));
-	xf->elements_direct.tau_e = calloc(xf->elements_direct.allocatedN, sizeof(double));
-	xf->elements_direct.tau_inc = calloc(xf->elements_direct.allocatedN, sizeof(double));
-	xf->elements_direct.tau_omega = calloc(xf->elements_direct.allocatedN, sizeof(double));
+void rebx_add_modify_orbits_direct(struct reb_simulation* sim){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	rebx->modify_orbits_direct.allocatedN = sim->N;
+	rebx->modify_orbits_direct.tau_a = calloc(rebx->modify_orbits_direct.allocatedN, sizeof(double));
+	rebx->modify_orbits_direct.tau_e = calloc(rebx->modify_orbits_direct.allocatedN, sizeof(double));
+	rebx->modify_orbits_direct.tau_inc = calloc(rebx->modify_orbits_direct.allocatedN, sizeof(double));
+	rebx->modify_orbits_direct.tau_omega = calloc(rebx->modify_orbits_direct.allocatedN, sizeof(double));
 	
-	xf->Nptm++;
-	xf->ptm = realloc(xf->ptm, sizeof(xfptr)*xf->Nptm);
-	xf->ptm[xf->Nptm-1] = rebxf_elements_direct;
-	sim->post_timestep_modifications = rebxf_ptm;
+	rebx->Nptm++;
+	rebx->ptm = realloc(rebx->ptm, sizeof(xptr)*rebx->Nptm);
+	rebx->ptm[rebx->Nptm-1] = rebx_modify_orbits_direct;
+	sim->post_timestep_modifications = rebx_ptm;
 }
 
-void rebxf_add_gr(struct reb_simulation* sim, double c){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	xf->gr.c = c;
-	xf->Nforces++;
-	xf->forces = realloc(xf->forces, sizeof(xfptr)*xf->Nforces);
-	xf->forces[xf->Nforces-1] = rebxf_gr;
-	sim->additional_forces = rebxf_forces;
+void rebx_add_gr(struct reb_simulation* sim, double c){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	rebx->gr.c = c;
+	rebx->Nforces++;
+	rebx->forces = realloc(rebx->forces, sizeof(xptr)*rebx->Nforces);
+	rebx->forces[rebx->Nforces-1] = rebx_gr;
+	sim->additional_forces = rebx_forces;
 	sim->force_is_velocity_dependent = 1;
 }
 
 /* Garbage collection */
-void rebxf_free_xfparams(struct rebxf_params* const xf){
-	free(xf->elements_forces.tau_a);
-	free(xf->elements_forces.tau_e);
-	free(xf->elements_forces.tau_inc);
-	free(xf->elements_forces.tau_omega);
+void rebx_free_xparams(struct rebx_extras* const rebx){
+	free(rebx->modify_orbits_forces.tau_a);
+	free(rebx->modify_orbits_forces.tau_e);
+	free(rebx->modify_orbits_forces.tau_inc);
+	free(rebx->modify_orbits_forces.tau_omega);
 
-	free(xf->elements_direct.tau_a);
-	free(xf->elements_direct.tau_e);
-	free(xf->elements_direct.tau_inc);
-	free(xf->elements_direct.tau_omega);
+	free(rebx->modify_orbits_direct.tau_a);
+	free(rebx->modify_orbits_direct.tau_e);
+	free(rebx->modify_orbits_direct.tau_inc);
+	free(rebx->modify_orbits_direct.tau_omega);
 }
 
 /*Getter/setters*/
 
-/*void rebxf_check_N(struct reb_simulation* sim){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	if(xf->allocatedN < sim->N) {
-		xf->allocatedN = sim->N;
-		xf->tau_a = realloc(xf->tau_a, sizeof(double)*xf->allocatedN);
-		xf->tau_e = realloc(xf->tau_e, sizeof(double)*xf->allocatedN);
-		xf->tau_inc = realloc(xf->tau_inc, sizeof(double)*xf->allocatedN);
-		xf->tau_omega = realloc(xf->tau_omega, sizeof(double)*xf->allocatedN);
+/*void rebx_check_N(struct reb_simulation* sim){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	if(rebx->allocatedN < sim->N) {
+		rebx->allocatedN = sim->N;
+		rebx->tau_a = realloc(rebx->tau_a, sizeof(double)*rebx->allocatedN);
+		rebx->tau_e = realloc(rebx->tau_e, sizeof(double)*rebx->allocatedN);
+		rebx->tau_inc = realloc(rebx->tau_inc, sizeof(double)*rebx->allocatedN);
+		rebx->tau_omega = realloc(rebx->tau_omega, sizeof(double)*rebx->allocatedN);
 	}
 }*/
 
-/*double* rebxf_get_tau_a(struct reb_simulation* sim){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	return xf->tau_a;	
+/*double* rebx_get_tau_a(struct reb_simulation* sim){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	return rebx->tau_a;	
 }
 
-void rebxf_set_tau_a(struct reb_simulation* sim, double* tau_a){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	memcpy(xf->tau_a, tau_a, sizeof(double)*sim->N);	
+void rebx_set_tau_a(struct reb_simulation* sim, double* tau_a){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	memcpy(rebx->tau_a, tau_a, sizeof(double)*sim->N);	
 }
 
-double* rebxf_get_tau_e(struct reb_simulation* sim){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	return xf->tau_e;	
+double* rebx_get_tau_e(struct reb_simulation* sim){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	return rebx->tau_e;	
 }
 
-void rebxf_set_tau_e(struct reb_simulation* sim, double* tau_e){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	memcpy(xf->tau_e, tau_e, sizeof(double)*sim->N);	
+void rebx_set_tau_e(struct reb_simulation* sim, double* tau_e){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	memcpy(rebx->tau_e, tau_e, sizeof(double)*sim->N);	
 }
 
-double* rebxf_get_tau_inc(struct reb_simulation* sim){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	return xf->tau_inc;	
+double* rebx_get_tau_inc(struct reb_simulation* sim){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	return rebx->tau_inc;	
 }
 
-void rebxf_set_tau_inc(struct reb_simulation* sim, double* tau_inc){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	memcpy(xf->tau_inc, tau_inc, sizeof(double)*sim->N);	
+void rebx_set_tau_inc(struct reb_simulation* sim, double* tau_inc){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	memcpy(rebx->tau_inc, tau_inc, sizeof(double)*sim->N);	
 }
 
-double* rebxf_get_tau_omega(struct reb_simulation* sim){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	return xf->tau_omega;	
+double* rebx_get_tau_omega(struct reb_simulation* sim){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	return rebx->tau_omega;	
 }
 
-void rebxf_set_tau_omega(struct reb_simulation* sim, double* tau_omega){
-	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
-	memcpy(xf->tau_omega, tau_omega, sizeof(double)*sim->N);	
+void rebx_set_tau_omega(struct reb_simulation* sim, double* tau_omega){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	memcpy(rebx->tau_omega, tau_omega, sizeof(double)*sim->N);	
 }*/
