@@ -39,6 +39,12 @@ class Extras(Structure):
     def __del__(self):
         clibreboundx.rebx_free_xparams(self.params)
 
+    def add_modify_orbits_forces():
+        clibreboundx.rebx_add_modify_orbits_forces(self.simulation)
+
+    def add_gr():
+        clibreboundx.rebx_add_gr(self.simulation, 10000.)
+
     @property
     def tau_a(self):
         return [self.params.contents.tau_a[i] for i in range(self.simulation.contents.N)]

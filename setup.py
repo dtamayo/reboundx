@@ -11,11 +11,12 @@ libreboundxmodule = Extension('libreboundx',
                                 'src/modify_orbits_direct.c',
                                 'src/modify_orbits_forces.c',
                                 'src/gr.c',
-                                os.environ['REB_DIR'] + '/src/tools.c'
+                                os.environ['REB_DIR'] + '/src/tools.c',
+                                os.environ['REB_DIR'] + '/src/particle.c'
                                 ],
                     include_dirs = ['src', os.environ['REB_DIR'] + '/src'],
                     define_macros=[ ('LIBREBOUNDx', None) ],
-                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-DLIBREBOUND', '-D_GNU_SOURCE', '-fPIC'],
+                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-DLIBREBOUND', '-D_GNU_SOURCE', '-fPIC', '-L$(REB_DIR)/src/', '-lrebound', '-lm', '-lrt', '-Wpointer-arith'],
                                     )
 
 here = os.path.abspath(os.path.dirname(__file__))
