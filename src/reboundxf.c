@@ -43,7 +43,7 @@ struct rebxf_params* rebxf_init(struct reb_simulation* sim){
 	xf->elements_direct.tau_omega = NULL;
 	xf->elements_direct.e_damping_p = 0.;
 
-	xf->gr.all_bodies = 0.;
+	xf->gr.c = 10064.9150404; // speed of light in units of AU/(yr/2pi)
 	return (struct rebxf_params*)sim->xf_params;
 }
 
@@ -106,8 +106,9 @@ void rebxf_add_elements_direct(struct reb_simulation* sim){
 	sim->post_timestep_modifications = rebxf_ptm;
 }
 
-void rebxf_add_gr(struct reb_simulation* sim){
+void rebxf_add_gr(struct reb_simulation* sim, double c){
 	struct rebxf_params* xf = (struct rebxf_params*)sim->xf_params;
+	xf->gr.c = c;
 	xf->Nforces++;
 	xf->forces = realloc(xf->forces, sizeof(xfptr)*xf->Nforces);
 	xf->forces[xf->Nforces-1] = rebxf_gr;

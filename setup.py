@@ -6,12 +6,15 @@ from codecs import open
 import os
 
 libreboundxfmodule = Extension('libreboundxf',
-                    sources = [ 'cext/libreboundxf.c',
-                                'cext/xftools.c'
+                    sources = [ 'src/reboundxf.c',
+                                'src/xftools.c',
+                                'src/elements_direct.c',
+                                'src/elements_forces.c',
+                                'src/gr.c'
                                 ],
-                    include_dirs = ['cext'],
+                    include_dirs = ['src'],
                     define_macros=[ ('LIBREBOUNDXF', None) ],
-                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native'],
+                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-DLIBREBOUND', '-D_GNU_SOURCE', '-fPIC'],
                                     )
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -19,7 +22,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='reboundxf',
-    version='0.0.3',
+    version='1.0',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
     url='http://github.com/dtamayo/reboundxf',

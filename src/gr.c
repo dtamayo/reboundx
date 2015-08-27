@@ -4,9 +4,11 @@
 #include <stdio.h>
 
 void rebxf_gr(struct reb_simulation* const sim){
+	struct rebxf_params* xf = sim->xf_params;
+	struct rebxf_param_gr xfparams = xf->gr;
+	const double C = xfparams.c;
 	const int _N_real = sim->N - sim->N_var;
 	const double G = sim->G;
-	const double C = sim->C;
 	struct reb_particle* const particles = sim->particles;
 	
 	for (int i=1; i<_N_real; i++){

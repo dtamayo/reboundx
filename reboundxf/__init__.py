@@ -1,5 +1,6 @@
 from ctypes import *
 import os
+import rebound
 
 #Find the migration C library
 pymodulespath = os.path.dirname(__file__)
@@ -9,13 +10,27 @@ except:
     print("Cannot find library 'libreboundxf.so'.")
     raise
 
-class rebxf_params(Structure):
+class rebxf_param_elements_forces(Structure):
     _fields_ = [("allocatedN", c_int),
-                        ("tau_a", POINTER(c_double)),
-                        ("tau_e", POINTER(c_double)),
-                        ("tau_inc", POINTER(c_double)),
-                        ("tau_pomega", POINTER(c_double)),
-                        ("e_damping_p", c_double)]                     
+                ("tau_a", POINTER(c_double)),
+                ("tau_e", POINTER(c_double)),
+                ("tau_inc", POINTER(c_double)),
+                ("tau_omega", POINTER(c_double)),
+                ("e_damping_p", c_double)]                     
+
+class rebxf_param_elements_direct(Structure):
+    _fields_ = [("allocatedN", c_int),
+                ("tau_a", POINTER(c_double)),
+                ("tau_e", POINTER(c_double)),
+                ("tau_inc", POINTER(c_double)),
+                ("tau_omega", POINTER(c_double)),
+                ("e_damping_p", c_double)]                     
+
+class rebxf_param_gr(Structure):
+    _fields_ = [("c", c_double)]
+
+class rebxf_params(Structure):
+    _fields_ = [("sim", reb_simulation)
 
 def mod_test():
     return clibreboundxf.rebxf_modify_elements

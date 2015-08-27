@@ -39,7 +39,7 @@ struct rebxf_param_elements_direct {
 };
 
 struct rebxf_param_gr {
-	int all_bodies;
+	double c;
 };
 
 struct rebxf_params {	
@@ -58,7 +58,7 @@ struct rebxf_params* rebxf_init(struct reb_simulation* sim);
 
 void rebxf_add_elements_forces(struct reb_simulation* sim);
 void rebxf_add_elements_direct(struct reb_simulation* sim);
-void rebxf_add_gr(struct reb_simulation* sim);
+void rebxf_add_gr(struct reb_simulation* sim, double c);
 
 double* rebxf_get_tau_a(struct reb_simulation* sim);
 void rebxf_set_tau_a(struct reb_simulation* sim, double* tau_a);
