@@ -1,5 +1,30 @@
-#ifndef _LIBrebx_H
-#define _LIBrebx_H
+/**
+ * @file 	reboundx.h
+ * @brief 	REBOUNDx API definition.
+ * @author 	Dan Tamayo <tamayo.daniel@gmail.com>
+ * 
+ * @section 	LICENSE
+ * Copyright (c) 2015 Dan Tamayo, Hanno Rein
+ *
+ * This file is part of reboundx.
+ *
+ * reboundx is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * reboundx is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+#ifndef _LIBREBX_H
+#define _LIBREBX_H
 #ifndef M_PI 
 #define M_PI 3.1415926535879323846
 #endif
