@@ -6,7 +6,7 @@ endif
 
 OPT+= -fPIC -DLIBREBOUNDX
 
-SOURCES=reboundx.c rebxtools.c modify_orbits_direct.c modify_orbits_forces.c gr.c tools.c particle.c tree.c boundary.c collision.c communication_mpi.c integrator.c
+SOURCES=reboundx.c rebxtools.c modify_orbits_direct.c modify_orbits_forces.c gr.c tools.c 
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=$(SOURCES:.c=.h)
 
