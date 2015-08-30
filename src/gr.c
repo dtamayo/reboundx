@@ -66,3 +66,26 @@ void rebx_gr(struct reb_simulation* const sim){
 	}
 }
 
+void rebx_gr_potential(struct reb_simulation* const sim){
+	// Nobili & Roxburgh 1986
+	struct rebx_params_gr* rebxparams = &((struct rebx_extras*)(sim->extras))->gr;
+	const double C = rebxparams->c;
+	const int _N_real = sim->N - sim->N_var;
+	const double G = sim->G;
+	struct reb_particle* const particles = sim->particles;
+	
+	const struct reb_particle sun = particles[0];
+	const double prefac1 = 6.*(G*sun.m)*(G*sun.m)/(C*C);
+	for (int i=1; i<_N_real; i++){
+		const double dx = particles[i].x - sun.x;
+		const double dy = particles[i].y - sun.y;
+		const double dz = particles[i].z - sun.z;
+		const double r2 = dx*dx + dy*dy + dz*dz;
+		const double prefac = prefac1/(r2*r2);
+		
+		particles[i].ax -= prefac*dx;
+		particles[i].ay -= prefac*dy;
+		particles[i].az -= prefac*dz;
+	}
+}
+
