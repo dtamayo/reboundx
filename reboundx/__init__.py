@@ -33,17 +33,24 @@ class rebx_params_gr(Structure):
 class Extras(Structure):
     def __init__(self, sim):
         self.simulation = sim.ref
-        #clibreboundx.rebx_addx.restype = POINTER(rebx_params)
         clibreboundx.rebx_init(self.simulation)
 
     #TODO: find a way to set individual elements from python, e.g., x.tau_a[2] = 1.e3
     def __del__(self):
         clibreboundx.rebx_free_xparams(byref(self))
 
+    def add_modify_orbits_direct():
+        clibreboundx.rebx_add_modify_orbits_direct(self.simulation)
+    
     def add_modify_orbits_forces():
         clibreboundx.rebx_add_modify_orbits_forces(self.simulation)
 
-    def add_gr(self, c=10064.915):
+    def add_gr(self, c=None):
+        if c is None:
+            if sim.G != 1.:
+                raise AttributeError('You must pass c in the appropriate units for the simulation, e.g., rebx.add_gr(c=3.e8)')
+            else: 
+                c = 10064.915
         clibreboundx.rebx_add_gr(self.simulation, c_double(c))
 
     @property
