@@ -1,6 +1,7 @@
 from ctypes import *
 import os
 import rebound
+from rebound import Simulation
 
 #Find the reboundx C library
 pymodulespath = os.path.dirname(__file__)
@@ -31,19 +32,19 @@ class rebx_params_gr(Structure):
 
 class Extras(Structure):
     def __init__(self, sim):
-        self.simulation = sim
+        self.simulation = sim.ref
         #clibreboundx.rebx_addx.restype = POINTER(rebx_params)
         clibreboundx.rebx_init(self.simulation)
 
     #TODO: find a way to set individual elements from python, e.g., x.tau_a[2] = 1.e3
     def __del__(self):
-        clibreboundx.rebx_free_xparams(self.params)
+        clibreboundx.rebx_free_xparams(byref(self))
 
     def add_modify_orbits_forces():
         clibreboundx.rebx_add_modify_orbits_forces(self.simulation)
 
-    def add_gr():
-        clibreboundx.rebx_add_gr(self.simulation, 10000.)
+    def add_gr(self, c=10064.915):
+        clibreboundx.rebx_add_gr(self.simulation, c_double(c))
 
     @property
     def tau_a(self):
@@ -86,14 +87,14 @@ class Extras(Structure):
         clibreboundx.rebx_set_tau_pomega(self.simulation, byref(arr))
 
 # Need to put fields after class definition because of self-referencing
-Extras._fields_ = [("sim", reb_simulation),
-                ("forces", POINTER(CFUNCTYPE(None, POINTER(reb_simulation)))),
-                ("ptm", POINTER(CFUNCTYPE(None, POINTER(reb_simulation)))),
+Extras._fields_ = [("sim", Simulation),
+                ("forces", POINTER(CFUNCTYPE(None, POINTER(Simulation)))),
+                ("ptm", POINTER(CFUNCTYPE(None, POINTER(Simulation)))),
                 ("Nforces", c_int),
                 ("Nptm", c_int),
                 ("modify_orbits_forces", rebx_params_modify_orbits_forces),
                 ("modify_orbits_direct", rebx_params_modify_orbits_direct),
-                ("gr", rebx_param_gr)]
+                ("gr", rebx_params_gr)]
 
 '''def set_e_damping_p(value):
     clibreboundx.rebx_set_e_damping_p(c_double(value))

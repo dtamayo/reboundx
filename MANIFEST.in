@@ -1,3 +1,4 @@
-include src/reboundxf.c
+include src/*.c
+include src/*.h
 include README.rst
 include LICENSE
