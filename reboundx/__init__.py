@@ -49,6 +49,9 @@ class Extras(Structure):
     def add_gr_potential(self, c=10064.915):
         clibreboundx.rebx_add_gr_potential(self.simulation, c_double(c))
 
+    def add_gr_implicit(self, c=10064.915):
+        clibreboundx.rebx_add_gr_implicit(self.simulation, c_double(c))
+
     @property
     def tau_a(self):
         return [self.params.contents.tau_a[i] for i in range(self.simulation.contents.N)]

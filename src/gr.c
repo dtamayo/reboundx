@@ -89,3 +89,183 @@ void rebx_gr_potential(struct reb_simulation* const sim){
 	}
 }
 
+void rebx_gr_implicit(struct reb_simulation* const sim){
+	struct rebx_params_gr* rebxparams = &((struct rebx_extras*)(sim->extras))->gr;
+	const double C = rebxparams->c;
+	const int _N_real = sim->N - sim->N_var;
+	const double G = sim->G;
+	struct reb_particle* const particles = sim->particles;
+
+	double a_const[_N_real][3]; // array that stores the value of the constant term
+	double a_newton[_N_real][3]; // stores the Newtonian term
+	double a_new[_N_real][3]; // stores the newly calculated term
+
+	for (int i=0; i < _N_real; i++){
+		// compute the Newtonian term 
+		double a_ntx = 0.;
+		double a_nty = 0.;
+		double a_ntz = 0.;
+		for (int j = 0; j< _N_real; j++){
+			if (j != i){
+				const double dxij = particles[i].x - particles[j].x;
+				const double dyij = particles[i].y - particles[j].y;
+				const double dzij = particles[i].z - particles[j].z;
+				const double r2ij = dxij*dxij + dyij*dyij + dzij*dzij;
+				const double rij = sqrt(r2ij);
+				a_ntx += -G*particles[j].m*dxij/(r2ij*rij);
+				a_nty += -G*particles[j].m*dyij/(r2ij*rij);
+				a_ntz += -G*particles[j].m*dzij/(r2ij*rij);
+			}
+		}
+		a_new[i][0] = a_ntx; // we want to use Newtonian term as our first substitution, hence the assignment here
+		a_new[i][1] = a_nty;
+		a_new[i][2] = a_ntz;
+		a_newton[i][0] = a_ntx;
+		a_newton[i][1] = a_nty;
+		a_newton[i][2] = a_ntz;
+
+		// then compute the constant terms:
+		double a_constx = 0.;
+		double a_consty = 0.;
+		double a_constz = 0.;
+		// 1st constant part
+		for (int j = 0; j< _N_real; j++){
+			if (j != i){
+				const double dxij = particles[i].x - particles[j].x;
+				const double dyij = particles[i].y - particles[j].y;
+				const double dzij = particles[i].z - particles[j].z;
+				const double r2ij = dxij*dxij + dyij*dyij + dzij*dzij;
+				const double rij = sqrt(r2ij);
+				
+				double a1 = 0.;
+				for (int k = 0; k< _N_real; k++){
+					if (k != i){
+						const double dxik = particles[i].x - particles[k].x;
+						const double dyik = particles[i].y - particles[k].y;
+						const double dzik = particles[i].z - particles[k].z;
+						const double r2ik = dxik*dxik + dyik*dyik + dzik*dzik;
+						const double rik = sqrt(r2ik);
+						a1 += (4./(C*C)) * G*particles[k].m/rik;
+					}
+				}
+
+				double a2 = 0.;
+				for (int l = 0; l< _N_real; l++){
+					if (l != j){
+						const double dxlj = particles[l].x - particles[j].x;
+						const double dylj = particles[l].y - particles[j].y;
+						const double dzlj = particles[l].z - particles[j].z;
+						const double r2lj = dxlj*dxlj + dylj*dylj + dzlj*dzlj;
+						const double rlj = sqrt(r2lj);
+						a2 += (1./(C*C)) * G*particles[l].m/rlj;
+					}
+				}
+
+				double a3;
+				double vi2 = particles[i].vx*particles[i].vx + particles[i].vy*particles[i].vy + particles[i].vz*particles[i].vz;
+				a3 = -vi2/(C*C);
+
+				double a4;
+				double vj2 = particles[j].vx*particles[j].vx + particles[j].vy*particles[j].vy + particles[j].vz*particles[j].vz;
+				a4 = -2.*vj2/(C*C);
+
+				double a5;
+				a5 = (4./(C*C)) * (particles[i].vx*particles[j].vx + particles[i].vy*particles[j].vy + particles[i].vz*particles[j].vz); 
+				
+				double a6;
+				double a6_0 = dxij*particles[j].vx + dyij*particles[j].vy + dzij*particles[j].vz;
+				a6 = (3./(2.*C*C)) * a6_0*a6_0/r2ij;
+				
+				double factor1 = -1. + a1 + a2 + a3 + a4 + a5 + a6;
+				 
+				a_constx += G*particles[j].m*dxij*factor1/(r2ij*rij);
+				a_consty += G*particles[j].m*dyij*factor1/(r2ij*rij);
+				a_constz += G*particles[j].m*dzij*factor1/(r2ij*rij);
+			}
+		}	
+		// 2nd consant part
+		for (int j = 0; j< _N_real; j++){
+			if (j != i){
+				const double dxij = particles[i].x - particles[j].x;
+				const double dyij = particles[i].y - particles[j].y;
+				const double dzij = particles[i].z - particles[j].z;
+				const double r2ij = dxij*dxij + dyij*dyij + dzij*dzij;
+				const double rij = sqrt(r2ij);
+				const double dvxij = particles[i].vx - particles[j].vx;
+				const double dvyij = particles[i].vy - particles[j].vy;
+				const double dvzij = particles[i].vz - particles[j].vz;
+					
+				double factor2 = dxij*(4.*particles[i].vx-3.*particles[j].vx)+dyij*(4.*particles[i].vy-3.*particles[j].vy)+dzij*(4.*particles[i].vz-3.*particles[j].vz);
+
+				a_constx += G*particles[j].m*factor2*dvxij/(r2ij*rij)/(C*C);
+				a_consty += G*particles[j].m*factor2*dvyij/(r2ij*rij)/(C*C);
+				a_constz += G*particles[j].m*factor2*dvzij/(r2ij*rij)/(C*C);
+			}
+		}
+		a_const[i][0] = a_constx;
+		a_const[i][1] = a_consty;
+		a_const[i][2] = a_constz;
+	}
+
+
+	// Now running the substitution again and again through the loop below
+	for (int k=0; k<10; k++){ // you can set k as how many substitution you want to make
+		double a_old[_N_real][3]; // initialize an arry that stores the information of previousu calculated accleration
+		for (int i =0; i <_N_real; i++){
+			a_old[i][0] = a_new[i][0]; // when k = 0, a_new is the Newtownian term which calculated before
+			a_old[i][1] = a_new[i][1];
+			a_old[i][2] = a_new[i][2];
+		}
+		// now add on the non-constant term
+		for (int i = 0; i < _N_real; i++){ // a_j is used to update a_i and vice versa
+			double non_constx = 0.;
+			double non_consty = 0.;
+			double non_constz = 0.;
+			for (int j = 0; j < _N_real; j++){
+				if (j != i){
+					const double dxij = particles[i].x - particles[j].x;
+					const double dyij = particles[i].y - particles[j].y;
+					const double dzij = particles[i].z - particles[j].z;
+					const double r2ij = dxij*dxij + dyij*dyij + dzij*dzij;
+					const double rij = sqrt(r2ij);
+					non_constx += (G*particles[j].m*dxij/(r2ij*rij))*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C*C)+\
+										(7./(2.*C*C))*G*particles[j].m*a_old[j][0]/rij;
+					non_consty += (G*particles[j].m*dyij/(r2ij*rij))*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C*C)+\
+										(7./(2.*C*C))*G*particles[j].m*a_old[j][1]/rij;
+					non_constz += (G*particles[j].m*dzij/(r2ij*rij))*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C*C)+\
+										(7./(2.*C*C))*G*particles[j].m*a_old[j][2]/rij;
+				}
+			}
+			a_new[i][0] = (a_const[i][0] + non_constx);
+			a_new[i][1] = (a_const[i][1] + non_consty);
+			a_new[i][2] = (a_const[i][2] + non_constz);
+		}
+
+		// break out loop if a_new is converging
+		int breakout = 0;
+		for (int i = 0; i < _N_real; i++){
+			double dx = fabs(a_new[i][0] - a_old[i][0])/a_old[i][0];
+			double dy = fabs(a_new[i][1] - a_old[i][1])/a_old[i][1];
+			double dz = fabs(a_new[i][2] - a_old[i][2])/a_old[i][2];
+			/*if (i ==1){FILE* d = fopen("difference.txt","a"); // this is used to check if the loop is giving resonable output
+			fprintf(d, "number %d: %d: %.30e \n", k, i, dx);
+			fclose(d);
+			}*/
+			if ((dx<1.e-30) && (dy <1.e-30) && (dz<1.e-30)){
+				breakout += 1;
+			}
+		}
+		if (breakout == 2){
+			//printf(">>>>Precision reached in round %d<<<< \n", k);
+			break;
+		}
+	}
+	// update acceleration in particles
+	for (int i = 0; i <_N_real;i++){
+		particles[i].ax += a_new[i][0] - a_newton[i][0]; // substract newtonian term off since WHFAST would add it on later
+		particles[i].ay += a_new[i][1] - a_newton[i][1];
+		particles[i].az += a_new[i][2] - a_newton[i][2];
+	}
+					
+}
+

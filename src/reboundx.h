@@ -87,6 +87,7 @@ void rebx_add_modify_orbits_forces(struct reb_simulation* sim);
 void rebx_add_modify_orbits_direct(struct reb_simulation* sim);
 void rebx_add_gr(struct reb_simulation* sim, double c);
 void rebx_add_gr_potential(struct reb_simulation* sim, double c);
+void rebx_add_gr_implicit(struct reb_simulation* sim, double c);
 
 double* rebx_get_tau_a(struct reb_simulation* sim);
 void rebx_set_tau_a(struct reb_simulation* sim, double* tau_a);
