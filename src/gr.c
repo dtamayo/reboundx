@@ -95,35 +95,40 @@ void rebx_gr_implicit(struct reb_simulation* const sim){
 	const int _N_real = sim->N - sim->N_var;
 	const double G = sim->G;
 	struct reb_particle* const particles = sim->particles;
+	const unsigned int _gravity_ignore_10 = sim->gravity_ignore_10;
 
 	double a_const[_N_real][3]; // array that stores the value of the constant term
 	double a_newton[_N_real][3]; // stores the Newtonian term
 	double a_new[_N_real][3]; // stores the newly calculated term
 
-	for (int i=0; i < _N_real; i++){
+	for (int i=0; i<_N_real; i++){
 		// compute the Newtonian term 
-		double a_ntx = 0.;
-		double a_nty = 0.;
-		double a_ntz = 0.;
-		for (int j = 0; j< _N_real; j++){
-			if (j != i){
-				const double dxij = particles[i].x - particles[j].x;
-				const double dyij = particles[i].y - particles[j].y;
-				const double dzij = particles[i].z - particles[j].z;
-				const double r2ij = dxij*dxij + dyij*dyij + dzij*dzij;
-				const double rij = sqrt(r2ij);
-				a_ntx += -G*particles[j].m*dxij/(r2ij*rij);
-				a_nty += -G*particles[j].m*dyij/(r2ij*rij);
-				a_ntz += -G*particles[j].m*dzij/(r2ij*rij);
-			}
-		}
-		a_new[i][0] = a_ntx; // we want to use Newtonian term as our first substitution, hence the assignment here
-		a_new[i][1] = a_nty;
-		a_new[i][2] = a_ntz;
-		a_newton[i][0] = a_ntx;
-		a_newton[i][1] = a_nty;
-		a_newton[i][2] = a_ntz;
+		a_newton[i][0] = particles[i].ax;
+		a_newton[i][1] = particles[i].ay;
+		a_newton[i][2] = particles[i].az;
+		a_new[i][0] = a_newton[i][0]; // we want to use Newtonian term as our first substitution, hence the assignment here
+		a_new[i][1] = a_newton[i][1];
+		a_new[i][2] = a_newton[i][1];
+	}
+	if (_gravity_ignore_10){
+		const double dx = particles[0].x - particles[1].x;
+		const double dy = particles[0].y - particles[1].y;
+		const double dz = particles[0].z - particles[1].z;
+		const double r2 = dx*dx + dy*dy + dz*dz;
+		const double r = sqrt(r2);
+		const double prefact = -G/(r2*r);
+		const double prefact0 = prefact*particles[0].m;
+		const double prefact1 = prefact*particles[1].m;
+		a_newton[0][0] += prefact1*dx;
+		a_newton[0][1] += prefact1*dy;
+		a_newton[0][2] += prefact1*dz;
+		a_newton[1][0] -= prefact0*dx;
+		a_newton[1][1] -= prefact0*dy;
+		a_newton[1][2] -= prefact0*dz;
 
+	}
+
+	for (int i=0; i<_N_real; i++){
 		// then compute the constant terms:
 		double a_constx = 0.;
 		double a_consty = 0.;
@@ -206,6 +211,7 @@ void rebx_gr_implicit(struct reb_simulation* const sim){
 		a_const[i][1] = a_consty;
 		a_const[i][2] = a_constz;
 	}
+	//fprintf(stderr,"%.16e\t%.16e\n",particles[1].ax, a_newton[1][0]);
 
 
 	// Now running the substitution again and again through the loop below
