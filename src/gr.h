@@ -29,5 +29,7 @@
 #include "rebound.h"
 
 void rebx_gr(struct reb_simulation* const sim);
+void rebx_gr_potential(struct reb_simulation* const sim);
+void rebx_gr_implicit(struct reb_simulation* const sim);
 
 #endif

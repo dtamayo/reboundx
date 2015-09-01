@@ -15,7 +15,7 @@ libreboundxmodule = Extension('libreboundx',
                                 ],
                     include_dirs = ['src'],
                     define_macros=[ ('LIBREBOUNDX', None) ],
-                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-D_GNU_SOURCE', '-fPIC', '-lm', '-lrt', '-Wpointer-arith'],
+                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-D_GNU_SOURCE', '-fPIC', '-Wpointer-arith'],
                                     )
 
 here = os.path.abspath(os.path.dirname(__file__))

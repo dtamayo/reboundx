@@ -137,6 +137,25 @@ void rebx_add_gr(struct reb_simulation* sim, double c){
 	sim->force_is_velocity_dependent = 1;
 }
 
+void rebx_add_gr_potential(struct reb_simulation* sim, double c){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	rebx->gr.c = c;
+	rebx->Nforces++;
+	rebx->forces = realloc(rebx->forces, sizeof(xptr)*rebx->Nforces);
+	rebx->forces[rebx->Nforces-1] = rebx_gr_potential;
+	sim->additional_forces = rebx_forces;
+}
+
+void rebx_add_gr_implicit(struct reb_simulation* sim, double c){
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	rebx->gr.c = c;
+	rebx->Nforces++;
+	rebx->forces = realloc(rebx->forces, sizeof(xptr)*rebx->Nforces);
+	rebx->forces[rebx->Nforces-1] = rebx_gr_implicit;
+	sim->additional_forces = rebx_forces;
+	sim->force_is_velocity_dependent = 1;
+}
+
 /* Garbage collection */
 void rebx_free_xparams(struct rebx_extras* const rebx){
 	free(rebx->modify_orbits_forces.tau_a);
