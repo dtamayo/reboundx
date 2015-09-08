@@ -3,6 +3,7 @@ import os
 import rebound
 from rebound import Simulation
 
+c_default = 10064.915
 #Find the reboundx C library
 pymodulespath = os.path.dirname(__file__)
 try:
@@ -11,6 +12,7 @@ except:
     print("Cannot find library 'libreboundx.so'.")
     raise
 
+#def assign_list(jjjjjjjjj^
 class rebx_params_modify_orbits_forces(Structure):
     _fields_ = [("allocatedN", c_int),
                 ("tau_a", POINTER(c_double)),
@@ -18,7 +20,13 @@ class rebx_params_modify_orbits_forces(Structure):
                 ("tau_inc", POINTER(c_double)),
                 ("tau_omega", POINTER(c_double)),
                 ("e_damping_p", c_double)]                     
-
+    @property
+    def tau_as(self):
+        #return self.tau_as
+        pass
+    @tau_as.setter
+    def tau_as(self, tau_a):
+        pass
 class rebx_params_modify_orbits_direct(Structure):
     _fields_ = [("allocatedN", c_int),
                 ("tau_a", POINTER(c_double)),
@@ -32,33 +40,27 @@ class rebx_params_gr(Structure):
 
 class Extras(Structure):
     def __init__(self, sim):
-        self.simulation = sim.ref
-        clibreboundx.rebx_init(self.simulation)
+        self.simulation = byref(sim)
+        clibreboundx.rebx_initialize(self.simulation, byref(self))
 
-    #TODO: find a way to set individual elements from python, e.g., x.tau_a[2] = 1.e3
     def __del__(self):
         clibreboundx.rebx_free_xparams(byref(self))
 
-    def add_modify_orbits_direct():
+    def add_modify_orbits_direct(self):
         clibreboundx.rebx_add_modify_orbits_direct(self.simulation)
     
-    def add_modify_orbits_forces():
+    def add_modify_orbits_forces(self):
         clibreboundx.rebx_add_modify_orbits_forces(self.simulation)
 
-    def add_gr(self, c=None):
-        if c is None:
-            if sim.G != 1.:
-                raise AttributeError('You must pass c in the appropriate units for the simulation, e.g., rebx.add_gr(c=3.e8)')
-            else: 
-                c = 10064.915
+    def add_gr(self, c=c_default):
         clibreboundx.rebx_add_gr(self.simulation, c_double(c))
 
-    def add_gr_potential(self, c=10064.915):
+    def add_gr_potential(self, c=c_default):
         clibreboundx.rebx_add_gr_potential(self.simulation, c_double(c))
 
-    def add_gr_implicit(self, c=10064.915):
+    def add_gr_implicit(self, c=c_default):
         clibreboundx.rebx_add_gr_implicit(self.simulation, c_double(c))
-
+'''
     @property
     def tau_a(self):
         return [self.params.contents.tau_a[i] for i in range(self.simulation.contents.N)]
@@ -98,9 +100,9 @@ class Extras(Structure):
             raise AttributeError('You must pass an array of timescales with as many elements as there are particles in the simulation')
         arr = (c_double * len(tau_pomega))(*tau_pomega)
         clibreboundx.rebx_set_tau_pomega(self.simulation, byref(arr))
-
+'''
 # Need to put fields after class definition because of self-referencing
-Extras._fields_ = [("sim", Simulation),
+Extras._fields_ = [("sim", POINTER(Simulation)),
                 ("forces", POINTER(CFUNCTYPE(None, POINTER(Simulation)))),
                 ("ptm", POINTER(CFUNCTYPE(None, POINTER(Simulation)))),
                 ("Nforces", c_int),

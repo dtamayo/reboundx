@@ -38,10 +38,14 @@ double podot; // pericenter precession at r = Rc
 */
 // pointers for damping timescales
 
-
 struct rebx_extras* rebx_init(struct reb_simulation* sim){
-	struct rebx_extras* rebx = (struct rebx_extras*) malloc(sizeof(struct rebx_extras));
-	sim->extras = (struct rebx_extras*) rebx;
+	struct rebx_extras* rebx = malloc(sizeof(struct rebx_extras));
+	rebx_initialize(sim, rebx);
+	return rebx;
+}
+
+void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
+	sim->extras = rebx;
 	rebx->sim = sim;
 
 	rebx->forces = NULL;
@@ -64,7 +68,6 @@ struct rebx_extras* rebx_init(struct reb_simulation* sim){
 	rebx->modify_orbits_direct.e_damping_p = 0.;
 
 	rebx->gr.c = C_DEFAULT; // speed of light in default units of AU/(yr/2pi)
-	return (struct rebx_extras*)sim->extras;
 }
 
 /*void rebx_add(struct reb_simulation* sim, enum REBX_EXTRAS extra){

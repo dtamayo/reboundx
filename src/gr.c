@@ -1,10 +1,10 @@
 /**
  * @file 	gr.c
  * @brief 	Post-newtonian general relativity corrections
- * @author 	Pengshuai (Sam) Shi <tamayo.daniel@gmail.com>
+ * @author 	Pengshuai (Sam) Shi, Hanno Rein <tamayo.daniel@gmail.com>
  * 
  * @section 	LICENSE
- * Copyright (c) 2015 Pengshuai (Sam) Shi, Dan Tamayo, Hanno Rein
+ * Copyright (c) 2015 Pengshuai (Sam) Shi, Hanno Rein, Dan Tamayo
  *
  * This file is part of reboundx.
  *

@@ -82,6 +82,7 @@ struct rebx_extras {
 };
 
 struct rebx_extras* rebx_init(struct reb_simulation* sim);
+void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx);
 
 void rebx_add_modify_orbits_forces(struct reb_simulation* sim);
 void rebx_add_modify_orbits_direct(struct reb_simulation* sim);
