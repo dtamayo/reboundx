@@ -45,7 +45,25 @@ class Extras(Structure):
     def add_modify_orbits_forces(self):
         clibreboundx.rebx_add_modify_orbits_forces(self.simulation)
 
-    def add_gr(self, c=c_default):
+    def check_c(self, c):
+        if c is not None: # user passed c explicitly
+            return c
+       
+        # c was not passed by user
+
+        if self.simulation.contents.G == 1: # if G = 1 (default) return default c
+            return c_default
+            
+        units = self.simulation.contents.units
+        if not None in units.values(): # units are set
+            c =  convert_vel(c_default, 'AU', 'yr2pi', units['length'], units['time'])
+            print(c)
+            return c
+        else:
+            raise ValueError("If you change G, you must pass c (speed of light) in appropriate units to add_gr, add_gr_potential, and add_gr_implicit.  Alternatively, set the units for the simulation.  See ipython_examples/GeneralRelativity.ipynb")
+              
+    def add_gr(self, c=None):
+        c = self.check_c(c)
         clibreboundx.rebx_add_gr(self.simulation, c_double(c))
 
     def add_gr_potential(self, c=c_default):
