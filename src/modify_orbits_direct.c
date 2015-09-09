@@ -42,12 +42,12 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim){
 		double de = 0.;
 		double dom = 0.;	
 		if (rebxparams->tau_a[i] != 0.){
-			da += -o.a*sim->dt/rebxparams->tau_a[i]; 
+			da += o.a*sim->dt/rebxparams->tau_a[i]; 
 		}
 	
 		if (rebxparams->tau_e[i] != 0.){
-			de += -o.e*sim->dt/rebxparams->tau_e[i];
-			da += -2.*o.a*o.e*o.e*rebxparams->e_damping_p*sim->dt/rebxparams->tau_e[i];
+			de += o.e*sim->dt/rebxparams->tau_e[i];
+			da += 2.*o.a*o.e*o.e*rebxparams->e_damping_p*sim->dt/rebxparams->tau_e[i];
 		}
 
 		if (rebxparams->tau_omega[i] != 0.){

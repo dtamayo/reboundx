@@ -12,7 +12,6 @@ except:
     print("Cannot find library 'libreboundx.so'.")
     raise
 
-#def assign_list(jjjjjjjjj^
 class rebx_params_modify_orbits_forces(Structure):
     _fields_ = [("allocatedN", c_int),
                 ("tau_a", POINTER(c_double)),
@@ -20,13 +19,7 @@ class rebx_params_modify_orbits_forces(Structure):
                 ("tau_inc", POINTER(c_double)),
                 ("tau_omega", POINTER(c_double)),
                 ("e_damping_p", c_double)]                     
-    @property
-    def tau_as(self):
-        #return self.tau_as
-        pass
-    @tau_as.setter
-    def tau_as(self, tau_a):
-        pass
+
 class rebx_params_modify_orbits_direct(Structure):
     _fields_ = [("allocatedN", c_int),
                 ("tau_a", POINTER(c_double)),
@@ -40,7 +33,7 @@ class rebx_params_gr(Structure):
 
 class Extras(Structure):
     def __init__(self, sim):
-        self.simulation = byref(sim)
+        self.simulation = pointer(sim)
         clibreboundx.rebx_initialize(self.simulation, byref(self))
 
     def __del__(self):
@@ -111,7 +104,8 @@ Extras._fields_ = [("sim", POINTER(Simulation)),
                 ("modify_orbits_direct", rebx_params_modify_orbits_direct),
                 ("gr", rebx_params_gr)]
 
-'''def set_e_damping_p(value):
+'''
+def set_e_damping_p(value):
     clibreboundx.rebx_set_e_damping_p(c_double(value))
 
 def set_migration(tau_a):
@@ -131,9 +125,9 @@ def set_i_damping(tau_i):
     arr = (c_double * len(tau_i))(*tau_i)
     clibreboundx.rebx_set_i_damping(byref(arr),c_int(len(tau_i)))
 
-def set_peri_precession(tau_po):
-    arr = (c_double * len(tau_po))(*tau_po)
-    clibreboundx.rebx_set_peri_precession(byref(arr), c_int(len(tau_po)))
+def set_peri_precession(tau_omega):
+    arr = (c_double * len(tau_omega))(*tau_omega)
+    clibreboundx.rebx_set_peri_precession(byref(arr), c_int(len(tau_omega)))
    
 def set_peri_precession(gamma, Rc, podot):
     clibreboundx.set_peri_precession(c_double(gamma), c_double(Rc), c_double(podot))
