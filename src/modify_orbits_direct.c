@@ -40,6 +40,7 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim){
 		struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, sim->particles[i], com, err);
 	    double da = 0.;
 		double de = 0.;
+		double di = 0.;
 		double dom = 0.;	
 		if (rebxparams->tau_a[i] != 0.){
 			da += o.a*sim->dt/rebxparams->tau_a[i]; 
@@ -48,6 +49,10 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim){
 		if (rebxparams->tau_e[i] != 0.){
 			de += o.e*sim->dt/rebxparams->tau_e[i];
 			da += 2.*o.a*o.e*o.e*rebxparams->e_damping_p*sim->dt/rebxparams->tau_e[i];
+		}
+
+		if (rebxparams->tau_inc[i] != 0.){
+			di += o.inc*sim->dt/rebxparams->tau_inc[i];
 		}
 
 		if (rebxparams->tau_omega[i] != 0.){
