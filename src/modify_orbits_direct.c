@@ -61,6 +61,7 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim){
 
 		o.a += da;
 		o.e += de;
+		o.inc += di;
 		o.omega += dom;
 
 		rebxtools_orbit2p(sim->G, &sim->particles[i], &com, o); 
