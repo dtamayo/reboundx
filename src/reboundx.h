@@ -111,4 +111,7 @@ void rebx_set_tau_omega(struct reb_simulation* sim, double* tau_omega);
 void rebx_forces(struct reb_simulation* sim);
 void rebx_ptm(struct reb_simulation* sim);
 
+void rebx_free_extras(struct rebx_extras* const rebx);
+void rebx_free_pointers(struct rebx_extras* const rebx);
+
 #endif

@@ -160,16 +160,32 @@ void rebx_add_gr_implicit(struct reb_simulation* sim, double c){
 }
 
 /* Garbage collection */
-void rebx_free_xparams(struct rebx_extras* const rebx){
-	free(rebx->modify_orbits_forces.tau_a);
-	free(rebx->modify_orbits_forces.tau_e);
-	free(rebx->modify_orbits_forces.tau_inc);
-	free(rebx->modify_orbits_forces.tau_omega);
+void rebx_free_extras(struct rebx_extras* const rebx){
+	rebx_free_pointers(rebx);
+	free(rebx);
+}
 
-	free(rebx->modify_orbits_direct.tau_a);
-	free(rebx->modify_orbits_direct.tau_e);
-	free(rebx->modify_orbits_direct.tau_inc);
-	free(rebx->modify_orbits_direct.tau_omega);
+void rebx_free_pointers(struct rebx_extras* const rebx){
+	if(rebx->forces){
+		free(rebx->forces);
+	}
+	if(rebx->ptm){
+		free(rebx->ptm);
+	}
+
+	if(rebx->modify_orbits_forces.tau_a){
+		free(rebx->modify_orbits_forces.tau_a);
+		free(rebx->modify_orbits_forces.tau_e);
+		free(rebx->modify_orbits_forces.tau_inc);
+		free(rebx->modify_orbits_forces.tau_omega);
+	}
+	
+	if(rebx->modify_orbits_direct.tau_a){
+		free(rebx->modify_orbits_direct.tau_a);
+		free(rebx->modify_orbits_direct.tau_e);
+		free(rebx->modify_orbits_direct.tau_inc);
+		free(rebx->modify_orbits_direct.tau_omega);
+	}
 }
 
 /*Getter/setters*/

@@ -33,28 +33,28 @@ class rebx_params_gr(Structure):
 
 class Extras(Structure):
     def __init__(self, sim):
-        self.simulation = pointer(sim)
-        clibreboundx.rebx_initialize(self.simulation, byref(self))
+        clibreboundx.rebx_initialize(byref(sim), byref(self))
 
     def __del__(self):
-        clibreboundx.rebx_free_xparams(byref(self))
+        clibreboundx.rebx_free_pointers(byref(self))
 
     def add_modify_orbits_direct(self):
-        clibreboundx.rebx_add_modify_orbits_direct(self.simulation)
+        clibreboundx.rebx_add_modify_orbits_direct(self.sim)
     
     def add_modify_orbits_forces(self):
-        clibreboundx.rebx_add_modify_orbits_forces(self.simulation)
+        clibreboundx.rebx_add_modify_orbits_forces(self.sim)
 
     def check_c(self, c):
         if c is not None: # user passed c explicitly
             return c
-       
+      
         # c was not passed by user
-
-        if self.simulation.contents.G == 1: # if G = 1 (default) return default c
+         
+        if self.sim.contents.G == 1: # if G = 1 (default) return default c
             return c_default
             
-        units = self.simulation.contents.units
+        
+        units = self.sim.contents.units
         if not None in units.values(): # units are set
             c =  convert_vel(c_default, 'AU', 'yr2pi', units['length'], units['time'])
             print(c)
@@ -62,55 +62,56 @@ class Extras(Structure):
         else:
             raise ValueError("If you change G, you must pass c (speed of light) in appropriate units to add_gr, add_gr_potential, and add_gr_implicit.  Alternatively, set the units for the simulation.  See ipython_examples/GeneralRelativity.ipynb")
               
+        return c_default
     def add_gr(self, c=None):
         c = self.check_c(c)
-        clibreboundx.rebx_add_gr(self.simulation, c_double(c))
+        clibreboundx.rebx_add_gr(self.sim, c_double(c))
 
     def add_gr_potential(self, c=c_default):
-        clibreboundx.rebx_add_gr_potential(self.simulation, c_double(c))
+        clibreboundx.rebx_add_gr_potential(self.sim, c_double(c))
 
     def add_gr_implicit(self, c=c_default):
-        clibreboundx.rebx_add_gr_implicit(self.simulation, c_double(c))
+        clibreboundx.rebx_add_gr_implicit(self.sim, c_double(c))
 '''
     @property
     def tau_a(self):
-        return [self.params.contents.tau_a[i] for i in range(self.simulation.contents.N)]
+        return [self.params.contents.tau_a[i] for i in range(self.sim.contents.N)]
     @tau_a.setter
     def tau_a(self, tau_a):
-        if len(tau_a) is not self.simulation.contents.N:
+        if len(tau_a) is not self.sim.contents.N:
             raise AttributeError('You must pass an array of timescales with as many elements as there are particles in the simulation')
         arr = (c_double * len(tau_a))(*tau_a)
-        clibreboundx.rebx_set_tau_a(self.simulation, byref(arr))
+        clibreboundx.rebx_set_tau_a(self.sim, byref(arr))
 
     @property
     def tau_e(self):
-        return [self.params.contents.tau_e[i] for i in range(self.simulation.contents.N)]
+        return [self.params.contents.tau_e[i] for i in range(self.sim.contents.N)]
     @tau_e.setter
     def tau_e(self, tau_e):
-        if len(tau_e) is not self.simulation.contents.N:
+        if len(tau_e) is not self.sim.contents.N:
             raise AttributeError('You must pass an array of timescales with as many elements as there are particles in the simulation')
         arr = (c_double * len(tau_e))(*tau_e)
-        clibreboundx.rebx_set_tau_e(self.simulation, byref(arr))
+        clibreboundx.rebx_set_tau_e(self.sim, byref(arr))
 
     @property
     def tau_inc(self):
-        return [self.params.contents.tau_inc[i] for i in range(self.simulation.contents.N)]
+        return [self.params.contents.tau_inc[i] for i in range(self.sim.contents.N)]
     @tau_inc.setter
     def tau_inc(self, tau_inc):
-        if len(tau_inc) is not self.simulation.contents.N:
+        if len(tau_inc) is not self.sim.contents.N:
             raise AttributeError('You must pass an array of timescales with as many elements as there are particles in the simulation')
         arr = (c_double * len(tau_inc))(*tau_inc)
-        clibreboundx.rebx_set_tau_inc(self.simulation, byref(arr))
+        clibreboundx.rebx_set_tau_inc(self.sim, byref(arr))
 
     @property
     def tau_pomega(self):
-        return [self.params.contents.tau_pomega[i] for i in range(self.simulation.contents.N)]
+        return [self.params.contents.tau_pomega[i] for i in range(self.sim.contents.N)]
     @tau_pomega.setter
     def tau_pomega(self, tau_pomega):
-        if len(tau_pomega) is not self.simulation.contents.N:
+        if len(tau_pomega) is not self.sim.contents.N:
             raise AttributeError('You must pass an array of timescales with as many elements as there are particles in the simulation')
         arr = (c_double * len(tau_pomega))(*tau_pomega)
-        clibreboundx.rebx_set_tau_pomega(self.simulation, byref(arr))
+        clibreboundx.rebx_set_tau_pomega(self.sim, byref(arr))
 '''
 # Need to put fields after class definition because of self-referencing
 Extras._fields_ = [("sim", POINTER(Simulation)),

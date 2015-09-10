@@ -37,7 +37,7 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim){
 	for(int i=1;i<sim->N;i++){
 		struct reb_particle *p = &(sim->particles[i]);
 		int* err = malloc(sizeof(int)); // dummy
-		struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, sim->particles[i], com, err);
+		struct reb_orbit o = rebxtools_particle_to_orbit_err(sim->G, sim->particles[i], com, err);
 	    double da = 0.;
 		double de = 0.;
 		double di = 0.;
