@@ -66,6 +66,6 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim){
 
 		rebxtools_orbit2p(sim->G, &sim->particles[i], &com, o); 
 	}
-	reb_move_to_com(sim);
+	rebxtools_move_to_com(sim);
 }
 

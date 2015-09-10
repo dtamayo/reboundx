@@ -123,7 +123,7 @@ struct reb_orbit rebxtools_particle_to_orbit_err(double G, struct reb_particle p
 
 struct reb_orbit rebxtools_particle_to_orbit(double G, struct reb_particle p, struct reb_particle primary){
 	int err;
-	return reb_tools_particle_to_orbit_err(G, p, primary, &err);
+	return rebxtools_particle_to_orbit_err(G, p, primary, &err);
 }
 
 void rebxtools_orbit2p(double G, struct reb_particle* p, struct reb_particle* primary, struct reb_orbit o){
