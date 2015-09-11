@@ -2,11 +2,9 @@ ifndef REB_DIR
 $(error Must set environment variable for the path to your rebound directory, e.g., export REB_DIR=/Users/dtamayo/rebound.  See https://github.com/dtamayo/reboundx/blob/master/README.rst)
 endif
 
-
-
 OPT+= -fPIC -DLIBREBOUNDX
 
-SOURCES=reboundx.c rebxtools.c modify_orbits_direct.c modify_orbits_forces.c gr.c tools.c 
+SOURCES=reboundx.c rebxtools.c modify_orbits_direct.c modify_orbits_forces.c gr.c
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=$(SOURCES:.c=.h)
 

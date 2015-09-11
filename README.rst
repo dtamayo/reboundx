@@ -19,7 +19,7 @@ Installation
 
 **Python version**
 
-We recommend that you installing REBOUND and REBOUNDx within a virtual environment (though this is not necessary).  See http://rebound.readthedocs.org/en/latest/python_quickstart.html.  If you already have REBOUND installed within a virtual environment you don't have to do this step.
+We recommend that you install REBOUND and REBOUNDx within a virtual environment (though this is not necessary).  See http://rebound.readthedocs.org/en/latest/python_quickstart.html.  If you already have REBOUND installed within a virtual environment you don't have to do this step.
 
 Installation is as easy as typing
  
@@ -35,7 +35,7 @@ You can find examples for adding various effects at https://github.com/dtamayo/r
 
     pip install -e ./
 
-(even if you're using a conda environment).  This gives you all the source code and examples, and allows you modify the C code, and compile the changes (just type the line above each time you make changes).
+(even if you're using a conda environment).  This gives you all the source code and examples, and allows you modify the C code and compile the changes (just type the line above each time you make changes).
 
 **C version**
 
@@ -54,7 +54,4 @@ and add the line::
 
 where you would replace the path to your own installation.  Now close your terminal, open a new one and you're all set!
     
-Examples
---------
-
 You can find working examples in reboundx/examples.  The gr example adds post-newtonian corrections. The modify_orbits example shows how to add semimajor axis / eccentricity damping to simulations, either through direct modifications of the orbital elements, or through forces.
