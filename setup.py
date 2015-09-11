@@ -7,14 +7,14 @@ import os
 
 libreboundxmodule = Extension('libreboundx',
                     sources = [ 'src/reboundx.c',
-                                'src/xtools.c',
-                                'src/elements_direct.c',
-                                'src/elements_forces.c',
-                                'src/gr.c'
+                                'src/rebxtools.c',
+                                'src/modify_orbits_direct.c',
+                                'src/modify_orbits_forces.c',
+                                'src/gr.c',
                                 ],
                     include_dirs = ['src'],
-                    define_macros=[ ('LIBREBOUNDx', None) ],
-                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-DLIBREBOUND', '-D_GNU_SOURCE', '-fPIC'],
+                    define_macros=[ ('LIBREBOUNDX', None) ],
+                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-D_GNU_SOURCE', '-fPIC', '-Wpointer-arith'],
                                     )
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -52,6 +52,6 @@ setup(name='reboundx',
     ],
     keywords='astronomy astrophysics nbody integrator',
     packages=['reboundx'],
-    install_requires=['rebound'],
+    install_requires=['rebound>=2.7.0'],
     ext_modules = [libreboundxmodule],
     zip_safe=False)

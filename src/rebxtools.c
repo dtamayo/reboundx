@@ -2,53 +2,6 @@
 #include <stdlib.h>
 #include "rebxtools.h"
 
-/*void rebxtools_inertial_to_jacobi_posvel(void){
-	double s_x = particles[N_megno].m * particles[N_megno].x;
-	double s_y = particles[N_megno].m * particles[N_megno].y;
-	double s_z = particles[N_megno].m * particles[N_megno].z;
-	double s_vx = particles[N_megno].m * particles[N_megno].vx;
-	double s_vy = particles[N_megno].m * particles[N_megno].vy;
-	double s_vz = particles[N_megno].m * particles[N_megno].vz;
-	for (unsigned int i=1+N_megno;i<N;i++){
-		const double ei = etai[i-1-N_megno];
-		const struct particle pi = particles[i];
-		const double pme = eta[i-N_megno]*ei;
-		p_j[i].x = pi.x - s_x*ei;
-		p_j[i].y = pi.y - s_y*ei;
-		p_j[i].z = pi.z - s_z*ei;
-		p_j[i].vx = pi.vx - s_vx*ei;
-		p_j[i].vy = pi.vy - s_vy*ei;
-		p_j[i].vz = pi.vz - s_vz*ei;
-		s_x  = s_x  * pme + pi.m*p_j[i].x ;
-		s_y  = s_y  * pme + pi.m*p_j[i].y ;
-		s_z  = s_z  * pme + pi.m*p_j[i].z ;
-		s_vx = s_vx * pme + pi.m*p_j[i].vx;
-		s_vy = s_vy * pme + pi.m*p_j[i].vy;
-		s_vz = s_vz * pme + pi.m*p_j[i].vz;
-	}
-	p_j[N_megno].x = s_x * Mtotali;
-	p_j[N_megno].y = s_y * Mtotali;
-	p_j[N_megno].z = s_z * Mtotali;
-	p_j[N_megno].vx = s_vx * Mtotali;
-	p_j[N_megno].vy = s_vy * Mtotali;
-	p_j[N_megno].vz = s_vz * Mtotali;
-}*/
-
-struct reb_orbit rebxtools_orbit_nan(void){
-	struct reb_orbit o;
-	o.a = NAN;
-	o.r = NAN;
-	o.h = NAN;
-	o.P = NAN;
-	o.l = NAN;
-	o.e = NAN;
-	o.inc = NAN;
-	o.Omega = NAN;
-	o.omega = NAN;
-	o.f = NAN;
-	return o;
-}
-
 static const struct reb_orbit reb_orbit_nan = {.r = NAN, .v = NAN, .h = NAN, .P = NAN, .n = NAN, .a = NAN, .e = NAN, .inc = NAN, .Omega = NAN, .omega = NAN, .pomega = NAN, .f = NAN, .M = NAN, .l = NAN};
 
 #define MIN_REL_ERROR 1.0e-12	///< Close to smallest relative floating point number, used for orbit calculation
@@ -75,7 +28,7 @@ static double acos2(double num, double denom, double disambiguator){
 	return val;
 }
 
-struct reb_orbit rebxtools_particle_to_orbit(double G, struct reb_particle p, struct reb_particle primary, int* err){
+struct reb_orbit rebxtools_particle_to_orbit_err(double G, struct reb_particle p, struct reb_particle primary, int* err){
 	struct reb_orbit o;
 	if (primary.m <= TINY){	
 		*err = 1;			// primary has no mass.
@@ -166,6 +119,11 @@ struct reb_orbit rebxtools_particle_to_orbit(double G, struct reb_particle p, st
 	}
 
 	return o;
+}
+
+struct reb_orbit rebxtools_particle_to_orbit(double G, struct reb_particle p, struct reb_particle primary){
+	int err;
+	return rebxtools_particle_to_orbit_err(G, p, primary, &err);
 }
 
 void rebxtools_orbit2p(double G, struct reb_particle* p, struct reb_particle* primary, struct reb_orbit o){

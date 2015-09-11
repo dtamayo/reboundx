@@ -1,5 +1,30 @@
-#ifndef _LIBrebx_H
-#define _LIBrebx_H
+/**
+ * @file 	reboundx.h
+ * @brief 	REBOUNDx API definition.
+ * @author 	Dan Tamayo <tamayo.daniel@gmail.com>
+ * 
+ * @section 	LICENSE
+ * Copyright (c) 2015 Dan Tamayo, Hanno Rein
+ *
+ * This file is part of reboundx.
+ *
+ * reboundx is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * reboundx is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+#ifndef _LIBREBX_H
+#define _LIBREBX_H
 #ifndef M_PI 
 #define M_PI 3.1415926535879323846
 #endif
@@ -13,10 +38,10 @@
 
 typedef void (*xptr)(struct reb_simulation* const r);
 
-/*enum REBx_MODS {
-	REBx_MODIFY_modify_orbits_forces 	= 0,
-	REBx_MODIFY_modify_orbits_direct 	= 1,
-	REBx_GR						= 2,
+/*enum REBX_EXTRAS {
+	REBX_MODIFY_ORBITS_FORCES	= 0,
+	REBX_MODIFY_ORBITS_DIRECT	= 1,
+	REBX_GR						= 2,
 };*/
 
 struct rebx_params_modify_orbits_forces {
@@ -57,10 +82,13 @@ struct rebx_extras {
 };
 
 struct rebx_extras* rebx_init(struct reb_simulation* sim);
+void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx);
 
 void rebx_add_modify_orbits_forces(struct reb_simulation* sim);
 void rebx_add_modify_orbits_direct(struct reb_simulation* sim);
 void rebx_add_gr(struct reb_simulation* sim, double c);
+void rebx_add_gr_potential(struct reb_simulation* sim, double c);
+void rebx_add_gr_implicit(struct reb_simulation* sim, double c);
 
 double* rebx_get_tau_a(struct reb_simulation* sim);
 void rebx_set_tau_a(struct reb_simulation* sim, double* tau_a);
@@ -74,7 +102,7 @@ void rebx_set_tau_inc(struct reb_simulation* sim, double* tau_inc);
 double* rebx_get_tau_omega(struct reb_simulation* sim);
 void rebx_set_tau_omega(struct reb_simulation* sim, double* tau_omega);
 
-//void rebx_add(struct reb_simulation* sim, enum REBx_MODS perturbation);
+//void rebx_add(struct reb_simulation* sim, enum REBX_EXTRAS extra);
 
 /**
  * @cond PRIVATE
@@ -82,5 +110,8 @@ void rebx_set_tau_omega(struct reb_simulation* sim, double* tau_omega);
  */
 void rebx_forces(struct reb_simulation* sim);
 void rebx_ptm(struct reb_simulation* sim);
+
+void rebx_free_extras(struct rebx_extras* const rebx);
+void rebx_free_pointers(struct rebx_extras* const rebx);
 
 #endif

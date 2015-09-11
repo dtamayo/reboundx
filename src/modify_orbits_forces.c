@@ -1,3 +1,28 @@
+/**
+ * @file 	modify_orbits_forces.c
+ * @brief 	Add forces that orbit-average to give semimajor axis and eccentricity damping
+ * @author 	Dan Tamayo <tamayo.daniel@gmail.com>
+ * 
+ * @section 	LICENSE
+ * Copyright (c) 2015 Dan Tamayo, Hanno Rein
+ *
+ * This file is part of reboundx.
+ *
+ * reboundx is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * reboundx is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 #include <stdio.h>
 #include <math.h>
 #include "modify_orbits_forces.h"
@@ -14,9 +39,9 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim){
 		const double dvz = p->vz - com.vz;
 
 		if (rebxparams->tau_a[i] != 0.){
-			p->ax -=  dvx/(2.*rebxparams->tau_a[i]);
-			p->ay -=  dvy/(2.*rebxparams->tau_a[i]);
-			p->az -=  dvz/(2.*rebxparams->tau_a[i]);
+			p->ax +=  dvx/(2.*rebxparams->tau_a[i]);
+			p->ay +=  dvy/(2.*rebxparams->tau_a[i]);
+			p->az +=  dvz/(2.*rebxparams->tau_a[i]);
 		}
 
 		if (rebxparams->tau_e[i] != 0. || rebxparams->tau_inc[i]!= 0.){// || diskmass != 0.){ 	// need h and e vectors for both types
@@ -41,16 +66,16 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim){
 				const double prefac1 = 1./rebxparams->tau_e[i]/1.5*(1.+e_damping_p/2.*e*e);
 				const double prefac2 = 1./(r*h) * sqrt(mu/a/(1.-e*e))/rebxparams->tau_e[i]/1.5;*/
 
-				p->ax += -2/rebxparams->tau_e[i]*vr*dx/r;
-				p->ay += -2/rebxparams->tau_e[i]*vr*dy/r;
-				p->az += -2/rebxparams->tau_e[i]*vr*dz/r;
+				p->ax += 2/rebxparams->tau_e[i]*vr*dx/r;
+				p->ay += 2/rebxparams->tau_e[i]*vr*dy/r;
+				p->az += 2/rebxparams->tau_e[i]*vr*dz/r;
 				/*p->ax += -dvx*prefac1 + (hy*dz-hz*dy)*prefac2;
 				p->ay += -dvy*prefac1 + (hz*dx-hx*dz)*prefac2;
 				p->az += -dvz*prefac1 + (hx*dy-hy*dx)*prefac2;*/
 			}
 			if (rebxparams->tau_inc[i]!=0){		// Inclination damping
-				p->az += -2.*dvz/rebxparams->tau_inc[i];
-				const double prefac = (hx*hx + hy*hy)/h/h/rebxparams->tau_inc[i];
+				p->az -= -2.*dvz/rebxparams->tau_inc[i];
+				const double prefac = -(hx*hx + hy*hy)/h/h/rebxparams->tau_inc[i];
 				p->ax += prefac*dvx;
 				p->ay += prefac*dvy;
 				p->az += prefac*dvz;
