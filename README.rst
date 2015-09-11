@@ -14,10 +14,8 @@ REBOUNDx allows you to easily add typically used modifications to your REBOUND s
 * Semimajor axis and eccentricity damping, implemented as forces
 * Direct modifications to particles' orbital elements after each timestep
 
-Installation
-------------
-
-**Python version**
+Python Version Installation
+---------------------------
 
 We recommend that you install REBOUND and REBOUNDx within a virtual environment (though this is not necessary).  See http://rebound.readthedocs.org/en/latest/python_quickstart.html.  If you already have REBOUND installed within a virtual environment you don't have to do this step.
 
@@ -37,7 +35,8 @@ You can find examples for adding various effects at https://github.com/dtamayo/r
 
 (even if you're using a conda environment).  This gives you all the source code and examples, and allows you modify the C code and compile the changes (just type the line above each time you make changes).
 
-**C version**
+C Version Installation
+----------------------
 
 In a terminal, navigate to the location where you want to put the reboundx folder.  Then::
 
@@ -54,4 +53,4 @@ and add the line::
 
 where you would replace the path to your own installation.  Now close your terminal, open a new one and you're all set!
     
-You can find working examples in reboundx/examples.  The gr example adds post-newtonian corrections. The modify_orbits example shows how to add semimajor axis / eccentricity damping to simulations, either through direct modifications of the orbital elements, or through forces.
+You can find working examples in reboundx/examples.  The gr example adds post-newtonian corrections. The modify_orbits example shows how to add semimajor axis / eccentricity damping to simulations, either through direct modifications of the orbital elements, or through forces.  It's worth checking out the python examples, since they have a bit more detail about each of the modifications:  https://github.com/dtamayo/reboundx/tree/master/ipython_examples.
