@@ -52,6 +52,6 @@ setup(name='reboundx',
     ],
     keywords='astronomy astrophysics nbody integrator',
     packages=['reboundx'],
-    install_requires=['rebound'],
+    install_requires=['rebound>=2.7.0'],
     ext_modules = [libreboundxmodule],
     zip_safe=False)
