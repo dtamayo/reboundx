@@ -39,9 +39,9 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim){
 		const double dvz = p->vz - com.vz;
 
 		if (rebxparams->tau_a[i] != 0.){
-			p->ax -=  dvx/(2.*rebxparams->tau_a[i]);
-			p->ay -=  dvy/(2.*rebxparams->tau_a[i]);
-			p->az -=  dvz/(2.*rebxparams->tau_a[i]);
+			p->ax +=  dvx/(2.*rebxparams->tau_a[i]);
+			p->ay +=  dvy/(2.*rebxparams->tau_a[i]);
+			p->az +=  dvz/(2.*rebxparams->tau_a[i]);
 		}
 
 		if (rebxparams->tau_e[i] != 0. || rebxparams->tau_inc[i]!= 0.){// || diskmass != 0.){ 	// need h and e vectors for both types
@@ -66,16 +66,16 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim){
 				const double prefac1 = 1./rebxparams->tau_e[i]/1.5*(1.+e_damping_p/2.*e*e);
 				const double prefac2 = 1./(r*h) * sqrt(mu/a/(1.-e*e))/rebxparams->tau_e[i]/1.5;*/
 
-				p->ax += -2/rebxparams->tau_e[i]*vr*dx/r;
-				p->ay += -2/rebxparams->tau_e[i]*vr*dy/r;
-				p->az += -2/rebxparams->tau_e[i]*vr*dz/r;
+				p->ax += 2/rebxparams->tau_e[i]*vr*dx/r;
+				p->ay += 2/rebxparams->tau_e[i]*vr*dy/r;
+				p->az += 2/rebxparams->tau_e[i]*vr*dz/r;
 				/*p->ax += -dvx*prefac1 + (hy*dz-hz*dy)*prefac2;
 				p->ay += -dvy*prefac1 + (hz*dx-hx*dz)*prefac2;
 				p->az += -dvz*prefac1 + (hx*dy-hy*dx)*prefac2;*/
 			}
 			if (rebxparams->tau_inc[i]!=0){		// Inclination damping
-				p->az += -2.*dvz/rebxparams->tau_inc[i];
-				const double prefac = (hx*hx + hy*hy)/h/h/rebxparams->tau_inc[i];
+				p->az -= -2.*dvz/rebxparams->tau_inc[i];
+				const double prefac = -(hx*hx + hy*hy)/h/h/rebxparams->tau_inc[i];
 				p->ax += prefac*dvx;
 				p->ay += prefac*dvy;
 				p->az += prefac*dvz;
@@ -91,7 +91,7 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim){
 				sim->particles[0].az -= p->m/sim->particles[0].m*a_over_r*dz;
 			}*/
 		}
-		com = reb_get_com_of_pair(com,sim->particles[i]);
+		com = rebxtools_get_com_of_pair(com,sim->particles[i]);
 	}
-	reb_move_to_com(sim);
+	rebxtools_move_to_com(sim);
 }

@@ -82,10 +82,13 @@ struct rebx_extras {
 };
 
 struct rebx_extras* rebx_init(struct reb_simulation* sim);
+void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx);
 
 void rebx_add_modify_orbits_forces(struct reb_simulation* sim);
 void rebx_add_modify_orbits_direct(struct reb_simulation* sim);
 void rebx_add_gr(struct reb_simulation* sim, double c);
+void rebx_add_gr_potential(struct reb_simulation* sim, double c);
+void rebx_add_gr_implicit(struct reb_simulation* sim, double c);
 
 double* rebx_get_tau_a(struct reb_simulation* sim);
 void rebx_set_tau_a(struct reb_simulation* sim, double* tau_a);
@@ -107,5 +110,8 @@ void rebx_set_tau_omega(struct reb_simulation* sim, double* tau_omega);
  */
 void rebx_forces(struct reb_simulation* sim);
 void rebx_ptm(struct reb_simulation* sim);
+
+void rebx_free_extras(struct rebx_extras* const rebx);
+void rebx_free_pointers(struct rebx_extras* const rebx);
 
 #endif
