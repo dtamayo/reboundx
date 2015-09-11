@@ -17,6 +17,12 @@ REBOUNDx allows you to easily add typically used modifications to your REBOUND s
 Installation
 ------------
 
+**Python**
+
+We recommend that you installing REBOUND and REBOUNDx within a virtual environment.  See http://rebound.readthedocs.org/en/latest/python_quickstart.html_.
+
+.. _http://rebound.readthedocs.org/en/latest/python_quickstart.html: http://rebound.readthedocs.org/en/latest/python_quickstart.html
+
 You'll have to have git installed.  In a terminal, navigate to the location where you want to put the reboundx folder.  Then::
 
     git clone https://github.com/dtamayo/reboundx.git
