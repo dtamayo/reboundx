@@ -66,12 +66,15 @@ class Extras(Structure):
     def add_gr(self, c=None):
         c = self.check_c(c)
         clibreboundx.rebx_add_gr(self.sim, c_double(c))
+    
+    def add_gr_single_mass(self, c=None):
+        c = self.check_c(c)
+        clibreboundx.rebx_add_gr_single_mass(self.sim, c_double(c))
 
-    def add_gr_potential(self, c=c_default):
+    def add_gr_potential(self, c=None):
+        c = self.check_c(c)
         clibreboundx.rebx_add_gr_potential(self.sim, c_double(c))
 
-    def add_gr_implicit(self, c=c_default):
-        clibreboundx.rebx_add_gr_implicit(self.sim, c_double(c))
 '''
     @property
     def tau_a(self):
