@@ -38,6 +38,20 @@
 
 typedef void (*xptr)(struct reb_simulation* const r);
 
+enum REBX_P_PARAMS{
+	TAU_A						= 0,
+	TAU_E						= 1,
+	TAU_INC						= 2,
+	TAU_LITTLE_OMEGA			= 3,
+	TAU_BIG_OMEGA				= 4
+};
+
+struct rebx_p_param{
+	void* value;
+	enum REBX_P_PARAMS param;
+	struct rebx_p_param* next;
+};
+
 /*enum REBX_EXTRAS {
 	REBX_MODIFY_ORBITS_FORCES	= 0,
 	REBX_MODIFY_ORBITS_DIRECT	= 1,
@@ -71,6 +85,10 @@ struct rebx_params_gr {
 
 struct rebx_extras {	
 	struct reb_simulation* sim;
+
+	int allocatedN;
+	struct rebx_p_param** rebx_pparams;
+
 	xptr* forces;
 	xptr* ptm;
 	int Nforces;
