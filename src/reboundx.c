@@ -27,6 +27,8 @@
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
+#include <limits.h>
+#include <assert.h>
 #include "reboundx.h"
 
 //disk parameters for precession
@@ -37,6 +39,37 @@ double alpha_over_rGM0;
 double podot; // pericenter precession at r = Rc
 */
 // pointers for damping timescales
+
+static int rebx_double_to_int(double x){
+	assert(x >= INT_MIN-0.5);
+	assert(x <= INT_MAX+0.5);
+	if(x >= 0){
+		return (int)(x+0.5);
+	}
+	return (int)(x-0.5);
+}
+
+static int rebx_should_be_int(enum REBX_P_PARAMS param){
+	if(param == TEST_INT || param == TEST_INT2){// these parameters are ints
+		return 1;
+	}
+	return 0;									// other parameters are doubles
+}
+
+void rebx_add_p_param(struct rebx_p_param** p_paramsRef, enum REBX_P_PARAMS param, double value){
+	struct rebx_p_param* newparam = malloc(sizeof(struct rebx_p_param));
+
+	if(rebx_should_be_int(param)){
+		int int_value = rebx_double_to_int(value);
+		newparam->value = &int_value;
+	}
+	else{
+		newparam->value = &value;
+	}
+	
+	newparam->param = param;
+	*p_paramsRef = newparam;
+}
 
 struct rebx_extras* rebx_init(struct reb_simulation* sim){
 	struct rebx_extras* rebx = malloc(sizeof(struct rebx_extras));

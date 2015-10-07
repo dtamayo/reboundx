@@ -43,7 +43,9 @@ enum REBX_P_PARAMS{
 	TAU_E						= 1,
 	TAU_INC						= 2,
 	TAU_LITTLE_OMEGA			= 3,
-	TAU_BIG_OMEGA				= 4
+	TAU_BIG_OMEGA				= 4,
+	TEST_INT					= 5,
+	TEST_INT2					= 6,
 };
 
 struct rebx_p_param{
@@ -98,6 +100,8 @@ struct rebx_extras {
 	struct rebx_params_modify_orbits_direct modify_orbits_direct;
 	struct rebx_params_gr gr;
 };
+
+void rebx_add_p_param(struct rebx_p_param** p_paramsRef, enum REBX_P_PARAMS param, double value);
 
 struct rebx_extras* rebx_init(struct reb_simulation* sim);
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx);
