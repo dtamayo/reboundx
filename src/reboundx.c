@@ -40,35 +40,49 @@ double podot; // pericenter precession at r = Rc
 */
 // pointers for damping timescales
 
-static int rebx_double_to_int(double x){
-	assert(x >= INT_MIN-0.5);
-	assert(x <= INT_MAX+0.5);
-	if(x >= 0){
-		return (int)(x+0.5);
+void rebx_set(struct reb_simulation* sim, int p_index, enum REBX_P_PARAMS param, double value){
+	struct reb_particle* p = &sim->particles[p_index];
+	if(p->ap == NULL){
+		printf("Particle %d had NULL ap\n", p_index);
+		struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+		rebx_add_particle(&rebx->particles, p);
 	}
-	return (int)(x-0.5);
+	rebx_add_double_param(&p->ap, param, value);
 }
 
-static int rebx_should_be_int(enum REBX_P_PARAMS param){
-	if(param == TEST_INT || param == TEST_INT2){// these parameters are ints
-		return 1;
-	}
-	return 0;									// other parameters are doubles
+void rebx_add_double_param(void** _p_paramsRef, enum REBX_P_PARAMS param, double value){
+	struct rebx_p_param** p_paramsRef = (struct rebx_p_param**)_p_paramsRef; // avoid void** to p_param** warning
+	struct rebx_p_param* newparam = malloc(sizeof(struct rebx_p_param));
+	
+	newparam->value = malloc(sizeof(double));
+	*(double*)newparam->value = value; // cast newparam->value (void pointer) to double*, then dereference
+	newparam->param = param;
+	newparam->next = *p_paramsRef;
+	*p_paramsRef = newparam;
 }
 
-void rebx_add_p_param(struct rebx_p_param** p_paramsRef, enum REBX_P_PARAMS param, double value){
+void rebx_add_particle(struct rebx_particle** particlesRef, struct reb_particle* p){
+	struct rebx_particle* newparticle = malloc(sizeof(struct rebx_particle));
+	newparticle->params = p->ap;
+	newparticle->next = *particlesRef;
+	*particlesRef = newparticle;
+}
+double rebx_get_double_param(struct rebx_p_param* p_param){
+	return *(double*)p_param->value;
+}
+
+void rebx_add_int_param(struct rebx_p_param** p_paramsRef, enum REBX_P_PARAMS param, int value){
 	struct rebx_p_param* newparam = malloc(sizeof(struct rebx_p_param));
 
-	if(rebx_should_be_int(param)){
-		int int_value = rebx_double_to_int(value);
-		newparam->value = &int_value;
-	}
-	else{
-		newparam->value = &value;
-	}
-	
+	newparam->value = malloc(sizeof(int));
+	*(int*)newparam->value = value;
 	newparam->param = param;
+	newparam->next = *p_paramsRef;
 	*p_paramsRef = newparam;
+}
+
+int rebx_get_int_param(struct rebx_p_param* p_param){
+	return *(int*)p_param->value;
 }
 
 struct rebx_extras* rebx_init(struct reb_simulation* sim){
@@ -81,6 +95,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
 	sim->extras = rebx;
 	rebx->sim = sim;
 
+	rebx->particles = NULL;
 	rebx->forces = NULL;
 	rebx->Nforces = 0;
 	rebx->ptm = NULL;

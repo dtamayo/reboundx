@@ -107,6 +107,7 @@ struct reb_particle {
 	double lastcollision;		///< Last time the particle had a physical collision.
 	struct reb_treecell* c;		///< Pointer to the cell the particle is currently in.
 	int id;				///< Unique id to identify particle.
+	void* ap;			///< Functionality for externally adding additional properties to particles.
 };
 
 
@@ -195,17 +196,18 @@ struct reb_simulation_integrator_ias15 {
 	double* restrict x0;			///<                      position (used for initial values at h=0) 
 	double* restrict v0;			///<                      velocity
 	double* restrict a0;			///<                      acceleration
-	double* restrict csx;			///<                      compensated summation
-	double* restrict csv;			///<                      compensated summation
+	double* restrict csx;			///<                      compensated summation for x
+	double* restrict csv;			///<                      compensated summation for v
+	double* restrict csa0;			///<                      compensated summation for a
 
 	struct reb_dp7 g;
 	struct reb_dp7 b;
+	struct reb_dp7 csb;			///< Compensated summation for b
 	struct reb_dp7 e;
 
 	// The following values are used for resetting the b and e coefficients if a timestep gets rejected
 	struct reb_dp7 br;
 	struct reb_dp7 er;
-	double dt_last_success;			///< Last accepted timestep (corresponding to br and er)
 	/**
 	 * @endcond
 	 */
@@ -339,7 +341,7 @@ struct reb_simulation {
 	double 	G;			///< Gravitational constant. Default: 1. 
 	double 	softening;		///< Gravitational softening parameter. Default: 0. 
 	double 	dt;			///< Current timestep. 
-	double 	dt_last_done;		///< Last full timestep (used if exact_finish_time==1). 
+	double 	dt_last_done;		///< Last dt used by integrator
 	int 	N;			///< Current number of particles on this node. 
 	int 	N_var;			///< Number of variational particles. Default: 0.
 	int 	N_active;		///< Number of massive particles included in force calculation. Default: N.

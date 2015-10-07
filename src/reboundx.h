@@ -54,6 +54,11 @@ struct rebx_p_param{
 	struct rebx_p_param* next;
 };
 
+struct rebx_particle{
+	struct rebx_particle* next;
+	struct rebx_p_param* params;
+};
+
 /*enum REBX_EXTRAS {
 	REBX_MODIFY_ORBITS_FORCES	= 0,
 	REBX_MODIFY_ORBITS_DIRECT	= 1,
@@ -88,8 +93,7 @@ struct rebx_params_gr {
 struct rebx_extras {	
 	struct reb_simulation* sim;
 
-	int allocatedN;
-	struct rebx_p_param** rebx_pparams;
+	struct rebx_particle* particles;
 
 	xptr* forces;
 	xptr* ptm;
@@ -101,7 +105,14 @@ struct rebx_extras {
 	struct rebx_params_gr gr;
 };
 
-void rebx_add_p_param(struct rebx_p_param** p_paramsRef, enum REBX_P_PARAMS param, double value);
+void rebx_set(struct reb_simulation* sim, int p_index, enum REBX_P_PARAMS param, double value);
+void rebx_add_particle(struct rebx_particle** particlesRef, struct reb_particle* p);
+
+void rebx_add_double_param(void** _p_paramsRef, enum REBX_P_PARAMS param, double value);
+void rebx_add_int_param(struct rebx_p_param** p_paramsRef, enum REBX_P_PARAMS param, int value);
+
+//double rebx_get_double_param(struct rebx_p_param*r p_param);
+int rebx_get_int_param(struct rebx_p_param* p_param);
 
 struct rebx_extras* rebx_init(struct reb_simulation* sim);
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx);

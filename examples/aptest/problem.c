@@ -17,18 +17,12 @@
 double tmax = 5.e4;
 
 int main(int argc, char* argv[]){
-	struct rebx_p_param* p_params = NULL;
-	rebx_add_p_param(&p_params, TAU_E, -1000);
-
-	printf("%f\n", *((double*)p_params->value));
-	printf("%f\n", *((double*)p_params->value));
+	/*struct rebx_p_param* p_params = NULL;
+	rebx_add_double_param(&p_params, TAU_E, -1000);
+	rebx_add_int_param(&p_params, TEST_INT, 3);
 	
-	struct rebx_p_param* current = p_params;
-	while(current != NULL){
-		printf("%f\n", *((double*)current->value));
-		current = current->next;
-	}
-	/*
+	printf("%d, %f\n", rebx_get_int_param(p_params), rebx_get_double_param(p_params->next));
+	*/
 	struct reb_simulation* sim = reb_create_simulation();
 	// Setup constants
 	sim->dt 			= 0.012;		// initial timestep.
@@ -53,11 +47,22 @@ int main(int argc, char* argv[]){
 	
 	struct rebx_extras* rebx = rebx_init(sim);	// first initialize rebx
 
+	rebx_set(sim, 1, TAU_E, 1.);
+	rebx_set(sim, 1, TAU_A, 3.);
+	rebx_set(sim, 2, TAU_A, 3.);
+	rebx_set(sim, 0, TAU_A, 3.);
+	rebx_set(sim, 0, TAU_E, 3.);
+	rebx_set(sim, 0, TAU_BIG_OMEGA, 3.);
+	struct rebx_p_param* ap = sim->particles[1].ap;
+	//printf("%f\n", *(double*)ap->value);
+	struct rebx_p_param* ap2 = ap->next;
+	//printf("%f\n", *(double*)ap2->value);
+
 	// There are two options for how to modify orbits.  You would only choose one (comment the other out).  
 	// modify_orbits_forces doesn't have precession implemented yet.
 
 	// modify_orbits_direct directly updates particles' orbital elements at the end of each timestep
-	rebx_add_modify_orbits_direct(sim);
+	/*rebx_add_modify_orbits_direct(sim);
 	rebx->modify_orbits_direct.tau_a[1] = -1e5;	// add semimajor axis damping on inner planet (e-folding timescale)
 	rebx->modify_orbits_direct.tau_e[2] = -1e4;	// add eccentricity damping on outer planet (e-folding timescale)
 	rebx->modify_orbits_direct.tau_omega[1] = -1.e4;  // add linear precession on inner planet (precession period)	
