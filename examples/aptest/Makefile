@@ -7,6 +7,7 @@ endif
 include $(REB_DIR)/src/Makefile.defs
 
 REBOUNDXDIR=../../../reboundx/src/
+DEBUGOPT = -std=c99 -Wpointer-arith -D_GNU_SOURCE -O0 -march=native -I/usr/local/include -Wall -Wno-deprecated -g
 
 all: librebound.so libreboundx.so
 	@echo ""
@@ -18,7 +19,7 @@ all: librebound.so libreboundx.so
 eclipse: librebound.so
 	@echo ""
 	@echo "Compiling problem file ..."
-	$(CC) -g -I../../src/ -I../../../reboundx/src/ -Wl,-rpath,./ $(OPT) $(PREDEF) problem.c $(REBOUNDXDIR)reboundx.c $(REBOUNDXDIR)rebxtools.c $(REBOUNDXDIR)gr.c $(REBOUNDXDIR)modify_orbits_direct.c $(REBOUNDXDIR)modify_orbits_forces.c -L. -L ../../../reboundx -lrebound $(LIB) -o rebound
+	$(CC) -I../../src/ -I../../../reboundx/src/ -Wl,-rpath,./ $(DEBUGOPT) $(PREDEF) problem.c $(REBOUNDXDIR)reboundx.c $(REBOUNDXDIR)rebxtools.c $(REBOUNDXDIR)gr.c $(REBOUNDXDIR)modify_orbits_direct.c $(REBOUNDXDIR)modify_orbits_forces.c -L. -L ../../../reboundx -lrebound $(LIB) -o rebound
 	@echo ""
 	@echo "Problem file compiled successfully."
  

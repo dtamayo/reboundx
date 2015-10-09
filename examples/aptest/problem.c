@@ -47,16 +47,26 @@ int main(int argc, char* argv[]){
 	
 	struct rebx_extras* rebx = rebx_init(sim);	// first initialize rebx
 
-	rebx_set(sim, 1, TAU_E, 1.);
-	rebx_set(sim, 1, TAU_A, 3.);
-	rebx_set(sim, 2, TAU_A, 3.);
-	rebx_set(sim, 0, TAU_A, 3.);
-	rebx_set(sim, 0, TAU_E, 3.);
-	rebx_set(sim, 0, TAU_BIG_OMEGA, 3.);
-	struct rebx_p_param* ap = sim->particles[1].ap;
+	rebx_set_double(sim, 1, TAU_A, 1.);
+	rebx_set_double(sim, 1, TAU_E, 2.);
+	rebx_set_double(sim, 1, TAU_INC, 3.);
+
+	rebx_set_double(sim, 2, TAU_LITTLE_OMEGA, 10.);
+	rebx_set_double(sim, 2, TAU_BIG_OMEGA, 11.);
+
+	rebx_set_double(sim, 0, TAU_A, 100.);
+	rebx_set_double(sim, 0, TAU_E, 200.);
+	rebx_set_double(sim, 0, TAU_INC, 300.);
+	rebx_set_double(sim, 0, TAU_BIG_OMEGA, 400.);
+	rebx_set_double(sim, 0, TAU_LITTLE_OMEGA, 500.);
+
+	rebx_free_rebx(rebx);
+	//struct rebx_p_param* ap = sim->particles[1].ap;
 	//printf("%f\n", *(double*)ap->value);
-	struct rebx_p_param* ap2 = ap->next;
+	//struct rebx_p_param* ap2 = ap->next;
 	//printf("%f\n", *(double*)ap2->value);
+
+	//printf("%f\n", rebx_get_double(sim->particles[1], TAU_E));
 
 	// There are two options for how to modify orbits.  You would only choose one (comment the other out).  
 	// modify_orbits_forces doesn't have precession implemented yet.
