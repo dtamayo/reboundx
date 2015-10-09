@@ -44,6 +44,8 @@ void rebxtools_move_to_com(struct reb_simulation* const r);
 
 struct reb_particle rebxtools_get_com_of_pair(struct reb_particle p1, struct reb_particle p2);
 
+struct reb_particle rebxtools_get_com_without_particle(struct reb_particle com, struct reb_particle p);
+
 struct reb_particle rebxtools_get_com(struct reb_simulation* const r);
 
 #endif

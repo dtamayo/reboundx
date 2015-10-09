@@ -227,6 +227,25 @@ struct reb_particle rebxtools_get_com_of_pair(struct reb_particle p1, struct reb
 	return p1;
 }
 
+struct reb_particle rebxtools_get_com_without_particle(struct reb_particle com, struct reb_particle p){
+	com.x = com.x*com.m - p.x*p.m;
+	com.y = com.y*com.m - p.y*p.m;
+	com.z = com.z*com.m - p.z*p.m;
+	com.vx = com.vx*com.m - p.vx*p.m;
+	com.vy = com.vy*com.m - p.vy*p.m;
+	com.vz = com.vz*com.m - p.vz*p.m;
+	com.m -= p.m;
+	if (com.m >0.){
+		com.x /= com.m;
+		com.y /= com.m;
+		com.z /= com.m;
+		com.vx /= com.m;
+		com.vy /= com.m;
+		com.vz /= com.m;
+	}
+	return com;
+}
+
 struct reb_particle rebxtools_get_com(struct reb_simulation* const r){
 	struct reb_particle com = {.m=0, .x=0, .y=0, .z=0, .vx=0, .vy=0, .vz=0};
 	const int N = r->N;
