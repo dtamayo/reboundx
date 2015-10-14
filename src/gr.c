@@ -30,7 +30,7 @@
 #include "gr.h"
 
 void rebx_gr(struct reb_simulation* const sim){
-	struct rebx_params_gr* rebxparams = &((struct rebx_extras*)(sim->extras))->gr;
+	struct rebx_params_gr* rebxparams = ((struct rebx_extras*)(sim->extras))->gr;
 	const double C = rebxparams->c;
 	const int _N_real = sim->N - sim->N_var;
 	const double G = sim->G;
@@ -216,7 +216,7 @@ void rebx_gr(struct reb_simulation* const sim){
 }
 
 void rebx_gr_single_mass(struct reb_simulation* const sim){
-	struct rebx_params_gr* rebxparams = &((struct rebx_extras*)(sim->extras))->gr;
+	struct rebx_params_gr* rebxparams = ((struct rebx_extras*)(sim->extras))->gr;
 	const double C = rebxparams->c;
 	const int _N_real = sim->N - sim->N_var;
 	const double G = sim->G;
@@ -254,7 +254,7 @@ void rebx_gr_single_mass(struct reb_simulation* const sim){
 
 void rebx_gr_potential(struct reb_simulation* const sim){
 	// Nobili & Roxburgh 1986
-	struct rebx_params_gr* rebxparams = &((struct rebx_extras*)(sim->extras))->gr;
+	struct rebx_params_gr* rebxparams = ((struct rebx_extras*)(sim->extras))->gr;
 	const double C = rebxparams->c;
 	const int _N_real = sim->N - sim->N_var;
 	const double G = sim->G;

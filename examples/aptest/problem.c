@@ -47,42 +47,24 @@ int main(int argc, char* argv[]){
 	
 	struct rebx_extras* rebx = rebx_init(sim);	// first initialize rebx
 
-	rebx_set_double(sim, 1, TAU_A, 1.);
-	rebx_set_double(sim, 1, TAU_E, 2.);
-	rebx_set_double(sim, 1, TAU_INC, 3.);
+	rebx_set_double(sim, 1, TAU_A, -1.e5);
+	rebx_set_double(sim, 1, TAU_LITTLE_OMEGA, 1.e4);
 
-	rebx_set_double(sim, 2, TAU_LITTLE_OMEGA, 10.);
-	rebx_set_double(sim, 2, TAU_BIG_OMEGA, 11.);
-
-	rebx_set_double(sim, 0, TAU_A, 100.);
-	rebx_set_double(sim, 0, TAU_E, 200.);
-	rebx_set_double(sim, 0, TAU_INC, 300.);
-	rebx_set_double(sim, 0, TAU_BIG_OMEGA, 400.);
-	rebx_set_double(sim, 0, TAU_LITTLE_OMEGA, 500.);
-
-	rebx_free_rebx(rebx);
-	//struct rebx_p_param* ap = sim->particles[1].ap;
-	//printf("%f\n", *(double*)ap->value);
-	//struct rebx_p_param* ap2 = ap->next;
-	//printf("%f\n", *(double*)ap2->value);
-
-	//printf("%f\n", rebx_get_double(sim->particles[1], TAU_E));
+	rebx_set_double(sim, 2, TAU_E, -1.e4);
 
 	// There are two options for how to modify orbits.  You would only choose one (comment the other out).  
 	// modify_orbits_forces doesn't have precession implemented yet.
 
 	// modify_orbits_direct directly updates particles' orbital elements at the end of each timestep
-	/*rebx_add_modify_orbits_direct(sim);
-	rebx->modify_orbits_direct.tau_a[1] = -1e5;	// add semimajor axis damping on inner planet (e-folding timescale)
-	rebx->modify_orbits_direct.tau_e[2] = -1e4;	// add eccentricity damping on outer planet (e-folding timescale)
-	rebx->modify_orbits_direct.tau_omega[1] = -1.e4;  // add linear precession on inner planet (precession period)	
+	rebx_add_modify_orbits_direct(sim);
 
+	/*
 	// modify_orbits_forces adds in additional forces that orbit-average to give exponential a and e damping
 	rebx_add_modify_orbits_forces(sim);
 	rebx->modify_orbits_forces.tau_a[1] = -1e5;	// add semimajor axis damping on inner planet (e-folding timescale)
 	rebx->modify_orbits_forces.tau_e[2] = -1e4;	// add eccentricity damping on outer planet (e-folding timescale)
-	
+	*/
 
 	reb_integrate(sim, tmax);
-	*/
+
 }

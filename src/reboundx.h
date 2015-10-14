@@ -36,8 +36,6 @@
 #include "modify_orbits_forces.h"
 #include "gr.h"
 
-typedef void (*xptr)(struct reb_simulation* const r);
-
 enum REBX_P_PARAMS{
 	TAU_A						= 0,
 	TAU_E						= 1,
@@ -97,11 +95,6 @@ struct rebx_extras {
 	int N;
 	struct rebx_p_param** particles;
 
-	xptr* forces;
-	xptr* ptm;
-	int Nforces;
-	int Nptm;
-
 	struct rebx_params_modify_orbits_forces* modify_orbits_forces;
 	struct rebx_params_modify_orbits_direct* modify_orbits_direct;
 	struct rebx_params_gr* gr;
@@ -114,6 +107,7 @@ void rebx_add_particle(struct rebx_extras* rebx, struct rebx_p_param* p_param);
 void rebx_update_particles(struct rebx_extras* rebx, struct rebx_p_param* p_param);
 void rebx_free_p_params(struct rebx_p_param* apPtr);
 void rebx_free_particles(struct rebx_extras* rebx);
+void rebx_free(struct rebx_extras* rebx);
 
 void rebx_add_double_param(struct reb_simulation* sim, void** _p_paramsRef, enum REBX_P_PARAMS param, double value);
 void rebx_add_int_param(struct rebx_p_param** p_paramsRef, enum REBX_P_PARAMS param, int value);
@@ -130,28 +124,7 @@ void rebx_add_gr(struct reb_simulation* sim, double c);
 void rebx_add_gr_potential(struct reb_simulation* sim, double c);
 void rebx_add_gr_implicit(struct reb_simulation* sim, double c);
 
-double* rebx_get_tau_a(struct reb_simulation* sim);
-void rebx_set_tau_a(struct reb_simulation* sim, double* tau_a);
-
-double* rebx_get_tau_e(struct reb_simulation* sim);
-void rebx_set_tau_e(struct reb_simulation* sim, double* tau_e);
-
-double* rebx_get_tau_inc(struct reb_simulation* sim);
-void rebx_set_tau_inc(struct reb_simulation* sim, double* tau_inc);
-
-double* rebx_get_tau_omega(struct reb_simulation* sim);
-void rebx_set_tau_omega(struct reb_simulation* sim, double* tau_omega);
-
 //void rebx_add(struct reb_simulation* sim, enum REBX_EXTRAS extra);
 
-/**
- * @cond PRIVATE
- * Internal functions used by reboundx.  User would not call these.
- */
-void rebx_forces(struct reb_simulation* sim);
-void rebx_ptm(struct reb_simulation* sim);
-
-void rebx_free_extras(struct rebx_extras* const rebx);
-void rebx_free_pointers(struct rebx_extras* const rebx);
 
 #endif
