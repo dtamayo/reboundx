@@ -40,12 +40,14 @@ void rebxtools_orbit2p(double G, struct reb_particle* p, struct reb_particle* pr
 
 struct reb_particle rebxtools_orbit_to_particle(double G, struct reb_particle primary, double m, double a, double e, double inc, double Omega, double omega, double f, int* err);
 
-void rebxtools_move_to_com(struct reb_simulation* const r);
+void rebxtools_move_to_com(struct reb_simulation* const sim);
 
 struct reb_particle rebxtools_get_com_of_pair(struct reb_particle p1, struct reb_particle p2);
 
-struct reb_particle rebxtools_get_com_without_particle(struct reb_particle com, struct reb_particle p);
+void rebxtools_update_com_with_particle(struct reb_particle* const com, const struct reb_particle* p);
 
-struct reb_particle rebxtools_get_com(struct reb_simulation* const r);
+void rebxtools_update_com_without_particle(struct reb_particle* const com, const struct reb_particle* p);
+
+void rebxtools_get_com(struct reb_simulation* sim, int last_index, struct reb_particle* com);
 
 #endif

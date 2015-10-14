@@ -45,9 +45,14 @@ enum REBX_P_PARAMS{
 	TAU_LITTLE_OMEGA			= 3,
 	TAU_BIG_OMEGA				= 4,
 	TEST_INT					= 5,
-	TEST_INT2					= 6,
+	TEST_INT2					= 6
 };
 
+enum REBX_COORDINATES{
+	JACOBI						= 0,
+	BARYCENTRIC					= 1,
+	HELIOCENTRIC				= 2
+};
 struct rebx_p_param{
 	void* valPtr;
 	enum REBX_P_PARAMS param;
@@ -67,11 +72,6 @@ struct rebx_particle{
 };*/
 
 struct rebx_params_modify_orbits_forces {
-	int allocatedN;
-	double* tau_a;
-	double* tau_e;
-	double* tau_inc;
-	double* tau_omega;
 	double e_damping_p; // p paramseter from Deck & Batygin (2015) for how e-damping
 	// is coupled to a-damping at order e^2
 	// p = 1 : e-damping at const angular momentum.  p = 0 : no contribution to a-damping
@@ -79,12 +79,11 @@ struct rebx_params_modify_orbits_forces {
 };
 
 struct rebx_params_modify_orbits_direct {
-	int allocatedN;
-	double* tau_a;
-	double* tau_e;
-	double* tau_inc;
-	double* tau_omega;
 	double e_damping_p;
+
+	enum REBX_COORDINATES coordinates;
+	struct reb_particle* com;
+	struct reb_orbit* orbit;
 };
 
 struct rebx_params_gr {
@@ -103,9 +102,9 @@ struct rebx_extras {
 	int Nforces;
 	int Nptm;
 
-	struct rebx_params_modify_orbits_forces modify_orbits_forces;
-	struct rebx_params_modify_orbits_direct modify_orbits_direct;
-	struct rebx_params_gr gr;
+	struct rebx_params_modify_orbits_forces* modify_orbits_forces;
+	struct rebx_params_modify_orbits_direct* modify_orbits_direct;
+	struct rebx_params_gr* gr;
 };
 
 void rebx_set_double(struct reb_simulation* sim, int p_index, enum REBX_P_PARAMS param, double value);

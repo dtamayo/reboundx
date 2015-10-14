@@ -194,10 +194,11 @@ struct reb_particle rebxtools_orbit_to_particle(double G, struct reb_particle pr
 	return p;
 }
 
-void rebxtools_move_to_com(struct reb_simulation* const r){
-	const int N = r->N;
-	struct reb_particle* restrict const particles = r->particles;
-	struct reb_particle com = rebxtools_get_com(r);
+void rebxtools_move_to_com(struct reb_simulation* const sim){
+	const int N = sim->N;
+	struct reb_particle* restrict const particles = sim->particles;
+	struct reb_particle com;
+	rebxtools_get_com(sim, sim->N-1, &com);
 	for(int i=0; i<N; i++){
 		particles[i].x -= com.x;
 		particles[i].y -= com.y;
@@ -208,51 +209,46 @@ void rebxtools_move_to_com(struct reb_simulation* const r){
 	}
 }
 
-struct reb_particle rebxtools_get_com_of_pair(struct reb_particle p1, struct reb_particle p2){
-	p1.x   = p1.x*p1.m + p2.x*p2.m;		
-	p1.y   = p1.y*p1.m + p2.y*p2.m;
-	p1.z   = p1.z*p1.m + p2.z*p2.m;
-	p1.vx  = p1.vx*p1.m + p2.vx*p2.m;
-	p1.vy  = p1.vy*p1.m + p2.vy*p2.m;
-	p1.vz  = p1.vz*p1.m + p2.vz*p2.m;
-	p1.m  += p2.m;
-	if (p1.m>0.){
-		p1.x  /= p1.m;
-		p1.y  /= p1.m;
-		p1.z  /= p1.m;
-		p1.vx /= p1.m;
-		p1.vy /= p1.m;
-		p1.vz /= p1.m;
+void rebxtools_update_com_with_particle(struct reb_particle* const com, const struct reb_particle* p){
+	com->x   = com->x*com->m + p->x*p->m;
+	com->y   = com->y*com->m + p->y*p->m;
+	com->z   = com->z*com->m + p->z*p->m;
+	com->vx  = com->vx*com->m + p->vx*p->m;
+	com->vy  = com->vy*com->m + p->vy*p->m;
+	com->vz  = com->vz*com->m + p->vz*p->m;
+	com->m  += p->m;
+	if (com->m>0.){
+		com->x  /= com->m;
+		com->y  /= com->m;
+		com->z  /= com->m;
+		com->vx /= com->m;
+		com->vy /= com->m;
+		com->vz /= com->m;
 	}
-	return p1;
 }
 
-struct reb_particle rebxtools_get_com_without_particle(struct reb_particle com, struct reb_particle p){
-	com.x = com.x*com.m - p.x*p.m;
-	com.y = com.y*com.m - p.y*p.m;
-	com.z = com.z*com.m - p.z*p.m;
-	com.vx = com.vx*com.m - p.vx*p.m;
-	com.vy = com.vy*com.m - p.vy*p.m;
-	com.vz = com.vz*com.m - p.vz*p.m;
-	com.m -= p.m;
-	if (com.m >0.){
-		com.x /= com.m;
-		com.y /= com.m;
-		com.z /= com.m;
-		com.vx /= com.m;
-		com.vy /= com.m;
-		com.vz /= com.m;
+void rebxtools_update_com_without_particle(struct reb_particle* const com, const struct reb_particle* p){
+	com->x   = com->x*com->m - p->x*p->m;
+	com->y   = com->y*com->m - p->y*p->m;
+	com->z   = com->z*com->m - p->z*p->m;
+	com->vx  = com->vx*com->m - p->vx*p->m;
+	com->vy  = com->vy*com->m - p->vy*p->m;
+	com->vz  = com->vz*com->m - p->vz*p->m;
+	com->m  -= p->m;
+	if (com->m>0.){
+		com->x  /= com->m;
+		com->y  /= com->m;
+		com->z  /= com->m;
+		com->vx /= com->m;
+		com->vy /= com->m;
+		com->vz /= com->m;
 	}
-	return com;
 }
 
-struct reb_particle rebxtools_get_com(struct reb_simulation* const r){
-	struct reb_particle com = {.m=0, .x=0, .y=0, .z=0, .vx=0, .vy=0, .vz=0};
-	const int N = r->N;
-	struct reb_particle* restrict const particles = r->particles;
-	for (int i=0;i<N;i++){
-		com = rebxtools_get_com_of_pair(com, particles[i]);
+/* Calculate the center of mass up to (and including) the index last_index */
+void rebxtools_get_com(struct reb_simulation* sim, int last_index, struct reb_particle* com){
+	struct reb_particle* particles = sim->particles;
+	for (int i=0;i<=last_index;i++){
+		rebxtools_update_com_with_particle(com, &particles[i]);
 	}
-	return com;
 }
-
