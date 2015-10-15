@@ -209,7 +209,7 @@ void rebxtools_move_to_com(struct reb_simulation* const sim){
 	}
 }
 
-void rebxtools_update_com_with_particle(struct reb_particle* const com, const struct reb_particle* p){
+void rebxtools_update_com_with_particle(struct reb_particle* const com, const struct reb_particle* const p){
 	com->x   = com->x*com->m + p->x*p->m;
 	com->y   = com->y*com->m + p->y*p->m;
 	com->z   = com->z*com->m + p->z*p->m;
@@ -227,7 +227,7 @@ void rebxtools_update_com_with_particle(struct reb_particle* const com, const st
 	}
 }
 
-void rebxtools_update_com_without_particle(struct reb_particle* const com, const struct reb_particle* p){
+void rebxtools_update_com_without_particle(struct reb_particle* const com, const struct reb_particle* const p){
 	com->x   = com->x*com->m - p->x*p->m;
 	com->y   = com->y*com->m - p->y*p->m;
 	com->z   = com->z*com->m - p->z*p->m;
@@ -246,7 +246,7 @@ void rebxtools_update_com_without_particle(struct reb_particle* const com, const
 }
 
 /* Calculate the center of mass up to (and including) the index last_index */
-void rebxtools_get_com(struct reb_simulation* sim, int last_index, struct reb_particle* com){
+void rebxtools_get_com(const struct reb_simulation* const sim, const int last_index, struct reb_particle* com){
 	struct reb_particle* particles = sim->particles;
 	for (int i=0;i<=last_index;i++){
 		rebxtools_update_com_with_particle(com, &particles[i]);

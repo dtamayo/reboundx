@@ -93,6 +93,5 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim){
 		}
 		com = rebxtools_get_com_of_pair(com,sim->particles[i]);
 	}
-	rebxtools_move_to_com(sim);
 	*/
 }

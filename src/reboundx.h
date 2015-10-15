@@ -36,52 +36,49 @@
 #include "modify_orbits_forces.h"
 #include "gr.h"
 
-enum REBX_P_PARAMS{
-	TAU_A						= 0,
-	TAU_E						= 1,
-	TAU_INC						= 2,
-	TAU_LITTLE_OMEGA			= 3,
-	TAU_BIG_OMEGA				= 4,
-	TEST_INT					= 5,
-	TEST_INT2					= 6
+enum REBX_PARAMS{
+	ORB_TAU,
+	TEST_INT,
+	TEST_INT2,
 };
 
 enum REBX_COORDINATES{
-	JACOBI						= 0,
-	BARYCENTRIC					= 1,
-	HELIOCENTRIC				= 2
+	JACOBI,				// default.  REBX_COORDINATE members in structs get calloced to 0 and first enum always = 0
+	BARYCENTRIC,
+	HELIOCENTRIC
 };
-struct rebx_p_param{
+
+struct rebx_param{
 	void* valPtr;
-	enum REBX_P_PARAMS param;
-	struct rebx_p_param* next;
+	enum REBX_PARAMS param;
+	struct rebx_param* next;
 	int rebx_index;
+};
+
+struct rebx_orb_tau{
+	double a;
+	double e;
+	double inc;
+	double omega;
+	double Omega;
 };
 
 struct rebx_particle{
 	struct rebx_particle* next;
-	struct rebx_p_param* params;
+	struct rebx_param* params;
 };
-
-/*enum REBX_EXTRAS {
-	REBX_MODIFY_ORBITS_FORCES	= 0,
-	REBX_MODIFY_ORBITS_DIRECT	= 1,
-	REBX_GR						= 2,
-};*/
 
 struct rebx_params_modify_orbits_forces {
 	double e_damping_p; // p paramseter from Deck & Batygin (2015) for how e-damping
 	// is coupled to a-damping at order e^2
 	// p = 1 : e-damping at const angular momentum.  p = 0 : no contribution to a-damping
 	// equal to p/3 with p defined as in Goldreich & Schlichting 2014
+	enum REBX_COORDINATES coordinates;
 };
 
 struct rebx_params_modify_orbits_direct {
 	double e_damping_p;
-
 	enum REBX_COORDINATES coordinates;
-	struct reb_particle* com;
-	struct reb_orbit* orbit;
 };
 
 struct rebx_params_gr {
@@ -93,15 +90,26 @@ struct rebx_extras {
 
 	int allocatedN;
 	int N;
-	struct rebx_p_param** particles;
+	struct rebx_param** particles; // pointer to a linked list that holds pointers foreach particle's
+									 // linked list of parameters.  Need to hold on to this to later free the memory.
 
-	struct rebx_params_modify_orbits_forces* modify_orbits_forces;
-	struct rebx_params_modify_orbits_direct* modify_orbits_direct;
-	struct rebx_params_gr* gr;
+	// these are pointers to simplify syntax.  Some structs need to update member variables
+	// inside functions so we need to pass the pointer to them anyway
+
+	struct rebx_params_modify_orbits_forces modify_orbits_forces;
+	struct rebx_params_modify_orbits_direct modify_orbits_direct;
+	struct rebx_params_gr gr;
+
+	// these are pointers to function pointers to use as arrays of function pointers for the user-added effects
+	void (**ptm) (struct reb_simulation* const sim);
+	void (**forces) (struct reb_simulation* const sim);
+
+	int Nptm;
+	int Nforces;
 };
 
-void rebx_set_double(struct reb_simulation* sim, int p_index, enum REBX_P_PARAMS param, double value);
-double rebx_get_double(struct reb_particle p, enum REBX_P_PARAMS param);
+/*void rebx_set_double(struct reb_simulation* sim, int p_index, enum REBX_EXTRAS param, double value);
+double rebx_get_double(struct reb_particle p, enum REBX_EXTRAS param);
 
 void rebx_add_particle(struct rebx_extras* rebx, struct rebx_p_param* p_param);
 void rebx_update_particles(struct rebx_extras* rebx, struct rebx_p_param* p_param);
@@ -109,12 +117,12 @@ void rebx_free_p_params(struct rebx_p_param* apPtr);
 void rebx_free_particles(struct rebx_extras* rebx);
 void rebx_free(struct rebx_extras* rebx);
 
-void rebx_add_double_param(struct reb_simulation* sim, void** _p_paramsRef, enum REBX_P_PARAMS param, double value);
-void rebx_add_int_param(struct rebx_p_param** p_paramsRef, enum REBX_P_PARAMS param, int value);
+void rebx_add_double_param(struct reb_simulation* sim, void** _p_paramsRef, enum REBX_EXTRAS param, double value);
+void rebx_add_int_param(struct rebx_p_param** p_paramsRef, enum REBX_USER_PARAMS param, int value);
 
 //double rebx_get_double_param(struct rebx_p_param*r p_param);
 int rebx_get_int_param(struct rebx_p_param* p_param);
-
+*/
 struct rebx_extras* rebx_init(struct reb_simulation* sim);
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx);
 
@@ -123,8 +131,5 @@ void rebx_add_modify_orbits_direct(struct reb_simulation* sim);
 void rebx_add_gr(struct reb_simulation* sim, double c);
 void rebx_add_gr_potential(struct reb_simulation* sim, double c);
 void rebx_add_gr_implicit(struct reb_simulation* sim, double c);
-
-//void rebx_add(struct reb_simulation* sim, enum REBX_EXTRAS extra);
-
 
 #endif

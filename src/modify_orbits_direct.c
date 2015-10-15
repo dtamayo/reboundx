@@ -32,14 +32,15 @@
 #include "rebxtools.h"
 
 void rebx_modify_orbits_direct(struct reb_simulation* const sim){
-	struct rebx_params_modify_orbits_direct* modparams = ((struct rebx_extras*)sim->extras)->modify_orbits_direct;
-	struct reb_particle* com = modparams->com;
+	struct rebx_params_modify_orbits_direct modparams = ((struct rebx_extras*)sim->extras)->modify_orbits_direct;
+	/*struct reb_particle* com = modparams->com;
 
 	if(com == NULL){
 		com = calloc(1, sizeof(*com));
 		switch(modparams->coordinates){
 			case JACOBI:
 				rebxtools_get_com(sim, sim->N-2, com);
+				printf("hi\n");
 				break;
 			case BARYCENTRIC:
 				rebxtools_get_com(sim, sim->N-1, com);
@@ -48,10 +49,10 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim){
 				*com = sim->particles[0];
 				break;
 			default:
-				fprintf(stderr, "Coordinate system not set in modify_orbits_direct.\n");
+				fprintf(stderr, "Coordinate system not set in modify_orbits_direct?! \n");
 				exit(1);
 		}
-	}
+	}*/
 	/*struct reb_particle com = rebxtools_get_com(sim);
 	
 	for(int i=sim->N-1;i>0;--i){
