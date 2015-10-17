@@ -56,28 +56,23 @@ struct rebx_param{
 };
 
 struct rebx_orb_tau{
-	double a;
-	double e;
-	double inc;
-	double omega;
-	double Omega;
+	double tau_a;
+	double tau_e;
+	double tau_inc;
+	double tau_omega;
+	double tau_Omega;
 };
 
-struct rebx_particle{
-	struct rebx_particle* next;
-	struct rebx_param* params;
+struct rebx_param_to_be_freed{
+	struct rebx_param_to_be_freed* next;
+	struct rebx_param* param;
 };
 
-struct rebx_params_modify_orbits_forces {
+struct rebx_params_modify_orbits{
 	double e_damping_p; // p paramseter from Deck & Batygin (2015) for how e-damping
 	// is coupled to a-damping at order e^2
 	// p = 1 : e-damping at const angular momentum.  p = 0 : no contribution to a-damping
 	// equal to p/3 with p defined as in Goldreich & Schlichting 2014
-	enum REBX_COORDINATES coordinates;
-};
-
-struct rebx_params_modify_orbits_direct {
-	double e_damping_p;
 	enum REBX_COORDINATES coordinates;
 };
 
@@ -87,18 +82,15 @@ struct rebx_params_gr {
 
 struct rebx_extras {	
 	struct reb_simulation* sim;
-
-	int allocatedN;
-	int N;
-	struct rebx_param** particles; // pointer to a linked list that holds pointers foreach particle's
-									 // linked list of parameters.  Need to hold on to this to later free the memory.
+	struct rebx_param_to_be_freed** params_to_be_freed; // pointer to a linked list holding pointers to all
+											// the allocated params for later freeing
 
 	// these are pointers to simplify syntax.  Some structs need to update member variables
 	// inside functions so we need to pass the pointer to them anyway
 
-	struct rebx_params_modify_orbits_forces modify_orbits_forces;
-	struct rebx_params_modify_orbits_direct modify_orbits_direct;
-	struct rebx_params_gr gr;
+	struct rebx_params_modify_orbits* modify_orbits_forces;
+	struct rebx_params_modify_orbits* modify_orbits_direct;
+	struct rebx_params_gr* gr;
 
 	// these are pointers to function pointers to use as arrays of function pointers for the user-added effects
 	void (**ptm) (struct reb_simulation* const sim);
@@ -108,6 +100,15 @@ struct rebx_extras {
 	int Nforces;
 };
 
+void* rebx_search_param(struct rebx_param* current, enum REBX_PARAMS param);
+void rebx_add_param_orb_tau(struct reb_simulation* sim, struct rebx_param** paramsRef);
+void rebx_set_tau_a(struct reb_simulation* sim, int p_index, double value);
+double rebx_get_tau_a(struct reb_particle p);
+void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param);
+void rebx_free_params(struct rebx_extras* rebx);
+void rebx_free(struct rebx_extras* rebx);
+void rebx_forces(struct reb_simulation* sim);
+void rebx_ptm(struct reb_simulation* sim);
 /*void rebx_set_double(struct reb_simulation* sim, int p_index, enum REBX_EXTRAS param, double value);
 double rebx_get_double(struct reb_particle p, enum REBX_EXTRAS param);
 

@@ -32,7 +32,7 @@
 #include "rebxtools.h"
 
 void rebx_modify_orbits_direct(struct reb_simulation* const sim){
-	struct rebx_params_modify_orbits_direct modparams = ((struct rebx_extras*)sim->extras)->modify_orbits_direct;
+	struct rebx_params_modify_orbits* modparams = ((struct rebx_extras*)sim->extras)->modify_orbits_direct;
 	/*struct reb_particle* com = modparams->com;
 
 	if(com == NULL){

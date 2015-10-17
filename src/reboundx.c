@@ -40,94 +40,91 @@ double podot; // pericenter precession at r = Rc
 */
 // pointers for damping timescales
 
-void rebx_set_double(struct reb_simulation* sim, int p_index, enum REBX_PARAMS param, double value){
-	struct reb_particle* p = &(sim->particles[p_index]);
-	rebx_add_double_param(sim, &(p->ap), param, value);
-}
-
-void rebx_add_particle(struct rebx_extras* rebx, struct rebx_p_param* p_param){
-	while(rebx->allocatedN <= rebx->N){
-		rebx->allocatedN += 128;
-		rebx->particles = realloc(rebx->particles, sizeof(struct rebx_p_param*)*rebx->allocatedN);
+void* rebx_search_param(struct rebx_param* current, enum REBX_PARAMS param){
+	while(current != NULL){
+		if(current->param == param){
+			return current;
+		}
 	}
-
-	p_param->rebx_index = rebx->N;	// uniquely identifies this linked list in rebx->particles
-	(rebx->N)++;
+	return NULL;
 }
 
-void rebx_update_particles(struct rebx_extras* rebx, struct rebx_p_param* p_param){
-	if(p_param->next == NULL){	// This was the first parameter added to particle, so need to add to rebx->particles
-		rebx_add_particle(rebx, p_param);
+void rebx_add_param_orb_tau(struct reb_simulation* sim, struct rebx_param** paramsRef){
+	struct rebx_param* newparam = malloc(sizeof(struct rebx_param));
+
+	newparam->valPtr = malloc(sizeof(struct rebx_orb_tau));
+	newparam->param = (enum REBX_PARAMS)ORB_TAU;
+	newparam->next = *paramsRef;
+	*paramsRef = newparam;
+
+	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
+	rebx_add_param_to_be_freed(rebx, *paramsRef);
+}
+
+void rebx_set_tau_a(struct reb_simulation* sim, int p_index, double value){
+	struct reb_particle* p = &(sim->particles[p_index]);
+	struct rebx_param* ap = (struct rebx_param*)p->ap;
+	struct rebx_param* orb_tau = rebx_search_param(ap, ORB_TAU);
+	if(orb_tau == NULL){
+		rebx_add_param_orb_tau(sim, &ap);
+		ap = (struct rebx_param*)p->ap;
+		((struct rebx_orb_tau*) ap->valPtr)->tau_a = value;
 	}
 	else{
-		p_param->rebx_index = p_param->next->rebx_index;
+		((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_a = value;
 	}
-	rebx->particles[p_param->rebx_index] = p_param;
 }
 
-void rebx_add_double_param(struct reb_simulation* sim, void** _p_paramsRef, enum REBX_PARAMS param, double value){
-	struct rebx_p_param** p_paramsRef = (struct rebx_p_param**)_p_paramsRef; // avoid void** to p_param** warning
-	struct rebx_p_param* newparam = malloc(sizeof(struct rebx_p_param));
+double rebx_get_tau_a(struct reb_particle p){
+	struct rebx_param* orb_tau = rebx_search_param(p.ap, ORB_TAU);
+	if(orb_tau == NULL){
+		fprintf(stderr, "tau_a wasn't set for particle passed to rebx_get_tau_a\n");
+	}
+	return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_a;
+}
+
+void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param){
+	struct rebx_param_to_be_freed* newparam = malloc(sizeof(*newparam));
+	newparam->param = param;
+	newparam->next = *rebx->params_to_be_freed;
+	*rebx->params_to_be_freed = newparam;
+}
+
+/*void rebx_add_double_param(struct reb_simulation* sim, void** _paramsRef, enum REBX_PARAMS param, double value){
+	struct rebx_param** paramsRef = (struct rebx_param**)_paramsRef; // avoid void** to param** warning
+	struct rebx_param* newparam = malloc(sizeof(struct rebx_param));
 	
 	newparam->valPtr = malloc(sizeof(double));
 	*(double*)newparam->valPtr = value; // valPtr is a void* so need to cast before dereference
 	newparam->param = param;
-	newparam->next = *p_paramsRef;
-	*p_paramsRef = newparam;
+	newparam->next = *paramsRef;
+	*paramsRef = newparam;
 
 	struct rebx_extras* rebx = (struct rebx_extras*)sim->extras;
-	rebx_update_particles(rebx, *p_paramsRef);
-}
+	rebx_update_particles(rebx, *paramsRef);
+}*/
 
-void rebx_free_p_params(struct rebx_p_param* apPtr){
-	if(apPtr != NULL){
-		rebx_free_p_params(apPtr->next);
-		free(apPtr->valPtr);
-		free(apPtr->next);
-	}
-}
-
-void rebx_free_particles(struct rebx_extras* rebx){
-	for(int i=0; i<rebx->N; i++)
+void rebx_free_params(struct rebx_extras* rebx){
+	struct rebx_param_to_be_freed* current = *rebx->params_to_be_freed;
+	struct rebx_param_to_be_freed* temp_next;
+	while(current != NULL)
 	{
-		rebx_free_p_params(rebx->particles[i]);
-		free(rebx->particles[i]);
+		temp_next = current->next;
+		free(current->param->valPtr);
+		free(current->param);
+		free(current);
+		current = temp_next;
 	}
 }
 
 void rebx_free(struct rebx_extras* rebx){
-	rebx_free_particles(rebx);
-	free(rebx->particles);
+	rebx_free_params(rebx);
+	free(rebx->modify_orbits_forces);
+	free(rebx->modify_orbits_direct);
+	free(rebx->gr);
+	free(rebx->forces);
+	free(rebx->ptm);
 	free(rebx);
-}
-
-double rebx_get_double(struct reb_particle p, enum REBX_PARAMS param){
-	struct rebx_p_param* current;
-	for(current = p.ap; current != NULL; current=current->next){
-		if(current->param == param){
-			return *(double*)current->valPtr;
-		}
-	}
-	fprintf(stderr, "REBOUNDx parameter not found in call to rebx_get_double.  Returning 0.\n");
-	return 0.;
-}
-
-double rebx_get_double_param(struct rebx_p_param* p_param){
-	return *(double*)p_param->valPtr;
-}
-
-void rebx_add_int_param(struct rebx_p_param** p_paramsRef, enum REBX_PARAMS param, int value){
-	struct rebx_p_param* newparam = malloc(sizeof(struct rebx_p_param));
-
-	newparam->valPtr = malloc(sizeof(int));
-	*(int*)newparam->valPtr = value;
-	newparam->param = param;
-	newparam->next = *p_paramsRef;
-	*p_paramsRef = newparam;
-}
-
-int rebx_get_int_param(struct rebx_p_param* p_param){
-	return *(int*)p_param->valPtr;
 }
 
 struct rebx_extras* rebx_init(struct reb_simulation* sim){
@@ -140,18 +137,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
 	sim->extras = rebx;
 	rebx->sim = sim;
 
-	rebx->N = 0;
-	rebx->allocatedN = 0;
-	rebx->particles = NULL;
-
-	rebx->modify_orbits_forces.e_damping_p = 0.;
-	rebx->modify_orbits_forces.coordinates = JACOBI;
-
-	rebx->modify_orbits_direct.e_damping_p = 0.;
-	rebx->modify_orbits_direct.coordinates = JACOBI;
-
-	rebx->gr.c = C_DEFAULT; // speed of light in default units of AU/(yr/2pi)
-
+	rebx->params_to_be_freed = NULL;
 	rebx->ptm = NULL;
 	rebx->forces = NULL;
 	rebx->Nptm = 0;
@@ -180,7 +166,7 @@ void rebx_add_gr(struct reb_simulation* sim, double c){
 	rebx->Nforces++;
 	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
 	rebx->forces[rebx->Nforces-1] = rebx_gr;
-	rebx->gr.c = c;
+	rebx->gr->c = c;
 }
 
 void rebx_add_gr_single_mass(struct reb_simulation* sim, double c){
@@ -191,7 +177,7 @@ void rebx_add_gr_single_mass(struct reb_simulation* sim, double c){
 	rebx->Nforces++;
 	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
 	rebx->forces[rebx->Nforces-1] = rebx_gr_single_mass;
-	rebx->gr.c = c;
+	rebx->gr->c = c;
 }
 
 void rebx_add_gr_potential(struct reb_simulation* sim, double c){
@@ -201,7 +187,7 @@ void rebx_add_gr_potential(struct reb_simulation* sim, double c){
 	rebx->Nforces++;
 	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
 	rebx->forces[rebx->Nforces-1] = rebx_gr_potential;
-	rebx->gr.c = c;
+	rebx->gr->c = c;
 }
 
 void rebx_add_modify_orbits_forces(struct reb_simulation* sim){
