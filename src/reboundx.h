@@ -82,7 +82,7 @@ struct rebx_params_gr {
 
 struct rebx_extras {	
 	struct reb_simulation* sim;
-	struct rebx_param_to_be_freed** params_to_be_freed; // pointer to a linked list holding pointers to all
+	struct rebx_param_to_be_freed* params_to_be_freed; // pointer to a linked list holding pointers to all
 											// the allocated params for later freeing
 
 	// these are pointers to simplify syntax.  Some structs need to update member variables
@@ -100,32 +100,31 @@ struct rebx_extras {
 	int Nforces;
 };
 
-void* rebx_search_param(struct rebx_param* current, enum REBX_PARAMS param);
-void rebx_add_param_orb_tau(struct reb_simulation* sim, struct rebx_param** paramsRef);
-void rebx_set_tau_a(struct reb_simulation* sim, int p_index, double value);
-double rebx_get_tau_a(struct reb_particle p);
-void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param);
-void rebx_free_params(struct rebx_extras* rebx);
-void rebx_free(struct rebx_extras* rebx);
+/* Main routines called each timestep. */
 void rebx_forces(struct reb_simulation* sim);
 void rebx_ptm(struct reb_simulation* sim);
-/*void rebx_set_double(struct reb_simulation* sim, int p_index, enum REBX_EXTRAS param, double value);
-double rebx_get_double(struct reb_particle p, enum REBX_EXTRAS param);
 
-void rebx_add_particle(struct rebx_extras* rebx, struct rebx_p_param* p_param);
-void rebx_update_particles(struct rebx_extras* rebx, struct rebx_p_param* p_param);
-void rebx_free_p_params(struct rebx_p_param* apPtr);
-void rebx_free_particles(struct rebx_extras* rebx);
-void rebx_free(struct rebx_extras* rebx);
-
-void rebx_add_double_param(struct reb_simulation* sim, void** _p_paramsRef, enum REBX_EXTRAS param, double value);
-void rebx_add_int_param(struct rebx_p_param** p_paramsRef, enum REBX_USER_PARAMS param, int value);
-
-//double rebx_get_double_param(struct rebx_p_param*r p_param);
-int rebx_get_int_param(struct rebx_p_param* p_param);
-*/
+/* Initialization routines. */
 struct rebx_extras* rebx_init(struct reb_simulation* sim);
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx);
+
+/* Garbage collection routines. */
+void rebx_free_params(struct rebx_extras* rebx);
+void rebx_free(struct rebx_extras* rebx);
+
+/* Internal utility functions. */
+void* rebx_search_param(struct rebx_param* current, enum REBX_PARAMS param);
+void rebx_add_param_to_be_freed(struct rebx_param_to_be_freed** ptbfRef, struct rebx_param* param);
+
+/* Internal parameter adders (need a different one for each REBX_PARAM type). */
+void rebx_add_param_orb_tau(struct reb_simulation* sim, void** paramsRef);
+
+/* User-called getters and setters for each parameter*/
+void rebx_set_tau_a(struct reb_simulation* sim, int p_index, double value);
+double rebx_get_tau_a(struct reb_particle p);
+
+
+
 
 void rebx_add_modify_orbits_forces(struct reb_simulation* sim);
 void rebx_add_modify_orbits_direct(struct reb_simulation* sim);

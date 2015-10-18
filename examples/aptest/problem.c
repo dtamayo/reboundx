@@ -49,8 +49,10 @@ int main(int argc, char* argv[]){
 
 	rebx_set_tau_a(sim, 1, -1.e5);
 	rebx_set_tau_a(sim, 2, -1.e4);
+	rebx_set_tau_a(sim, 0, -1.e3);
 	printf("%f\n", rebx_get_tau_a(sim->particles[1]));
 	printf("%f\n", rebx_get_tau_a(sim->particles[2]));
+	rebx_free(rebx);
 	//rebx_set_double(sim, 1, TAU_LITTLE_OMEGA, 1.e4);
 
 	//rebx_set_double(sim, 2, TAU_E, -1.e4);
@@ -59,9 +61,9 @@ int main(int argc, char* argv[]){
 	// modify_orbits_forces doesn't have precession implemented yet.
 
 	// modify_orbits_direct directly updates particles' orbital elements at the end of each timestep
-	rebx_add_modify_orbits_forces(sim);
+	/*rebx_add_modify_orbits_forces(sim);
 	rebx_add_modify_orbits_direct(sim);
-	rebx_add_gr_potential(sim, 3);
+	rebx_add_gr_potential(sim, 3);*/
 
 	/*
 	// modify_orbits_forces adds in additional forces that orbit-average to give exponential a and e damping
@@ -70,6 +72,5 @@ int main(int argc, char* argv[]){
 	rebx->modify_orbits_forces.tau_e[2] = -1e4;	// add eccentricity damping on outer planet (e-folding timescale)
 	*/
 
-	reb_integrate(sim, tmax);
-	rebx_free(rebx);
+	//reb_integrate(sim, tmax);
 }
