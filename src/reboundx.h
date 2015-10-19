@@ -63,8 +63,8 @@ struct rebx_orb_tau{
 };
 
 struct rebx_param_to_be_freed{
-	struct rebx_param_to_be_freed* next;
 	struct rebx_param* param;
+	struct rebx_param_to_be_freed* next;
 };
 
 struct rebx_params_modify_orbits{
