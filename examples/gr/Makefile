@@ -19,7 +19,7 @@ all: librebound.so libreboundx.so
 eclipse: librebound.so
 	@echo ""
 	@echo "Compiling problem file ..."
-	$(CC) -I../../src/ -I../../../reboundx/src/ -Wl,-rpath,./ $(DEBUGOPT) $(PREDEF) problem.c $(REBOUNDXDIR)reboundx.c $(REBOUNDXDIR)rebxtools.c $(REBOUNDXDIR)gr.c $(REBOUNDXDIR)modify_orbits_direct.c $(REBOUNDXDIR)modify_orbits_forces.c -L. -L ../../../reboundx -lrebound $(LIB) -o rebound
+	gcc -I../../src/ -I../../../reboundx/src/ -Wl,-rpath,./ $(DEBUGOPT) $(PREDEF) problem.c $(REBOUNDXDIR)reboundx.c $(REBOUNDXDIR)rebxtools.c $(REBOUNDXDIR)gr.c $(REBOUNDXDIR)modify_orbits_direct.c $(REBOUNDXDIR)modify_orbits_forces.c -L. -L ../../../reboundx -lrebound $(LIB) --coverage -o rebound
 	@echo ""
 	@echo "Problem file compiled successfully."
  

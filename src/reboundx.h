@@ -52,7 +52,6 @@ struct rebx_param{
 	void* valPtr;
 	enum REBX_PARAMS param;
 	struct rebx_param* next;
-	int rebx_index;
 };
 
 struct rebx_orb_tau{
@@ -120,7 +119,7 @@ void rebx_add_param_to_be_freed(struct rebx_param_to_be_freed** ptbfRef, struct 
 void rebx_add_param_orb_tau(struct reb_simulation* sim, void** paramsRef);
 
 /* User-called getters and setters for each parameter*/
-void rebx_set_tau_a(struct reb_simulation* sim, int p_index, double value);
+void rebx_set_tau_a(struct reb_simulation* sim, int p_index, double value); // change to pointer, pass rebx
 void rebx_set_tau_e(struct reb_simulation* sim, int p_index, double value);
 void rebx_set_tau_inc(struct reb_simulation* sim, int p_index, double value);
 void rebx_set_tau_omega(struct reb_simulation* sim, int p_index, double value);
@@ -130,9 +129,6 @@ double rebx_get_tau_e(struct reb_particle p);
 double rebx_get_tau_inc(struct reb_particle p);
 double rebx_get_tau_omega(struct reb_particle p);
 double rebx_get_tau_Omega(struct reb_particle p);
-
-
-
 
 void rebx_add_modify_orbits_forces(struct reb_simulation* sim);
 void rebx_add_modify_orbits_direct(struct reb_simulation* sim);

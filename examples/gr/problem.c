@@ -37,6 +37,6 @@ int main(int argc, char* argv[]){
 	double c = C_DEFAULT; // Have to set the speed of light in appropriate units (set by G and your initial conditions).  Here we use the value in default units of AU/(yr/2pi)	
 	rebx_add_gr(sim,c); // add postnewtonian correction.
 
-	double tmax = 1.e-1;
+	double tmax = 1.e-4;
 	reb_integrate(sim, tmax); 
 }
