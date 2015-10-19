@@ -14,8 +14,6 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-double tmax = 5.e4;
-
 int main(int argc, char* argv[]){
 	struct reb_simulation* sim = reb_create_simulation();
 	// Setup constants
@@ -46,9 +44,10 @@ int main(int argc, char* argv[]){
 
 	// modify_orbits_direct directly updates particles' orbital elements at the end of each timestep
 	rebx_add_modify_orbits_direct(sim);
-	rebx->modify_orbits_direct.tau_a[1] = -1e5;	// add semimajor axis damping on inner planet (e-folding timescale)
-	rebx->modify_orbits_direct.tau_e[2] = -1e4;	// add eccentricity damping on outer planet (e-folding timescale)
-	rebx->modify_orbits_direct.tau_omega[1] = -1.e4;  // add linear precession on inner planet (precession period)	
+	int particle_index = 1;
+	rebx_set_tau_a(sim, particle_index, -1.e5); // add semimajor axis damping on inner planet (e-folding timescale)
+	rebx_set_tau_omega(sim, particle_index, -1.e4); // add linear precession on inner planet (precession period)	
+	rebx_set_tau_e(sim, 2, -1.e4); // add eccentricity damping on particles[2] (e-folding timescale)
 
 	// modify_orbits_forces adds in additional forces that orbit-average to give exponential a and e damping
 	/*rebx_add_modify_orbits_forces(sim);
@@ -56,5 +55,6 @@ int main(int argc, char* argv[]){
 	rebx->modify_orbits_forces.tau_e[2] = -1e4;	// add eccentricity damping on outer planet (e-folding timescale)
 	*/
 
+	double tmax = 1.e5;
 	reb_integrate(sim, tmax);
 }

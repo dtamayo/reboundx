@@ -121,7 +121,15 @@ void rebx_add_param_orb_tau(struct reb_simulation* sim, void** paramsRef);
 
 /* User-called getters and setters for each parameter*/
 void rebx_set_tau_a(struct reb_simulation* sim, int p_index, double value);
+void rebx_set_tau_e(struct reb_simulation* sim, int p_index, double value);
+void rebx_set_tau_inc(struct reb_simulation* sim, int p_index, double value);
+void rebx_set_tau_omega(struct reb_simulation* sim, int p_index, double value);
+void rebx_set_tau_Omega(struct reb_simulation* sim, int p_index, double value);
 double rebx_get_tau_a(struct reb_particle p);
+double rebx_get_tau_e(struct reb_particle p);
+double rebx_get_tau_inc(struct reb_particle p);
+double rebx_get_tau_omega(struct reb_particle p);
+double rebx_get_tau_Omega(struct reb_particle p);
 
 
 

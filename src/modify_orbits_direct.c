@@ -32,68 +32,48 @@
 #include "rebxtools.h"
 
 void rebx_modify_orbits_direct(struct reb_simulation* const sim){
-	struct rebx_params_modify_orbits* modparams = ((struct rebx_extras*)sim->extras)->modify_orbits_direct;
-	/*struct reb_particle* com = modparams->com;
-
-	if(com == NULL){
-		com = calloc(1, sizeof(*com));
-		switch(modparams->coordinates){
-			case JACOBI:
-				rebxtools_get_com(sim, sim->N-2, com);
-				printf("hi\n");
-				break;
-			case BARYCENTRIC:
-				rebxtools_get_com(sim, sim->N-1, com);
-				break;
-			case HELIOCENTRIC:
-				*com = sim->particles[0];
-				break;
-			default:
-				fprintf(stderr, "Coordinate system not set in modify_orbits_direct?! \n");
-				exit(1);
-		}
-	}*/
-	/*struct reb_particle com = rebxtools_get_com(sim);
+	struct rebx_extras* rebx = sim->extras;
+	struct rebx_params_modify_orbits* modparams = rebx->modify_orbits_direct;
 	
+	struct reb_particle com = {0};
+	switch(modparams->coordinates){
+	case JACOBI:
+		rebxtools_get_com(sim, sim->N-1, &com); // We start with outermost particle, so get COM for the first N-1 particles
+		break;
+	case BARYCENTRIC:
+		rebxtools_get_com(sim, sim->N, &com); // COM of whole system
+		break;
+	case HELIOCENTRIC:
+		com = sim->particles[0];
+		break;
+	default:
+		fprintf(stderr, "Coordinate system not set in modify_orbits_direct?! \n");
+		exit(1);
+	}
+
 	for(int i=sim->N-1;i>0;--i){
 		struct reb_particle *p = &(sim->particles[i]);
-		com = rebxtools_get_com_without_particle(com, *p);
-		int* err = malloc(sizeof(int)); // dummy
-		struct reb_orbit oif(com == NULL){ = rebxtools_particle_to_orbit_err(sim->G, sim->particles[i], com, err);
-	    double da = 0.;
-		double de = 0.;
-		double di = 0.;
-		double dom = 0.;	
-		double dt2 = sim->dt_last_done;
-		if (modparams->tau_a[i] != 0.){
-			da += o.a*sim->dt/modparams->tau_a[i];
-		}
-	
-		if (modparams->tau_e[i] != 0.){
-			o.e = o.e*exp(dt2/modparams->tau_e[i]);
-			//o.e += o.e*(exp(sim->dt/rebxparams->tau_e[i])-1.);
-			//de += o.e*sim->dt/rebxparams->tau_e[i];
-			da += 2.*o.a*o.e*o.e*modparams->e_damping_p*sim->dt/modparams->tau_e[i];
-		}
+		struct reb_orbit o = rebxtools_particle_to_orbit(sim->G, p, &com);
+		double dt = sim->dt_last_done;
+		double tau_a = rebx_get_tau_a(*p);
+		double tau_e = rebx_get_tau_e(*p);
+		double tau_inc = rebx_get_tau_inc(*p);
+		double tau_omega = rebx_get_tau_omega(*p);
+		double tau_Omega = rebx_get_tau_Omega(*p);
 
-		if (modparams->tau_inc[i] != 0.){
-			o.inc = o.inc*exp(dt2/modparams->tau_inc[i]);
-			//di += o.inc*sim->dt/rebxparams->tau_inc[i];
+		o.a = o.a*exp(dt/tau_a);
+		o.e = o.e*exp(dt/tau_e);
+		o.inc = o.inc*exp(dt/tau_inc);
+		o.omega += 2*M_PI*dt/tau_omega;
+		o.Omega += 2*M_PI*dt/tau_Omega;
+
+		o.a += 2.*o.a*o.e*o.e*modparams->e_damping_p*dt/tau_e; // Coupling term between e and a
+
+		rebxtools_orbit2p(sim->G, p, &com, &o);
+		if(modparams->coordinates == JACOBI){
+			rebxtools_update_com_without_particle(&com, p);
 		}
-
-		if (modparams->tau_omega[i] != 0.){
-			dom += 2*M_PI*sim->dt/modparams->tau_omega[i];
-		}
-
-		o.a += da;
-		o.e += de;
-		o.inc += di;
-		o.omega += dom;
-
-		rebxtools_orbit2p(sim->G, &sim->particles[i], &com, o); 
 	}
 	//rebxtools_move_to_com(sim);
-	 *
-	 */
 }
 
