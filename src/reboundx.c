@@ -146,12 +146,96 @@ void rebx_set_tau_a(struct reb_simulation* sim, int p_index, double value){
 	}
 }
 
+void rebx_set_tau_e(struct reb_simulation* sim, int p_index, double value){
+	struct reb_particle* p = &(sim->particles[p_index]);
+	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
+	if(orb_tau == NULL){
+		rebx_add_param_orb_tau(sim, &p->ap);
+		void* valPtr = ((struct rebx_param*) p->ap)->valPtr;
+		((struct rebx_orb_tau*) valPtr)->tau_e = value;
+	}
+	else{
+		((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_e = value;
+	}
+}
+
+void rebx_set_tau_inc(struct reb_simulation* sim, int p_index, double value){
+	struct reb_particle* p = &(sim->particles[p_index]);
+	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
+	if(orb_tau == NULL){
+		rebx_add_param_orb_tau(sim, &p->ap);
+		void* valPtr = ((struct rebx_param*) p->ap)->valPtr;
+		((struct rebx_orb_tau*) valPtr)->tau_inc = value;
+	}
+	else{
+		((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_inc = value;
+	}
+}
+
+void rebx_set_tau_omega(struct reb_simulation* sim, int p_index, double value){
+	struct reb_particle* p = &(sim->particles[p_index]);
+	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
+	if(orb_tau == NULL){
+		rebx_add_param_orb_tau(sim, &p->ap);
+		void* valPtr = ((struct rebx_param*) p->ap)->valPtr;
+		((struct rebx_orb_tau*) valPtr)->tau_omega = value;
+	}
+	else{
+		((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_omega = value;
+	}
+}
+
+void rebx_set_tau_Omega(struct reb_simulation* sim, int p_index, double value){
+	struct reb_particle* p = &(sim->particles[p_index]);
+	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
+	if(orb_tau == NULL){
+		rebx_add_param_orb_tau(sim, &p->ap);
+		void* valPtr = ((struct rebx_param*) p->ap)->valPtr;
+		((struct rebx_orb_tau*) valPtr)->tau_Omega = value;
+	}
+	else{
+		((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_Omega = value;
+	}
+}
+
 double rebx_get_tau_a(struct reb_particle p){
 	struct rebx_param* orb_tau = rebx_search_param(p.ap, ORB_TAU);
 	if(orb_tau == NULL){
 		fprintf(stderr, "tau_a wasn't set for particle passed to rebx_get_tau_a\n");
 	}
 	return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_a;
+}
+
+double rebx_get_tau_e(struct reb_particle p){
+	struct rebx_param* orb_tau = rebx_search_param(p.ap, ORB_TAU);
+	if(orb_tau == NULL){
+		fprintf(stderr, "tau_e wasn't set for particle passed to rebx_get_tau_e\n");
+	}
+	return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_e;
+}
+
+double rebx_get_tau_inc(struct reb_particle p){
+	struct rebx_param* orb_tau = rebx_search_param(p.ap, ORB_TAU);
+	if(orb_tau == NULL){
+		fprintf(stderr, "tau_inc wasn't set for particle passed to rebx_get_tau_inc\n");
+	}
+	return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_inc;
+}
+
+double rebx_get_tau_omega(struct reb_particle p){
+	struct rebx_param* orb_tau = rebx_search_param(p.ap, ORB_TAU);
+	if(orb_tau == NULL){
+		fprintf(stderr, "tau_omega wasn't set for particle passed to rebx_get_tau_omega\n");
+	}
+	return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_omega;
+}
+
+double rebx_get_tau_Omega(struct reb_particle p){
+	struct rebx_param* orb_tau = rebx_search_param(p.ap, ORB_TAU);
+	if(orb_tau == NULL){
+		fprintf(stderr, "tau_Omega wasn't set for particle passed to rebx_get_tau_Omega\n");
+	}
+	return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_Omega;
 }
 
 /* Functions to add effects. */
