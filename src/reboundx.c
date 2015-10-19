@@ -259,7 +259,7 @@ void rebx_add_gr_single_mass(struct reb_simulation* sim, double c){
 	struct rebx_extras* rebx = sim->extras;
 	rebx->Nforces++;
 	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
-	rebx->forces[rebx->Nforces-1] = rebx_gr;
+	rebx->forces[rebx->Nforces-1] = rebx_gr_single_mass;
 	rebx->gr = malloc(sizeof(*rebx->gr));
 	rebx->gr->c = c;
 }
@@ -270,7 +270,7 @@ void rebx_add_gr_potential(struct reb_simulation* sim, double c){
 	struct rebx_extras* rebx = sim->extras;
 	rebx->Nforces++;
 	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
-	rebx->forces[rebx->Nforces-1] = rebx_gr;
+	rebx->forces[rebx->Nforces-1] = rebx_gr_potential;
 	rebx->gr = malloc(sizeof(*rebx->gr));
 	rebx->gr->c = c;
 }
