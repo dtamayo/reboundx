@@ -54,12 +54,12 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim){
 	for(int i=sim->N-1;i>0;--i){
 		struct reb_particle *p = &(sim->particles[i]);
 		struct reb_orbit o = rebxtools_particle_to_orbit(sim->G, p, &com);
-		double dt = sim->dt_last_done;
-		double tau_a = rebx_get_tau_a(*p);
-		double tau_e = rebx_get_tau_e(*p);
-		double tau_inc = rebx_get_tau_inc(*p);
-		double tau_omega = rebx_get_tau_omega(*p);
-		double tau_Omega = rebx_get_tau_Omega(*p);
+		const double dt = sim->dt_last_done;
+		const double tau_a = rebx_get_tau_a(*p);
+		const double tau_e = rebx_get_tau_e(*p);
+		const double tau_inc = rebx_get_tau_inc(*p);
+		const double tau_omega = rebx_get_tau_omega(*p);
+		const double tau_Omega = rebx_get_tau_Omega(*p);
 
 		o.a = o.a*exp(dt/tau_a);
 		o.e = o.e*exp(dt/tau_e);
