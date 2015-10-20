@@ -87,13 +87,17 @@ void rebx_free_params(struct rebx_extras* rebx){
 	}
 }
 
-void rebx_free(struct rebx_extras* rebx){
+void rebx_free_pointers(struct rebx_extras* rebx){
 	rebx_free_params(rebx);
 	free(rebx->modify_orbits_forces);
 	free(rebx->modify_orbits_direct);
 	free(rebx->gr);
 	free(rebx->forces);
 	free(rebx->ptm);
+}
+
+void rebx_free(struct rebx_extras* rebx){
+	rebx_free_pointers(rebx);
 	free(rebx);
 }
 
@@ -194,40 +198,40 @@ void rebx_set_tau_Omega(struct reb_particle* p, double value){
 	}
 }
 
-double rebx_get_tau_a(struct reb_particle p){
-	struct rebx_param* orb_tau = rebx_search_param(p.ap, ORB_TAU);
+double rebx_get_tau_a(struct reb_particle* p){
+	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
 	if(orb_tau == NULL){
 		fprintf(stderr, "tau_a wasn't set for particle passed to rebx_get_tau_a\n");
 	}
 	return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_a;
 }
 
-double rebx_get_tau_e(struct reb_particle p){
-	struct rebx_param* orb_tau = rebx_search_param(p.ap, ORB_TAU);
+double rebx_get_tau_e(struct reb_particle* p){
+	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
 	if(orb_tau == NULL){
 		fprintf(stderr, "tau_e wasn't set for particle passed to rebx_get_tau_e\n");
 	}
 	return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_e;
 }
 
-double rebx_get_tau_inc(struct reb_particle p){
-	struct rebx_param* orb_tau = rebx_search_param(p.ap, ORB_TAU);
+double rebx_get_tau_inc(struct reb_particle* p){
+	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
 	if(orb_tau == NULL){
 		fprintf(stderr, "tau_inc wasn't set for particle passed to rebx_get_tau_inc\n");
 	}
 	return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_inc;
 }
 
-double rebx_get_tau_omega(struct reb_particle p){
-	struct rebx_param* orb_tau = rebx_search_param(p.ap, ORB_TAU);
+double rebx_get_tau_omega(struct reb_particle* p){
+	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
 	if(orb_tau == NULL){
 		fprintf(stderr, "tau_omega wasn't set for particle passed to rebx_get_tau_omega\n");
 	}
 	return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_omega;
 }
 
-double rebx_get_tau_Omega(struct reb_particle p){
-	struct rebx_param* orb_tau = rebx_search_param(p.ap, ORB_TAU);
+double rebx_get_tau_Omega(struct reb_particle* p){
+	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
 	if(orb_tau == NULL){
 		fprintf(stderr, "tau_Omega wasn't set for particle passed to rebx_get_tau_Omega\n");
 	}

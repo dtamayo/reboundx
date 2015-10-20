@@ -33,8 +33,7 @@ class rebx_params_gr(Structure):
 
 class Extras(Structure):
     def __init__(self, sim):
-        clibreboundx.rebx_initialize(byref(sim), byref(self))
-
+        clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
     def __del__(self):
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_pointers(byref(self))
@@ -75,6 +74,34 @@ class Extras(Structure):
         c = self.check_c(c)
         clibreboundx.rebx_add_gr_potential(self.sim, c_double(c))
 
+    def set_tau_a(self, p, value):
+        clibreboundx.rebx_set_tau_a(byref(p), c_double(value))
+    def set_tau_e(self, p, value):
+        clibreboundx.rebx_set_tau_e(byref(p), c_double(value))
+    def set_tau_inc(self, p, value):
+        clibreboundx.rebx_set_tau_inc(byref(p), c_double(value))
+    def set_tau_omega(self, p, value):
+        clibreboundx.rebx_set_tau_omega(byref(p), c_double(value))
+    def set_tau_Omega(self, p, value):
+        clibreboundx.rebx_set_tau_Omega(byref(p), c_double(value))
+
+    def get_tau_a(self, p):
+        clibreboundx.rebx_get_tau_a.restype = c_double
+        return clibreboundx.rebx_get_tau_a(byref(p))
+    def get_tau_e(self, p):
+        clibreboundx.rebx_get_tau_e.restype = c_double
+        return clibreboundx.rebx_get_tau_e(byref(p))
+    def get_tau_inc(self, p):
+        clibreboundx.rebx_get_tau_inc.restype = c_double
+        return clibreboundx.rebx_get_tau_inc(byref(p))
+    def get_tau_omega(self, p):
+        clibreboundx.rebx_get_tau_omega.restype = c_double
+        return clibreboundx.rebx_get_tau_omega(byref(p))
+    def get_tau_Omega(self, p):
+        clibreboundx.rebx_get_tau_Omega.restype = c_double
+        return clibreboundx.rebx_get_tau_Omega(byref(p))
+
+    
 '''
     @property
     def tau_a(self):

@@ -51,11 +51,11 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim){
 
 	for(int i=sim->N-1;i>0;--i){
 		struct reb_particle* p = &(sim->particles[i]);
-		const double tau_a = rebx_get_tau_a(*p);
-		const double tau_e = rebx_get_tau_e(*p);
-		const double tau_inc = rebx_get_tau_inc(*p);
-		//const double tau_omega = rebx_get_tau_omega(*p);
-		//const double tau_Omega = rebx_get_tau_Omega(*p);
+		const double tau_a = rebx_get_tau_a(p);
+		const double tau_e = rebx_get_tau_e(p);
+		const double tau_inc = rebx_get_tau_inc(p);
+		//const double tau_omega = rebx_get_tau_omega(p);
+		//const double tau_Omega = rebx_get_tau_Omega(p);
 
 		const double dvx = p->vx - com.vx;
 		const double dvy = p->vy - com.vy;

@@ -109,6 +109,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx);
 
 /* Garbage collection routines. */
 void rebx_free_params(struct rebx_extras* rebx);
+void rebx_free_pointers(struct rebx_extras* rebx);
 void rebx_free(struct rebx_extras* rebx);
 
 /* Internal utility functions. */
@@ -124,11 +125,11 @@ void rebx_set_tau_e(struct reb_particle* p, double value);
 void rebx_set_tau_inc(struct reb_particle* p, double value); 
 void rebx_set_tau_omega(struct reb_particle* p, double value); 
 void rebx_set_tau_Omega(struct reb_particle* p, double value); 
-double rebx_get_tau_a(struct reb_particle p);
-double rebx_get_tau_e(struct reb_particle p);
-double rebx_get_tau_inc(struct reb_particle p);
-double rebx_get_tau_omega(struct reb_particle p);
-double rebx_get_tau_Omega(struct reb_particle p);
+double rebx_get_tau_a(struct reb_particle* p);
+double rebx_get_tau_e(struct reb_particle* p);
+double rebx_get_tau_inc(struct reb_particle* p);
+double rebx_get_tau_omega(struct reb_particle* p);
+double rebx_get_tau_Omega(struct reb_particle* p);
 
 void rebx_add_modify_orbits_forces(struct reb_simulation* sim);
 void rebx_add_modify_orbits_direct(struct reb_simulation* sim);

@@ -50,9 +50,9 @@ int main(int argc, char* argv[]){
 	rebx_set_tau_a(&sim->particles[1], -1.e5);
 	rebx_set_tau_a(&sim->particles[2], -1.e4);
 	rebx_set_tau_e(&sim->particles[1], -1.e3);
-	printf("%f\n", rebx_get_tau_a(sim->particles[1]));
-	printf("%f\n", rebx_get_tau_e(sim->particles[1]));
-	printf("%f\n", rebx_get_tau_omega(sim->particles[1]));
+	printf("%f\n", rebx_get_tau_a(&sim->particles[1]));
+	printf("%f\n", rebx_get_tau_e(&sim->particles[1]));
+	printf("%f\n", rebx_get_tau_omega(&sim->particles[1]));
 	
 	rebx_free(rebx);
 	//rebx_set_double(sim, 1, TAU_LITTLE_OMEGA, 1.e4);
