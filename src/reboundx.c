@@ -36,7 +36,6 @@
 void rebx_forces(struct reb_simulation* sim){
 	struct rebx_extras* rebx = sim->extras;
 	for(int i=0; i<rebx->Nforces; i++){
-		printf("t=%e\tdt=%e\tforces\n", sim->t, sim->dt);
 		rebx->forces[i](sim);
 	}
 }

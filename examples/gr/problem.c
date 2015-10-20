@@ -15,7 +15,7 @@
 int main(int argc, char* argv[]){
 	struct reb_simulation* sim = reb_create_simulation();
 	// Setup constants
-	sim->dt 		= 1.e-8;		// timestep.
+	sim->dt 		= 1.e-2;		// timestep.
 	sim->integrator	= REB_INTEGRATOR_WHFAST;
 	//sim->integrator	= REB_INTEGRATOR_IAS15;
 
@@ -24,7 +24,7 @@ int main(int argc, char* argv[]){
 	reb_add(sim, p); 
 
 	double m = 0.;
-	double a = 1.e-4; // put planet close to enhance precession (this would put planet inside the Sun!)
+	double a = 1.; // put planet close to enhance precession (this would put planet inside the Sun!)
 	double e = 0.2;
 	double omega = 0.;
 	double f = 0.;
@@ -35,11 +35,9 @@ int main(int argc, char* argv[]){
 	
 	rebx_init(sim); // initialize reboundx
 	double c = C_DEFAULT; // Have to set the speed of light in appropriate units (set by G and your initial conditions).  Here we use the value in default units of AU/(yr/2pi)	
-	rebx_add_gr(sim,c); // add postnewtonian correction.
+	rebx_add_gr(sim,c); // add postnewtonian correction.  
 
-	reb_step(sim);
-	printf("****\n");
-	reb_step(sim);
-	//double tmax = 1.e-4;
-	//reb_integrate(sim, tmax);
+
+	double tmax = 1.e2;
+	reb_integrate(sim, tmax); 
 }
