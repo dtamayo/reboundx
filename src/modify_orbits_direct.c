@@ -67,7 +67,7 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim){
 		o.omega += 2*M_PI*dt/tau_omega;
 		o.Omega += 2*M_PI*dt/tau_Omega;
 
-		o.a += 2.*o.a*o.e*o.e*modparams->e_damping_p*dt/tau_e; // Coupling term between e and a
+		o.a += 2.*o.a*o.e*o.e*modparams->p*dt/tau_e; // Coupling term between e and a
 
 		rebxtools_orbit2p(sim->G, p, &com, &o);
 		if(modparams->coordinates == JACOBI){

@@ -238,13 +238,46 @@ double rebx_get_tau_Omega(struct reb_particle* p){
 	return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_Omega;
 }
 
-/* Functions to add effects. */
+/* User functions to change modification parameters */
 
-void rebx_add_gr(struct reb_simulation* sim, double c){
+void rebx_set_modify_orbits_direct_p(struct rebx_extras* rebx, double value){
+	if(rebx->modify_orbits_direct == NULL){
+		fprintf(stderr, "Need to call rebx_add_modify_orbits_direct before modifying its parameters.\n");
+		return;
+	}
+	if(value < 0 || value > 1){
+		fprintf(stderr, "Note that the typical range for p is between 0 (no a-e coupling) to 1 (e-damping at constant angular momentum).  See Deck & Batygin (2015).  **Setting anyway**");
+	}
+	rebx->modify_orbits_direct->p = value;
+}
+
+void rebx_set_modify_orbits_direct_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords){
+	if(rebx->modify_orbits_direct == NULL){
+		fprintf(stderr, "Need to call rebx_add_modify_orbits_direct before modifying its parameters.\n");
+		return;
+	}
+	rebx->modify_orbits_direct->coordinates = coords;
+}
+
+void rebx_set_modify_orbits_forces_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords){
+	if(rebx->modify_orbits_forces == NULL){
+		fprintf(stderr, "Need to call rebx_add_modify_orbits_forces before modifying its parameters.\n");
+		return;
+	}
+	rebx->modify_orbits_forces->coordinates = coords;
+}
+	
+void rebx_set_gr_c(struct rebx_extras* rebx, double value){
+	rebx->gr->c = value;
+}
+
+/* User functions to add effects. */
+
+void rebx_add_gr(struct rebx_extras* rebx, double c){
+	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
 	sim->force_is_velocity_dependent = 1;
 
-	struct rebx_extras* rebx = sim->extras;
 	rebx->Nforces++;
 	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
 	rebx->forces[rebx->Nforces-1] = rebx_gr;
@@ -252,11 +285,11 @@ void rebx_add_gr(struct reb_simulation* sim, double c){
 	rebx->gr->c = c;
 }
 
-void rebx_add_gr_single_mass(struct reb_simulation* sim, double c){
+void rebx_add_gr_single_mass(struct rebx_extras* rebx, double c){
+	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
 	sim->force_is_velocity_dependent = 1;
 
-	struct rebx_extras* rebx = sim->extras;
 	rebx->Nforces++;
 	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
 	rebx->forces[rebx->Nforces-1] = rebx_gr_single_mass;
@@ -264,10 +297,10 @@ void rebx_add_gr_single_mass(struct reb_simulation* sim, double c){
 	rebx->gr->c = c;
 }
 
-void rebx_add_gr_potential(struct reb_simulation* sim, double c){
+void rebx_add_gr_potential(struct rebx_extras* rebx, double c){
+	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
 
-	struct rebx_extras* rebx = sim->extras;
 	rebx->Nforces++;
 	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
 	rebx->forces[rebx->Nforces-1] = rebx_gr_potential;
@@ -275,27 +308,27 @@ void rebx_add_gr_potential(struct reb_simulation* sim, double c){
 	rebx->gr->c = c;
 }
 
-void rebx_add_modify_orbits_forces(struct reb_simulation* sim){
+void rebx_add_modify_orbits_forces(struct rebx_extras* rebx){
+	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
 	sim->force_is_velocity_dependent = 1;
 
-	struct rebx_extras* rebx = sim->extras;
 	rebx->Nforces++;
 	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
 	rebx->forces[rebx->Nforces-1] = rebx_modify_orbits_forces;
 	rebx->modify_orbits_forces = malloc(sizeof(*rebx->modify_orbits_forces));
-	rebx->modify_orbits_forces->e_damping_p = 0.;
+	rebx->modify_orbits_forces->p = 0.;
 	rebx->modify_orbits_forces->coordinates = JACOBI;
 }
 
-void rebx_add_modify_orbits_direct(struct reb_simulation* sim){
+void rebx_add_modify_orbits_direct(struct rebx_extras* rebx){
+	struct reb_simulation* sim = rebx->sim;
 	sim->post_timestep_modifications = rebx_ptm;
 
-	struct rebx_extras* rebx = sim->extras;
 	rebx->Nptm++;
 	rebx->ptm = realloc(rebx->ptm, sizeof(*rebx->ptm)*rebx->Nptm);
 	rebx->ptm[rebx->Nptm-1] = rebx_modify_orbits_direct;
 	rebx->modify_orbits_direct = malloc(sizeof(*rebx->modify_orbits_direct));
-	rebx->modify_orbits_direct->e_damping_p = 0.;
+	rebx->modify_orbits_direct->p = 0.;
 	rebx->modify_orbits_direct->coordinates = JACOBI;
 }

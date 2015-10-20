@@ -68,7 +68,7 @@ struct rebx_param_to_be_freed{
 };
 
 struct rebx_params_modify_orbits{
-	double e_damping_p; // p paramseter from Deck & Batygin (2015) for how e-damping
+	double p; // p paramseter from Deck & Batygin (2015) for how e-damping
 	// is coupled to a-damping at order e^2
 	// p = 1 : e-damping at const angular momentum.  p = 0 : no contribution to a-damping
 	// equal to p/3 with p defined as in Goldreich & Schlichting 2014
@@ -131,10 +131,15 @@ double rebx_get_tau_inc(struct reb_particle* p);
 double rebx_get_tau_omega(struct reb_particle* p);
 double rebx_get_tau_Omega(struct reb_particle* p);
 
-void rebx_add_modify_orbits_forces(struct reb_simulation* sim);
-void rebx_add_modify_orbits_direct(struct reb_simulation* sim);
-void rebx_add_gr(struct reb_simulation* sim, double c);
-void rebx_add_gr_potential(struct reb_simulation* sim, double c);
-void rebx_add_gr_implicit(struct reb_simulation* sim, double c);
+void rebx_set_modify_orbits_direct_p(struct rebx_extras* rebx, double value);
+void rebx_set_modify_orbits_direct_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords);
+void rebx_set_modify_orbits_forces_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords);
+void rebx_set_gr_c(struct rebx_extras* rebx, double value);
+
+void rebx_add_modify_orbits_forces(struct rebx_extras* rebx);
+void rebx_add_modify_orbits_direct(struct rebx_extras* rebx);
+void rebx_add_gr(struct rebx_extras* rebx, double c);
+void rebx_add_gr_potential(struct rebx_extras* rebx, double c);
+void rebx_add_gr_implicit(struct rebx_extras* rebx, double c);
 
 #endif
