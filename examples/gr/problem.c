@@ -15,16 +15,16 @@
 int main(int argc, char* argv[]){
 	struct reb_simulation* sim = reb_create_simulation();
 	// Setup constants
-	//sim->dt 		= 1.e-8;		// timestep.
-	//sim->integrator	= REB_INTEGRATOR_WHFAST;
-	sim->integrator	= REB_INTEGRATOR_IAS15;
+	sim->dt 		= 1.e-2;		// timestep.
+	sim->integrator	= REB_INTEGRATOR_WHFAST;
+	//sim->integrator	= REB_INTEGRATOR_IAS15;
 
 	struct reb_particle p = {0}; 
 	p.m  	= 1.;	
 	reb_add(sim, p); 
 
 	double m = 0.;
-	double a = 1.e-4; // put planet close to enhance precession (this would put planet inside the Sun!)
+	double a = 1.; // put planet close to enhance precession (this would put planet inside the Sun!)
 	double e = 0.2;
 	double omega = 0.;
 	double f = 0.;
@@ -38,6 +38,6 @@ int main(int argc, char* argv[]){
 	rebx_add_gr(sim,c); // add postnewtonian correction.  
 
 
-	double tmax = .1;
+	double tmax = 1.e2;
 	reb_integrate(sim, tmax); 
 }
