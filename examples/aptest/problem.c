@@ -47,11 +47,13 @@ int main(int argc, char* argv[]){
 	
 	struct rebx_extras* rebx = rebx_init(sim);	// first initialize rebx
 
-	rebx_set_tau_a(sim, 1, -1.e5);
-	rebx_set_tau_a(sim, 2, -1.e4);
-	rebx_set_tau_a(sim, 0, -1.e3);
+	rebx_set_tau_a(&sim->particles[1], -1.e5);
+	rebx_set_tau_a(&sim->particles[2], -1.e4);
+	rebx_set_tau_e(&sim->particles[1], -1.e3);
 	printf("%f\n", rebx_get_tau_a(sim->particles[1]));
-	printf("%f\n", rebx_get_tau_a(sim->particles[2]));
+	printf("%f\n", rebx_get_tau_e(sim->particles[1]));
+	printf("%f\n", rebx_get_tau_omega(sim->particles[1]));
+	
 	rebx_free(rebx);
 	//rebx_set_double(sim, 1, TAU_LITTLE_OMEGA, 1.e4);
 

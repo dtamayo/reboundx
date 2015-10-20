@@ -134,11 +134,10 @@ void rebx_add_param_orb_tau(struct reb_simulation* sim, void** paramsRef){
 
 /* User-called getters and setters for each parameter*/
 
-void rebx_set_tau_a(struct reb_simulation* sim, int p_index, double value){
-	struct reb_particle* p = &(sim->particles[p_index]);
+void rebx_set_tau_a(struct reb_particle* p, double value){
 	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(sim, &p->ap);
+		rebx_add_param_orb_tau(p->sim, &p->ap);
 		void* valPtr = ((struct rebx_param*) p->ap)->valPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_a = value;
 	}
@@ -147,11 +146,10 @@ void rebx_set_tau_a(struct reb_simulation* sim, int p_index, double value){
 	}
 }
 
-void rebx_set_tau_e(struct reb_simulation* sim, int p_index, double value){
-	struct reb_particle* p = &(sim->particles[p_index]);
+void rebx_set_tau_e(struct reb_particle* p, double value){
 	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(sim, &p->ap);
+		rebx_add_param_orb_tau(p->sim, &p->ap);
 		void* valPtr = ((struct rebx_param*) p->ap)->valPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_e = value;
 	}
@@ -160,11 +158,10 @@ void rebx_set_tau_e(struct reb_simulation* sim, int p_index, double value){
 	}
 }
 
-void rebx_set_tau_inc(struct reb_simulation* sim, int p_index, double value){
-	struct reb_particle* p = &(sim->particles[p_index]);
+void rebx_set_tau_inc(struct reb_particle* p, double value){
 	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(sim, &p->ap);
+		rebx_add_param_orb_tau(p->sim, &p->ap);
 		void* valPtr = ((struct rebx_param*) p->ap)->valPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_inc = value;
 	}
@@ -173,11 +170,10 @@ void rebx_set_tau_inc(struct reb_simulation* sim, int p_index, double value){
 	}
 }
 
-void rebx_set_tau_omega(struct reb_simulation* sim, int p_index, double value){
-	struct reb_particle* p = &(sim->particles[p_index]);
+void rebx_set_tau_omega(struct reb_particle* p, double value){
 	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(sim, &p->ap);
+		rebx_add_param_orb_tau(p->sim, &p->ap);
 		void* valPtr = ((struct rebx_param*) p->ap)->valPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_omega = value;
 	}
@@ -186,11 +182,10 @@ void rebx_set_tau_omega(struct reb_simulation* sim, int p_index, double value){
 	}
 }
 
-void rebx_set_tau_Omega(struct reb_simulation* sim, int p_index, double value){
-	struct reb_particle* p = &(sim->particles[p_index]);
+void rebx_set_tau_Omega(struct reb_particle* p, double value){
 	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(sim, &p->ap);
+		rebx_add_param_orb_tau(p->sim, &p->ap);
 		void* valPtr = ((struct rebx_param*) p->ap)->valPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_Omega = value;
 	}
