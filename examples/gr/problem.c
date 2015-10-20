@@ -38,6 +38,6 @@ int main(int argc, char* argv[]){
 	rebx_add_gr(sim,c); // add postnewtonian correction.  
 
 
-	double tmax = 1.e2;
+	double tmax = 1.e4;
 	reb_integrate(sim, tmax); 
 }
