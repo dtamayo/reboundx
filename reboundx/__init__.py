@@ -34,6 +34,8 @@ class rebx_params_gr(Structure):
 class Extras(Structure):
     def __init__(self, sim):
         clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
+        self.add_Particle_props()
+
     def __del__(self):
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_pointers(byref(self))
@@ -74,75 +76,49 @@ class Extras(Structure):
         c = self.check_c(c)
         clibreboundx.rebx_add_gr_potential(self.sim, c_double(c))
 
-    def set_tau_a(self, p, value):
-        clibreboundx.rebx_set_tau_a(byref(p), c_double(value))
-    def set_tau_e(self, p, value):
-        clibreboundx.rebx_set_tau_e(byref(p), c_double(value))
-    def set_tau_inc(self, p, value):
-        clibreboundx.rebx_set_tau_inc(byref(p), c_double(value))
-    def set_tau_omega(self, p, value):
-        clibreboundx.rebx_set_tau_omega(byref(p), c_double(value))
-    def set_tau_Omega(self, p, value):
-        clibreboundx.rebx_set_tau_Omega(byref(p), c_double(value))
+    def add_Particle_props(self):
+        @property
+        def tau_a(self):
+            clibreboundx.rebx_get_tau_a.restype = c_double
+            return clibreboundx.rebx_get_tau_a(byref(self))
+        @tau_a.setter
+        def tau_a(self, value):
+            clibreboundx.rebx_set_tau_a(byref(self), c_double(value))
+        @property
+        def tau_e(self):
+            clibreboundx.rebx_get_tau_e.restype = c_double
+            return clibreboundx.rebx_get_tau_e(byref(self))
+        @tau_e.setter
+        def tau_e(self, value):
+            clibreboundx.rebx_set_tau_e(byref(self), c_double(value))
+        @property
+        def tau_inc(self):
+            clibreboundx.rebx_get_tau_inc.restype = c_double
+            return clibreboundx.rebx_get_tau_inc(byref(self))
+        @tau_inc.setter
+        def tau_inc(self, value):
+            clibreboundx.rebx_set_tau_inc(byref(self), c_double(value))
+        @property
+        def tau_omega(self):
+            clibreboundx.rebx_get_tau_omega.restype = c_double
+            return clibreboundx.rebx_get_tau_omega(byref(self))
+        @tau_omega.setter
+        def tau_omega(self, value):
+            clibreboundx.rebx_set_tau_omega(byref(self), c_double(value))
+        @property
+        def tau_Omega(self):
+            clibreboundx.rebx_get_tau_Omega.restype = c_double
+            return clibreboundx.rebx_get_tau_Omega(byref(self))
+        @tau_Omega.setter
+        def tau_Omega(self, value):
+            clibreboundx.rebx_set_tau_Omega(byref(self), c_double(value))
 
-    def get_tau_a(self, p):
-        clibreboundx.rebx_get_tau_a.restype = c_double
-        return clibreboundx.rebx_get_tau_a(byref(p))
-    def get_tau_e(self, p):
-        clibreboundx.rebx_get_tau_e.restype = c_double
-        return clibreboundx.rebx_get_tau_e(byref(p))
-    def get_tau_inc(self, p):
-        clibreboundx.rebx_get_tau_inc.restype = c_double
-        return clibreboundx.rebx_get_tau_inc(byref(p))
-    def get_tau_omega(self, p):
-        clibreboundx.rebx_get_tau_omega.restype = c_double
-        return clibreboundx.rebx_get_tau_omega(byref(p))
-    def get_tau_Omega(self, p):
-        clibreboundx.rebx_get_tau_Omega.restype = c_double
-        return clibreboundx.rebx_get_tau_Omega(byref(p))
+        rebound.Particle.tau_a = tau_a
+        rebound.Particle.tau_e = tau_e
+        rebound.Particle.tau_inc = tau_inc
+        rebound.Particle.tau_omega = tau_omega
+        rebound.Particle.tau_Omega = tau_Omega
 
-    
-'''
-    @property
-    def tau_a(self):
-        return [self.params.contents.tau_a[i] for i in range(self.sim.contents.N)]
-    @tau_a.setter
-    def tau_a(self, tau_a):
-        if len(tau_a) is not self.sim.contents.N:
-            raise AttributeError('You must pass an array of timescales with as many elements as there are particles in the simulation')
-        arr = (c_double * len(tau_a))(*tau_a)
-        clibreboundx.rebx_set_tau_a(self.sim, byref(arr))
-
-    @property
-    def tau_e(self):
-        return [self.params.contents.tau_e[i] for i in range(self.sim.contents.N)]
-    @tau_e.setter
-    def tau_e(self, tau_e):
-        if len(tau_e) is not self.sim.contents.N:
-            raise AttributeError('You must pass an array of timescales with as many elements as there are particles in the simulation')
-        arr = (c_double * len(tau_e))(*tau_e)
-        clibreboundx.rebx_set_tau_e(self.sim, byref(arr))
-
-    @property
-    def tau_inc(self):
-        return [self.params.contents.tau_inc[i] for i in range(self.sim.contents.N)]
-    @tau_inc.setter
-    def tau_inc(self, tau_inc):
-        if len(tau_inc) is not self.sim.contents.N:
-            raise AttributeError('You must pass an array of timescales with as many elements as there are particles in the simulation')
-        arr = (c_double * len(tau_inc))(*tau_inc)
-        clibreboundx.rebx_set_tau_inc(self.sim, byref(arr))
-
-    @property
-    def tau_pomega(self):
-        return [self.params.contents.tau_pomega[i] for i in range(self.sim.contents.N)]
-    @tau_pomega.setter
-    def tau_pomega(self, tau_pomega):
-        if len(tau_pomega) is not self.sim.contents.N:
-            raise AttributeError('You must pass an array of timescales with as many elements as there are particles in the simulation')
-        arr = (c_double * len(tau_pomega))(*tau_pomega)
-        clibreboundx.rebx_set_tau_pomega(self.sim, byref(arr))
-'''
 # Need to put fields after class definition because of self-referencing
 Extras._fields_ = [("sim", POINTER(Simulation)),
                 ("forces", POINTER(CFUNCTYPE(None, POINTER(Simulation)))),
@@ -153,31 +129,3 @@ Extras._fields_ = [("sim", POINTER(Simulation)),
                 ("modify_orbits_direct", rebx_params_modify_orbits_direct),
                 ("gr", rebx_params_gr)]
 
-'''
-def set_e_damping_p(value):
-    clibreboundx.rebx_set_e_damping_p(c_double(value))
-
-def set_migration(tau_a):
-    arr = (c_double * len(tau_a))(*tau_a)
-    clibreboundx.rebx_set_migration(byref(arr),c_int(len(tau_a)))
-
-def set_e_damping(tau_e, p=0.):
-    c_double.in_dll(libreboundx, "e_damping_p").value = p
-    arr = (c_double * len(tau_e))(*tau_e)
-    clibreboundx.rebx_set_e_damping(byref(arr),c_int(len(tau_e)))
-    
-def set_e_damping(tau_e):
-    arr = (c_double * len(tau_e))(*tau_e)
-    clibreboundx.rebx_set_e_damping(byref(arr),c_int(len(tau_e)))
-    
-def set_i_damping(tau_i):
-    arr = (c_double * len(tau_i))(*tau_i)
-    clibreboundx.rebx_set_i_damping(byref(arr),c_int(len(tau_i)))
-
-def set_peri_precession(tau_omega):
-    arr = (c_double * len(tau_omega))(*tau_omega)
-    clibreboundx.rebx_set_peri_precession(byref(arr), c_int(len(tau_omega)))
-   
-def set_peri_precession(gamma, Rc, podot):
-    clibreboundx.set_peri_precession(c_double(gamma), c_double(Rc), c_double(podot))
-'''
