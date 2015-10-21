@@ -12,21 +12,20 @@ except:
     print("Cannot find library 'libreboundx.so'.")
     raise
 
-class rebx_params_modify_orbits_forces(Structure):
-    _fields_ = [("allocatedN", c_int),
-                ("tau_a", POINTER(c_double)),
-                ("tau_e", POINTER(c_double)),
-                ("tau_inc", POINTER(c_double)),
-                ("tau_omega", POINTER(c_double)),
-                ("e_damping_p", c_double)]                     
+class rebx_param(Structure): # need to define fields afterward because of circular ref in linked list
+    pass    
+rebx_param._fields_ = [("valPtr", c_void_p),
+            ("param", c_int),
+            ("next", POINTER(rebx_param))]
 
-class rebx_params_modify_orbits_direct(Structure):
-    _fields_ = [("allocatedN", c_int),
-                ("tau_a", POINTER(c_double)),
-                ("tau_e", POINTER(c_double)),
-                ("tau_inc", POINTER(c_double)),
-                ("tau_omega", POINTER(c_double)),
-                ("e_damping_p", c_double)]                     
+class rebx_param_to_be_freed(Structure):
+    pass
+rebx_param_to_be_freed._fields_ = [("param", POINTER(rebx_param)),
+            ("next", POINTER(rebx_param_to_be_freed))]
+
+class rebx_params_modify_orbits(Structure):
+    _fields_ = [("p", c_double),
+                ("coordinates", c_int)]
 
 class rebx_params_gr(Structure):
     _fields_ = [("c", c_double)]
@@ -35,16 +34,17 @@ class Extras(Structure):
     def __init__(self, sim):
         clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
         self.add_Particle_props()
+        self.coordinates = {"JACOBI":0, "BARYCENTRIC":1, "HELIOCENTRIC":2} # to use C version's REBX_COORDINATES enum
 
     def __del__(self):
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_pointers(byref(self))
 
     def add_modify_orbits_direct(self):
-        clibreboundx.rebx_add_modify_orbits_direct(self.sim)
+        clibreboundx.rebx_add_modify_orbits_direct(byref(self))
     
     def add_modify_orbits_forces(self):
-        clibreboundx.rebx_add_modify_orbits_forces(self.sim)
+        clibreboundx.rebx_add_modify_orbits_forces(byref(self))
 
     def check_c(self, c):
         if c is not None: # user passed c explicitly
@@ -66,15 +66,15 @@ class Extras(Structure):
         return c_default
     def add_gr(self, c=None):
         c = self.check_c(c)
-        clibreboundx.rebx_add_gr(self.sim, c_double(c))
+        clibreboundx.rebx_add_gr(byref(self), c_double(c))
     
     def add_gr_single_mass(self, c=None):
         c = self.check_c(c)
-        clibreboundx.rebx_add_gr_single_mass(self.sim, c_double(c))
+        clibreboundx.rebx_add_gr_single_mass(byref(self), c_double(c))
 
     def add_gr_potential(self, c=None):
         c = self.check_c(c)
-        clibreboundx.rebx_add_gr_potential(self.sim, c_double(c))
+        clibreboundx.rebx_add_gr_potential(byref(self), c_double(c))
 
     def add_Particle_props(self):
         @property
@@ -121,11 +121,12 @@ class Extras(Structure):
 
 # Need to put fields after class definition because of self-referencing
 Extras._fields_ = [("sim", POINTER(Simulation)),
+                ("params_to_be_freed", POINTER(rebx_param_to_be_freed)),
                 ("forces", POINTER(CFUNCTYPE(None, POINTER(Simulation)))),
                 ("ptm", POINTER(CFUNCTYPE(None, POINTER(Simulation)))),
-                ("Nforces", c_int),
                 ("Nptm", c_int),
-                ("modify_orbits_forces", rebx_params_modify_orbits_forces),
-                ("modify_orbits_direct", rebx_params_modify_orbits_direct),
-                ("gr", rebx_params_gr)]
+                ("Nforces", c_int),
+                ("modify_orbits_forces", POINTER(rebx_params_modify_orbits)),
+                ("modify_orbits_direct", POINTER(rebx_params_modify_orbits)),
+                ("gr", POINTER(rebx_params_gr))]
 

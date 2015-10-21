@@ -84,19 +84,18 @@ struct rebx_extras {
 	struct rebx_param_to_be_freed* params_to_be_freed; // pointer to a linked list holding pointers to all
 											// the allocated params for later freeing
 
-	// these are pointers to simplify syntax.  Some structs need to update member variables
-	// inside functions so we need to pass the pointer to them anyway
-
-	struct rebx_params_modify_orbits* modify_orbits_forces;
-	struct rebx_params_modify_orbits* modify_orbits_direct;
-	struct rebx_params_gr* gr;
-
 	// these are pointers to function pointers to use as arrays of function pointers for the user-added effects
 	void (**ptm) (struct reb_simulation* const sim);
 	void (**forces) (struct reb_simulation* const sim);
 
 	int Nptm;
 	int Nforces;
+	// these are pointers to simplify syntax.  Some structs need to update member variables
+	// inside functions so we need to pass the pointer to them anyway
+
+	struct rebx_params_modify_orbits* modify_orbits_forces;
+	struct rebx_params_modify_orbits* modify_orbits_direct;
+	struct rebx_params_gr* gr;
 };
 
 /* Main routines called each timestep. */
