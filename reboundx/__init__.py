@@ -126,7 +126,7 @@ Extras._fields_ = [("sim", POINTER(Simulation)),
                 ("ptm", POINTER(CFUNCTYPE(None, POINTER(Simulation)))),
                 ("Nptm", c_int),
                 ("Nforces", c_int),
-                ("modify_orbits_forces", POINTER(rebx_params_modify_orbits)),
-                ("modify_orbits_direct", POINTER(rebx_params_modify_orbits)),
-                ("gr", POINTER(rebx_params_gr))]
+                ("modify_orbits_forces", rebx_params_modify_orbits),
+                ("modify_orbits_direct", rebx_params_modify_orbits),
+                ("gr", rebx_params_gr)]
 

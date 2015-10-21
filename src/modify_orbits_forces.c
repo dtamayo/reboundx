@@ -31,10 +31,10 @@
 
 void rebx_modify_orbits_forces(struct reb_simulation* const sim){
 	struct rebx_extras* rebx = sim->extras;
-	struct rebx_params_modify_orbits* modparams = rebx->modify_orbits_forces;
+	struct rebx_params_modify_orbits modparams = rebx->modify_orbits_forces;
 
 	struct reb_particle com = {0};
-	switch(modparams->coordinates){
+	switch(modparams.coordinates){
 	case JACOBI:
 		rebxtools_get_com(sim, sim->N-1, &com); // We start with outermost particle, so get COM for the first N-1 particles
 		break;
@@ -115,7 +115,7 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim){
 				sim->particles[0].az -= p->m/sim->particles[0].m*a_over_r*dz;
 			}*/
 		}
-		if(modparams->coordinates == JACOBI){
+		if(modparams.coordinates == JACOBI){
 			rebxtools_update_com_without_particle(&com, p);
 		}
 	}

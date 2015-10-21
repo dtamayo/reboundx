@@ -90,12 +90,10 @@ struct rebx_extras {
 
 	int Nptm;
 	int Nforces;
-	// these are pointers to simplify syntax.  Some structs need to update member variables
-	// inside functions so we need to pass the pointer to them anyway
 
-	struct rebx_params_modify_orbits* modify_orbits_forces;
-	struct rebx_params_modify_orbits* modify_orbits_direct;
-	struct rebx_params_gr* gr;
+	struct rebx_params_modify_orbits modify_orbits_forces;
+	struct rebx_params_modify_orbits modify_orbits_direct;
+	struct rebx_params_gr gr;
 };
 
 /* Main routines called each timestep. */
@@ -109,7 +107,6 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx);
 /* Garbage collection routines. */
 void rebx_free_params(struct rebx_extras* rebx);
 void rebx_free_pointers(struct rebx_extras* rebx);
-void rebx_free(struct rebx_extras* rebx);
 
 /* Internal utility functions. */
 void* rebx_search_param(struct rebx_param* current, enum REBX_PARAMS param);
@@ -135,10 +132,14 @@ void rebx_set_modify_orbits_direct_coordinates(struct rebx_extras* rebx, enum RE
 void rebx_set_modify_orbits_forces_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords);
 void rebx_set_gr_c(struct rebx_extras* rebx, double value);
 
+/* Functions for the user to add modifications to a simulation */
 void rebx_add_modify_orbits_forces(struct rebx_extras* rebx);
 void rebx_add_modify_orbits_direct(struct rebx_extras* rebx);
 void rebx_add_gr(struct rebx_extras* rebx, double c);
 void rebx_add_gr_potential(struct rebx_extras* rebx, double c);
 void rebx_add_gr_implicit(struct rebx_extras* rebx, double c);
+
+/* User-called function for freeing all memory allocated by REBOUNDx */
+void rebx_free(struct rebx_extras* rebx);
 
 #endif

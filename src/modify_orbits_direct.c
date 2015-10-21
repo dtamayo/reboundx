@@ -33,10 +33,10 @@
 
 void rebx_modify_orbits_direct(struct reb_simulation* const sim){
 	struct rebx_extras* rebx = sim->extras;
-	struct rebx_params_modify_orbits* modparams = rebx->modify_orbits_direct;
+	struct rebx_params_modify_orbits modparams = rebx->modify_orbits_direct;
 	
 	struct reb_particle com = {0};
-	switch(modparams->coordinates){
+	switch(modparams.coordinates){
 	case JACOBI:
 		rebxtools_get_com(sim, sim->N-1, &com); // We start with outermost particle, so get COM for the first N-1 particles
 		break;
@@ -67,10 +67,10 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim){
 		o.omega += 2*M_PI*dt/tau_omega;
 		o.Omega += 2*M_PI*dt/tau_Omega;
 
-		o.a += 2.*o.a*o.e*o.e*modparams->p*dt/tau_e; // Coupling term between e and a
+		o.a += 2.*o.a*o.e*o.e*modparams.p*dt/tau_e; // Coupling term between e and a
 
 		rebxtools_orbit2p(sim->G, p, &com, &o);
-		if(modparams->coordinates == JACOBI){
+		if(modparams.coordinates == JACOBI){
 			rebxtools_update_com_without_particle(&com, p);
 		}
 	}
