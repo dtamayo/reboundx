@@ -20,13 +20,14 @@ from ctypes import *
 clibreboundx = cdll.LoadLibrary(pymodulespath + '/../libreboundx' + suffix)
 
 # Get string for build in libreboundx.so
-def build_str():
-    return c_charp_p.in_dll(clibreboundx, "rebx_build_str").value.decode("ascii")
-
+def build_date():
+    return c_char_p.in_dll(clibreboundx, "rebx_build_str").value.decode("ascii")
+def build_version():
+    return c_char_p.in_dll(clibreboundx, "rebx_version_str").value.decode("ascii")
 #Check for version
 try:
     moduleversion = pkg_resources.require("reboundx")[0].version
-    libreboundxversion = build_str()
+    libreboundxversion = build_version()
     if moduleversion != libreboundxversion:
         print("WARNING: python module and libreboundx have different version numbers: '%s' vs '%s'.\n".format(moduleversion, libreboundxversion))
 except:
