@@ -245,6 +245,7 @@ double rebx_get_tau_Omega(struct reb_particle* p){
 	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
 	if(orb_tau == NULL){
 		fprintf(stderr, "tau_Omega wasn't set for particle passed to rebx_get_tau_Omega\n");
+		return INFINITY;
 	}
 	else{
 		return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_Omega;
