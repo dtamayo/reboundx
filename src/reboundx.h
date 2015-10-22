@@ -36,33 +36,43 @@
 #include "modify_orbits_forces.h"
 #include "gr.h"
 
-typedef void (*xptr)(struct reb_simulation* const r);
+enum REBX_PARAMS{
+	ORB_TAU,
+	TEST_INT,
+	TEST_INT2,
+};
 
-/*enum REBX_EXTRAS {
-	REBX_MODIFY_ORBITS_FORCES	= 0,
-	REBX_MODIFY_ORBITS_DIRECT	= 1,
-	REBX_GR						= 2,
-};*/
+enum REBX_COORDINATES{
+	JACOBI,				// default.  REBX_COORDINATE members in structs get calloced to 0 and first enum always = 0
+	BARYCENTRIC,
+	HELIOCENTRIC
+};
 
-struct rebx_params_modify_orbits_forces {
-	int allocatedN;
-	double* tau_a;
-	double* tau_e;
-	double* tau_inc;
-	double* tau_omega;
-	double e_damping_p; // p paramseter from Deck & Batygin (2015) for how e-damping
+struct rebx_param{
+	void* valPtr;
+	enum REBX_PARAMS param;
+	struct rebx_param* next;
+};
+
+struct rebx_orb_tau{
+	double tau_a;
+	double tau_e;
+	double tau_inc;
+	double tau_omega;
+	double tau_Omega;
+};
+
+struct rebx_param_to_be_freed{
+	struct rebx_param* param;
+	struct rebx_param_to_be_freed* next;
+};
+
+struct rebx_params_modify_orbits{
+	double p; // p paramseter from Deck & Batygin (2015) for how e-damping
 	// is coupled to a-damping at order e^2
 	// p = 1 : e-damping at const angular momentum.  p = 0 : no contribution to a-damping
 	// equal to p/3 with p defined as in Goldreich & Schlichting 2014
-};
-
-struct rebx_params_modify_orbits_direct {
-	int allocatedN;
-	double* tau_a;
-	double* tau_e;
-	double* tau_inc;
-	double* tau_omega;
-	double e_damping_p;
+	enum REBX_COORDINATES coordinates;
 };
 
 struct rebx_params_gr {
@@ -71,47 +81,65 @@ struct rebx_params_gr {
 
 struct rebx_extras {	
 	struct reb_simulation* sim;
-	xptr* forces;
-	xptr* ptm;
-	int Nforces;
-	int Nptm;
+	struct rebx_param_to_be_freed* params_to_be_freed; // pointer to a linked list holding pointers to all
+											// the allocated params for later freeing
 
-	struct rebx_params_modify_orbits_forces modify_orbits_forces;
-	struct rebx_params_modify_orbits_direct modify_orbits_direct;
+	// these are pointers to function pointers to use as arrays of function pointers for the user-added effects
+	void (**ptm) (struct reb_simulation* const sim);
+	void (**forces) (struct reb_simulation* const sim);
+
+	int Nptm;
+	int Nforces;
+
+	struct rebx_params_modify_orbits modify_orbits_forces;
+	struct rebx_params_modify_orbits modify_orbits_direct;
 	struct rebx_params_gr gr;
 };
 
-struct rebx_extras* rebx_init(struct reb_simulation* sim);
-void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx);
-
-void rebx_add_modify_orbits_forces(struct reb_simulation* sim);
-void rebx_add_modify_orbits_direct(struct reb_simulation* sim);
-void rebx_add_gr(struct reb_simulation* sim, double c);
-void rebx_add_gr_potential(struct reb_simulation* sim, double c);
-void rebx_add_gr_implicit(struct reb_simulation* sim, double c);
-
-double* rebx_get_tau_a(struct reb_simulation* sim);
-void rebx_set_tau_a(struct reb_simulation* sim, double* tau_a);
-
-double* rebx_get_tau_e(struct reb_simulation* sim);
-void rebx_set_tau_e(struct reb_simulation* sim, double* tau_e);
-
-double* rebx_get_tau_inc(struct reb_simulation* sim);
-void rebx_set_tau_inc(struct reb_simulation* sim, double* tau_inc);
-
-double* rebx_get_tau_omega(struct reb_simulation* sim);
-void rebx_set_tau_omega(struct reb_simulation* sim, double* tau_omega);
-
-//void rebx_add(struct reb_simulation* sim, enum REBX_EXTRAS extra);
-
-/**
- * @cond PRIVATE
- * Internal functions used by reboundx.  User would not call these.
- */
+/* Main routines called each timestep. */
 void rebx_forces(struct reb_simulation* sim);
 void rebx_ptm(struct reb_simulation* sim);
 
-void rebx_free_extras(struct rebx_extras* const rebx);
-void rebx_free_pointers(struct rebx_extras* const rebx);
+/* Initialization routines. */
+struct rebx_extras* rebx_init(struct reb_simulation* sim);
+void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx);
+
+/* Garbage collection routines. */
+void rebx_free_params(struct rebx_extras* rebx);
+void rebx_free_pointers(struct rebx_extras* rebx);
+
+/* Internal utility functions. */
+void* rebx_search_param(struct rebx_param* current, enum REBX_PARAMS param);
+void rebx_add_param_to_be_freed(struct rebx_param_to_be_freed** ptbfRef, struct rebx_param* param);
+
+/* Internal parameter adders (need a different one for each REBX_PARAM type). */
+void rebx_add_param_orb_tau(struct reb_simulation* sim, void** paramsRef);
+
+/* User-called getters and setters for each parameter*/
+void rebx_set_tau_a(struct reb_particle* p, double value); 
+void rebx_set_tau_e(struct reb_particle* p, double value); 
+void rebx_set_tau_inc(struct reb_particle* p, double value); 
+void rebx_set_tau_omega(struct reb_particle* p, double value); 
+void rebx_set_tau_Omega(struct reb_particle* p, double value); 
+double rebx_get_tau_a(struct reb_particle* p);
+double rebx_get_tau_e(struct reb_particle* p);
+double rebx_get_tau_inc(struct reb_particle* p);
+double rebx_get_tau_omega(struct reb_particle* p);
+double rebx_get_tau_Omega(struct reb_particle* p);
+
+void rebx_set_modify_orbits_direct_p(struct rebx_extras* rebx, double value);
+void rebx_set_modify_orbits_direct_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords);
+void rebx_set_modify_orbits_forces_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords);
+void rebx_set_gr_c(struct rebx_extras* rebx, double value);
+
+/* Functions for the user to add modifications to a simulation */
+void rebx_add_modify_orbits_forces(struct rebx_extras* rebx);
+void rebx_add_modify_orbits_direct(struct rebx_extras* rebx);
+void rebx_add_gr(struct rebx_extras* rebx, double c);
+void rebx_add_gr_potential(struct rebx_extras* rebx, double c);
+void rebx_add_gr_implicit(struct rebx_extras* rebx, double c);
+
+/* User-called function for freeing all memory allocated by REBOUNDx */
+void rebx_free(struct rebx_extras* rebx);
 
 #endif
