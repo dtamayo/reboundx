@@ -42,16 +42,20 @@ int main(int argc, char* argv[]){
 	// There are two options for how to modify orbits.  You would only choose one (comment the other out).  
 	// modify_orbits_forces doesn't have precession implemented yet.
 
-	// modify_orbits_direct directly updates particles' orbital elements at the end of each timestep
-	rebx_add_modify_orbits_forces(sim);
-	int particle_index = 1;
-	rebx_set_tau_a(sim, particle_index, -1.e5); // add semimajor axis damping on inner planet (e-folding timescale)
-	rebx_set_tau_omega(sim, particle_index, -1.e4); // add linear precession on inner planet (precession period)	
-	rebx_set_tau_e(sim, 2, -1.e4); // add eccentricity damping on particles[2] (e-folding timescale)
+	rebx_add_modify_orbits_direct(rebx);	// directly update particles' orbital elements each timestep
+	//rebx_add_modify_orbits_forces(rebx);	// add forces that orbit-average to give exponential a and e damping
 
-	// modify_orbits_forces adds in additional forces that orbit-average to give exponential a and e damping
-	/*rebx_add_modify_orbits_forces(sim);*/
+	// Set the timescales for each particle.  Parameter getter and setter functions always take the address of the particle (&)
+	
+	rebx_set_tau_a(&sim->particles[1], -1.e5); // add semimajor axis damping on inner planet (e-folding timescale)
+	rebx_set_tau_omega(&sim->particles[1], -1.e4); // add linear precession on inner planet (precession period)	
+	rebx_set_tau_e(&sim->particles[2], -1.e4); // add eccentricity damping on particles[2] (e-folding timescale)
 
-	double tmax = 1.e5;
+	printf("Semimajor axis damping timescale for inner planet is %f.\n", -1.*rebx_get_tau_a(&sim->particles[1]));
+	printf("Eccentricity damping timescale for inner planet is %f.\n", -1.*rebx_get_tau_e(&sim->particles[1]));
+	printf("Eccentricity damping timescale for outer planet is %f.\n", -1.*rebx_get_tau_e(&sim->particles[2]));
+
+	double tmax = 5.e4;
 	reb_integrate(sim, tmax);
+	rebx_free(rebx);	// Free all the memory allocated by rebx
 }
