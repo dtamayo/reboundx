@@ -1,132 +1,36 @@
-from ctypes import *
-import os
-import rebound
-from rebound import Simulation
-
-c_default = 10064.915
-#Find the reboundx C library
-pymodulespath = os.path.dirname(__file__)
+# -*- coding: utf-8 -*-
+#Make changes for python 2 and 3 compatibility
 try:
-    clibreboundx = CDLL(pymodulespath + '/../libreboundx.so', RTLD_GLOBAL)
+    import builtins     # if this success it's python 3.x
+    builtins.xrange = range
+    builtins.basestring = (str,bytes)
+except ImportError:
+    pass                # python 2.x
+
+#Find suffix
+import sysconfig
+suffix = sysconfig.get_config_var('EXT_SUFFIX')
+if suffix is None:
+    suffix = ".so"
+
+#Import shared C library
+import os
+pymodulespath = os.path.dirname(__file__)
+from ctypes import *
+clibreboundx = cdll.LoadLibrary(pymodulespath + '/../libreboundx' + suffix)
+
+# Get string for build in libreboundx.so
+def build_str():
+    return c_charp_p.in_dll(clibreboundx, "rebx_build_str").value.decode("ascii")
+
+#Check for version
+try:
+    moduleversion = pkg_resources.require("reboundx")[0].version
+    libreboundxversion = build_str()
+    if moduleversion != libreboundxversion:
+        print("WARNING: python module and libreboundx have different version numbers: '%s' vs '%s'.\n".format(moduleversion, libreboundxversion))
 except:
-    print("Cannot find library 'libreboundx.so'.")
-    raise
+    pass    # this check fails in python 3. Problem with setuptools
 
-class rebx_param(Structure): # need to define fields afterward because of circular ref in linked list
-    pass    
-rebx_param._fields_ = [("valPtr", c_void_p),
-            ("param", c_int),
-            ("next", POINTER(rebx_param))]
-
-class rebx_param_to_be_freed(Structure):
-    pass
-rebx_param_to_be_freed._fields_ = [("param", POINTER(rebx_param)),
-            ("next", POINTER(rebx_param_to_be_freed))]
-
-class rebx_params_modify_orbits(Structure):
-    _fields_ = [("p", c_double),
-                ("coordinates", c_int)]
-
-class rebx_params_gr(Structure):
-    _fields_ = [("c", c_double)]
-
-class Extras(Structure):
-    def __init__(self, sim):
-        clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
-        self.add_Particle_props()
-        self.coordinates = {"JACOBI":0, "BARYCENTRIC":1, "HELIOCENTRIC":2} # to use C version's REBX_COORDINATES enum
-
-    def __del__(self):
-        if self._b_needsfree_ == 1:
-            clibreboundx.rebx_free_pointers(byref(self))
-
-    def add_modify_orbits_direct(self):
-        clibreboundx.rebx_add_modify_orbits_direct(byref(self))
-    
-    def add_modify_orbits_forces(self):
-        clibreboundx.rebx_add_modify_orbits_forces(byref(self))
-
-    def check_c(self, c):
-        if c is not None: # user passed c explicitly
-            return c
-      
-        # c was not passed by user
-         
-        if self.sim.contents.G == 1: # if G = 1 (default) return default c
-            return c_default
-            
-        u = self.sim.contents.units
-        if not None in u.values(): # units are set
-            from rebound import units
-            c = units.convert_vel(c_default, 'au', 'yr2pi', u['length'], u['time'])
-            return c
-        else:
-            raise ValueError("If you change G, you must pass c (speed of light) in appropriate units to add_gr, add_gr_potential, and add_gr_implicit.  Alternatively, set the units for the simulation.  See ipython_examples/GeneralRelativity.ipynb")
-              
-        return c_default
-    def add_gr(self, c=None):
-        c = self.check_c(c)
-        clibreboundx.rebx_add_gr(byref(self), c_double(c))
-    
-    def add_gr_single_mass(self, c=None):
-        c = self.check_c(c)
-        clibreboundx.rebx_add_gr_single_mass(byref(self), c_double(c))
-
-    def add_gr_potential(self, c=None):
-        c = self.check_c(c)
-        clibreboundx.rebx_add_gr_potential(byref(self), c_double(c))
-
-    def add_Particle_props(self):
-        @property
-        def tau_a(self):
-            clibreboundx.rebx_get_tau_a.restype = c_double
-            return clibreboundx.rebx_get_tau_a(byref(self))
-        @tau_a.setter
-        def tau_a(self, value):
-            clibreboundx.rebx_set_tau_a(byref(self), c_double(value))
-        @property
-        def tau_e(self):
-            clibreboundx.rebx_get_tau_e.restype = c_double
-            return clibreboundx.rebx_get_tau_e(byref(self))
-        @tau_e.setter
-        def tau_e(self, value):
-            clibreboundx.rebx_set_tau_e(byref(self), c_double(value))
-        @property
-        def tau_inc(self):
-            clibreboundx.rebx_get_tau_inc.restype = c_double
-            return clibreboundx.rebx_get_tau_inc(byref(self))
-        @tau_inc.setter
-        def tau_inc(self, value):
-            clibreboundx.rebx_set_tau_inc(byref(self), c_double(value))
-        @property
-        def tau_omega(self):
-            clibreboundx.rebx_get_tau_omega.restype = c_double
-            return clibreboundx.rebx_get_tau_omega(byref(self))
-        @tau_omega.setter
-        def tau_omega(self, value):
-            clibreboundx.rebx_set_tau_omega(byref(self), c_double(value))
-        @property
-        def tau_Omega(self):
-            clibreboundx.rebx_get_tau_Omega.restype = c_double
-            return clibreboundx.rebx_get_tau_Omega(byref(self))
-        @tau_Omega.setter
-        def tau_Omega(self, value):
-            clibreboundx.rebx_set_tau_Omega(byref(self), c_double(value))
-
-        rebound.Particle.tau_a = tau_a
-        rebound.Particle.tau_e = tau_e
-        rebound.Particle.tau_inc = tau_inc
-        rebound.Particle.tau_omega = tau_omega
-        rebound.Particle.tau_Omega = tau_Omega
-
-# Need to put fields after class definition because of self-referencing
-Extras._fields_ = [("sim", POINTER(Simulation)),
-                ("params_to_be_freed", POINTER(rebx_param_to_be_freed)),
-                ("forces", POINTER(CFUNCTYPE(None, POINTER(Simulation)))),
-                ("ptm", POINTER(CFUNCTYPE(None, POINTER(Simulation)))),
-                ("Nptm", c_int),
-                ("Nforces", c_int),
-                ("modify_orbits_forces", rebx_params_modify_orbits),
-                ("modify_orbits_direct", rebx_params_modify_orbits),
-                ("gr", rebx_params_gr)]
-
+from .extras import Extras
+__all__ = ["Extras"]

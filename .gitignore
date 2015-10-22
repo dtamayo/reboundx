@@ -4,9 +4,15 @@
 *.pdf
 *.bin
 *.swp
+*.cproject
+*.project
+*.settings
 nbody
 .DS_Store
 error.txt
+examples/test
+examples/test/*
+ipython_examples/test.ipynb
 tests/testall.html
 tests/*/*.txt
 tests/*/*.png
@@ -29,3 +35,4 @@ doc/doxygen/html/
 doc/ipython
 doc/search.json
 problems/
+
