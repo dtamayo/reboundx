@@ -71,6 +71,8 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
 	rebx->modify_orbits_direct.p = 0;
 	rebx->modify_orbits_direct.coordinates = JACOBI;
 	rebx->gr.c = C_DEFAULT;	
+	rebx->radiation_forces.c = C_DEFAULT;
+	rebx->radiation_forces.L = 0.;
 
 	rebx->Nptm = 0;
 	rebx->Nforces = 0;
@@ -81,8 +83,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
 void rebx_free_params(struct rebx_extras* rebx){
 	struct rebx_param_to_be_freed* current = rebx->params_to_be_freed;
 	struct rebx_param_to_be_freed* temp_next;
-	while(current != NULL)
-	{
+	while(current != NULL){
 		temp_next = current->next;
 		free(current->param->paramPtr);
 		free(current->param);
@@ -116,13 +117,25 @@ void* rebx_search_param(struct reb_particle* p, enum REBX_PARAMS param){
 	struct rebx_param* current = p->ap;
 	while(current != NULL){
 		if(current->param_type == param){
-			return current;
+			return current->paramPtr;
 		}
 	}
 	return NULL;
 }
 
 /* Internal parameter adders (need a different one for each REBX_PARAM type). */
+/* Generic adder for params that are a single double value */
+void rebx_add_param_double(struct reb_particle* p, enum REBX_PARAMS param_type, double value){
+	struct rebx_param* newparam = malloc(sizeof(*newparam));
+	newparam->paramPtr = malloc(sizeof(double));
+	*(double*) newparam->paramPtr = value;
+	newparam->param_type = param_type;
+
+	newparam->next = p->ap;
+	p->ap = newparam;
+
+	rebx_add_param_to_be_freed(p->sim->extras, newparam);
+}	
 
 void rebx_add_param_orb_tau(struct reb_particle* p){
 	struct rebx_param* newparam = malloc(sizeof(*newparam));
@@ -140,120 +153,134 @@ void rebx_add_param_orb_tau(struct reb_particle* p){
 /* User-called getters and setters for each parameter*/
 
 void rebx_set_tau_a(struct reb_particle* p, double value){
-	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
+	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
 		rebx_add_param_orb_tau(p);
 		void* valPtr = ((struct rebx_param*) p->ap)->paramPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_a = value;
 	}
 	else{
-		((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_a = value;
+		orb_tau->tau_a = value;
 	}
 }
 
 void rebx_set_tau_e(struct reb_particle* p, double value){
-	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
+	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
 		rebx_add_param_orb_tau(p);
 		void* valPtr = ((struct rebx_param*) p->ap)->paramPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_e = value;
 	}
 	else{
-		((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_e = value;
+		orb_tau->tau_e = value;
 	}
 }
 
 void rebx_set_tau_inc(struct reb_particle* p, double value){
-	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
+	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
 		rebx_add_param_orb_tau(p);
 		void* valPtr = ((struct rebx_param*) p->ap)->paramPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_inc = value;
 	}
 	else{
-		((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_inc = value;
+		orb_tau->tau_inc = value;
 	}
 }
 
 void rebx_set_tau_omega(struct reb_particle* p, double value){
-	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
+	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
 		rebx_add_param_orb_tau(p);
 		void* valPtr = ((struct rebx_param*) p->ap)->paramPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_omega = value;
 	}
 	else{
-		((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_omega = value;
+		orb_tau->tau_omega = value;
 	}
 }
 
 void rebx_set_tau_Omega(struct reb_particle* p, double value){
-	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
+	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
 		rebx_add_param_orb_tau(p);
 		void* valPtr = ((struct rebx_param*) p->ap)->paramPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_Omega = value;
 	}
 	else{
-		((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_Omega = value;
+		orb_tau->tau_Omega = value;
 	}
 }
 
 double rebx_get_tau_a(struct reb_particle* p){
-	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
+	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		fprintf(stderr, "tau_a wasn't set for particle passed to rebx_get_tau_a\n");
 		return INFINITY;
 	}
 	else{
-		return ((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_a;
+		return orb_tau->tau_a;
 	}
 }
 
 double rebx_get_tau_e(struct reb_particle* p){
-	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
+	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		fprintf(stderr, "tau_e wasn't set for particle passed to rebx_get_tau_e\n");
 		return INFINITY;
 	}
 	else{
-		return ((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_e;
+		return orb_tau->tau_e;
 	}
 }
 
 double rebx_get_tau_inc(struct reb_particle* p){
-	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
+	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		fprintf(stderr, "tau_inc wasn't set for particle passed to rebx_get_tau_inc\n");
 		return INFINITY;
 	}
 	else{
-		return ((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_inc;
+		return orb_tau->tau_inc;
 	}
 }
 
 double rebx_get_tau_omega(struct reb_particle* p){
-	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
+	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		fprintf(stderr, "tau_omega wasn't set for particle passed to rebx_get_tau_omega\n");
 		return INFINITY;	
 	}
 	else{
-		return ((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_omega;
+		return orb_tau->tau_omega;
 	}
 }
 
 double rebx_get_tau_Omega(struct reb_particle* p){
-	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
+	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		fprintf(stderr, "tau_Omega wasn't set for particle passed to rebx_get_tau_Omega\n");
 		return INFINITY;
 	}
 	else{
-		return ((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_Omega;
+		return orb_tau->tau_Omega;
 	}
 }
 
+void rebx_set_Q_pr(struct reb_particle* p, double value){
+	double* Q_pr = rebx_search_param(p, Q_PR);
+	if(Q_pr == NULL){
+		rebx_add_param_double(p, Q_PR, value);
+	}
+	else{
+		*Q_pr = value;
+	}
+}
+
+double rebx_get_Q_pr(struct reb_particle* p){
+	double* Q_pr = rebx_search_param(p, Q_PR);
+	if(Q_pr == NULL){
+		return 0.;
+	}
+	else{
+		return *Q_pr;
+	}
+}
 /* User functions to change modification parameters */
 
 void rebx_set_modify_orbits_direct_p(struct rebx_extras* rebx, double value){
@@ -297,6 +324,7 @@ double rebx_get_radiation_forces_c(struct rebx_extras* rebx){
 double rebx_get_radiation_forces_L(struct rebx_extras* rebx){
 	return rebx->radiation_forces.L;
 }
+
 
 /* User functions to add effects. */
 
@@ -349,4 +377,43 @@ void rebx_add_modify_orbits_direct(struct rebx_extras* rebx){
 	rebx->Nptm++;
 	rebx->ptm = realloc(rebx->ptm, sizeof(*rebx->ptm)*rebx->Nptm);
 	rebx->ptm[rebx->Nptm-1] = rebx_modify_orbits_direct;
+}
+
+void rebx_add_radiation_forces(struct rebx_extras* rebx, double c, double L){
+	struct reb_simulation* sim = rebx->sim;
+	sim->additional_forces = rebx_forces;
+	sim->force_is_velocity_dependent = 1;
+
+	rebx->Nforces++;
+	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
+	rebx->forces[rebx->Nforces-1] = rebx_radiation_forces;
+	rebx->radiation_forces.c = c;
+	rebx->radiation_forces.L = L;
+}
+
+double rebx_rad_calc_mass(double density, double radius){
+	return 4.*M_PI*radius*radius*radius/3.;
+}
+
+double rebx_rad_calc_beta(struct rebx_extras* rebx, struct reb_particle* p){
+	if(p->m == 0.){
+		fprintf(stderr, "Particle passed to rebx_calc_beta had 0 mass.\n");
+		return 0.;
+	}
+	double* Q_pr = rebx_search_param(p, Q_PR);
+	if(Q_pr == NULL){
+		fprintf(stderr, "Particle wasn't given a radiation pressure coefficient Q_pr.  Call rebx_set_Q_pr.\n");
+		return 0.;	
+	}
+	double L = rebx->radiation_forces.L;
+	double c = rebx->radiation_forces.c;
+	double mu = rebx->sim->G*rebx->sim->particles[0].m;
+	return L*(*Q_pr)*p->r*p->r/(4.*mu*p->m*c);
+}
+
+double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, double density, double Q_pr){
+	double mu = rebx->sim->G*rebx->sim->particles[0].m;
+	double L = rebx->radiation_forces.L;
+	double c = rebx->radiation_forces.c;
+	return 3.*L*Q_pr/(16.*M_PI*mu*c*density*beta);	
 }

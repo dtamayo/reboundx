@@ -35,6 +35,7 @@
 #include "modify_orbits_direct.h"
 #include "modify_orbits_forces.h"
 #include "gr.h"
+#include "radiation_forces.h"
 
 extern const char* rebx_build_str;		///< Date and time build string.
 extern const char* rebx_version_str;	///<Version string.
@@ -51,12 +52,6 @@ struct rebx_orb_tau{
 	double tau_Omega;					// Nodal precession timescale (linear) (>0 = prograde, <0 = retrograde).
 };
 
-/* 	Structure to hold parameters for dust particles.*/
-struct rebx_dust_params{
-	double beta;						// Ratio of radiation pressure force to gravitational force from star.
-	double density;						// Particle bulk density.
-};
-
 /****************************************
 Basic types in REBOUNDx
 *****************************************/
@@ -64,7 +59,7 @@ Basic types in REBOUNDx
 /* 	Enumeration for the different groups of parameters that can be added to particles.*/
 enum REBX_PARAMS{
 	ORB_TAU,							// Parameter holding timescales for orbit modifications (migration etc.).
-	DUST_PARAMS							// Parameter holding dust particle properties.
+	Q_PR								// Radiation pressure coefficient for radiation forces (should be 1 in limit where particles size >> wavelength of radiation
 };
 
 /* 	Main structure used for all parameters added to particles.
@@ -147,8 +142,8 @@ void* rebx_search_param(struct reb_particle* p, enum REBX_PARAMS param);	// retu
 void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
 
 /* Internal parameter adders (need a different one for each REBX_PARAM type). */
+void rebx_add_param_double(struct reb_particle* p, enum REBX_PARAMS param_type, double value);
 void rebx_add_param_orb_tau(struct reb_particle* p);		// add a rebx_orb_tau parameter to particle p
-
 /****************************************
 User API
 *****************************************/
@@ -267,8 +262,10 @@ double rebx_get_tau_inc(struct reb_particle* p);
 double rebx_get_tau_omega(struct reb_particle* p);
 double rebx_get_tau_Omega(struct reb_particle* p);
 
+void rebx_set_Q_pr(struct reb_particle* p, double value);
+double rebx_get_Q_pr(struct reb_particle* p);
 
-
-
-
+double rebx_rad_calc_mass(double density, double radius);
+double rebx_rad_calc_beta(struct rebx_extras* rebx, struct reb_particle* p);
+double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, double density, double Qpr);
 #endif

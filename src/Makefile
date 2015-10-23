@@ -3,7 +3,7 @@ $(error Must set environment variable for the path to your rebound directory, e.
 endif
 
 include $(REB_DIR)/src/Makefile.defs
-OPT+= -fPIC -DLIBREBOUNDX
+OPT+= -fPIC -DLIBREBOUNDX -ferror-limit=50
 
 SOURCES=reboundx.c rebxtools.c modify_orbits_direct.c modify_orbits_forces.c gr.c
 OBJECTS=$(SOURCES:.c=.o)
