@@ -36,86 +36,226 @@
 #include "modify_orbits_forces.h"
 #include "gr.h"
 
-enum REBX_PARAMS{
-	ORB_TAU,
-	TEST_INT,
-	TEST_INT2,
-};
+extern const char* rebx_build_str;		///< Date and time build string.
+extern const char* rebx_version_str;	///<Version string.
 
-enum REBX_COORDINATES{
-	JACOBI,				// default.  REBX_COORDINATE members in structs get calloced to 0 and first enum always = 0
-	BARYCENTRIC,
-	HELIOCENTRIC
-};
-
-struct rebx_param{
-	void* valPtr;
-	enum REBX_PARAMS param;
-	struct rebx_param* next;
-};
-
+/****************************************
+Structures for effect-specific parameters
+*****************************************/
+/*	Structure to hold all the orbit modification timescales (used by both modify_orbits_direct and modify_orbits_forces).*/
 struct rebx_orb_tau{
-	double tau_a;
-	double tau_e;
-	double tau_inc;
-	double tau_omega;
-	double tau_Omega;
+	double tau_a;						// Semimajor axis e-folding timescale (<0 = damp, >0 = grow).
+	double tau_e;						// Eccentricity e-folding timescale (<0 = damp, >0 = grow).
+	double tau_inc;						// Inclination e-folding timescale (<0 = damp, >0 = grow).
+	double tau_omega;					// Pericenter precession timescale (linear) (>0 = prograde, <0 = retrograde).
+	double tau_Omega;					// Nodal precession timescale (linear) (>0 = prograde, <0 = retrograde).
 };
 
+/* 	Structure to hold parameters for dust particles.*/
+struct rebx_dust_params{
+	double beta;						// Ratio of radiation pressure force to gravitational force from star.
+	double density;						// Particle bulk density.
+};
+
+/****************************************
+Basic types in REBOUNDx
+*****************************************/
+
+/* 	Enumeration for the different groups of parameters that can be added to particles.*/
+enum REBX_PARAMS{
+	ORB_TAU,							// Parameter holding timescales for orbit modifications (migration etc.).
+	DUST_PARAMS							// Parameter holding dust particle properties.
+};
+
+/* 	Main structure used for all parameters added to particles.
+ 	These get added as nodes to a linked list for each particle, stored at particles[i].ap.*/
+struct rebx_param{
+	void* paramPtr;						// Pointer to the parameter (void* so it can point to different types of structs).
+	enum REBX_PARAMS param_type;		// Identifier for the type of parameter.
+	struct rebx_param* next;			// Pointer to the next parameter in the linked list.
+};
+
+/*	Nodes for a linked list to all the parameters that have been allocated by REBOUNDx (so it can later free them).*/
 struct rebx_param_to_be_freed{
-	struct rebx_param* param;
-	struct rebx_param_to_be_freed* next;
+	struct rebx_param* param;			// Pointer to a parameter node allocated by REBOUNDx.
+	struct rebx_param_to_be_freed* next;// Pointer to the next node in the linked list rebx_extras.params_to_be_freed.
 };
 
+/****************************************
+Enums and structs for the particular modifications.
+*****************************************/
+
+/* 	Enumeration for different types of coordinate systems.*/
+enum REBX_COORDINATES{
+	JACOBI,								// Default.  Uses Jacobi coordinates.
+	BARYCENTRIC,						// Uses coordinates referenced to the center of mass of the whole system.
+	HELIOCENTRIC						// Uses coordinates referenced to sim->particles[0].
+};
+
+/* Structure for orbit modifications (modify_orbits_direct and modify_orbits_forces).*/
 struct rebx_params_modify_orbits{
-	double p; // p paramseter from Deck & Batygin (2015) for how e-damping
-	// is coupled to a-damping at order e^2
-	// p = 1 : e-damping at const angular momentum.  p = 0 : no contribution to a-damping
-	// equal to p/3 with p defined as in Goldreich & Schlichting 2014
-	enum REBX_COORDINATES coordinates;
+	double p; 							// p parameter from Deck & Batygin (2015) for how e-damping couples to a-damping at order e^2.  p=0 : no damping (default), p=1 : e-damping at constant angular momentum.
+	enum REBX_COORDINATES coordinates;	// Identifier for the coordinate system that should be used for the damping.
 };
 
+/*	Structure for adding post-Newtonian corrections.*/
 struct rebx_params_gr {
-	double c;
+	double c;							// Speed of light in units appropriate for sim->G and initial conditions.
 };
 
+/* 	Structure for adding radiation forces to the simulation.*/
+struct rebx_params_radiation_forces{
+	double L;							// Luminosity of star in units appropriate for sim->G and initial conditions.
+	double c;							// Speed of light in units appropriate for sim->G and initial conditions.
+};
+
+/****************************************
+Main REBOUNDx structure
+*****************************************/
 struct rebx_extras {	
-	struct reb_simulation* sim;
-	struct rebx_param_to_be_freed* params_to_be_freed; // pointer to a linked list holding pointers to all
-											// the allocated params for later freeing
+	struct reb_simulation* sim;								// Pointer to the simulation REBOUNDx is linked to.
+	struct rebx_param_to_be_freed* params_to_be_freed; 		// Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
 
-	// these are pointers to function pointers to use as arrays of function pointers for the user-added effects
-	void (**ptm) (struct reb_simulation* const sim);
-	void (**forces) (struct reb_simulation* const sim);
+	void (**ptm) (struct reb_simulation* const sim);		// Pointer to an array of function pointers for all the post-timestep modifications added by user.
+	void (**forces) (struct reb_simulation* const sim);		// Pointer to an array of function pointers for all the force-based modifications added by user.
 
-	int Nptm;
-	int Nforces;
+	int Nptm;												// Number of post-timestep modifications currently in simulation.
+	int Nforces;											// Number of force-based modifications currently in simulation.
 
-	struct rebx_params_modify_orbits modify_orbits_forces;
-	struct rebx_params_modify_orbits modify_orbits_direct;
-	struct rebx_params_gr gr;
+	struct rebx_params_modify_orbits modify_orbits_forces;	// Structure for migration/ecc,inc damping/precession using forces.
+	struct rebx_params_modify_orbits modify_orbits_direct;	// Structure for migration/ecc,inc damping/precession directly altering orbital elements.
+	struct rebx_params_gr gr;								// Structure for post-Newtonian corrections.
+	struct rebx_params_radiation_forces radiation_forces;	// Structure for radiation forces.
 };
+
+/****************************************
+Internal functions
+*****************************************/
 
 /* Main routines called each timestep. */
-void rebx_forces(struct reb_simulation* sim);
-void rebx_ptm(struct reb_simulation* sim);
+void rebx_forces(struct reb_simulation* sim);				// Calls all the forces that have been added to the simulation.
+void rebx_ptm(struct reb_simulation* sim);					// Calls all the post-timestep modifications that have been added to the simulation.
 
-/* Initialization routines. */
-struct rebx_extras* rebx_init(struct reb_simulation* sim);
-void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx);
+void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx); // Initializes all pointers and values.
 
 /* Garbage collection routines. */
-void rebx_free_params(struct rebx_extras* rebx);
-void rebx_free_pointers(struct rebx_extras* rebx);
+void rebx_free_params(struct rebx_extras* rebx);			// Steps through linked list to free all allocated parameters.
+void rebx_free_pointers(struct rebx_extras* rebx);			// Frees all the remaining pointers in rebx_extras.
 
 /* Internal utility functions. */
-void* rebx_search_param(struct rebx_param* current, enum REBX_PARAMS param);
-void rebx_add_param_to_be_freed(struct rebx_param_to_be_freed** ptbfRef, struct rebx_param* param);
+void* rebx_search_param(struct reb_particle* p, enum REBX_PARAMS param);	// returns rebx_param corresponding to the passed param in the passed particle.  If it doesn't exist, returns NULL.
+void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
 
 /* Internal parameter adders (need a different one for each REBX_PARAM type). */
-void rebx_add_param_orb_tau(struct reb_simulation* sim, void** paramsRef);
+void rebx_add_param_orb_tau(struct reb_particle* p);		// add a rebx_orb_tau parameter to particle p
 
-/* User-called getters and setters for each parameter*/
+/****************************************
+User API
+*****************************************/
+
+/**
+ * @name Main/general REBOUNDx routines
+ * @{
+ */
+/**
+ * @defgroup MainRebxFunctions List of the main/general REBOUNDx routines.
+ * @details These are the modification-independent code the user will typically need when using REBOUNDx.
+ * @{
+ */
+/**
+ * @brief Adds REBOUNDx functionality to a passed REBOUND simulation.
+ * @details Allocates memory for a REBOUNDx structure, initializes all variables and returns a pointer to
+ * the rebx_extras structure.  The function must be called before calling any other REBOUNDx functions.
+ * @param sim reb_simulation pointer to the simulation that you want to add REBOUNDx functionality.
+ * @return Returns a pointer to a rebx_extras structure, which holds all the information REBOUNDx needs.
+ */
+struct rebx_extras* rebx_init(struct reb_simulation* sim);
+/**
+ * @brief Frees all memory allocated by REBOUNDx instance.
+ * @details Should be called after simulation is done if memory is a concern.
+ * @param rebx a the rebx_extras pointer returned from the initial call to rebx_init.
+ */
+void rebx_free(struct rebx_extras* rebx);
+
+/** @} */
+/** @} */
+
+/**
+ * @name Functions for specific REBOUNDx effects.
+ * @{
+ */
+/**
+ * @defgroup AddEffect List of the functions for specific REBOUNDx effects.
+ * @details In all cases the function call to add an effect is of the form rebx_add_effect.  All calls take
+ * the pointer to the rebx_extras structure returned by rebx_init as the first argument.
+ * Different effects then take different numbers of modification-specific parameters.
+ * If a modification 'effect' has specific parameters one can set a parameter 'param' to 'value' through
+ * rebx_set_effect_param(rebx, value), where rebx is the rebx_extras pointer.  To get it back one calls
+ * value = rebx_get_effect_param(rebx).  Finally to set a particle-specific parameter, one calls
+ * rebx_set_param(&particle, value), where @particle is the address of the particle in question.  To get
+ * it back one calls value = rebx_get_param(&particle).
+ * @{
+ */
+
+/** @} */
+/** @} */
+
+/**
+ * @brief Adds orbit modifications (migration, damping, precession), implemented as forces.
+ */
+void rebx_add_modify_orbits_forces(struct rebx_extras* rebx);
+/**
+ * @brief Adds orbit modifications (migration, damping, precession), altering the orbital elements directly.
+ */
+void rebx_add_modify_orbits_direct(struct rebx_extras* rebx);
+/**
+ * @brief Adds post-Newtonian corrections arising from all bodies in the simulation.  Safe, but slow.
+ */
+void rebx_add_gr(struct rebx_extras* rebx, double c);
+/**
+ * @brief Adds post-Newtonian corrections arising only from particles[0].  Gets precessions and mean motions right.  Accurate and fast.
+ */
+void rebx_add_gr_single_mass(struct rebx_extras* rebx, double c);
+/**
+ * @brief Adds simple potential for post-Newtonian corrections arising only from particles[0].  Gets precessions but not mean motions correct.  Fastest.
+ */
+void rebx_add_gr_potential(struct rebx_extras* rebx, double c);
+/**
+ * @brief Adds radiation forces to the simulation (i.e., radiation pressure and Poynting-Robertson drag).
+ * @param c is the speed of light.
+ * @param L is the luminosity of the star.
+ */
+void rebx_add_radiation_forces(struct rebx_extras* rebx, double c, double L);
+/** @} */
+/** @} */
+
+/**
+ * @name Functions for getting and setting the parameters of the various modifications.
+ * @{
+ */
+/**
+ * @defgroup SetMod List of getters and setters for the parameters in each modification.
+ * @{
+ */
+/*
+ * @brief Change p (default 0), the coupling parameter between e damping and a damping (Deck & Batygin 2015).
+ * @defails Default is 0 (no coupling).  p=1 corresponds to e-damping at constant angular momentum.
+ */
+void rebx_set_modify_orbits_direct_p(struct rebx_extras* rebx, double value);
+/*
+ * @brief Change the coordinate system used for the damping.  
+ */
+void rebx_set_modify_orbits_direct_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords);
+void rebx_set_modify_orbits_forces_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords);
+void rebx_set_gr_c(struct rebx_extras* rebx, double value);
+void rebx_set_radiation_forces_c(struct rebx_extras* rebx, double value);
+void rebx_set_radiation_forces_L(struct rebx_extras* rebx, double value);
+double rebx_get_modify_orbits_direct_coordinates(struct rebx_extras* rebx);
+double rebx_get_modify_orbits_forces_coordinates(struct rebx_extras* rebx);
+double rebx_get_gr_c(struct rebx_extras* rebx);
+double rebx_get_radiation_forces_c(struct rebx_extras* rebx);
+double rebx_get_radiation_forces_L(struct rebx_extras* rebx);
+
 void rebx_set_tau_a(struct reb_particle* p, double value); 
 void rebx_set_tau_e(struct reb_particle* p, double value); 
 void rebx_set_tau_inc(struct reb_particle* p, double value); 
@@ -127,19 +267,8 @@ double rebx_get_tau_inc(struct reb_particle* p);
 double rebx_get_tau_omega(struct reb_particle* p);
 double rebx_get_tau_Omega(struct reb_particle* p);
 
-void rebx_set_modify_orbits_direct_p(struct rebx_extras* rebx, double value);
-void rebx_set_modify_orbits_direct_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords);
-void rebx_set_modify_orbits_forces_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords);
-void rebx_set_gr_c(struct rebx_extras* rebx, double value);
 
-/* Functions for the user to add modifications to a simulation */
-void rebx_add_modify_orbits_forces(struct rebx_extras* rebx);
-void rebx_add_modify_orbits_direct(struct rebx_extras* rebx);
-void rebx_add_gr(struct rebx_extras* rebx, double c);
-void rebx_add_gr_potential(struct rebx_extras* rebx, double c);
-void rebx_add_gr_implicit(struct rebx_extras* rebx, double c);
 
-/* User-called function for freeing all memory allocated by REBOUNDx */
-void rebx_free(struct rebx_extras* rebx);
+
 
 #endif

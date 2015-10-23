@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-#include "modify_orbits_forces.h"
 #include "reboundx.h"
 
 void rebx_modify_orbits_forces(struct reb_simulation* const sim){

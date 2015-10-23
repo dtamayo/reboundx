@@ -52,7 +52,7 @@ int main(int argc, char* argv[]){
 	rebx_set_tau_e(&sim->particles[2], -1.e4); // add eccentricity damping on particles[2] (e-folding timescale)
 
 	printf("Semimajor axis damping timescale for inner planet is %f.\n", -1.*rebx_get_tau_a(&sim->particles[1]));
-	printf("Eccentricity damping timescale for inner planet is %f.\n", -1.*rebx_get_tau_e(&sim->particles[1]));
+	printf("Precession timescale for inner planet is %f.\n", -1.*rebx_get_tau_omega(&sim->particles[1]));
 	printf("Eccentricity damping timescale for outer planet is %f.\n", -1.*rebx_get_tau_e(&sim->particles[2]));
 
 	double tmax = 5.e4;

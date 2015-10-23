@@ -84,7 +84,7 @@ void rebx_free_params(struct rebx_extras* rebx){
 	while(current != NULL)
 	{
 		temp_next = current->next;
-		free(current->param->valPtr);
+		free(current->param->paramPtr);
 		free(current->param);
 		free(current);
 		current = temp_next;
@@ -104,17 +104,18 @@ void rebx_free(struct rebx_extras* rebx){
 
 /* Internal utility functions. */
 
-void rebx_add_param_to_be_freed(struct rebx_param_to_be_freed** ptbfRef, struct rebx_param* param){
+void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param){
 	struct rebx_param_to_be_freed* newparam = malloc(sizeof(*newparam));
 	newparam->param = param;
 
-	newparam->next = *ptbfRef;
-	*ptbfRef = newparam;
+	newparam->next = rebx->params_to_be_freed;
+	rebx->params_to_be_freed = newparam;
 }
 
-void* rebx_search_param(struct rebx_param* current, enum REBX_PARAMS param){
+void* rebx_search_param(struct reb_particle* p, enum REBX_PARAMS param){
+	struct rebx_param* current = p->ap;
 	while(current != NULL){
-		if(current->param == param){
+		if(current->param_type == param){
 			return current;
 		}
 	}
@@ -123,134 +124,133 @@ void* rebx_search_param(struct rebx_param* current, enum REBX_PARAMS param){
 
 /* Internal parameter adders (need a different one for each REBX_PARAM type). */
 
-void rebx_add_param_orb_tau(struct reb_simulation* sim, void** paramsRef){
+void rebx_add_param_orb_tau(struct reb_particle* p){
 	struct rebx_param* newparam = malloc(sizeof(*newparam));
+	newparam->paramPtr = malloc(sizeof(struct rebx_orb_tau));
+	struct rebx_orb_tau orb_tau = {INFINITY, INFINITY, INFINITY, INFINITY, INFINITY}; // set all timescales to infinity (i.e. no effect)
+	*(struct rebx_orb_tau*) newparam->paramPtr = orb_tau;
+	newparam->param_type = (enum REBX_PARAMS)ORB_TAU;
 
-	newparam->valPtr = malloc(sizeof(struct rebx_orb_tau));
-	struct rebx_orb_tau orb_tau = {INFINITY, INFINITY, INFINITY, INFINITY, INFINITY};
-	*(struct rebx_orb_tau*) newparam->valPtr = orb_tau;
-	newparam->param = (enum REBX_PARAMS)ORB_TAU;
-	newparam->next = *paramsRef;
-	*paramsRef = newparam;
+	newparam->next = p->ap;
+	p->ap = newparam;
 
-	struct rebx_extras* rebx = sim->extras;
-	rebx_add_param_to_be_freed(&rebx->params_to_be_freed, *paramsRef);
+	rebx_add_param_to_be_freed(p->sim->extras, newparam);
 }
 
 /* User-called getters and setters for each parameter*/
 
 void rebx_set_tau_a(struct reb_particle* p, double value){
-	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
+	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(p->sim, &p->ap);
-		void* valPtr = ((struct rebx_param*) p->ap)->valPtr;
+		rebx_add_param_orb_tau(p);
+		void* valPtr = ((struct rebx_param*) p->ap)->paramPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_a = value;
 	}
 	else{
-		((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_a = value;
+		((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_a = value;
 	}
 }
 
 void rebx_set_tau_e(struct reb_particle* p, double value){
-	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
+	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(p->sim, &p->ap);
-		void* valPtr = ((struct rebx_param*) p->ap)->valPtr;
+		rebx_add_param_orb_tau(p);
+		void* valPtr = ((struct rebx_param*) p->ap)->paramPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_e = value;
 	}
 	else{
-		((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_e = value;
+		((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_e = value;
 	}
 }
 
 void rebx_set_tau_inc(struct reb_particle* p, double value){
-	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
+	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(p->sim, &p->ap);
-		void* valPtr = ((struct rebx_param*) p->ap)->valPtr;
+		rebx_add_param_orb_tau(p);
+		void* valPtr = ((struct rebx_param*) p->ap)->paramPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_inc = value;
 	}
 	else{
-		((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_inc = value;
+		((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_inc = value;
 	}
 }
 
 void rebx_set_tau_omega(struct reb_particle* p, double value){
-	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
+	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(p->sim, &p->ap);
-		void* valPtr = ((struct rebx_param*) p->ap)->valPtr;
+		rebx_add_param_orb_tau(p);
+		void* valPtr = ((struct rebx_param*) p->ap)->paramPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_omega = value;
 	}
 	else{
-		((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_omega = value;
+		((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_omega = value;
 	}
 }
 
 void rebx_set_tau_Omega(struct reb_particle* p, double value){
-	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
+	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(p->sim, &p->ap);
-		void* valPtr = ((struct rebx_param*) p->ap)->valPtr;
+		rebx_add_param_orb_tau(p);
+		void* valPtr = ((struct rebx_param*) p->ap)->paramPtr;
 		((struct rebx_orb_tau*) valPtr)->tau_Omega = value;
 	}
 	else{
-		((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_Omega = value;
+		((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_Omega = value;
 	}
 }
 
 double rebx_get_tau_a(struct reb_particle* p){
-	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
+	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
 		fprintf(stderr, "tau_a wasn't set for particle passed to rebx_get_tau_a\n");
 		return INFINITY;
 	}
 	else{
-		return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_a;
+		return ((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_a;
 	}
 }
 
 double rebx_get_tau_e(struct reb_particle* p){
-	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
+	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
 		fprintf(stderr, "tau_e wasn't set for particle passed to rebx_get_tau_e\n");
 		return INFINITY;
 	}
 	else{
-		return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_e;
+		return ((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_e;
 	}
 }
 
 double rebx_get_tau_inc(struct reb_particle* p){
-	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
+	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
 		fprintf(stderr, "tau_inc wasn't set for particle passed to rebx_get_tau_inc\n");
 		return INFINITY;
 	}
 	else{
-		return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_inc;
+		return ((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_inc;
 	}
 }
 
 double rebx_get_tau_omega(struct reb_particle* p){
-	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
+	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
 		fprintf(stderr, "tau_omega wasn't set for particle passed to rebx_get_tau_omega\n");
 		return INFINITY;	
 	}
 	else{
-		return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_omega;
+		return ((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_omega;
 	}
 }
 
 double rebx_get_tau_Omega(struct reb_particle* p){
-	struct rebx_param* orb_tau = rebx_search_param(p->ap, ORB_TAU);
+	struct rebx_param* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
 		fprintf(stderr, "tau_Omega wasn't set for particle passed to rebx_get_tau_Omega\n");
 		return INFINITY;
 	}
 	else{
-		return ((struct rebx_orb_tau*) (orb_tau->valPtr))->tau_Omega;
+		return ((struct rebx_orb_tau*) (orb_tau->paramPtr))->tau_Omega;
 	}
 }
 
@@ -266,13 +266,36 @@ void rebx_set_modify_orbits_direct_p(struct rebx_extras* rebx, double value){
 void rebx_set_modify_orbits_direct_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords){
 	rebx->modify_orbits_direct.coordinates = coords;
 }
-
 void rebx_set_modify_orbits_forces_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords){
 	rebx->modify_orbits_forces.coordinates = coords;
 }
-	
 void rebx_set_gr_c(struct rebx_extras* rebx, double value){
 	rebx->gr.c = value;
+}
+void rebx_set_radiation_forces_c(struct rebx_extras* rebx, double value){
+	rebx->radiation_forces.c = value;
+}
+void rebx_set_radiation_forces_L(struct rebx_extras* rebx, double value){
+	rebx->radiation_forces.L = value;
+}
+
+double rebx_get_modify_orbits_direct_p(struct rebx_extras* rebx){
+	return rebx->modify_orbits_direct.p;
+}
+double rebx_get_modify_orbits_direct_coordinates(struct rebx_extras* rebx){
+	return rebx->modify_orbits_direct.coordinates;
+}
+double rebx_get_modify_orbits_forces_coordinates(struct rebx_extras* rebx){
+	return rebx->modify_orbits_forces.coordinates;
+}
+double rebx_get_gr_c(struct rebx_extras* rebx){
+	return rebx->gr.c;
+}
+double rebx_get_radiation_forces_c(struct rebx_extras* rebx){
+	return rebx->radiation_forces.c;
+}
+double rebx_get_radiation_forces_L(struct rebx_extras* rebx){
+	return rebx->radiation_forces.L;
 }
 
 /* User functions to add effects. */

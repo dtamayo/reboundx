@@ -27,7 +27,6 @@
 #include <math.h>
 #include "rebound.h"
 #include "reboundx.h"
-#include "gr.h"
 
 void rebx_gr(struct reb_simulation* const sim){
 	struct rebx_params_gr modparams = ((struct rebx_extras*) (sim->extras))->gr;
