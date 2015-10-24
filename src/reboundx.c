@@ -113,7 +113,7 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
 	rebx->params_to_be_freed = newparam;
 }
 
-void* rebx_search_param(struct reb_particle* p, enum REBX_PARAMS param){
+void* rebx_search_param(const struct reb_particle* p, enum REBX_PARAMS param){
 	struct rebx_param* current = p->ap;
 	while(current != NULL){
 		if(current->param_type == param){

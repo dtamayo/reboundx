@@ -138,7 +138,7 @@ void rebx_free_params(struct rebx_extras* rebx);			// Steps through linked list 
 void rebx_free_pointers(struct rebx_extras* rebx);			// Frees all the remaining pointers in rebx_extras.
 
 /* Internal utility functions. */
-void* rebx_search_param(struct reb_particle* p, enum REBX_PARAMS param);	// returns rebx_param corresponding to the passed param in the passed particle.  If it doesn't exist, returns NULL.
+void* rebx_search_param(const struct reb_particle* p, enum REBX_PARAMS param);	// returns rebx_param corresponding to the passed param in the passed particle.  If it doesn't exist, returns NULL.
 void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
 
 /* Internal parameter adders (need a different one for each REBX_PARAM type). */
