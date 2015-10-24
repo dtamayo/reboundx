@@ -16,7 +16,7 @@
 
 void heartbeat(struct reb_simulation* r);
 
-double tmax = 1e6;
+double tmax = 1e11;
 
 int main(int argc, char* argv[]){
 	struct reb_simulation* sim = reb_create_simulation();
@@ -25,7 +25,7 @@ int main(int argc, char* argv[]){
 	sim->G				= 6.674e-11;	// Use SI units
 	sim->dt 			= 1e4;			// Initial timestep in sec (~1 hr.  IAS15 will adjust adaptively)
 	sim->N_active		= 2;			// Only the sun and the planet affect other particles gravitationally (simulation will be very slow without this!)
-	sim->heartbeat	 	= heartbeat;
+	//sim->heartbeat	 	= heartbeat;
 	sim->usleep		= 5000;				// Slow down integration (for visualization only)
 
 	struct rebx_extras* rebx = rebx_init(sim); // Always add rebx to simulation first
@@ -74,53 +74,50 @@ int main(int argc, char* argv[]){
 	// we pass 0 mass for the particle in the 3rd parameter here for simplicity since it won't affect the orbit.
 
 	// now we set the physical parameters
-	double density_dust = 1.e3;	// kg/m^3 = 1g/cc
-	double Q_pr = 1.;			// Radiation pressure coefficient. Equals 1 in limit where particle radius >> wavelength of radiation
-	p.r = 1.e-5					// dust grain radius in m 
+	
+	double Q_pr = 1.;				// Radiation pressure coefficient. Equals 1 in limit where particle radius >> wavelength of radiation
+	rebx_set_Q_pr(rebx, &p, Q_pr); 	// Only particles with Q_pr set will feel radiation forces.
+	printf("%p\n", &p.ap);
+	double density_dust = 1.e3;		// kg/m^3 = 1g/cc
+	p.r = 1.e-5;					// dust grain radius in m 
 	p.m = rebx_rad_calc_mass(density_dust, p.r);	// assumes spherical grains
 	reb_add(sim, p); 
-
-	/********
-	 * For a particle to feel radiation forces, you must set Q_pr. Note that you can only add 
-	 * parameters to particles AFTER they've been added to a simulation (and using the structures
-	 * in the sim->particles array).
-	 *
-	 * rebx_set_Q_pr(&p, Q_pr); would fail.
-	 *******/
-	rebx_set_Q_pr(&sim->particles[2], Q_pr);	
+	printf("%p\t%p\n", &p.ap, &sim->particles[2].ap);
+	rebx_set_Q_pr(rebx, &sim->particles[2], Q_pr);	
 	
-	// Now we add a second particle of a different size and density on the same orbit, using a beta value
+	// Now add a 2nd particle of different size and density on same orbit, using a beta value
 	struct reb_particle p2 = reb_tools_orbit_to_particle(sim->G, sim->particles[1], 0., a_dust, e_dust, inc_dust, Omega_dust, omega_dust, f_dust); 
-	
-	density_dust = 3.e3;	// kg/m^3 = 3g/cc
+
+	//rebx_set_Q_pr(rebx, &p2, Q_pr);
+	density_dust = 3.e3;							
 	double beta = 1.e-3;
-	p.r = rebx_rad_calc_particle_radius(rebx, beta, density_dust, Q_pr);
-	p.m = rebx_rad_calc_mass(density_dust, p.r);	// assumes spherical grains
-	reb_add(sim, p); 
-	rebx_set_Q_pr(&sim->particles[3], Q_pr);	
-}
-	
+	p2.r = rebx_rad_calc_particle_radius(rebx, beta, density_dust, Q_pr);
+	p2.m = rebx_rad_calc_mass(density_dust, p.r);	// assumes spherical grains
+	reb_add(sim, p2); 
+
 	reb_move_to_com(sim);
 
 	system("rm -v a.txt");	
 
+	printf("m\tr\tbeta\n");
+	printf("%e\t%e\t%e\n", sim->particles[2].m, sim->particles[2].r, rebx_rad_calc_beta(rebx, &sim->particles[2]));
+	printf("%e\t%e\t%e\n", rebx_rad_calc_mass(1.e3, sim->particles[2].r), sim->particles[2].r, rebx_rad_calc_beta(rebx, &sim->particles[2]));
+
 	reb_integrate(sim, tmax);
 }
 
-void heartbeat(struct reb_simulation* r){
+void heartbeat(struct reb_simulation* sim){
 	if(reb_output_check(sim, 1.e8)){
 		reb_output_timing(sim, tmax);
 	}
 	if(reb_output_check(sim, 1.e8)){ // output every year
 		FILE* f = fopen("a.txt","a");
 		const struct reb_particle* particles = sim->particles;
-		const struct reb_particle planet = particles[1];
-		const double G = sim->G;
+		const struct reb_particle saturn = particles[1];
 		const double t = sim->t;
 		const int N = sim->N;
 		for (int i=2;i<N;i++){
-			const reb_orbit orbit = reb_tools_particle_to_orbit(sim->G, sim->particles[i], sim->particles[1]); // calculate orbit of particles[i] around Saturn (particles[1])
-
+			const struct reb_orbit orbit = reb_tools_particle_to_orbit(sim->G, sim->particles[i], saturn); // calculate orbit of particles[i] around Saturn
 			fprintf(f,"%e\t%e\t%e\n",t,orbit.a, orbit.e);
 		}
 		fclose(f);
