@@ -265,50 +265,6 @@ double rebx_get_Q_pr(struct reb_particle* p){
 		return *Q_pr;
 	}
 }
-/* User functions to change modification parameters */
-
-void rebx_set_modify_orbits_direct_p(struct rebx_extras* rebx, double value){
-	if(value < 0 || value > 1){
-		fprintf(stderr, "Note that the typical range for p is between 0 (no a-e coupling) to 1 (e-damping at constant angular momentum).  See Deck & Batygin (2015).  **Setting anyway**");
-	}
-	rebx->modify_orbits_direct.p = value;
-}
-
-void rebx_set_modify_orbits_direct_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords){
-	rebx->modify_orbits_direct.coordinates = coords;
-}
-void rebx_set_modify_orbits_forces_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords){
-	rebx->modify_orbits_forces.coordinates = coords;
-}
-void rebx_set_gr_c(struct rebx_extras* rebx, double value){
-	rebx->gr.c = value;
-}
-void rebx_set_radiation_forces_c(struct rebx_extras* rebx, double value){
-	rebx->radiation_forces.c = value;
-}
-void rebx_set_radiation_forces_L(struct rebx_extras* rebx, double value){
-	rebx->radiation_forces.L = value;
-}
-
-double rebx_get_modify_orbits_direct_p(struct rebx_extras* rebx){
-	return rebx->modify_orbits_direct.p;
-}
-double rebx_get_modify_orbits_direct_coordinates(struct rebx_extras* rebx){
-	return rebx->modify_orbits_direct.coordinates;
-}
-double rebx_get_modify_orbits_forces_coordinates(struct rebx_extras* rebx){
-	return rebx->modify_orbits_forces.coordinates;
-}
-double rebx_get_gr_c(struct rebx_extras* rebx){
-	return rebx->gr.c;
-}
-double rebx_get_radiation_forces_c(struct rebx_extras* rebx){
-	return rebx->radiation_forces.c;
-}
-double rebx_get_radiation_forces_L(struct rebx_extras* rebx){
-	return rebx->radiation_forces.L;
-}
-
 
 /* User functions to add effects. */
 

@@ -46,12 +46,12 @@ int main(int argc, char* argv[]){
 	rebx_add_gr(rebx, c);					// add post-newtonian corrections from general relativity
 	rebx_add_modify_orbits_direct(rebx);	// add orbit modifications (doesn't take any parameters)
 
-	/*At any time, we can change any of the parameters specific to a REBOUNDx modification by calling the
-	 * setter function of the form rebx_set_modification_parameter(rebx, value).  There is also a
-	 * corresponding rebx_get_modification_parameter(rebx) getter function:*/
+	/*At any time, we can change any of the parameters specific to a REBOUNDx modification by accessing
+	 * the modification structure directly.  For a given effect and param, one accesses it through
+	 * rebx->effect.param:*/
 
-	rebx_set_radiation_forces_L(rebx, 8.e26);	// Change the luminosity of the central body
-	printf("L = %e\n", rebx_get_radiation_forces_L(rebx));	// prints 8.e26
+	rebx->radiation_forces.L = 8.e26;				// Change the luminosity of the central body
+	printf("L = %e\n", rebx->radiation_forces.L);	// prints 8.e26
 
 	/******************
 	 * Adding particles

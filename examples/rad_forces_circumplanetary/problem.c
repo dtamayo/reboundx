@@ -25,7 +25,7 @@ int main(int argc, char* argv[]){
 	sim->G				= 6.674e-11;	// Use SI units
 	sim->dt 			= 1e4;			// Initial timestep in sec
 	sim->N_active		= 2;			// Only the sun and the planet affect other particles gravitationally
-	//sim->heartbeat	 	= heartbeat;
+	sim->heartbeat	 	= heartbeat;
 	sim->usleep		= 5000;				// Slow down integration (for visualization only)
 
 	struct rebx_extras* rebx = rebx_init(sim); 

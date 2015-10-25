@@ -240,16 +240,6 @@ void rebx_set_modify_orbits_direct_p(struct rebx_extras* rebx, double value);
 /*
  * @brief Change the coordinate system used for the damping.  
  */
-void rebx_set_modify_orbits_direct_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords);
-void rebx_set_modify_orbits_forces_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES coords);
-void rebx_set_gr_c(struct rebx_extras* rebx, double value);
-void rebx_set_radiation_forces_c(struct rebx_extras* rebx, double value);
-void rebx_set_radiation_forces_L(struct rebx_extras* rebx, double value);
-double rebx_get_modify_orbits_direct_coordinates(struct rebx_extras* rebx);
-double rebx_get_modify_orbits_forces_coordinates(struct rebx_extras* rebx);
-double rebx_get_gr_c(struct rebx_extras* rebx);
-double rebx_get_radiation_forces_c(struct rebx_extras* rebx);
-double rebx_get_radiation_forces_L(struct rebx_extras* rebx);
 
 void rebx_set_tau_a(struct reb_particle* p, double value); 
 void rebx_set_tau_e(struct reb_particle* p, double value); 
