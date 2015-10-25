@@ -16,7 +16,7 @@
 
 void heartbeat(struct reb_simulation* r);
 
-double tmax = 1e11;
+double tmax = 1e9;
 
 int main(int argc, char* argv[]){
 	struct reb_simulation* sim = reb_create_simulation();
@@ -77,18 +77,15 @@ int main(int argc, char* argv[]){
 	
 	double Q_pr = 1.;				// Radiation pressure coefficient. Equals 1 in limit where particle radius >> wavelength of radiation
 	rebx_set_Q_pr(rebx, &p, Q_pr); 	// Only particles with Q_pr set will feel radiation forces.
-	printf("%p\n", &p.ap);
 	double density_dust = 1.e3;		// kg/m^3 = 1g/cc
 	p.r = 1.e-5;					// dust grain radius in m 
 	p.m = rebx_rad_calc_mass(density_dust, p.r);	// assumes spherical grains
 	reb_add(sim, p); 
-	printf("%p\t%p\n", &p.ap, &sim->particles[2].ap);
-	rebx_set_Q_pr(rebx, &sim->particles[2], Q_pr);	
 	
 	// Now add a 2nd particle of different size and density on same orbit, using a beta value
 	struct reb_particle p2 = reb_tools_orbit_to_particle(sim->G, sim->particles[1], 0., a_dust, e_dust, inc_dust, Omega_dust, omega_dust, f_dust); 
 
-	//rebx_set_Q_pr(rebx, &p2, Q_pr);
+	rebx_set_Q_pr(rebx, &p2, Q_pr);
 	density_dust = 3.e3;							
 	double beta = 1.e-3;
 	p2.r = rebx_rad_calc_particle_radius(rebx, beta, density_dust, Q_pr);

@@ -125,7 +125,7 @@ void* rebx_search_param(const struct reb_particle* p, enum REBX_PARAMS param){
 
 /* Internal parameter adders (need a different one for each REBX_PARAM type). */
 /* Generic adder for params that are a single double value */
-void rebx_add_param_double(struct rebx_extras* rebx, struct reb_particle* p, enum REBX_PARAMS param_type, double value){
+void rebx_add_param_double(struct reb_particle* p, enum REBX_PARAMS param_type, double value){
 	struct rebx_param* newparam = malloc(sizeof(*newparam));
 	newparam->paramPtr = malloc(sizeof(double));
 	*(double*) newparam->paramPtr = value;
@@ -134,10 +134,10 @@ void rebx_add_param_double(struct rebx_extras* rebx, struct reb_particle* p, enu
 	newparam->next = p->ap;
 	p->ap = newparam;
 
-	rebx_add_param_to_be_freed(rebx, newparam);
+	rebx_add_param_to_be_freed(p->sim->extras, newparam);
 }	
 
-void rebx_add_param_orb_tau(struct rebx_extras* rebx, struct reb_particle* p){
+void rebx_add_param_orb_tau(struct reb_particle* p){
 	struct rebx_param* newparam = malloc(sizeof(*newparam));
 	newparam->paramPtr = malloc(sizeof(struct rebx_orb_tau));
 	struct rebx_orb_tau orb_tau = {INFINITY, INFINITY, INFINITY, INFINITY, INFINITY}; // set all timescales to infinity (i.e. no effect)
@@ -147,51 +147,50 @@ void rebx_add_param_orb_tau(struct rebx_extras* rebx, struct reb_particle* p){
 	newparam->next = p->ap;
 	p->ap = newparam;
 
-	rebx_add_param_to_be_freed(rebx, newparam);
+	rebx_add_param_to_be_freed(p->sim->extras, newparam);
 }
 
 /* User-called getters and setters for each parameter*/
-
-void rebx_set_tau_a(struct rebx_extras* rebx, struct reb_particle* p, double value){
+void rebx_set_tau_a(struct reb_particle* p, double value){
 	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(rebx, p);
+		rebx_add_param_orb_tau(p);
 		orb_tau = rebx_search_param(p, ORB_TAU);
 	}
 	orb_tau->tau_a = value;
 }
 
-void rebx_set_tau_e(struct rebx_extras* rebx, struct reb_particle* p, double value){
+void rebx_set_tau_e(struct reb_particle* p, double value){
 	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(rebx, p);
+		rebx_add_param_orb_tau(p);
 		orb_tau = rebx_search_param(p, ORB_TAU);
 	}
 	orb_tau->tau_e = value;
 }
 
-void rebx_set_tau_inc(struct rebx_extras* rebx, struct reb_particle* p, double value){
+void rebx_set_tau_inc(struct reb_particle* p, double value){
 	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(rebx, p);
+		rebx_add_param_orb_tau(p);
 		orb_tau = rebx_search_param(p, ORB_TAU);
 	}
 	orb_tau->tau_inc = value;
 }
 
-void rebx_set_tau_omega(struct rebx_extras* rebx, struct reb_particle* p, double value){
+void rebx_set_tau_omega(struct reb_particle* p, double value){
 	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(rebx, p);
+		rebx_add_param_orb_tau(p);
 		orb_tau = rebx_search_param(p, ORB_TAU);
 	}
 	orb_tau->tau_omega = value;
 }
 
-void rebx_set_tau_Omega(struct rebx_extras* rebx, struct reb_particle* p, double value){
+void rebx_set_tau_Omega(struct reb_particle* p, double value){
 	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
-		rebx_add_param_orb_tau(rebx, p);
+		rebx_add_param_orb_tau(p);
 		orb_tau = rebx_search_param(p, ORB_TAU);
 	}
 	orb_tau->tau_Omega = value;
@@ -247,10 +246,10 @@ double rebx_get_tau_Omega(struct reb_particle* p){
 	}
 }
 
-void rebx_set_Q_pr(struct rebx_extras* rebx, struct reb_particle* p, double value){
+void rebx_set_Q_pr(struct reb_particle* p, double value){
 	double* Q_pr = rebx_search_param(p, Q_PR);
 	if(Q_pr == NULL){
-		rebx_add_param_double(rebx, p, Q_PR, value);
+		rebx_add_param_double(p, Q_PR, value);
 	}
 	else{
 		*Q_pr = value;

@@ -142,8 +142,8 @@ void* rebx_search_param(const struct reb_particle* p, enum REBX_PARAMS param);	/
 void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
 
 /* Internal parameter adders (need a different one for each REBX_PARAM type). */
-void rebx_add_param_double(struct rebx_extras* rebx, struct reb_particle* p, enum REBX_PARAMS param_type, double value);
-void rebx_add_param_orb_tau(struct rebx_extras* rebx, struct reb_particle* p);		// add a rebx_orb_tau parameter to particle p
+void rebx_add_param_double(struct reb_particle* p, enum REBX_PARAMS param_type, double value);
+void rebx_add_param_orb_tau(struct reb_particle* p);		// add a rebx_orb_tau parameter to particle p
 /****************************************
 User API
 *****************************************/
@@ -251,18 +251,18 @@ double rebx_get_gr_c(struct rebx_extras* rebx);
 double rebx_get_radiation_forces_c(struct rebx_extras* rebx);
 double rebx_get_radiation_forces_L(struct rebx_extras* rebx);
 
-void rebx_set_tau_a(struct rebx_extras* rebx, struct reb_particle* p, double value); 
-void rebx_set_tau_e(struct rebx_extras* rebx, struct reb_particle* p, double value); 
-void rebx_set_tau_inc(struct rebx_extras* rebx, struct reb_particle* p, double value); 
-void rebx_set_tau_omega(struct rebx_extras* rebx, struct reb_particle* p, double value); 
-void rebx_set_tau_Omega(struct rebx_extras* rebx, struct reb_particle* p, double value); 
+void rebx_set_tau_a(struct reb_particle* p, double value); 
+void rebx_set_tau_e(struct reb_particle* p, double value); 
+void rebx_set_tau_inc(struct reb_particle* p, double value); 
+void rebx_set_tau_omega(struct reb_particle* p, double value); 
+void rebx_set_tau_Omega(struct reb_particle* p, double value); 
 double rebx_get_tau_a(struct reb_particle* p);
 double rebx_get_tau_e(struct reb_particle* p);
 double rebx_get_tau_inc(struct reb_particle* p);
 double rebx_get_tau_omega(struct reb_particle* p);
 double rebx_get_tau_Omega(struct reb_particle* p);
 
-void rebx_set_Q_pr(struct rebx_extras* rebx, struct reb_particle* p, double value);
+void rebx_set_Q_pr(struct reb_particle* p, double value);
 double rebx_get_Q_pr(struct reb_particle* p);
 
 double rebx_rad_calc_mass(double density, double radius);
