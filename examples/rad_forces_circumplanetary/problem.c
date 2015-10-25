@@ -16,19 +16,19 @@
 
 void heartbeat(struct reb_simulation* r);
 
-double tmax = 1e9;
+double tmax = 1e10;
 
 int main(int argc, char* argv[]){
 	struct reb_simulation* sim = reb_create_simulation();
 	// Setup constants
 	sim->integrator		= REB_INTEGRATOR_IAS15;
 	sim->G				= 6.674e-11;	// Use SI units
-	sim->dt 			= 1e4;			// Initial timestep in sec (~1 hr.  IAS15 will adjust adaptively)
-	sim->N_active		= 2;			// Only the sun and the planet affect other particles gravitationally (simulation will be very slow without this!)
+	sim->dt 			= 1e4;			// Initial timestep in sec
+	sim->N_active		= 2;			// Only the sun and the planet affect other particles gravitationally
 	//sim->heartbeat	 	= heartbeat;
 	sim->usleep		= 5000;				// Slow down integration (for visualization only)
 
-	struct rebx_extras* rebx = rebx_init(sim); // Always add rebx to simulation first
+	struct rebx_extras* rebx = rebx_init(sim); 
 	double c = 3.e8;					// speed of light in SI units
 	double L = 3.85e26;					// Luminosity of the sun in SI units (W)
 	rebx_add_radiation_forces(rebx, c, L); // add radiation forces
@@ -75,29 +75,32 @@ int main(int argc, char* argv[]){
 
 	// now we set the physical parameters
 	
-	double Q_pr = 1.;				// Radiation pressure coefficient. Equals 1 in limit where particle radius >> wavelength of radiation
-	rebx_set_Q_pr(rebx, &p, Q_pr); 	// Only particles with Q_pr set will feel radiation forces.
 	double density_dust = 1.e3;		// kg/m^3 = 1g/cc
 	p.r = 1.e-5;					// dust grain radius in m 
 	p.m = rebx_rad_calc_mass(density_dust, p.r);	// assumes spherical grains
 	reb_add(sim, p); 
 	
+	/*We can only call rebx parameter setters on particles in the sim->particles array*/
+	double Q_pr = 1.;				// Radiation pressure coefficient. Equals 1 in limit where particle radius >> wavelength of radiation
+	rebx_set_Q_pr(&sim->particles[2], Q_pr); 	// Only particles with Q_pr set will feel radiation forces.
+	
 	// Now add a 2nd particle of different size and density on same orbit, using a beta value
 	struct reb_particle p2 = reb_tools_orbit_to_particle(sim->G, sim->particles[1], 0., a_dust, e_dust, inc_dust, Omega_dust, omega_dust, f_dust); 
 
-	rebx_set_Q_pr(rebx, &p2, Q_pr);
 	density_dust = 3.e3;							
 	double beta = 1.e-3;
-	p2.r = rebx_rad_calc_particle_radius(rebx, beta, density_dust, Q_pr);
-	p2.m = rebx_rad_calc_mass(density_dust, p.r);	// assumes spherical grains
+	p2.r = rebx_rad_calc_particle_radius(rebx, beta, density_dust, Q_pr); 	// convenience function for getting size from beta
+	p2.m = rebx_rad_calc_mass(density_dust, p2.r);							// assumes spherical grains
 	reb_add(sim, p2); 
+	
+	rebx_set_Q_pr(&sim->particles[3], Q_pr);
 
 	reb_move_to_com(sim);
 
 	system("rm -v a.txt");	
 
 	printf("m\tr\tbeta\n");
-	printf("%e\t%e\t%e\n", sim->particles[2].m, sim->particles[2].r, rebx_rad_calc_beta(rebx, &sim->particles[2]));
+	printf("%e\t%e\t%e\n", sim->particles[3].m, sim->particles[3].r, rebx_rad_calc_beta(rebx, &sim->particles[3]));
 	printf("%e\t%e\t%e\n", rebx_rad_calc_mass(1.e3, sim->particles[2].r), sim->particles[2].r, rebx_rad_calc_beta(rebx, &sim->particles[2]));
 
 	reb_integrate(sim, tmax);
