@@ -21,6 +21,10 @@ class rebx_params_modify_orbits(Structure):
 class rebx_params_gr(Structure):
     _fields_ = [("c", c_double)]
 
+class rebx_params_radiation_forces(Structure):
+    _fields_ = [("L", c_double),
+                ("c", c_double)]
+
 class Extras(Structure):
     def __init__(self, sim):
         clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
@@ -118,6 +122,8 @@ Extras._fields_ = [("sim", POINTER(rebound.Simulation)),
                 ("Nforces", c_int),
                 ("modify_orbits_forces", rebx_params_modify_orbits),
                 ("modify_orbits_direct", rebx_params_modify_orbits),
-                ("gr", rebx_params_gr)]
+                ("gr", rebx_params_gr),
+                ("radiation_forces", rebx_params_radiation_forces)]
+
 
 
