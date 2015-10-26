@@ -50,13 +50,8 @@ void rebx_ptm(struct reb_simulation* sim){
 	}
 }
 
-/* Initialization routines. */
+/* Initialization routine. */
 
-struct rebx_extras* rebx_init(struct reb_simulation* sim){
-	struct rebx_extras* rebx = malloc(sizeof(*rebx));
-	rebx_initialize(sim, rebx);
-	return rebx;
-}
 
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
 	sim->extras = rebx;
@@ -98,10 +93,6 @@ void rebx_free_pointers(struct rebx_extras* rebx){
 	free(rebx->ptm);
 }
 
-void rebx_free(struct rebx_extras* rebx){
-	rebx_free_pointers(rebx);
-	free(rebx);
-}
 
 /* Internal utility functions. */
 
@@ -150,7 +141,92 @@ void rebx_add_param_orb_tau(struct reb_particle* p){
 	rebx_add_param_to_be_freed(p->sim->extras, newparam);
 }
 
-/* User-called getters and setters for each parameter*/
+/****************************************
+User API
+*****************************************/
+
+struct rebx_extras* rebx_init(struct reb_simulation* sim){
+	struct rebx_extras* rebx = malloc(sizeof(*rebx));
+	rebx_initialize(sim, rebx);
+	return rebx;
+}
+
+void rebx_free(struct rebx_extras* rebx){
+	rebx_free_pointers(rebx);
+	free(rebx);
+}
+
+/****************************************
+Functions for specific REBOUNDx effects
+ *****************************************/
+
+void rebx_add_gr(struct rebx_extras* rebx, double c){
+	struct reb_simulation* sim = rebx->sim;
+	sim->additional_forces = rebx_forces;
+	sim->force_is_velocity_dependent = 1;
+
+	rebx->Nforces++;
+	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
+	rebx->forces[rebx->Nforces-1] = rebx_gr;
+	rebx->gr.c = c;
+}
+
+void rebx_add_gr_single_mass(struct rebx_extras* rebx, double c){
+	struct reb_simulation* sim = rebx->sim;
+	sim->additional_forces = rebx_forces;
+	sim->force_is_velocity_dependent = 1;
+
+	rebx->Nforces++;
+	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
+	rebx->forces[rebx->Nforces-1] = rebx_gr_single_mass;
+	rebx->gr.c = c;
+}
+
+void rebx_add_gr_potential(struct rebx_extras* rebx, double c){
+	struct reb_simulation* sim = rebx->sim;
+	sim->additional_forces = rebx_forces;
+
+	rebx->Nforces++;
+	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
+	rebx->forces[rebx->Nforces-1] = rebx_gr_potential;
+	rebx->gr.c = c;
+}
+
+void rebx_add_modify_orbits_forces(struct rebx_extras* rebx){
+	struct reb_simulation* sim = rebx->sim;
+	sim->additional_forces = rebx_forces;
+	sim->force_is_velocity_dependent = 1;
+
+	rebx->Nforces++;
+	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
+	rebx->forces[rebx->Nforces-1] = rebx_modify_orbits_forces;
+}
+
+void rebx_add_modify_orbits_direct(struct rebx_extras* rebx){
+	struct reb_simulation* sim = rebx->sim;
+	sim->post_timestep_modifications = rebx_ptm;
+
+	rebx->Nptm++;
+	rebx->ptm = realloc(rebx->ptm, sizeof(*rebx->ptm)*rebx->Nptm);
+	rebx->ptm[rebx->Nptm-1] = rebx_modify_orbits_direct;
+}
+
+void rebx_add_radiation_forces(struct rebx_extras* rebx, double c, double L){
+	struct reb_simulation* sim = rebx->sim;
+	sim->additional_forces = rebx_forces;
+	sim->force_is_velocity_dependent = 1;
+
+	rebx->Nforces++;
+	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
+	rebx->forces[rebx->Nforces-1] = rebx_radiation_forces;
+	rebx->radiation_forces.c = c;
+	rebx->radiation_forces.L = L;
+}
+
+/****************************************
+Functions for getting and setting particle parameters
+ *****************************************/
+
 void rebx_set_tau_a(struct reb_particle* p, double value){
 	struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
 	if(orb_tau == NULL){
@@ -266,70 +342,9 @@ double rebx_get_Q_pr(struct reb_particle* p){
 	}
 }
 
-/* User functions to add effects. */
-
-void rebx_add_gr(struct rebx_extras* rebx, double c){
-	struct reb_simulation* sim = rebx->sim;
-	sim->additional_forces = rebx_forces;
-	sim->force_is_velocity_dependent = 1;
-
-	rebx->Nforces++;
-	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
-	rebx->forces[rebx->Nforces-1] = rebx_gr;
-	rebx->gr.c = c;
-}
-
-void rebx_add_gr_single_mass(struct rebx_extras* rebx, double c){
-	struct reb_simulation* sim = rebx->sim;
-	sim->additional_forces = rebx_forces;
-	sim->force_is_velocity_dependent = 1;
-
-	rebx->Nforces++;
-	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
-	rebx->forces[rebx->Nforces-1] = rebx_gr_single_mass;
-	rebx->gr.c = c;
-}
-
-void rebx_add_gr_potential(struct rebx_extras* rebx, double c){
-	struct reb_simulation* sim = rebx->sim;
-	sim->additional_forces = rebx_forces;
-
-	rebx->Nforces++;
-	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
-	rebx->forces[rebx->Nforces-1] = rebx_gr_potential;
-	rebx->gr.c = c;
-}
-
-void rebx_add_modify_orbits_forces(struct rebx_extras* rebx){
-	struct reb_simulation* sim = rebx->sim;
-	sim->additional_forces = rebx_forces;
-	sim->force_is_velocity_dependent = 1;
-
-	rebx->Nforces++;
-	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
-	rebx->forces[rebx->Nforces-1] = rebx_modify_orbits_forces;
-}
-
-void rebx_add_modify_orbits_direct(struct rebx_extras* rebx){
-	struct reb_simulation* sim = rebx->sim;
-	sim->post_timestep_modifications = rebx_ptm;
-
-	rebx->Nptm++;
-	rebx->ptm = realloc(rebx->ptm, sizeof(*rebx->ptm)*rebx->Nptm);
-	rebx->ptm[rebx->Nptm-1] = rebx_modify_orbits_direct;
-}
-
-void rebx_add_radiation_forces(struct rebx_extras* rebx, double c, double L){
-	struct reb_simulation* sim = rebx->sim;
-	sim->additional_forces = rebx_forces;
-	sim->force_is_velocity_dependent = 1;
-
-	rebx->Nforces++;
-	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
-	rebx->forces[rebx->Nforces-1] = rebx_radiation_forces;
-	rebx->radiation_forces.c = c;
-	rebx->radiation_forces.L = L;
-}
+/****************************************
+Convenience Functions (include modification in function name in some form)
+ *****************************************/
 
 double rebx_rad_calc_mass(double density, double radius){
 	return 4.*M_PI*radius*radius*radius/3.*density;

@@ -41,18 +41,6 @@ extern const char* rebx_build_str;		///< Date and time build string.
 extern const char* rebx_version_str;	///<Version string.
 
 /****************************************
-Structures for effect-specific parameters
-*****************************************/
-/*	Structure to hold all the orbit modification timescales (used by both modify_orbits_direct and modify_orbits_forces).*/
-struct rebx_orb_tau{
-	double tau_a;						// Semimajor axis e-folding timescale (<0 = damp, >0 = grow).
-	double tau_e;						// Eccentricity e-folding timescale (<0 = damp, >0 = grow).
-	double tau_inc;						// Inclination e-folding timescale (<0 = damp, >0 = grow).
-	double tau_omega;					// Pericenter precession timescale (linear) (>0 = prograde, <0 = retrograde).
-	double tau_Omega;					// Nodal precession timescale (linear) (>0 = prograde, <0 = retrograde).
-};
-
-/****************************************
 Basic types in REBOUNDx
 *****************************************/
 
@@ -102,6 +90,18 @@ struct rebx_params_gr {
 struct rebx_params_radiation_forces{
 	double L;							// Luminosity of star in units appropriate for sim->G and initial conditions.
 	double c;							// Speed of light in units appropriate for sim->G and initial conditions.
+};
+
+/*************************************************
+Structures for effect-specific particle parameters
+**************************************************/
+/*	Structure to hold all the orbit modification timescales (used by both modify_orbits_direct and modify_orbits_forces).*/
+struct rebx_orb_tau{
+	double tau_a;						// Semimajor axis e-folding timescale (<0 = damp, >0 = grow).
+	double tau_e;						// Eccentricity e-folding timescale (<0 = damp, >0 = grow).
+	double tau_inc;						// Inclination e-folding timescale (<0 = damp, >0 = grow).
+	double tau_omega;					// Pericenter precession timescale (linear) (>0 = prograde, <0 = retrograde).
+	double tau_Omega;					// Nodal precession timescale (linear) (>0 = prograde, <0 = retrograde).
 };
 
 /****************************************
@@ -230,15 +230,11 @@ void rebx_add_radiation_forces(struct rebx_extras* rebx, double c, double L);
  */
 /**
  * @defgroup SetMod List of getters and setters for the parameters in each modification.
+ * @details both getters and setters always take a pointer to the particle 
+ * for consistency, and should not take a rebx pointer 
+ * (this allows the python version to have these parameters be properties of
+ * the Particle class).
  * @{
- */
-/*
- * @brief Change p (default 0), the coupling parameter between e damping and a damping (Deck & Batygin 2015).
- * @defails Default is 0 (no coupling).  p=1 corresponds to e-damping at constant angular momentum.
- */
-void rebx_set_modify_orbits_direct_p(struct rebx_extras* rebx, double value);
-/*
- * @brief Change the coordinate system used for the damping.  
  */
 
 void rebx_set_tau_a(struct reb_particle* p, double value); 
@@ -255,7 +251,22 @@ double rebx_get_tau_Omega(struct reb_particle* p);
 void rebx_set_Q_pr(struct reb_particle* p, double value);
 double rebx_get_Q_pr(struct reb_particle* p);
 
+/** @} */
+/** @} */
+
+/**
+ * @name Convenience functions for particular effects
+ * @{
+ */
+/**
+ * @defgroup ConvFunc Convenience functions for setting parameters for particular effects.
+ * @{
+ */
+
 double rebx_rad_calc_mass(double density, double radius);
 double rebx_rad_calc_beta(struct rebx_extras* rebx, struct reb_particle* p);
 double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, double density, double Qpr);
+/** @} */
+/** @} */
+
 #endif
