@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
 	 * semimajor axes in the above range.  We take all particles to have a beta parameter (ratio of radiation 
 	 * force to gravitational force from the star) of 0.1, and a density of 1g/cc.
 	 *
-	 * We also have to set each particle's radidation pressure coefficient Q_pr (Burns et al. 1979).  Only particles
+	 * We also have to set each particle's radiation pressure coefficient Q_pr (Burns et al. 1979).  Only particles
 	 * with Q_pr set will feel radiation forces.  For particles with radii >> the stellar radiation wavelength, Q_pr = 1.*/
 
 	double amin = 100.*AU;
