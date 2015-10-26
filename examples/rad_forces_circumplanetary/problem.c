@@ -104,6 +104,7 @@ int main(int argc, char* argv[]){
 	printf("%e\t%e\t%e\n", rebx_rad_calc_mass(1.e3, sim->particles[2].r), sim->particles[2].r, rebx_rad_calc_beta(rebx, &sim->particles[2]));
 
 	reb_integrate(sim, tmax);
+	rebx_free(rebx);				// free memory allocated by REBOUNDx
 }
 
 void heartbeat(struct reb_simulation* sim){

@@ -103,4 +103,6 @@ int main(int argc, char* argv[]){
 	 * application, but it's important to be aware of this potential pitfall.*/
 
 	/* Now you would integrate, etc. as normal */
+
+	rebx_free(rebx);	// This frees all the memory allocated by REBOUNDx.  Should do this any time memory is a concern.
 }

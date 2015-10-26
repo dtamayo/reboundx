@@ -69,7 +69,4 @@ int main(int argc, char* argv[]){
 	double tmax = 5.e4;
 	reb_integrate(sim, tmax);
 	rebx_free(rebx);	// Free all the memory allocated by rebx
-
-
-
 }
