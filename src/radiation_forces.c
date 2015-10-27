@@ -30,16 +30,15 @@
 
 void rebx_radiation_forces(struct reb_simulation* const sim){
 	struct reb_particle* particles = sim->particles;
-	const struct reb_particle star = particles[0];
+	const struct reb_particle star = *rebx->radiation_forces.source;
+	const double mu = sim->G*star.m;
 	const int N = sim->N;
 	struct rebx_extras* rebx = sim->extras;
-	const double c = rebx->radiation_forces.c;
-	const double L = rebx->radiation_forces.L;
 #pragma omp parallel for
-	for (int i=1;i<N;i++){
+	for (int i=0;i<N;i++){
 		const struct reb_particle p = particles[i];
-		double* Q_pr = rebx_search_param(&p, Q_PR);
-		if(Q_pr == NULL) continue; // only particles with Q_pr set feel radiation forces
+		double* betaPtr = rebx_search_param(&p, RAD_BETA);
+		if(betaPtr == NULL) continue; // only particles with Q_pr set feel radiation forces
 		const double dx = p.x - star.x; 
 		const double dy = p.y - star.y;
 		const double dz = p.z - star.z;
@@ -49,12 +48,12 @@ void rebx_radiation_forces(struct reb_simulation* const sim){
 		const double dvy = p.vy - star.vy;
 		const double dvz = p.vz - star.vz;
 		const double rdot = (dx*dvx + dy*dvy + dz*dvz)/dr; // radial velocity
-		const double F_rad = L*p.r*p.r*(*Q_pr)/(4.*c*dr*dr*p.m);
+		const double a_rad = *betaPtr*mu/(dr*dr);
 
 		// Equation (5) of Burns, Lamy & Soter (1979)
 
-		particles[i].ax += F_rad*((1.-rdot/c)*dx/dr - dvx/c);
-		particles[i].ay += F_rad*((1.-rdot/c)*dy/dr - dvy/c);
-		particles[i].az += F_rad*((1.-rdot/c)*dz/dr - dvz/c);
+		particles[i].ax += a_rad*((1.-rdot/c)*dx/dr - dvx/c);
+		particles[i].ay += a_rad*((1.-rdot/c)*dy/dr - dvy/c);
+		particles[i].az += a_rad*((1.-rdot/c)*dz/dr - dvz/c);
 	}
 }

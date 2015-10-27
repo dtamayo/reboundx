@@ -211,7 +211,7 @@ void rebx_add_modify_orbits_direct(struct rebx_extras* rebx){
 	rebx->ptm[rebx->Nptm-1] = rebx_modify_orbits_direct;
 }
 
-void rebx_add_radiation_forces(struct rebx_extras* rebx, double c, double L){
+void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source){
 	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
 	sim->force_is_velocity_dependent = 1;
@@ -219,8 +219,7 @@ void rebx_add_radiation_forces(struct rebx_extras* rebx, double c, double L){
 	rebx->Nforces++;
 	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
 	rebx->forces[rebx->Nforces-1] = rebx_radiation_forces;
-	rebx->radiation_forces.c = c;
-	rebx->radiation_forces.L = L;
+	rebx->radiation_forces.source = c;
 }
 
 /****************************************
@@ -322,23 +321,23 @@ double rebx_get_tau_Omega(struct reb_particle* p){
 	}
 }
 
-void rebx_set_Q_pr(struct reb_particle* p, double value){
-	double* Q_pr = rebx_search_param(p, Q_PR);
-	if(Q_pr == NULL){
-		rebx_add_param_double(p, Q_PR, value);
+void rebx_set_beta(struct reb_particle* p, double value){
+	double* betaPtr = rebx_search_param(p, RAD_BETA);
+	if(betaPtr == NULL){
+		rebx_add_param_double(p, RAD_BETA, value);
 	}
 	else{
-		*Q_pr = value;
+		*betaPtr = value;
 	}
 }
 
-double rebx_get_Q_pr(struct reb_particle* p){
-	double* Q_pr = rebx_search_param(p, Q_PR);
-	if(Q_pr == NULL){
+double rebx_get_beta(struct reb_particle* p){
+	double* betaPtr = rebx_search_param(p, RAD_BETA);
+	if(betaPtr == NULL){
 		return 0.;
 	}
 	else{
-		return *Q_pr;
+		return *betaPtr;
 	}
 }
 
@@ -346,29 +345,11 @@ double rebx_get_Q_pr(struct reb_particle* p){
 Convenience Functions (include modification in function name in some form)
  *****************************************/
 
-double rebx_rad_calc_mass(double density, double radius){
-	return 4.*M_PI*radius*radius*radius/3.*density;
+double rebx_rad_calc_beta(struct rebx_extras* rebx, double particle_radius, double density, double Q_pr, double L, double c){
+	double mu = rebx->sim->G*rebx->radiation_forces.source->m;
+	return 3.*L*Q_pr/(16.*M_PI*mu*c*density*particle_radius);	
 }
-
-double rebx_rad_calc_beta(struct rebx_extras* rebx, struct reb_particle* p){
-	if(p->m == 0.){
-		fprintf(stderr, "Particle passed to rebx_calc_beta had 0 mass.\n");
-		return 0.;
-	}
-	double* Q_pr = rebx_search_param(p, Q_PR);
-	if(Q_pr == NULL){
-		fprintf(stderr, "Particle wasn't given a radiation pressure coefficient Q_pr.  Call rebx_set_Q_pr.\n");
-		return 0.;	
-	}
-	double L = rebx->radiation_forces.L;
-	double c = rebx->radiation_forces.c;
-	double mu = rebx->sim->G*rebx->sim->particles[0].m;
-	return L*(*Q_pr)*p->r*p->r/(4.*mu*p->m*c);
-}
-
-double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, double density, double Q_pr){
-	double mu = rebx->sim->G*rebx->sim->particles[0].m;
-	double L = rebx->radiation_forces.L;
-	double c = rebx->radiation_forces.c;
+double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, double density, double Q_pr, double L, double c){
+	double mu = rebx->sim->G*rebx->radiation_forces.source->m;
 	return 3.*L*Q_pr/(16.*M_PI*mu*c*density*beta);	
 }

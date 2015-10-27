@@ -47,7 +47,7 @@ Basic types in REBOUNDx
 /* 	Enumeration for the different groups of parameters that can be added to particles.*/
 enum REBX_PARAMS{
 	ORB_TAU,							// Parameter holding timescales for orbit modifications (migration etc.).
-	Q_PR								// Radiation pressure coefficient for radiation forces (should be 1 in limit where particles size >> wavelength of radiation
+	RAD_BETA,							// Ratio of radiation pressure force to gravitational force from the star.
 };
 
 /* 	Main structure used for all parameters added to particles.
@@ -88,8 +88,7 @@ struct rebx_params_gr {
 
 /* 	Structure for adding radiation forces to the simulation.*/
 struct rebx_params_radiation_forces{
-	double L;							// Luminosity of star in units appropriate for sim->G and initial conditions.
-	double c;							// Speed of light in units appropriate for sim->G and initial conditions.
+	struct reb_particle* source;				// Pointer to the particle that's the source of the radiation.
 };
 
 /*************************************************
@@ -217,10 +216,9 @@ void rebx_add_gr_single_mass(struct rebx_extras* rebx, double c);
 void rebx_add_gr_potential(struct rebx_extras* rebx, double c);
 /**
  * @brief Adds radiation forces to the simulation (i.e., radiation pressure and Poynting-Robertson drag).
- * @param c is the speed of light.
- * @param L is the luminosity of the star.
+ * @param source Pointer to the particle that is the source of the radiation.
  */
-void rebx_add_radiation_forces(struct rebx_extras* rebx, double c, double L);
+void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source);
 /** @} */
 /** @} */
 
@@ -248,8 +246,8 @@ double rebx_get_tau_inc(struct reb_particle* p);
 double rebx_get_tau_omega(struct reb_particle* p);
 double rebx_get_tau_Omega(struct reb_particle* p);
 
-void rebx_set_Q_pr(struct reb_particle* p, double value);
-double rebx_get_Q_pr(struct reb_particle* p);
+void rebx_set_beta(struct reb_particle* p, double value);
+double rebx_get_beta(struct reb_particle* p);
 
 /** @} */
 /** @} */
@@ -263,10 +261,17 @@ double rebx_get_Q_pr(struct reb_particle* p);
  * @{
  */
 
-double rebx_rad_calc_mass(double density, double radius);
-double rebx_rad_calc_beta(struct rebx_extras* rebx, struct reb_particle* p);
-double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, double density, double Qpr);
+/**
+ * @brief Calculates beta, the ratio between the radiation pressure force and the gravitational force from the star.
+ */
+double rebx_rad_calc_beta(struct rebx_extras* rebx, double particle_radius, double density, double Q_pr, double L, double c);
+/**
+ * @brief Calculates the particle radius from physical parameters and beta, the ratio of radiation to gravitational forces from the star.
+ */
+double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, double density, double Q_pr, double L, double c);
+
 /** @} */
 /** @} */
 
 #endif
+
