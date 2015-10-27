@@ -67,7 +67,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
 	rebx->modify_orbits_direct.coordinates = JACOBI;
 	rebx->gr.c = C_DEFAULT;	
 	rebx->radiation_forces.c = C_DEFAULT;
-	rebx->radiation_forces.L = 0.;
+	rebx->radiation_forces.source = NULL;
 
 	rebx->Nptm = 0;
 	rebx->Nforces = 0;
@@ -211,7 +211,7 @@ void rebx_add_modify_orbits_direct(struct rebx_extras* rebx){
 	rebx->ptm[rebx->Nptm-1] = rebx_modify_orbits_direct;
 }
 
-void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source){
+void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source, double c){
 	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
 	sim->force_is_velocity_dependent = 1;
@@ -219,7 +219,8 @@ void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* so
 	rebx->Nforces++;
 	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
 	rebx->forces[rebx->Nforces-1] = rebx_radiation_forces;
-	rebx->radiation_forces.source = c;
+	rebx->radiation_forces.source = source;
+	rebx->radiation_forces.c = c;
 }
 
 /****************************************
@@ -345,11 +346,13 @@ double rebx_get_beta(struct reb_particle* p){
 Convenience Functions (include modification in function name in some form)
  *****************************************/
 
-double rebx_rad_calc_beta(struct rebx_extras* rebx, double particle_radius, double density, double Q_pr, double L, double c){
+double rebx_rad_calc_beta(struct rebx_extras* rebx, double particle_radius, double density, double Q_pr, double L){
 	double mu = rebx->sim->G*rebx->radiation_forces.source->m;
+	const double c = rebx->radiation_forces.c;
 	return 3.*L*Q_pr/(16.*M_PI*mu*c*density*particle_radius);	
 }
-double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, double density, double Q_pr, double L, double c){
-	double mu = rebx->sim->G*rebx->radiation_forces.source->m;
+double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, double density, double Q_pr, double L){
+	const double mu = rebx->sim->G*rebx->radiation_forces.source->m;
+	const double c = rebx->radiation_forces.c;
 	return 3.*L*Q_pr/(16.*M_PI*mu*c*density*beta);	
 }

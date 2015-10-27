@@ -23,7 +23,7 @@ class rebx_params_gr(Structure):
     _fields_ = [("c", c_double)]
 
 class rebx_params_radiation_forces(Structure):
-    _fields_ = [("L", c_double),
+    _fields_ = [("source", POINTER(rebound.Particle),
                 ("c", c_double)]
 
 class Extras(Structure):
@@ -71,8 +71,8 @@ class Extras(Structure):
         c = self.check_c(c)
         clibreboundx.rebx_add_gr_potential(byref(self), c_double(c))
     
-    def add_radiation_forces(self, c, L):
-        clibreboundx.rebx_add_radiation_forces(byref(self), c_double(c), c_double(L))
+    def add_radiation_forces(self, source, c):
+        clibreboundx.rebx_add_radiation_forces(byref(self), byref(source), c_double(c))
 
     def add_Particle_props(self):
         @property
@@ -111,29 +111,26 @@ class Extras(Structure):
         def tau_Omega(self, value):
             clibreboundx.rebx_set_tau_Omega(byref(self), c_double(value))
         @property
-        def Q_pr(self):
-            clibreboundx.rebx_get_Q_pr.restype = c_double
-            return clibreboundx.rebx_get_Q_pr(byref(self))
-        @Q_pr.setter
-        def Q_pr(self, value):
-            clibreboundx.rebx_set_Q_pr(byref(self), c_double(value))
+        def beta(self):
+            clibreboundx.rebx_get_beta.restype = c_double
+            return clibreboundx.rebx_get_beta(byref(self))
+        @beta.setter
+        def beta(self, value):
+            clibreboundx.rebx_set_beta(byref(self), c_double(value))
 
         rebound.Particle.tau_a = tau_a
         rebound.Particle.tau_e = tau_e
         rebound.Particle.tau_inc = tau_inc
         rebound.Particle.tau_omega = tau_omega
         rebound.Particle.tau_Omega = tau_Omega
-        rebound.Particle.Q_pr = Q_pr
+        rebound.Particle.beta = beta 
 
-    def rad_calc_mass(self, density, radius):
-        clibreboundx.rebx_rad_calc_mass.restype = c_double
-        return clibreboundx.rebx_rad_calc_mass(c_double(density), c_double(radius))
-    def rad_calc_beta(self, particle):
+    def rad_calc_beta(self, particle_radius, density, Q_pr, L)
         clibreboundx.rebx_rad_calc_beta.restype = c_double
-        return clibreboundx.rebx_rad_calc_beta(byref(self), byref(particle))
-    def rad_calc_particle_radius(self, beta, density, Q_pr):
+        return clibreboundx.rebx_rad_calc_beta(byref(self), c_double(particle_radius), c_double(density), c_double(Q_pr), c_double(L))
+    def rad_calc_particle_radius(self, beta, density, Q_pr, L):
         clibreboundx.rebx_rad_calc_particle_radius.restype = c_double
-        return clibreboundx.rebx_rad_calc_particle_radius(byref(self), c_double(beta), c_double(density), c_double(Q_pr))
+        return clibreboundx.rebx_rad_calc_particle_radius(byref(self), c_double(beta), c_double(density), c_double(Q_pr), c_double(L))
 
 
 # Need to put fields after class definition because of self-referencing

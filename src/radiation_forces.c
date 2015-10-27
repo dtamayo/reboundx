@@ -30,10 +30,11 @@
 
 void rebx_radiation_forces(struct reb_simulation* const sim){
 	struct reb_particle* particles = sim->particles;
+	const struct rebx_extras* rebx = sim->extras;
 	const struct reb_particle star = *rebx->radiation_forces.source;
 	const double mu = sim->G*star.m;
+	const double c = rebx->radiation_forces.c;
 	const int N = sim->N;
-	struct rebx_extras* rebx = sim->extras;
 #pragma omp parallel for
 	for (int i=0;i<N;i++){
 		const struct reb_particle p = particles[i];
