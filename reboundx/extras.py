@@ -23,7 +23,7 @@ class rebx_params_gr(Structure):
     _fields_ = [("c", c_double)]
 
 class rebx_params_radiation_forces(Structure):
-    _fields_ = [("source", POINTER(rebound.Particle),
+    _fields_ = [("source", POINTER(rebound.Particle)),
                 ("c", c_double)]
 
 class Extras(Structure):
@@ -125,7 +125,7 @@ class Extras(Structure):
         rebound.Particle.tau_Omega = tau_Omega
         rebound.Particle.beta = beta 
 
-    def rad_calc_beta(self, particle_radius, density, Q_pr, L)
+    def rad_calc_beta(self, particle_radius, density, Q_pr, L):
         clibreboundx.rebx_rad_calc_beta.restype = c_double
         return clibreboundx.rebx_rad_calc_beta(byref(self), c_double(particle_radius), c_double(density), c_double(Q_pr), c_double(L))
     def rad_calc_particle_radius(self, beta, density, Q_pr, L):
