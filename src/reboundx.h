@@ -275,5 +275,18 @@ double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, doub
 /** @} */
 /** @} */
 
+
+/**
+ * @brief Allows user to specify their own post timestep modifications. Behaviour is identical to setting up post timestep modifications in REBOUND itself.
+ */
+void rebx_add_custom_ptm(struct rebx_extras* rebx, void (*custom_ptm)(struct reb_simulation* const r) );
+
+/**
+ * @brief Allows user to specify their own extra forces. Behaviour is identical to setting up extra forces  in REBOUND itself.
+ * @param force_is_velocity_dependent Set to 1 if force is velocity dependent.
+
+ */
+void rebx_add_custom_forces(struct rebx_extras* rebx, void (*custom_forces)(struct reb_simulation* const r), int force_is_velocity_dependent);
+
 #endif
 

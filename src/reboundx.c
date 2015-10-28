@@ -223,6 +223,27 @@ void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* so
 	rebx->radiation_forces.c = c;
 }
 
+void rebx_add_custom_ptm(struct rebx_extras* rebx, void (*custom_ptm)(struct reb_simulation* const r) ){
+	struct reb_simulation* sim = rebx->sim;
+	sim->post_timestep_modifications = rebx_ptm;
+
+	rebx->Nptm++;
+	rebx->ptm = realloc(rebx->ptm, sizeof(*rebx->ptm)*rebx->Nptm);
+	rebx->ptm[rebx->Nptm-1] = custom_ptm;
+}
+
+void rebx_add_custom_forces(struct rebx_extras* rebx, void (*custom_forces)(struct reb_simulation* const r), int force_is_velocity_dependent){
+	struct reb_simulation* sim = rebx->sim;
+	sim->additional_forces = rebx_forces;
+	if (force_is_velocity_dependent){
+		sim->force_is_velocity_dependent = 1;
+	}
+
+	rebx->Nforces++;
+	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
+	rebx->forces[rebx->Nforces-1] = custom_forces;
+}
+
 /****************************************
 Functions for getting and setting particle parameters
  *****************************************/
