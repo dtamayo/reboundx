@@ -12,12 +12,10 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-double tmax = 1.;
-
 int main(int argc, char* argv[]){
 	struct reb_simulation* sim = reb_create_simulation();
 	// Setup constants
-	sim->dt 		= 1.e-8;		// timestep.
+	sim->dt 		= 1.e-2;		// timestep.
 	sim->integrator	= REB_INTEGRATOR_WHFAST;
 	//sim->integrator	= REB_INTEGRATOR_IAS15;
 
@@ -26,7 +24,7 @@ int main(int argc, char* argv[]){
 	reb_add(sim, p); 
 
 	double m = 0.;
-	double a = 1.e-4; // put planet close to enhance precession (this would put planet inside the Sun!)
+	double a = 1.e-4; // put planet close to enhance precession so it's visible in visualization (this would put planet inside the Sun!)
 	double e = 0.2;
 	double omega = 0.;
 	double f = 0.;
@@ -35,9 +33,11 @@ int main(int argc, char* argv[]){
 	reb_add(sim,p1);
 	reb_move_to_com(sim);
 	
-	rebx_init(sim); // initialize reboundx
+	struct rebx_extras* rebx = rebx_init(sim); // initialize reboundx
 	double c = C_DEFAULT; // Have to set the speed of light in appropriate units (set by G and your initial conditions).  Here we use the value in default units of AU/(yr/2pi)	
-	rebx_add_gr(sim,c); // add postnewtonian correction.  
+	rebx_add_gr(rebx,c); // add postnewtonian correction.  
 
+	double tmax = 5.e-2;
 	reb_integrate(sim, tmax); 
+	rebx_free(rebx); 	// this explicitly frees all the memory allocated by REBOUNDx 
 }
