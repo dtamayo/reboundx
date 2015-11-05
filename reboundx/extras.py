@@ -31,6 +31,7 @@ class Extras(Structure):
         clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
         self.add_Particle_props()
         self.coordinates = {"JACOBI":0, "BARYCENTRIC":1, "HELIOCENTRIC":2} # to use C version's REBX_COORDINATES enum
+        sim._extras_ref = self
 
     def __del__(self):
         if self._b_needsfree_ == 1:
