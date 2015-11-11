@@ -48,6 +48,7 @@ Basic types in REBOUNDx
 enum REBX_PARAMS{
 	ORB_TAU,							// Parameter holding timescales for orbit modifications (migration etc.).
 	RAD_BETA,							// Ratio of radiation pressure force to gravitational force from the star.
+	ROT_PARAMS							// Parameters for rotation of bodies
 };
 
 /* 	Main structure used for all parameters added to particles.
@@ -92,6 +93,9 @@ struct rebx_params_radiation_forces{
 	double c;							// Speed of light
 };
 
+struct rebx_params_tides{
+	// here you could have pointers to particles that you want to feel tides or other parameters that should be common to the whole tides implementation (not to individual particles)}
+	
 /*************************************************
 Structures for effect-specific particle parameters
 **************************************************/
@@ -103,6 +107,11 @@ struct rebx_orb_tau{
 	double tau_omega;					// Pericenter precession timescale (linear) (>0 = prograde, <0 = retrograde).
 	double tau_Omega;					// Nodal precession timescale (linear) (>0 = prograde, <0 = retrograde).
 };
+
+struct rebx_rot_params{
+	double Omega[3];					// rotational velocity
+	double I[3];						// Diagonal moment of inertia matrix (could make 2-dimensional)
+}
 
 /****************************************
 Main REBOUNDx structure
@@ -121,6 +130,7 @@ struct rebx_extras {
 	struct rebx_params_modify_orbits modify_orbits_direct;	// Structure for migration/ecc,inc damping/precession directly altering orbital elements.
 	struct rebx_params_gr gr;								// Structure for post-Newtonian corrections.
 	struct rebx_params_radiation_forces radiation_forces;	// Structure for radiation forces.
+	struct rebx_params_tides tides;							// Structure for tides.
 };
 
 /****************************************
@@ -224,6 +234,7 @@ void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* so
 /** @} */
 /** @} */
 
+void rebx_add_tides(struct rebx_extras* rebx, ADD ANY PARAMETERS HERE);
 /**
  * @name Functions for getting and setting the parameters of the various modifications.
  * @{
@@ -250,6 +261,12 @@ double rebx_get_tau_Omega(struct reb_particle* p);
 
 void rebx_set_beta(struct reb_particle* p, double value);
 double rebx_get_beta(struct reb_particle* p);
+
+void rebx_set_rot_Omega(struct reb_particle* p, double* Omega);
+double* rebx_get_rot_Omega(struct reb_particle* p);
+
+void rebx_set_rot_I(struct reb_particle* p, double* I);
+double* rebx_get_rot_I(struct reb_particle* p);
 
 /** @} */
 /** @} */

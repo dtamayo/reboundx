@@ -192,6 +192,16 @@ void rebx_add_gr_potential(struct rebx_extras* rebx, double c){
 	rebx->gr.c = c;
 }
 
+void rebx_add_tides(struct rebx_extras* rebx, ADD PARAMETERS HERE){
+	struct reb_simulation* sim = rebx->sim;
+	sim->additional_forces = rebx_forces;
+
+	rebx->Nforces++;
+	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
+	rebx->forces[rebx->Nforces-1] = rebx_tides;
+	rebx->tides.ADD PARAMETER HERE = blah;
+}
+
 void rebx_add_modify_orbits_forces(struct rebx_extras* rebx){
 	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
@@ -360,6 +370,26 @@ double rebx_get_beta(struct reb_particle* p){
 	}
 	else{
 		return *betaPtr;
+	}
+}
+
+void rebx_set_rot_Omega(struct reb_particle* p, double* value){
+	double* rotparamsPtr = rebx_search_param(p, ROT_PARAMS);
+	if(rotparamsPtr == NULL){
+		rebx_add_param_rot_params(p);
+		rotparamsPtr = rebx_search_param(p, ROT_PARAMS);
+	}
+	rotparamsPtr->Omega = value;
+}
+
+double* rebx_get_rot_Omega(struct reb_particle* p){
+	struct rebx_rot_params* rotparamsPtr = rebx_search_param(p, ROT_PARAMS);
+	if(rotparamsPtr == NULL){
+		double* Omega[3] = {0.,0.,0.};
+		return Omega;
+	}
+	else{
+		return rotparamsPtr->Omega;
 	}
 }
 
