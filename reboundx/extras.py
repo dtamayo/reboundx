@@ -26,6 +26,9 @@ class rebx_params_radiation_forces(Structure):
     _fields_ = [("source", POINTER(rebound.Particle)),
                 ("c", c_double)]
 
+class rebx_params_tides(Structure):
+    _fields_ = # add whatever parameters are in C struct rebx_params_tides
+
 class Extras(Structure):
     def __init__(self, sim):
         clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
@@ -75,6 +78,9 @@ class Extras(Structure):
     def add_radiation_forces(self, source, c):
         clibreboundx.rebx_add_radiation_forces(byref(self), byref(source), c_double(c))
 
+    def add_tides(self, ADD PARAMETERS HERE):
+        clibrebound.rebx_add_tides(byref(self), ADD PARAMETERS HERE)
+
     def add_Particle_props(self):
         @property
         def tau_a(self):
@@ -119,12 +125,24 @@ class Extras(Structure):
         def beta(self, value):
             clibreboundx.rebx_set_beta(byref(self), c_double(value))
 
+        @property
+        def rot_Omega(self):
+            clibreobundx.rebx_get_rot_Omega.restype = POINTER(c_double)
+            clibreboundx.rebx_get_rot_Omega(byref(self))
+        @rot_Omega.setter
+        def rot_Omega(self, value):
+            clibreboundx.rebx_set_beta(byref(self), LOOK UP CTYPES DOC ON HOW TO PASS AN ARRAY)
+
+        # do same for rot_I
+
         rebound.Particle.tau_a = tau_a
         rebound.Particle.tau_e = tau_e
         rebound.Particle.tau_inc = tau_inc
         rebound.Particle.tau_omega = tau_omega
         rebound.Particle.tau_Omega = tau_Omega
         rebound.Particle.beta = beta 
+        rebound.Particle.rot_Omega = rot_Omega
+        # do same for rot_I
 
     def rad_calc_beta(self, particle_radius, density, Q_pr, L):
         clibreboundx.rebx_rad_calc_beta.restype = c_double
@@ -144,7 +162,8 @@ Extras._fields_ = [("sim", POINTER(rebound.Simulation)),
                 ("modify_orbits_forces", rebx_params_modify_orbits),
                 ("modify_orbits_direct", rebx_params_modify_orbits),
                 ("gr", rebx_params_gr),
-                ("radiation_forces", rebx_params_radiation_forces)]
+                ("radiation_forces", rebx_params_radiation_forces),
+                ("tides", rebx_params_tides)]
 
 
 
