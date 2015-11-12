@@ -48,7 +48,7 @@ Basic types in REBOUNDx
 enum REBX_PARAMS{
 	ORB_TAU,							// Parameter holding timescales for orbit modifications (migration etc.).
 	RAD_BETA,							// Ratio of radiation pressure force to gravitational force from the star.
-	ROT_PARAMS							// Parameters for rotation of bodies
+	ROT_OMEGA							// Rotational velocity
 };
 
 /* 	Main structure used for all parameters added to particles.
@@ -108,9 +108,10 @@ struct rebx_orb_tau{
 	double tau_Omega;					// Nodal precession timescale (linear) (>0 = prograde, <0 = retrograde).
 };
 
-struct rebx_rot_params{
-	double Omega[3];					// rotational velocity
-	double I[3];						// Diagonal moment of inertia matrix (could make 2-dimensional)
+struct rebx_rot_Omega{					// rotational velocity
+	double x;							
+	double y;
+	double z;
 }
 
 /****************************************
@@ -154,6 +155,8 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
 /* Internal parameter adders (need a different one for each REBX_PARAM type). */
 void rebx_add_param_double(struct reb_particle* p, enum REBX_PARAMS param_type, double value);
 void rebx_add_param_orb_tau(struct reb_particle* p);		// add a rebx_orb_tau parameter to particle p
+void rebx_add_param_rot_Omega(struct reb_particle* p);		// add a rebx_rot_Omega parameter to particle p
+
 /****************************************
 User API
 *****************************************/
@@ -234,7 +237,7 @@ void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* so
 /** @} */
 /** @} */
 
-void rebx_add_tides(struct rebx_extras* rebx, ADD ANY PARAMETERS HERE);
+void rebx_add_tides(struct rebx_extras* rebx);
 /**
  * @name Functions for getting and setting the parameters of the various modifications.
  * @{
