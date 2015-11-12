@@ -36,6 +36,7 @@
 #include "modify_orbits_forces.h"
 #include "gr.h"
 #include "radiation_forces.h"
+#include "tides.h"
 
 extern const char* rebx_build_str;		///< Date and time build string.
 extern const char* rebx_version_str;	///<Version string.
@@ -94,8 +95,9 @@ struct rebx_params_radiation_forces{
 };
 
 struct rebx_params_tides{
-	// here you could have pointers to particles that you want to feel tides or other parameters that should be common to the whole tides implementation (not to individual particles)}
-	
+	struct reb_particle** particles;	// array of pointers to the particles that should feel tides
+};
+
 /*************************************************
 Structures for effect-specific particle parameters
 **************************************************/
@@ -112,7 +114,7 @@ struct rebx_rot_Omega{					// rotational velocity
 	double x;							
 	double y;
 	double z;
-}
+};
 
 /****************************************
 Main REBOUNDx structure
@@ -265,11 +267,8 @@ double rebx_get_tau_Omega(struct reb_particle* p);
 void rebx_set_beta(struct reb_particle* p, double value);
 double rebx_get_beta(struct reb_particle* p);
 
-void rebx_set_rot_Omega(struct reb_particle* p, double* Omega);
-double* rebx_get_rot_Omega(struct reb_particle* p);
-
-void rebx_set_rot_I(struct reb_particle* p, double* I);
-double* rebx_get_rot_I(struct reb_particle* p);
+void rebx_set_rot_Omega(struct reb_particle* p, double Omega_x, double Omega_y, double Omega_z);
+struct rebx_rot_Omega rebx_get_rot_Omega(struct reb_particle* p);
 
 /** @} */
 /** @} */

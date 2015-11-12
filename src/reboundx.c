@@ -68,7 +68,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
 	rebx->gr.c = C_DEFAULT;	
 	rebx->radiation_forces.c = C_DEFAULT;
 	rebx->radiation_forces.source = NULL;
-	***INITIALIZE ANYTHING IN THE rebx->tides struct here
+	rebx->tides.particles = NULL;
 
 	rebx->Nptm = 0;
 	rebx->Nforces = 0;
@@ -145,8 +145,8 @@ void rebx_add_param_orb_tau(struct reb_particle* p){
 void rebx_add_param_rot_Omega(struct reb_particle* p){
 	struct rebx_param* newparam = malloc(sizeof(*newparam));
 	newparam->paramPtr = malloc(sizeof(struct rebx_rot_Omega));
-	struct rebx_rot_Omega rot_Omega; = {0.};	// initialize to 0
-	*(struct rebx_orb_tau*) newparam->paramPtr = rot_Omega;
+	struct rebx_rot_Omega rot_Omega = {0.};	// initialize to 0
+	*(struct rebx_rot_Omega*) newparam->paramPtr = rot_Omega;
 	newparam->param_type = (enum REBX_PARAMS)ROT_OMEGA;
 
 	newparam->next = p->ap;
@@ -213,7 +213,6 @@ void rebx_add_tides(struct rebx_extras* rebx){
 	rebx->Nforces++;
 	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
 	rebx->forces[rebx->Nforces-1] = rebx_tides;
-	rebx->tides.ADD PARAMETER HERE = blah;
 }
 
 void rebx_add_modify_orbits_forces(struct rebx_extras* rebx){
@@ -387,19 +386,19 @@ double rebx_get_beta(struct reb_particle* p){
 	}
 }
 
-void rebx_set_rot_Omega(struct reb_particle* p, double Omegax, double Omegay, double Omegaz){
-	double* rotOmegaPtr = rebx_search_param(p, ROT_OMEGA);
+void rebx_set_rot_Omega(struct reb_particle* p, double Omega_x, double Omega_y, double Omega_z){
+	struct rebx_rot_Omega* rotOmegaPtr = rebx_search_param(p, ROT_OMEGA);
 	if(rotOmegaPtr == NULL){
 		rebx_add_param_rot_Omega(p);
 		rotOmegaPtr = rebx_search_param(p, ROT_OMEGA);
 	}
-	rotOmegaPtr->x = Omegax;
-	rotOmegaPtr->y = Omegay;
-	rotOmegaPtr->z = Omegaz;
+	rotOmegaPtr->x = Omega_x;
+	rotOmegaPtr->y = Omega_y;
+	rotOmegaPtr->z = Omega_z;
 }
 
 struct rebx_rot_Omega rebx_get_rot_Omega(struct reb_particle* p){
-	struct rebx_rot_params* rotOmegaPtr = rebx_search_param(p, ROT_OMEGA);
+	struct rebx_rot_Omega* rotOmegaPtr = rebx_search_param(p, ROT_OMEGA);
 	if(rotOmegaPtr == NULL){
 		struct rebx_rot_Omega Omega = {0.};
 		return Omega;
