@@ -29,6 +29,11 @@ class rebx_params_radiation_forces(Structure):
 class rebx_params_tides(Structure):
     _fields_ = # add whatever parameters are in C struct rebx_params_tides
 
+class rebx_rot_Omega(Structure):
+    _fields_ = [("x", c_double),
+                ("y", c_double),
+                ("z", c_double)]
+
 class Extras(Structure):
     def __init__(self, sim):
         clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
@@ -127,11 +132,11 @@ class Extras(Structure):
 
         @property
         def rot_Omega(self):
-            clibreobundx.rebx_get_rot_Omega.restype = POINTER(c_double)
-            clibreboundx.rebx_get_rot_Omega(byref(self))
+            clibreobundx.rebx_get_rot_Omega.restype = POINTER(rebx_rot_Omega)
+            return clibreboundx.rebx_get_rot_Omega(byref(self))
         @rot_Omega.setter
-        def rot_Omega(self, value):
-            clibreboundx.rebx_set_beta(byref(self), LOOK UP CTYPES DOC ON HOW TO PASS AN ARRAY)
+        def rot_Omega(self, Omega):
+            clibreboundx.rebx_set_beta(byref(self), c_double(Omega[0]), c_double(Omega[1]), c_double(Omega[2]))
 
         # do same for rot_I
 
