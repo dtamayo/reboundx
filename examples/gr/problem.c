@@ -14,10 +14,6 @@
 
 int main(int argc, char* argv[]){
 	struct reb_simulation* sim = reb_create_simulation();
-	// Setup constants
-	sim->dt 		= 1.e-2;		// timestep.
-	sim->integrator	= REB_INTEGRATOR_WHFAST;
-	//sim->integrator	= REB_INTEGRATOR_IAS15;
 
 	struct reb_particle p = {0}; 
 	p.m  	= 1.;	
@@ -35,9 +31,8 @@ int main(int argc, char* argv[]){
 	
 	struct rebx_extras* rebx = rebx_init(sim); // initialize reboundx
 	double c = C_DEFAULT; // Have to set the speed of light in appropriate units (set by G and your initial conditions).  Here we use the value in default units of AU/(yr/2pi)	
-	rebx_add_gr(rebx,c); // add postnewtonian correction.  
-
-	double tmax = 5.e-2;
+	rebx_add_gr_single_mass(rebx,c); // add postnewtonian correction.  
+	double tmax = 5.e5;
 	reb_integrate(sim, tmax); 
 	rebx_free(rebx); 	// this explicitly frees all the memory allocated by REBOUNDx 
 }
