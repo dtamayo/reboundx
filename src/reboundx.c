@@ -68,7 +68,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
 	rebx->gr.c = C_DEFAULT;	
 	rebx->radiation_forces.c = C_DEFAULT;
 	rebx->radiation_forces.source = NULL;
-	rebx->tides.particles = NULL;
+	rebx->tides.N_tides_active = 0;
 
 	rebx->Nptm = 0;
 	rebx->Nforces = 0;
@@ -144,10 +144,23 @@ void rebx_add_param_orb_tau(struct reb_particle* p){
 
 void rebx_add_param_rot_Omega(struct reb_particle* p){
 	struct rebx_param* newparam = malloc(sizeof(*newparam));
-	newparam->paramPtr = malloc(sizeof(struct rebx_rot_Omega));
-	struct rebx_rot_Omega rot_Omega = {0.};	// initialize to 0
-	*(struct rebx_rot_Omega*) newparam->paramPtr = rot_Omega;
+	newparam->paramPtr = malloc(sizeof(struct rebx_vec3d));
+	struct rebx_vec3d rot_Omega = {0.};	// initialize to 0
+	*(struct rebx_vec3d*) newparam->paramPtr = rot_Omega;
 	newparam->param_type = (enum REBX_PARAMS)ROT_OMEGA;
+
+	newparam->next = p->ap;
+	p->ap = newparam;
+
+	rebx_add_param_to_be_freed(p->sim->extras, newparam);
+}
+
+void rebx_add_param_mom_of_inertia(struct reb_particle* p){
+	struct rebx_param* newparam = malloc(sizeof(*newparam));
+	newparam->paramPtr = malloc(sizeof(struct rebx_mom_of_inertia));
+	struct rebx_mom_of_inertia I = {0.};	// initialize to 0
+	*(struct rebx_mom_of_inertia*) newparam->paramPtr = I;
+	newparam->param_type = (enum REBX_PARAMS)MOM_OF_INERTIA;
 
 	newparam->next = p->ap;
 	p->ap = newparam;
@@ -206,13 +219,14 @@ void rebx_add_gr_potential(struct rebx_extras* rebx, double c){
 	rebx->gr.c = c;
 }
 
-void rebx_add_tides(struct rebx_extras* rebx){
+void rebx_add_tides(struct rebx_extras* rebx, int N_tides_active){
 	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
 
 	rebx->Nforces++;
 	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
 	rebx->forces[rebx->Nforces-1] = rebx_tides;
+	rebx->tides.N_tides_active = N_tides_active;
 }
 
 void rebx_add_modify_orbits_forces(struct rebx_extras* rebx){
@@ -386,8 +400,48 @@ double rebx_get_beta(struct reb_particle* p){
 	}
 }
 
+void rebx_set_tidal_tau(struct reb_particle* p, double value){
+	double* tauPtr = rebx_search_param(p, TIDAL_TAU);
+	if(tauPtr == NULL){
+		rebx_add_param_double(p, TIDAL_TAU, value);
+	}
+	else{
+		*tauPtr = value;
+	}
+}
+
+double rebx_get_tidal_tau(struct reb_particle* p){
+	double* tauPtr = rebx_search_param(p, TIDAL_TAU);
+	if(tauPtr == NULL){
+		return 0.;
+	}
+	else{
+		return *tauPtr;
+	}
+}
+
+void rebx_set_tidal_k2(struct reb_particle* p, double value){
+	double* k2Ptr = rebx_search_param(p, TIDAL_K2);
+	if(k2Ptr == NULL){
+		rebx_add_param_double(p, TIDAL_K2, value);
+	}
+	else{
+		*k2Ptr = value;
+	}
+}
+
+double rebx_get_tidal_k2(struct reb_particle* p){
+	double* k2Ptr = rebx_search_param(p, TIDAL_K2);
+	if(k2Ptr == NULL){
+		return 0.;
+	}
+	else{
+		return *k2Ptr;
+	}
+}
+
 void rebx_set_rot_Omega(struct reb_particle* p, double Omega_x, double Omega_y, double Omega_z){
-	struct rebx_rot_Omega* rotOmegaPtr = rebx_search_param(p, ROT_OMEGA);
+	struct rebx_vec3d* rotOmegaPtr = rebx_search_param(p, ROT_OMEGA);
 	if(rotOmegaPtr == NULL){
 		rebx_add_param_rot_Omega(p);
 		rotOmegaPtr = rebx_search_param(p, ROT_OMEGA);
@@ -397,14 +451,36 @@ void rebx_set_rot_Omega(struct reb_particle* p, double Omega_x, double Omega_y, 
 	rotOmegaPtr->z = Omega_z;
 }
 
-struct rebx_rot_Omega rebx_get_rot_Omega(struct reb_particle* p){
-	struct rebx_rot_Omega* rotOmegaPtr = rebx_search_param(p, ROT_OMEGA);
+struct rebx_vec3d rebx_get_rot_Omega(struct reb_particle* p){
+	struct rebx_vec3d* rotOmegaPtr = rebx_search_param(p, ROT_OMEGA);
 	if(rotOmegaPtr == NULL){
-		struct rebx_rot_Omega Omega = {0.};
+		struct rebx_vec3d Omega = {0.};
 		return Omega;
 	}
 	else{
 		return *rotOmegaPtr;
+	}
+}
+
+void rebx_set_mom_of_inertia(struct reb_particle* p, double A, double B, double C){
+	struct rebx_mom_of_inertia* IPtr = rebx_search_param(p, MOM_OF_INERTIA);
+	if(IPtr == NULL){
+		rebx_add_param_mom_of_inertia(p);
+		IPtr = rebx_search_param(p, MOM_OF_INERTIA);
+	}
+	IPtr->A = A;
+	IPtr->B = B;
+	IPtr->C = C;
+}
+
+struct rebx_mom_of_inertia rebx_get_mom_of_inertia(struct reb_particle* p){
+	struct rebx_mom_of_inertia* IPtr = rebx_search_param(p, MOM_OF_INERTIA);
+	if(IPtr == NULL){
+		struct rebx_mom_of_inertia I = {0.};
+		return I;
+	}
+	else{
+		return *IPtr;
 	}
 }
 
