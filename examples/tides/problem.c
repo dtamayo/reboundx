@@ -38,7 +38,7 @@ int main(int argc, char* argv[]){
 	reb_add(sim,p3);
 
 	reb_move_to_com(sim);
-
+	
 	struct rebx_extras* rebx = rebx_init(sim);	// first initialize rebx
 
 	int N_tides_active = 1; // This makes it so both planets interact tidally with the Sun, but not with each other.  In particular, the first N_tides_active particles will tidally interact with all other particles.  The remaining ones will only interact with the active tide particles (and not each other).  Analogous to sim->N_active for test particles

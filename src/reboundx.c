@@ -111,6 +111,7 @@ void* rebx_search_param(const struct reb_particle* p, enum REBX_PARAMS param){
 		if(current->param_type == param){
 			return current->paramPtr;
 		}
+		current = current->next;
 	}
 	return NULL;
 }

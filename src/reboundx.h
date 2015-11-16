@@ -50,7 +50,7 @@ enum REBX_PARAMS{
 	ORB_TAU,							// Parameter holding timescales for orbit modifications (migration etc.).
 	RAD_BETA,							// Ratio of radiation pressure force to gravitational force from the star.
 	ROT_OMEGA,							// Rotational velocity
-	MOM_OF_INERTIA,								// Moment of inertia
+	MOM_OF_INERTIA,						// Moment of inertia
 	TIDAL_K2,							// Tidal love number
 	TIDAL_TAU,							// Tidal time lag
 };
