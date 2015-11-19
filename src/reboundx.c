@@ -120,52 +120,57 @@ void* rebx_search_param(const struct reb_particle* p, enum REBX_PARAMS param){
 /* Generic adder for params that are a single double value */
 void rebx_add_param_double(struct reb_particle* p, enum REBX_PARAMS param_type, double value){
 	struct rebx_param* newparam = malloc(sizeof(*newparam));
-	newparam->paramPtr = malloc(sizeof(double));
-	*(double*) newparam->paramPtr = value;
+	double* doub = malloc(sizeof(*doub));
+	*doub = 0.;
+	newparam->paramPtr = doub;
 	newparam->param_type = param_type;
 
 	newparam->next = p->ap;
 	p->ap = newparam;
-
 	rebx_add_param_to_be_freed(p->sim->extras, newparam);
 }	
 
 void rebx_add_param_orb_tau(struct reb_particle* p){
 	struct rebx_param* newparam = malloc(sizeof(*newparam));
-	newparam->paramPtr = malloc(sizeof(struct rebx_orb_tau));
-	struct rebx_orb_tau orb_tau = {INFINITY, INFINITY, INFINITY, INFINITY, INFINITY}; // set all timescales to infinity (i.e. no effect)
-	*(struct rebx_orb_tau*) newparam->paramPtr = orb_tau;
+	struct rebx_orb_tau* orb_tau = malloc(sizeof(*orb_tau));
+	orb_tau->tau_a = INFINITY; // initialize all timescales to infinity, i.e., no effect
+	orb_tau->tau_e = INFINITY;
+	orb_tau->tau_inc = INFINITY; 
+	orb_tau->tau_omega = INFINITY;
+	orb_tau->tau_Omega = INFINITY;
+	newparam->paramPtr = orb_tau;
 	newparam->param_type = (enum REBX_PARAMS)ORB_TAU;
 
 	newparam->next = p->ap;
 	p->ap = newparam;
-
 	rebx_add_param_to_be_freed(p->sim->extras, newparam);
 }
 
 void rebx_add_param_rot_Omega(struct reb_particle* p){
 	struct rebx_param* newparam = malloc(sizeof(*newparam));
-	newparam->paramPtr = malloc(sizeof(struct rebx_vec3d));
-	struct rebx_vec3d rot_Omega = {0.};	// initialize to 0
-	*(struct rebx_vec3d*) newparam->paramPtr = rot_Omega;
+	struct rebx_vec3d* vec3d = malloc(sizeof(*vec3d));
+	vec3d->x = 0.;
+	vec3d->y = 0.;
+	vec3d->z = 0.;
+	newparam->paramPtr = vec3d;
 	newparam->param_type = (enum REBX_PARAMS)ROT_OMEGA;
 
 	newparam->next = p->ap;
 	p->ap = newparam;
-
 	rebx_add_param_to_be_freed(p->sim->extras, newparam);
 }
 
 void rebx_add_param_mom_of_inertia(struct reb_particle* p){
 	struct rebx_param* newparam = malloc(sizeof(*newparam));
-	newparam->paramPtr = malloc(sizeof(struct rebx_mom_of_inertia));
-	struct rebx_mom_of_inertia I = {0.};	// initialize to 0
-	*(struct rebx_mom_of_inertia*) newparam->paramPtr = I;
+	struct rebx_mom_of_inertia* I = malloc(sizeof(*I));
+	I->A = 0.;
+	I->B = 0.;
+	I->C = 0.;
+	newparam->paramPtr = I;
 	newparam->param_type = (enum REBX_PARAMS)MOM_OF_INERTIA;
 
 	newparam->next = p->ap;
 	p->ap = newparam;
-
 	rebx_add_param_to_be_freed(p->sim->extras, newparam);
 }
 

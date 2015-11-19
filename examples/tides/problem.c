@@ -77,4 +77,5 @@ int main(int argc, char* argv[]){
 
 	// set up tide parameters and integrate
 	rebx_free(rebx);
+	reb_free_simulation(sim);
 }

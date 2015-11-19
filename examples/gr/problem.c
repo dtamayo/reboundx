@@ -14,10 +14,6 @@
 
 int main(int argc, char* argv[]){
 	struct reb_simulation* sim = reb_create_simulation();
-	// Setup constants
-	sim->dt 		= 1.e-2;		// timestep.
-	sim->integrator	= REB_INTEGRATOR_WHFAST;
-	//sim->integrator	= REB_INTEGRATOR_IAS15;
 
 	struct reb_particle p = {0}; 
 	p.m  	= 1.;	
