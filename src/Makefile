@@ -5,7 +5,7 @@ endif
 include $(REB_DIR)/src/Makefile.defs
 OPT+= -fPIC -DLIBREBOUNDX -ferror-limit=50
 
-SOURCES=gr.c modify_orbits_direct.c modify_orbits_forces.c radiation_forces.c reboundx.c rebxtools.c 
+SOURCES=gr.c modify_orbits_direct.c modify_orbits_forces.c radiation_forces.c reboundx.c rebxtools.c tides.c 
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=$(SOURCES:.c=.h)
 
