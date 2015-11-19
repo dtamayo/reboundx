@@ -36,7 +36,6 @@
 #include "modify_orbits_forces.h"
 #include "gr.h"
 #include "radiation_forces.h"
-#include "tides.h"
 
 extern const char* rebx_build_str;		///< Date and time build string.
 extern const char* rebx_version_str;	///<Version string.
@@ -49,10 +48,6 @@ Basic types in REBOUNDx
 enum REBX_PARAMS{
 	ORB_TAU,							// Parameter holding timescales for orbit modifications (migration etc.).
 	RAD_BETA,							// Ratio of radiation pressure force to gravitational force from the star.
-	ROT_OMEGA,							// Rotational velocity
-	MOM_OF_INERTIA,						// Moment of inertia
-	TIDAL_K2,							// Tidal love number
-	TIDAL_TAU,							// Tidal time lag
 };
 
 /* 	Main structure used for all parameters added to particles.
@@ -97,10 +92,6 @@ struct rebx_params_radiation_forces{
 	double c;							// Speed of light
 };
 
-struct rebx_params_tides{
-	int N_tides_active;					// Number of particles that should feel tides with all other particles
-};
-
 /*************************************************
 Structures for effect-specific particle parameters
 **************************************************/
@@ -111,18 +102,6 @@ struct rebx_orb_tau{
 	double tau_inc;						// Inclination e-folding timescale (<0 = damp, >0 = grow).
 	double tau_omega;					// Pericenter precession timescale (linear) (>0 = prograde, <0 = retrograde).
 	double tau_Omega;					// Nodal precession timescale (linear) (>0 = prograde, <0 = retrograde).
-};
-
-struct rebx_vec3d{						// 3d vector
-	double x;							
-	double y;
-	double z;
-};
-
-struct rebx_mom_of_inertia{				// Principal moments of inertia
-	double A;
-	double B;
-	double C;
 };
 
 /****************************************
@@ -142,7 +121,6 @@ struct rebx_extras {
 	struct rebx_params_modify_orbits modify_orbits_direct;	// Structure for migration/ecc,inc damping/precession directly altering orbital elements.
 	struct rebx_params_gr gr;								// Structure for post-Newtonian corrections.
 	struct rebx_params_radiation_forces radiation_forces;	// Structure for radiation forces.
-	struct rebx_params_tides tides;							// Structure for tides.
 };
 
 /****************************************
@@ -166,9 +144,6 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
 /* Internal parameter adders (need a different one for each REBX_PARAM type). */
 void rebx_add_param_double(struct reb_particle* p, enum REBX_PARAMS param_type, double value);
 void rebx_add_param_orb_tau(struct reb_particle* p);		// add a rebx_orb_tau parameter to particle p
-void rebx_add_param_rot_Omega(struct reb_particle* p);		// add a rot_Omega vec3d parameter to particle p
-void rebx_add_param_mom_of_inertia(struct reb_particle* p);	// add a moment of inertia parameter to particle p
-
 /****************************************
 User API
 *****************************************/
@@ -246,12 +221,6 @@ void rebx_add_gr_potential(struct rebx_extras* rebx, double c);
  * @param c	Speed of light.
  */
 void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source, double c);
-
-/**
- * @brief Adds tidal forces to the simulation (constant time-lag model).
- * @param N_tides_active The first N_tides_active particles in the simulation will tidally interact with all others.  The remainder will interact with the active tide particles, but not with each other.  Analogous to sim->N_active for test particles.
- */
-void rebx_add_tides(struct rebx_extras* rebx, int N_tides_active);
 /** @} */
 /** @} */
 
@@ -281,18 +250,6 @@ double rebx_get_tau_Omega(struct reb_particle* p);
 
 void rebx_set_beta(struct reb_particle* p, double value);
 double rebx_get_beta(struct reb_particle* p);
-
-void rebx_set_rot_Omega(struct reb_particle* p, double Omega_x, double Omega_y, double Omega_z);
-struct rebx_vec3d rebx_get_rot_Omega(struct reb_particle* p);
-
-void rebx_set_mom_of_inertia(struct reb_particle* p, double A, double B, double C);
-struct rebx_mom_of_inertia rebx_get_mom_of_inertia(struct reb_particle* p);
-
-void rebx_set_tidal_tau(struct reb_particle* p, double value);
-double rebx_get_tidal_tau(struct reb_particle* p);
-
-void rebx_set_tidal_k2(struct reb_particle* p, double value);
-double rebx_get_tidal_k2(struct reb_particle* p);
 
 /** @} */
 /** @} */

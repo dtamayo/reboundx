@@ -6,7 +6,7 @@ from codecs import open
 import os
 
 libreboundxmodule = Extension('libreboundx',
-                    sources = [ 'src/gr.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/radiation_forces.c', 'src/reboundx.c', 'src/rebxtools.c', 'src/tides.c'],
+                    sources = [ 'src/gr.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/radiation_forces.c', 'src/reboundx.c', 'src/rebxtools.c'],
                     include_dirs = ['src'],
                     define_macros=[ ('LIBREBOUNDX', None) ],
                     extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-D_GNU_SOURCE', '-fPIC', '-Wpointer-arith'],
