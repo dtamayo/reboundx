@@ -220,7 +220,7 @@ void rebx_gr_single_mass(struct reb_simulation* const sim){
 	const int _N_real = sim->N - sim->N_var;
 	const double G = sim->G;
 	struct reb_particle* const particles = sim->particles;
-	
+
 	const struct reb_particle sun = particles[0];
 	for (int i=1; i<_N_real; i++){
 		const double dx = particles[i].x - sun.x;

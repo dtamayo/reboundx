@@ -353,7 +353,7 @@ struct reb_simulation {
 	struct reb_treecell** tree_root;///< Pointer to the roots of the trees. 
 	double opening_angle2;	 	///< Square of the cell opening angle \f$ \theta \f$. 
 	enum REB_STATUS status;		///< Set to 1 to exit the simulation at the end of the next timestep. 
-	int 	exact_finish_time; 	///< Set to 1 to finish the integration exactly at tmax. Set to 0 to finish at the next dt. 
+	int 	exact_finish_time; 	///< Set to 1 to finish the integration exactly at tmax. Set to 0 to finish at the next dt. Default is 1. 
 
 	unsigned int force_is_velocity_dependent;///< Set to 1 if integrator needs to consider velocity dependent forces.  
 	unsigned int gravity_ignore_10;		///< Ignore the gravity form the central object (for WH-type integrators)
@@ -725,6 +725,20 @@ struct reb_particle reb_get_com_of_pair(struct reb_particle p1, struct reb_parti
 /** @} */
 /** @} */
 
+/**
+ * @brief Returns a particle pointer's index in the simulation it's in.
+ * @param p A pointer to the particle 
+ * @return The integer index of the particle in its simulation (will return -1 if not found in the simulation).
+ */
+int reb_get_particle_index(struct reb_particle* p);
+
+/**
+ * @brief Returns the jacobi center of mass for a given particle
+ * @param p A pointer to the particle
+ * @return A reb_particle structure for the center of mass of all particles with lower index.  Returns particles[0] if passed the 0th particle.
+ */
+
+struct reb_particle reb_get_jacobi_com(struct reb_particle* p);
 
 /**
  * \name Built-in output function
