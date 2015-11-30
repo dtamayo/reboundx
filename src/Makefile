@@ -1,5 +1,9 @@
-ifndef REB_DIR
-$(error Must set environment variable for the path to your rebound directory, e.g., export REB_DIR=/Users/dtamayo/rebound.  See https://github.com/dtamayo/reboundx/blob/master/README.rst)
+ifneq ($(wildcard ../../rebound/.*),) # Check for REBOUND in default location
+REB_DIR=../../rebound
+endif
+
+ifndef REB_DIR # REBOUND is not in default location and REB_DIR is not set
+	$(error REBOUNDx not in the same directory as REBOUND.  To use a custom location, you Must set the REB_DIR environment variable for the path to your rebound directory, e.g., export REB_DIR=/Users/dtamayo/rebound.  See reboundx.readthedocs.org)
 endif
 
 include $(REB_DIR)/src/Makefile.defs
