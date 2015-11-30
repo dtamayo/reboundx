@@ -1,7 +1,6 @@
 from . import clibreboundx
 from ctypes import *
 import rebound
-import numpy as np
 c_default = 10064.915
 
 class rebx_param(Structure): # need to define fields afterward because of circular ref in linked list
