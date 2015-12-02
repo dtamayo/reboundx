@@ -16,6 +16,7 @@ HEADERS=$(SOURCES:.c=.h)
 all: $(SOURCES) libreboundx.so
 	
 %.o: %.c $(HEADERS)
+	@echo $(REB_DIR)
 	@echo "Compiling source file $< ..."
 	$(CC) -g -c $(OPT) $(PREDEF) -o $@ $<
 
@@ -31,5 +32,6 @@ libreboundx.so: $(OBJECTS)
 clean:
 	@echo "Cleaning up shared library libreboundx.so ..."
 	@-rm -f libreboundx.so
+	@-rm -f librebound.so
 	@-rm -f *.o
 	
