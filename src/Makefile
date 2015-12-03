@@ -24,7 +24,6 @@ HEADERS=$(SOURCES:.c=.h)
 all: $(SOURCES) libreboundx.so
 	
 %.o: %.c $(HEADERS)
-	@echo $(REB_DIR)
 	@echo "Compiling source file $< ..."
 	$(CC) -g -c $(OPT) $(PREDEF) -o $@ $<
 
