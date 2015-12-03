@@ -1,56 +1,53 @@
-REBOUNDx (eXtras) 
-=================
-A library of additional effects/forces for REBOUND simulations
---------------------------------------------------------------
+Welcome to REBOUNDx (eXtras)
+====================================
 
 .. image:: https://github.com/dtamayo/dtamayo.github.io/blob/master/pix/reboundx.png
 
-FEATURES
---------
+REBOUNDx allows you to easily incorporate additional physics into your REBOUND simulations.
+All the computationally expensive parts of the code are written in C, so that the code will run much faster than if you define your own custom `additional_forces` functions in Python.
 
-REBOUNDx allows you to easily add typically used modifications to your REBOUND simulations.  So far we include:
+So far we include:
 
-* Post-newtonian general relativity corrections
+* General relativity corrections
 * Semimajor axis and eccentricity damping, implemented as forces
 * Direct modifications to particles' orbital elements after each timestep
+* Radiation Forces
 
-Python Version Installation
----------------------------
+Installation
+------------
 
-We recommend that you install REBOUND and REBOUNDx within a virtual environment (though this is not necessary).  See http://rebound.readthedocs.org/en/latest/python_quickstart.html.  If you already have REBOUND installed within a virtual environment you don't have to do this step.
+You can call REBOUNDx from whichever language you use for REBOUND (C or Python).
 
-Installation is as easy as typing
- 
+If you want to quickly get up and running with the *Python version*, simply type into a terminal (if you installed REBOUND in a virtual environment, activate it first)::
+
     pip install reboundx
 
-on the command line.  If you don't have REBOUND installed, this command will also install it for you.
+If you don't have REBOUND installed, this command will also install it for you.
 
-You can find examples for adding various effects at https://github.com/dtamayo/reboundx/tree/master/ipython_examples.  You can get these ipython notebooks to play around with them by cloning the directory from github on the command line:
+For a more complete installation, i.e., if you want any of the following: 
+* Source code
+* Example files
+* To use the *C version* (or both C and Python)
+  
+Navigate to the parent directory that holds the `rebound` folder and (see below if you want to install in a custom folder)::
 
     git clone https://github.com/dtamayo/reboundx.git
 
-(you may have to install git first).  This will create a `reboundx` folder in the current directory.  After you `cd` into `reboundx`, you can install the development version with
+(install git if you don't have it).  You can now run C code (see the rebound/examples directory).  To install the Python version from this repository (you'd also do this to install the Python version after modifying any of the C code)::
 
+    cd reboundx
     pip install -e ./
-
-(even if you're using a conda environment).  This gives you all the source code and examples, and allows you modify the C code and compile the changes (just type the line above each time you make changes).
-
-C Version Installation
-----------------------
-
-In a terminal, navigate to the location where you want to put the reboundx folder.  Then::
-
-    git clone https://github.com/dtamayo/reboundx.git
-
-(you may have to install git first).  REBOUNDx also needs to know where REBOUND is installed on your machine.  You tell it by setting the REB_DIR environment variable.  One good way to do this is to edit your .profile::
-
-    cd ~
-    pico .profile
-
-and add the line::
-
+   
+If you cloned the repository, and want to use a custom install location for REBOUNDx, you have to set the `REB_DIR` environment variable to the path to REBOUND.  You might add this to your shell's startup files, e.g. .bashrc or .profile::
+    
     export REB_DIR=/Users/dtamayo/rebound
 
-where you would replace the path to your own installation.  Now close your terminal, open a new one and you're all set!
-    
-You can find working examples in reboundx/examples.  The gr example adds post-newtonian corrections. The modify_orbits example shows how to add semimajor axis / eccentricity damping to simulations, either through direct modifications of the orbital elements, or through forces.  It's worth checking out the python examples, since they have a bit more detail about each of the modifications:  https://github.com/dtamayo/reboundx/tree/master/ipython_examples.
+Getting Started
+---------------
+
+The best way to get started is to use the examples as a starting point and modify them as needed.  Even if you didn't clone the repository, you can still see the examples at https://github.com/dtamayo/reboundx/tree/master/ipython_examples (for the Python examples) and https://github.com/dtamayo/reboundx/tree/master/examples (for the C examples).  If you are using C, you might still look through the corresponding Python example, as the ipython notebooks nicely incorporate text and they therefore have a bit longer discussions about the details for the implementation.
+
+Documentation
+-------------
+
+For details, be sure to check out the documentation at http://reboundx.readthedocs.org.

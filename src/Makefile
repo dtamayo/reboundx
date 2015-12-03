@@ -1,9 +1,13 @@
+ifndef REB_DIR
+	
 ifneq ($(wildcard ../../rebound/.*),) # Check for REBOUND in default location
 REB_DIR=../../rebound
 endif
 
 ifneq ($(wildcard ../../../rebound/.*),) # Check for REBOUNDx being inside the REBOUND directory
 REB_DIR=../../
+endif
+
 endif
 
 ifndef REB_DIR # REBOUND is not in default location and REB_DIR is not set
