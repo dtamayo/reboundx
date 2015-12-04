@@ -24,7 +24,7 @@ Welcome to REBOUNDx (eXtras)
    :align: right
 
 REBOUNDx allows you to easily incorporate additional physics into your REBOUND simulations.
-All the computationally expensive parts of the code are written in C, so that the code will run much faster than if you define your own custom `additional_forces` functions in Python.
+All the computationally expensive parts of the code are written in C, so that the code will run much faster than if you define your own custom ``additional_forces`` functions in Python.
 
 So far we include:
 
@@ -50,7 +50,7 @@ For a more complete installation, i.e., if you want any of the following:
 * Example files
 * To use the *C version* (or both C and Python)
   
-Navigate to the parent directory that holds the `rebound` folder and (see below if you want to install in a custom folder)::
+Navigate to the parent directory that holds the ``rebound`` folder and (see below if you want to install in a custom folder)::
 
     git clone https://github.com/dtamayo/reboundx.git
 
@@ -59,7 +59,7 @@ Navigate to the parent directory that holds the `rebound` folder and (see below 
     cd reboundx
     pip install -e ./
    
-If you cloned the repository, and want to use a custom install location for REBOUNDx, you have to set the `REB_DIR` environment variable to the path to REBOUND.  You might add this to your shell's startup files, e.g. .bashrc or .profile::
+If you cloned the repository, and want to use a custom install location for REBOUNDx, you have to set the ``REB_DIR`` environment variable to the path to REBOUND (you might add this to your shell's startup files)::
     
     export REB_DIR=/Users/dtamayo/rebound
 
@@ -71,7 +71,9 @@ The best way to get started is to use the examples as a starting point and modif
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+    :numbered:
+
+    cversion
 
 Indices and tables
 ==================
