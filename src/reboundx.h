@@ -41,6 +41,115 @@ extern const char* rebx_build_str;		///< Date and time build string.
 extern const char* rebx_version_str;	///<Version string.
 
 /****************************************
+  User API
+*****************************************/
+
+/**
+ * @defgroup MainRebxFunctions 
+ * @details These are the top level routines that one needs when using REBOUNDx.
+ * @{
+ */
+/**
+ * @brief Adds REBOUNDx functionality to a passed REBOUND simulation.
+ * @details Allocates memory for a REBOUNDx structure, initializes all variables and returns a pointer to
+ * the rebx_extras structure.  The function must be called before calling any other REBOUNDx functions.
+ * @param sim reb_simulation pointer to the simulation that you want to add REBOUNDx functionality.
+ * @return Returns a pointer to a rebx_extras structure, which holds all the information REBOUNDx needs.
+ */
+struct rebx_extras* rebx_init(struct reb_simulation* sim);
+/**
+ * @brief Frees all memory allocated by REBOUNDx instance.
+ * @details Should be called after simulation is done if memory is a concern.
+ * @param rebx the rebx_extras pointer returned from the initial call to rebx_init.
+ */
+void rebx_free(struct rebx_extras* rebx);
+/** @} */
+
+/**
+ * @defgroup AddEffect
+ * @{
+ */
+/**
+ * @brief Adds orbit modifications (migration, damping, precession), implemented as forces.
+ */
+void rebx_add_modify_orbits_forces(struct rebx_extras* rebx);
+/**
+ * @brief Adds orbit modifications (migration, damping, precession), altering the orbital elements directly.
+ */
+void rebx_add_modify_orbits_direct(struct rebx_extras* rebx);
+/**
+ * @brief Adds post-Newtonian corrections arising from all bodies in the simulation.  Safe, but slow.
+ */
+void rebx_add_gr(struct rebx_extras* rebx, double c);
+/**
+ * @brief Adds post-Newtonian corrections arising only from particles[0].  Gets precessions and mean motions right.  Accurate and fast.
+ */
+void rebx_add_gr_single_mass(struct rebx_extras* rebx, double c);
+/**
+ * @brief Adds simple potential for post-Newtonian corrections arising only from particles[0].  Gets precessions but not mean motions correct.  Fastest.
+ */
+void rebx_add_gr_potential(struct rebx_extras* rebx, double c);
+/**
+ * @brief Adds radiation forces to the simulation (i.e., radiation pressure and Poynting-Robertson drag).
+ * @param source Pointer to the particle that is the source of the radiation.
+ * @param c	Speed of light.
+ */
+void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source, double c);
+/**
+ * @brief Allows user to specify their own post timestep modifications. Behaviour is identical to setting up post timestep modifications in REBOUND itself.
+ * @param custom_ptm Custom post-timestep modification function.
+ */
+void rebx_add_custom_ptm(struct rebx_extras* rebx, void (*custom_ptm)(struct reb_simulation* const r) );
+
+/**
+ * @brief Allows user to specify their own extra forces. Behaviour is identical to setting up extra forces  in REBOUND itself.
+ * @param force_is_velocity_dependent Set to 1 if force is velocity dependent.
+ */
+void rebx_add_custom_forces(struct rebx_extras* rebx, void (*custom_forces)(struct reb_simulation* const r), int force_is_velocity_dependent);
+/** @} */
+
+/**
+ * @defgroup GettersSetters
+ * @details Both getters and setters always take a *pointer* to the particle. See List of Particle Parameters for definitions of the various parameters.
+ * @{
+ */
+
+void rebx_set_tau_a(struct reb_particle* p, double value); 
+double rebx_get_tau_a(struct reb_particle* p);
+void rebx_set_tau_e(struct reb_particle* p, double value); 
+void rebx_set_tau_inc(struct reb_particle* p, double value); 
+void rebx_set_tau_omega(struct reb_particle* p, double value); 
+void rebx_set_tau_Omega(struct reb_particle* p, double value); 
+double rebx_get_tau_e(struct reb_particle* p);
+double rebx_get_tau_inc(struct reb_particle* p);
+double rebx_get_tau_omega(struct reb_particle* p);
+double rebx_get_tau_Omega(struct reb_particle* p);
+void rebx_set_beta(struct reb_particle* p, double value);
+double rebx_get_beta(struct reb_particle* p);
+
+/** @} */
+
+/**
+ * @defgroup ConvFunc
+ * @{
+ */
+
+/**
+ * @brief Calculates beta, the ratio between the radiation pressure force and the gravitational force from the star.
+ */
+double rebx_rad_calc_beta(struct rebx_extras* rebx, double particle_radius, double density, double Q_pr, double L);
+/**
+ * @brief Calculates the particle radius from physical parameters and beta, the ratio of radiation to gravitational forces from the star.
+ */
+double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, double density, double Q_pr, double L);
+
+/** @} */
+
+/****************************************
+ * Internal Functions and data structures
+ ***************************************/
+
+/****************************************
 Basic types in REBOUNDx
 *****************************************/
 
@@ -144,149 +253,7 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
 /* Internal parameter adders (need a different one for each REBX_PARAM type). */
 void rebx_add_param_double(struct reb_particle* p, enum REBX_PARAMS param_type, double value);
 void rebx_add_param_orb_tau(struct reb_particle* p);		// add a rebx_orb_tau parameter to particle p
-/****************************************
-User API
-*****************************************/
-
-/**
- * @name Main/general REBOUNDx routines
- * @{
- */
-/**
- * @defgroup MainRebxFunctions List of the main/general REBOUNDx routines.
- * @details These are the modification-independent code the user will typically need when using REBOUNDx.
- * @{
- */
-/**
- * @brief Adds REBOUNDx functionality to a passed REBOUND simulation.
- * @details Allocates memory for a REBOUNDx structure, initializes all variables and returns a pointer to
- * the rebx_extras structure.  The function must be called before calling any other REBOUNDx functions.
- * @param sim reb_simulation pointer to the simulation that you want to add REBOUNDx functionality.
- * @return Returns a pointer to a rebx_extras structure, which holds all the information REBOUNDx needs.
- */
-struct rebx_extras* rebx_init(struct reb_simulation* sim);
-/**
- * @brief Frees all memory allocated by REBOUNDx instance.
- * @details Should be called after simulation is done if memory is a concern.
- * @param rebx a the rebx_extras pointer returned from the initial call to rebx_init.
- */
-void rebx_free(struct rebx_extras* rebx);
 
 /** @} */
-/** @} */
-
-/**
- * @name Functions for specific REBOUNDx effects.
- * @{
- */
-/**
- * @defgroup AddEffect List of the functions for specific REBOUNDx effects.
- * @details In all cases the function call to add an effect is of the form rebx_add_effect.  All calls take
- * the pointer to the rebx_extras structure returned by rebx_init as the first argument.
- * Different effects then take different numbers of modification-specific parameters.
- * If a modification 'effect' has specific parameters one can set a parameter 'param' to 'value' through
- * rebx_set_effect_param(rebx, value), where rebx is the rebx_extras pointer.  To get it back one calls
- * value = rebx_get_effect_param(rebx).  Finally to set a particle-specific parameter, one calls
- * rebx_set_param(&particle, value), where @particle is the address of the particle in question.  To get
- * it back one calls value = rebx_get_param(&particle).
- * @{
- */
-
-/** @} */
-/** @} */
-
-/**
- * @brief Adds orbit modifications (migration, damping, precession), implemented as forces.
- */
-void rebx_add_modify_orbits_forces(struct rebx_extras* rebx);
-/**
- * @brief Adds orbit modifications (migration, damping, precession), altering the orbital elements directly.
- */
-void rebx_add_modify_orbits_direct(struct rebx_extras* rebx);
-/**
- * @brief Adds post-Newtonian corrections arising from all bodies in the simulation.  Safe, but slow.
- */
-void rebx_add_gr(struct rebx_extras* rebx, double c);
-/**
- * @brief Adds post-Newtonian corrections arising only from particles[0].  Gets precessions and mean motions right.  Accurate and fast.
- */
-void rebx_add_gr_single_mass(struct rebx_extras* rebx, double c);
-/**
- * @brief Adds simple potential for post-Newtonian corrections arising only from particles[0].  Gets precessions but not mean motions correct.  Fastest.
- */
-void rebx_add_gr_potential(struct rebx_extras* rebx, double c);
-/**
- * @brief Adds radiation forces to the simulation (i.e., radiation pressure and Poynting-Robertson drag).
- * @param source Pointer to the particle that is the source of the radiation.
- * @param c	Speed of light.
- */
-void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source, double c);
-/** @} */
-/** @} */
-
-/**
- * @name Functions for getting and setting the parameters of the various modifications.
- * @{
- */
-/**
- * @defgroup SetMod List of getters and setters for the parameters in each modification.
- * @details both getters and setters always take a pointer to the particle 
- * for consistency, and should not take a rebx pointer 
- * (this allows the python version to have these parameters be properties of
- * the Particle class).
- * @{
- */
-
-void rebx_set_tau_a(struct reb_particle* p, double value); 
-void rebx_set_tau_e(struct reb_particle* p, double value); 
-void rebx_set_tau_inc(struct reb_particle* p, double value); 
-void rebx_set_tau_omega(struct reb_particle* p, double value); 
-void rebx_set_tau_Omega(struct reb_particle* p, double value); 
-double rebx_get_tau_a(struct reb_particle* p);
-double rebx_get_tau_e(struct reb_particle* p);
-double rebx_get_tau_inc(struct reb_particle* p);
-double rebx_get_tau_omega(struct reb_particle* p);
-double rebx_get_tau_Omega(struct reb_particle* p);
-
-void rebx_set_beta(struct reb_particle* p, double value);
-double rebx_get_beta(struct reb_particle* p);
-
-/** @} */
-/** @} */
-
-/**
- * @name Convenience functions for particular effects
- * @{
- */
-/**
- * @defgroup ConvFunc Convenience functions for setting parameters for particular effects.
- * @{
- */
-
-/**
- * @brief Calculates beta, the ratio between the radiation pressure force and the gravitational force from the star.
- */
-double rebx_rad_calc_beta(struct rebx_extras* rebx, double particle_radius, double density, double Q_pr, double L);
-/**
- * @brief Calculates the particle radius from physical parameters and beta, the ratio of radiation to gravitational forces from the star.
- */
-double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, double density, double Q_pr, double L);
-
-/** @} */
-/** @} */
-
-
-/**
- * @brief Allows user to specify their own post timestep modifications. Behaviour is identical to setting up post timestep modifications in REBOUND itself.
- */
-void rebx_add_custom_ptm(struct rebx_extras* rebx, void (*custom_ptm)(struct reb_simulation* const r) );
-
-/**
- * @brief Allows user to specify their own extra forces. Behaviour is identical to setting up extra forces  in REBOUND itself.
- * @param force_is_velocity_dependent Set to 1 if force is velocity dependent.
-
- */
-void rebx_add_custom_forces(struct rebx_extras* rebx, void (*custom_forces)(struct reb_simulation* const r), int force_is_velocity_dependent);
-
 #endif
 
