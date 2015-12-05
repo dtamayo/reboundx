@@ -73,6 +73,7 @@ Contents:
 .. toctree::
     :numbered:
 
+    modules
     cversion
 
 Indices and tables
