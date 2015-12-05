@@ -32,10 +32,13 @@
 
 #include "rebound.h"
 #include "rebxtools.h"
-#include "modify_orbits_direct.h"
-#include "modify_orbits_forces.h"
-#include "gr.h"
-#include "radiation_forces.h"
+
+void rebx_modify_orbits_forces(struct reb_simulation* const sim);
+void rebx_modify_orbits_direct(struct reb_simulation* const sim);
+void rebx_gr(struct reb_simulation* const sim);
+void rebx_gr_potential(struct reb_simulation* const sim);
+void rebx_gr_single_mass(struct reb_simulation* const sim);
+void rebx_radiation_forces(struct reb_simulation* const sim);
 
 extern const char* rebx_build_str;		///< Date and time build string.
 extern const char* rebx_version_str;	///<Version string.
