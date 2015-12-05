@@ -28,7 +28,7 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-void rebx_gr(struct reb_simulation* const sim){
+void rebx_gr_full(struct reb_simulation* const sim){
 	struct rebx_params_gr modparams = ((struct rebx_extras*) (sim->extras))->gr;
 	const double C = modparams.c;
 	const int _N_real = sim->N - sim->N_var;
@@ -214,7 +214,7 @@ void rebx_gr(struct reb_simulation* const sim){
 					
 }
 
-void rebx_gr_single_mass(struct reb_simulation* const sim){
+void rebx_gr(struct reb_simulation* const sim){
 	struct rebx_params_gr modparams = ((struct rebx_extras*)(sim->extras))->gr;
 	const double C = modparams.c;
 	const int _N_real = sim->N - sim->N_var;

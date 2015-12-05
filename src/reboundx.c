@@ -172,14 +172,14 @@ void rebx_add_gr(struct rebx_extras* rebx, double c){
 	rebx->gr.c = c;
 }
 
-void rebx_add_gr_single_mass(struct rebx_extras* rebx, double c){
+void rebx_add_gr_full(struct rebx_extras* rebx, double c){
 	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
 	sim->force_is_velocity_dependent = 1;
 
 	rebx->Nforces++;
 	rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
-	rebx->forces[rebx->Nforces-1] = rebx_gr_single_mass;
+	rebx->forces[rebx->Nforces-1] = rebx_gr_full;
 	rebx->gr.c = c;
 }
 
