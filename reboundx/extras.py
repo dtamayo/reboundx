@@ -50,22 +50,16 @@ class Extras(Structure):
          
         if self.sim.contents.G == 1: # if G = 1 (default) return default c
             return c_default
-            
-        u = self.sim.contents.units
-        if not None in u.values(): # units are set
-            c = rebound.units.convert_vel(c_default, 'au', 'yr2pi', u['length'], u['time'])
-            return c
         else:
-            raise ValueError("If you change G, you must pass c (speed of light) in appropriate units to add_gr, add_gr_potential, and add_gr_implicit.  Alternatively, set the units for the simulation.  See ipython_examples/GeneralRelativity.ipynb")
-              
-        return c_default
+            raise ValueError("If you change G, you must pass c (speed of light) in appropriate units to add_gr, add_gr_potential, and add_gr_full.  Setting the units in the simulation does not work with REBOUNDx.  See ipython_examples/GeneralRelativity.ipynb")
+
     def add_gr(self, c=None):
         c = self.check_c(c)
         clibreboundx.rebx_add_gr(byref(self), c_double(c))
     
-    def add_gr_single_mass(self, c=None):
+    def add_gr_full(self, c=None):
         c = self.check_c(c)
-        clibreboundx.rebx_add_gr_single_mass(byref(self), c_double(c))
+        clibreboundx.rebx_add_gr_full(byref(self), c_double(c))
 
     def add_gr_potential(self, c=None):
         c = self.check_c(c)
