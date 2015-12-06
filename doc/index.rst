@@ -75,6 +75,8 @@ Contents:
 
     modules
     cversion
+    c_examples
+    ipython_examples
 
 Indices and tables
 ==================
