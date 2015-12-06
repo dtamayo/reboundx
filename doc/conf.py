@@ -16,12 +16,67 @@
 import sys
 import os
 import shlex
+import subprocess
+import glob
 
 # Doxygen trigger
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 if read_the_docs_build:
     subprocess.call('cd doxygen; doxygen', shell=True)
 
+# C Example update
+with open("c_examples.rst","w") as fd:
+    fd.write("Examples (C)\n")
+    fd.write("============\n\n")
+    for problemc in glob.glob("../examples/*/problem.c"):
+        will_output = 0
+        with open(problemc) as pf:
+            did_output=0
+            empty_lines = 0
+            for line in pf:
+                if line[0:3] == "/**":
+                    will_output += 1
+                if line[0:3] == " */":
+                    will_output = -1
+                    line = ""
+                    fd.write("\n\n.. code-block:: c\n");
+                if will_output>1:
+                    if will_output == 2:
+                        under = "-"*(len(line.strip())-2)
+                        line = "  " +line.strip() + '\n' + under
+                    will_output = 2
+                    if len(line[3:].strip())==0:
+                        fd.write("\n\n"+line[3:].strip())
+                    else:
+                        fd.write(line[3:].strip() + " " )
+                if will_output==-1:
+                    fd.write("   " +line.rstrip() + "\n" )
+                    did_output = 1
+                if will_output>0:
+                    will_output += 1
+            fd.write("\n\nThis example is located in the directory `examples/"+problemc.split("/")[2]+"`\n\n")
+            if did_output==0:
+                print "Warning: Did not find description in "+problemc
+
+# iPython examples:
+import shutil
+if os.path.exists("ipython"):
+    shutil.rmtree('./ipython')
+os.makedirs("./ipython")
+if 1:
+    try:
+        os.chdir("ipython")
+        for example in glob.glob("../../ipython_examples/*.ipynb"):
+            subprocess.check_output(["ipython", "nbconvert", example, "--to", "rst"])
+    except:
+        with open("ipython.rst","w") as fd:
+            fd.write("Examples can be found on github\n")
+            fd.write("-------------------------------\n\n")
+            fd.write("Due to a bug in the readthedocs system, the iPython notebooks are currently not included here. To view them, head over to github: \n")
+            fd.write("https://github.com/dtamayo/reboundx/tree/master/ipython_examples\n")
+    finally:
+        os.chdir("../")
+        
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
