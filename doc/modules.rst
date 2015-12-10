@@ -1,5 +1,5 @@
-REBOUNDx Effects and Parameters
-===============================
+REBx Effects & Parameters
+=========================
 
 .. _effectList:
 

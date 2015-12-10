@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to REBOUNDx (eXtras)
-====================================
+Welcome to REBOUNDx
+===================
 
 .. image:: images/hlTau.png
    :width: 200px
@@ -23,7 +23,7 @@ Welcome to REBOUNDx (eXtras)
    :height: 200px
    :align: right
 
-REBOUNDx allows you to easily incorporate additional physics into your REBOUND simulations.
+REBOUNDx (eXtras) allows you to easily incorporate additional physics into your REBOUND simulations.
 All the computationally expensive parts of the code are written in C, so that the code will run much faster than if you define your own custom ``additional_forces`` functions in Python.
 
 So far we include:
@@ -68,11 +68,12 @@ Getting Started
 
 The best way to get started is to use the examples as a starting point and modify them as needed.  Even if you didn't clone the repository, you can still see the examples at https://github.com/dtamayo/reboundx/tree/master/ipython_examples (for the Python examples) and https://github.com/dtamayo/reboundx/tree/master/examples (for the C examples).  If you are using C, you might still look through the corresponding Python example, as the iPython notebooks nicely incorporate text and they therefore have a bit longer discussions about the details for the implementation.
 
-Contents:
-
+Table of Contents
+-----------------
 .. toctree::
     :numbered:
 
+    self
     modules
     c_version
     c_examples
