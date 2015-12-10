@@ -74,7 +74,7 @@ Contents:
     :numbered:
 
     modules
-    cversion
+    c_version
     c_examples
     ipython_examples
 
