@@ -30,7 +30,7 @@ class Extras(Structure):
         clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
         self.add_Particle_props()
         self.coordinates = {"JACOBI":0, "BARYCENTRIC":1, "HELIOCENTRIC":2} # to use C version's REBX_COORDINATES enum
-        sim._extras_ref = self
+        sim._extras_ref = self # add a reference to this instance in sim to make sure it's not garbage collected
 
     def __del__(self):
         if self._b_needsfree_ == 1:
@@ -54,6 +54,9 @@ class Extras(Structure):
             raise ValueError("If you change G, you must pass c (speed of light) in appropriate units to add_gr, add_gr_potential, and add_gr_full.  Setting the units in the simulation does not work with REBOUNDx.  See ipython_examples/GeneralRelativity.ipynb")
 
     def add_gr(self, c=None):
+        """
+        Add general relativity corrections, treating only particles[0] as massive (see :ref:`effectList` for details on the implementation). Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
+        """
         c = self.check_c(c)
         clibreboundx.rebx_add_gr(byref(self), c_double(c))
     

@@ -26,6 +26,7 @@ if read_the_docs_build:
 
 # C Example update
 with open("c_examples.rst","w") as fd:
+    fd.write(".. _c_examples:\n\n")
     fd.write("Examples (C)\n")
     fd.write("============\n\n")
     for problemc in glob.glob("../examples/*/problem.c"):

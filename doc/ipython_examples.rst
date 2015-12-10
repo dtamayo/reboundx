@@ -1,3 +1,5 @@
+.. _ipython_examples:
+
 Examples (iPython)
 ==================
 You will find various examples of how to use REBOUND from python in the list below.

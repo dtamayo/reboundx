@@ -6,62 +6,49 @@ REBOUNDx Effects and Parameters
 List of REBOUNDx Effects
 ------------------------
 
-Each of these can be added to a REBOUND simulation with the corresponding function in :ref:`add-effects`.  Each of these effects has at least one corresponding examples in both ``reboundx/examples`` and ``reboundx/ipython_examples``.  The latter can also be viewed online at https://github.com/dtamayo/reboundx/tree/master/ipython_examples.  Make sure to look at the corresponding iPython example, which has further details on the physical model for the particular effect.
+Each of these can be added to a REBOUND simulation with the corresponding function in :ref:`add-effects`.  Each of these effects has at least one corresponding examples in both :ref:`c_examples` and :ref:`ipython_examples`. Make sure to look at the corresponding iPython example, which has further details on the physical model for the particular effect.
 
 To see what particle parameters should be set for each effect, see :ref:`paramlist`.
 
-=======================  ============================================ 
-Effect                   Description
-=======================  ============================================ 
-modify_orbits_direct      Update orbital elements directly between timesteps
-modify_orbits_forces      Modify orbital elements with additional forces
-gr                        Post-Newtonian corrections
-REB_GRAVITY_TREE          Oct tree, Barnes & Hut 1986, O(N log(N))
-REB_GRAVITY_OPENCL        (upgrade to REBOUND 2.0 still in progress) Direct summation, O(N^2), but accelerated using the OpenCL framework.
-REB_GRAVITY_FFT           (upgrade to REBOUND 2.0 still in progress) Two dimensional gravity solver using FFTW, works in a periodic box and the shearing sheet. 
-=======================  ============================================ 
+* **modify_orbits_direct**
+  
+  This updates particles' positions and velocities between timesteps to achieve the desired changes to the osculating orbital elements.  This is the approach of Lee & Peale (2002).  This nicely isolates changes to particular osculating elements, making it easier to interpret the resulting dynamics.  
+
+  Each particle is assigned evolution timescales for each orbital element.  Positive timescales correspond to growth / progression, negative timescales correspond to damping / regression.  Semimajor axes, eccentricities and inclinations grow / damp exponentially.  Pericenters and nodes progress/regress linearly.
+
+* **modify_orbits_forces**
+
+  This adds additional forces that, averaged over an orbit, yield exponential growth/damping of the semimajor axes, eccentricities and inclinations (set positive timescale for growth, negative for damping).  These equations follow Papaloizou & Larwood (2000).  These provide more physically realistic coupling of the orbital elements' evolutions to one another, e.g., adding an eccentricity damping timescale causes semimajor axis evolution at order :math:`e^2` (equivalent to a p parameter of 1 for modify_orbit_direct), cf. Goldreich & Schlichting (2014), Deck & Batygin (2015), Delisle et al. (2015). 
+
+* **gr**
+
+  Adds post-Newtonian corrections to a simulation, treating only ``particles[0]`` as massive for the modification.  This should be OK for objects orbiting a single star.  Follows Eq. 2 of Benitez and Gallardo 2008.  It gets both the mean motion and precession correct, and will be significantly faster than gr_full, particularly with several bodies.
+
+* **gr_full**
+
+  Follows Eq. 1 of Benitez and Gallardo 2008, treating all objects in the simulation as massive for the post-Newtonian correction.  This is the most general / safest implementation, but will be slower.
+
+* **gr_potential**
+
+  This is the simplest potential you can use for GR (Nobili & Roxburgh 1986). It gets the precession right, but gets the mean motion wrong by :math:`\mathcal{O}(GM/ac^2)`.  It's the fasest option, and because it's not velocity-dependent, it automatically keeps WHFast symplectic.  Nice if you don't need to get GR exactly right and want speed.
+
+* **radiation_forces**
+
+  This adds radiation forces, following Eq. 5 of Burns, Lamy & Soter (1979).  This incorporates both radiation pressure and Poynting-Robertson drag.  
 
 .. _paramlist:
 
 List of Particle Parameters
 ---------------------------
 
-=======================  ============================================ 
-Module name               Description
-=======================  ============================================ 
-REB_COLLISION_NONE        No collision detection, default
-REB_COLLISION_DIRECT      Direct nearest neighbour search, O(N^2)
-REB_COLLISION_TREE        Oct tree, O(N log(N))
-REB_COLLISION_SWEPP       (upgrade to REBOUND 2.0 still in progress) Plane sweep algorithm, ideal for low dimensional  problems, O(N) or O(N^1.5) depending on geometry 
-=======================  ============================================ 
-
-
-Boundary conditions
--------------------
-
-=======================  ============================================ 
-Module name               Description
-=======================  ============================================ 
-REB_BOUNDARY_NONE         Dummy. Particles are not affected by boundary conditions, default
-REB_BOUNDARY_OPEN         Particles are removed from the simulation if they leaves the box.
-REB_BOUNDARY_PERIODIC     Periodic boundary conditions. Particles are reinserted on the other side if they cross the box boundaries. You can use an arbitrary number of ghost-boxes with this module.
-REB_BOUNDARY_SHEAR        Shear periodic boundary conditions. Similar to periodic boundary conditions, but ghost-boxes are moving with constant speed, set by the shear.
-=======================  ============================================ 
- 
-
-Integrators
------------
-
-=======================  ============================================ 
-Module name               Description
-=======================  ============================================ 
-REB_INTEGRATOR_IAS15      IAS15 stands for Integrator with Adaptive Step-size control, 15th order. It is a vey high order, non-symplectic integrator which can handle arbitrary (velocity dependent) forces and is in most cases accurate down to machine precision. IAS15 can integrate variational equations. Rein & Spiegel 2015, Everhart 1985, default
-REB_INTEGRATOR_WHFAST     WHFast is the integrator described in Rein & Tamayo 2015, it's a second order symplectic Wisdom Holman integrator with 11th order symplectic correctors. It is extremely fast and accurate, uses Gauss f and g functions to solve the Kepler motion and can integrate variational equations.
-REB_INTEGRATOR_EULER      Euler scheme, first order
-REB_INTEGRATOR_LEAPFROG   Leap frog, second order, symplectic
-REB_INTEGRATOR_WH         SWIFT-style Wisdom-Holman Mapping, mixed variable symplectic integrator for the Kepler potential, second order, note that  `integrator_whfast.c` almost always offers better characteristics, Wisdom & Holman 1991, Kinoshita et al 1991
-REB_INTEGRATOR_SEI        Symplectic Epicycle Integrator (SEI), mixed variable symplectic integrator for the shearing sheet, second order, Rein & Tremaine 2011
-REB_INTEGRATOR_HYBRID     An experimental hybrid symplectic integrator that uses WHFast for long term integrations but switches over to IAS15 for close encounters.
-=======================  ============================================ 
-
+=============== ========================================= ============================================ 
+Parameter name  Effect                                    Description
+=============== ========================================= ============================================ 
+tau_a           modify_orbit_direct, modify_orbits_forces Semimajor axis exponential growth/damping timescale
+tau_e           modify_orbit_direct, modify_orbits_forces Eccentricity exponential growth/damping timescale
+tau_inc         modify_orbit_direct, modify_orbits_forces Inclination axis exponential growth/damping timescale
+tau_Omega       modify_orbit_direct, modify_orbits_forces Period of linear nodal precession/regression
+tau_omega       modify_orbit_direct, modify_orbits_forces Period of linear apsidal precession/regression
+beta            radiation_forces                          Ratio of radiation to gravitational force (Burns et al. 1979)
+=============== ========================================= ============================================ 
 
