@@ -24,3 +24,19 @@ with open("setup.py") as f:
     with open("setup.py", "w") as f:
         f.writelines(setuplines)
 
+shortversion = reboundxversion
+while shortversion[-1] is not '.':
+    shortversion = shortversion[:-1]
+    
+shortversion = shortversion[:-1]
+
+with open("doc/conf.py") as f:
+    conflines = f.readlines()
+    for i,l  in enumerate(conflines):
+        if "version =" in l:
+            conflines[i] = "version = '"+shortversion+"'\n"
+        if "release =" in l:
+            conflines[i] = "release = '"+reboundxversion+"'\n"
+
+    with open("doc/conf.py", "w") as f:
+        f.writelines(conflines)
