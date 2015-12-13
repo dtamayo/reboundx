@@ -26,6 +26,9 @@ class rebx_params_radiation_forces(Structure):
                 ("c", c_double)]
 
 class Extras(Structure):
+    """
+    Main object used for all REBOUNDx operations, tied to a particular REBOUND simulation.  This is an abstraction of the C struct rebx_extras, with all the C convenience functions and functions for adding effects implemented as class methods.  
+    """
     def __init__(self, sim):
         clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
         self.add_Particle_props()
