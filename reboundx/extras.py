@@ -27,8 +27,12 @@ class rebx_params_radiation_forces(Structure):
 
 class Extras(Structure):
     """
-    Main object used for all REBOUNDx operations, tied to a particular REBOUND simulation.  This is an abstraction of the C struct rebx_extras, with all the C convenience functions and functions for adding effects implemented as class methods.  
+    Main object used for all REBOUNDx operations, tied to a particular REBOUND simulation.
+    This is an abstraction of the C struct rebx_extras, with all the C convenience functions
+    and functions for adding effects implemented as methods of the class.  
+    The fastest way to understand it is to follow the examples at :ref:`ipython_examples`.  
     """
+
     def __init__(self, sim):
         clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
         self.add_Particle_props()
@@ -40,9 +44,21 @@ class Extras(Structure):
             clibreboundx.rebx_free_pointers(byref(self))
 
     def add_modify_orbits_direct(self):
+        """
+        Adds orbit modifications to the simulation, modifying orbital elements directly after each timestep.
+        You must still set the relevant timescales on the individual particles.
+        See :ref:`modules` for additional information, and for definitions of the relevant timescales.
+        See :ref:`ipython_examples` for an example.
+        """
         clibreboundx.rebx_add_modify_orbits_direct(byref(self))
-    
+
     def add_modify_orbits_forces(self):
+        """
+        Adds orbit modifications to the simulation, implemented as forces that yield the desired effect.
+        You must still set the relevant timescales on the individual particles.
+        See :ref:`modules` for additional information, and for definitions of the relevant timescales.
+        See :ref:`ipython_examples` for an example.
+        """
         clibreboundx.rebx_add_modify_orbits_forces(byref(self))
 
     def check_c(self, c):
@@ -54,24 +70,47 @@ class Extras(Structure):
         if self.sim.contents.G == 1: # if G = 1 (default) return default c
             return c_default
         else:
-            raise ValueError("If you change G, you must pass c (speed of light) in appropriate units to add_gr, add_gr_potential, and add_gr_full.  Setting the units in the simulation does not work with REBOUNDx.  See ipython_examples/GeneralRelativity.ipynb")
+            raise ValueError("If you change G, you must pass c (speed of light) in appropriate units to add_gr, add_gr_potential, add_gr_full, and radiation_forces.  Setting the units in the simulation does not work with REBOUNDx.  See ipython_examples/GeneralRelativity.ipynb and ipython_examples/Radiation_Forces_Debris_Disk.ipynb")
 
     def add_gr(self, c=None):
         """
-        Add general relativity corrections, treating only particles[0] as massive (see :ref:`effectList` for details on the implementation). Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
+        Add general relativity corrections, treating only particles[0] as massive 
+        (see :ref:`effectList` for details on the implementation). 
+        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
+        See :ref:`ipython_examples` for an example.
         """
         c = self.check_c(c)
         clibreboundx.rebx_add_gr(byref(self), c_double(c))
     
     def add_gr_full(self, c=None):
+        """
+        Add general relativity corrections, treating all particles as massive.
+        (see :ref:`effectList` for details on the implementation). 
+        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
+        See :ref:`ipython_examples` for an example.
+        """
         c = self.check_c(c)
         clibreboundx.rebx_add_gr_full(byref(self), c_double(c))
 
     def add_gr_potential(self, c=None):
+        """
+        Add general relativity corrections, using a simple potential that gets the precession right.
+        (see :ref:`effectList` for details on the implementation). 
+        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
+        See :ref:`ipython_examples` for an example.
+        """
         c = self.check_c(c)
         clibreboundx.rebx_add_gr_potential(byref(self), c_double(c))
     
-    def add_radiation_forces(self, source, c):
+    def add_radiation_forces(self, source, c=None):
+        """
+        Add radiation forces to the simulation (radiation pressure and Poynting-Robertson drag).
+        (see :ref:`effectList` for details on the implementation). 
+        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi),
+        as well as the Particle in the Simulation that is the source of the radiation.
+        See :ref:`ipython_examples` for an example.
+        """
+        c = self.check_c(c)
         clibreboundx.rebx_add_radiation_forces(byref(self), byref(source), c_double(c))
 
     def add_Particle_props(self):
@@ -126,9 +165,20 @@ class Extras(Structure):
         rebound.Particle.beta = beta 
 
     def rad_calc_beta(self, particle_radius, density, Q_pr, L):
+        """
+        Calculates a particle's beta parameter (the ratio of the radiation force to the gravitational force) given
+        the particle's physical radius, density, radiation pressure coefficient ``Q_pr``, and the star's luminosity.
+        All values must be passed in the same units as used for the simulation as a whole (e.g., AU, Msun, yr/2pi).
+        See the circumplanetary dust example in :ref:`ipython_examples`.
+        """
         clibreboundx.rebx_rad_calc_beta.restype = c_double
         return clibreboundx.rebx_rad_calc_beta(byref(self), c_double(particle_radius), c_double(density), c_double(Q_pr), c_double(L))
     def rad_calc_particle_radius(self, beta, density, Q_pr, L):
+        """
+        Calculates a particle's physical radius given its beta parameter (the ratio of the radiation force to the gravitational force),
+        density, radiation pressure coefficient ``Q_pr``, and the star's luminosity.
+        All values must be passed in the same units as used for the simulation as a whole (e.g., AU, Msun, yr/2pi).
+        """
         clibreboundx.rebx_rad_calc_particle_radius.restype = c_double
         return clibreboundx.rebx_rad_calc_particle_radius(byref(self), c_double(beta), c_double(density), c_double(Q_pr), c_double(L))
 
