@@ -1,7 +1,7 @@
+.. image:: https://github.com/dtamayo/dtamayo.github.io/blob/master/pix/reboundx.png
+
 Welcome to REBOUNDx (eXtras)
 ====================================
-
-.. image:: https://github.com/dtamayo/dtamayo.github.io/blob/master/pix/reboundx.png
 
 REBOUNDx allows you to easily incorporate additional physics into your REBOUND simulations.
 All the computationally expensive parts of the code are written in C, so that the code will run much faster than if you define your own custom `additional_forces` functions in Python.
