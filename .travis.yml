@@ -1,0 +1,33 @@
+sudo: false
+language: c
+os:
+    - linux
+addons:
+    apt:
+        packages:
+            - freeglut3-dev
+            - python-virtualenv
+            - python-numpy
+            - python-matplotlib
+            - python-scipy
+            - openmpi-bin 
+            - libopenmpi-dev
+install:
+    - virtualenv --system-site-packages venv && source venv/bin/activate
+    - pip install coveralls
+    - pip install -e .
+compiler:
+    - gcc
+script:
+    - cd $TRAVIS_BUILD_DIR && coverage run --source=rebound setup.py test
+    - cd $TRAVIS_BUILD_DIR/examples/ && make
+    - cd $TRAVIS_BUILD_DIR/src && make clean
+    - cd $TRAVIS_BUILD_DIR/ && make
+    - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py EccAndIncDamping.ipynb | python 
+    - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py GeneralRelativity.ipynb | python 
+    - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Migration.ipynb | python 
+    - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Radiation_Forces_Circumplanetary_Dust.ipynb | python 
+    - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Radiation_Forces_Debris_Disk.ipynb | python 
+    - cd $TRAVIS_BUILD_DIR 
+after_success:
+    coveralls

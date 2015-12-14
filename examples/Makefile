@@ -19,6 +19,7 @@ include $(REB_DIR)/src/Makefile.defs
 REBOUNDXDIR=../src/
 DEBUGOPT = -std=c99 -Wpointer-arith -D_GNU_SOURCE -O0 -march=native -I/usr/local/include -Wall -Wno-deprecated -g
 SOURCES=$(REBOUNDXDIR)gr.c $(REBOUNDXDIR)modify_orbits_direct.c $(REBOUNDXDIR)modify_orbits_forces.c $(REBOUNDXDIR)radiation_forces.c $(REBOUNDXDIR)reboundx.c $(REBOUNDXDIR)rebxtools.c 
+SUBDIRS := $(wildcard */.)
 
 all: librebound.so libreboundx.so
 	@echo ""
@@ -34,8 +35,17 @@ eclipse: librebound.so
 	@echo ""
 	@echo "Problem file compiled successfully."
  
+allexamples: $(SUBDIRS)
+$(SUBDIRS):
+	@echo "Trying to compile example $(subst /.,,$@):"
+	$(MAKE) -s -C $@ clean 
+	$(MAKE) -s -C $@ 
+	@echo "\033[1A\033[55CSuccess."
+
+.PHONY: allexamples $(SUBDIRS)
+
 librebound.so:
-	@echo "Compiling shared library libreboundx.so ..."
+	@echo "Compiling shared library librebound.so ..."
 	$(MAKE) -C $(REB_DIR)/src/
 	@echo "Creating link for shared library librebound.so ..."
 	@-rm -f librebound.so
