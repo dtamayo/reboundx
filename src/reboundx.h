@@ -113,7 +113,6 @@ void rebx_add_custom_forces(struct rebx_extras* rebx, void (*custom_forces)(stru
 
 /**
  * @defgroup GettersSetters
- * @details Both getters and setters always take a *pointer* to the particle. See List of Particle Parameters for definitions of the various parameters.
  * @{
  */
 

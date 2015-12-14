@@ -1,3 +1,5 @@
+.. _c_version:
+
 C Version
 =========
 
@@ -8,7 +10,7 @@ Navigate to the parent directory that holds the ``rebound`` folder (see below if
 
     git clone https://github.com/dtamayo/reboundx.git
 
-(install git if you don't have it).  To use a custom install location for REBOUNDx, you have to set the ``REB_DIR`` environment variable to the path to REBOUND (you might add this to your shell's startup files)::
+(install git if you don't have it).  *If you do use* a custom install location for REBOUNDx, you have to additionally set the ``REB_DIR`` environment variable to the path to REBOUND (you might add this to your shell's startup files)::
     
     export REB_DIR=/Users/dtamayo/rebound
 
@@ -23,11 +25,11 @@ We then add the effect we are interested in::
 
     rebx_add_effect(rebx);
 
-where ``effect`` is one of the effects in the List of REBOUNDx Effects.  Some effects need parameters to set up, see :ref:`add-effects`.  We then set the particle-specific parameters::
+where ``effect`` is one of the effects in :ref:`effectList`.  Some effects need parameters to set up, see :ref:`add-effects`.  We then set the particle-specific parameters::
 
     rebx_set_param(&sim->particles[1], 1.e4);
 
-where ``param`` is one of the parameters in the List of Particle Parameters.  Here we set the ``param`` parameter for ``particles[1]`` to a value of 1.e4.  Then we run the REBOUND simulation as usual::
+where ``param`` is one of the parameters in :ref:`paramList`.  Here we set the hypothetical ``param`` parameter for ``particles[1]`` to a value of 1.e4.  Then we run the REBOUND simulation as usual::
 
     reb_integrate(sim, tmax);
 
@@ -48,15 +50,22 @@ Top Level REBOUNDx Functions
 Functions For Adding REBOUNDx Effects
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+See :ref:`effectList` for additional details on the implementation of each effect.
+
 .. doxygengroup:: AddEffect
 
 Functions For Getting and Setting Particle Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Both getters and setters always take a *pointer* to the particle.  
+See :ref:`paramList` for definitions of the various parameters.
+
 .. doxygengroup:: GettersSetters
 
 Convenience Functions for Particular Effects
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+These are functions provided for convenience for calculating various parameters.
 
 .. doxygengroup:: ConvFunc
 
