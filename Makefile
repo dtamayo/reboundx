@@ -1,4 +1,4 @@
-# This makefile compiles the shared libraries and updates the documentation
+# This makefile compiles the shared libraries and updates the documentation.
 #
 ifndef REB_DIR
 ifneq ($(wildcard ../rebound/.*),) # Check for REBOUND in default location
