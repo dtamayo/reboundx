@@ -5,6 +5,7 @@ os:
 addons:
     apt:
         packages:
+            - freeglut3-dev
             - python-virtualenv
             - python-numpy
             - python-matplotlib
@@ -20,7 +21,6 @@ script:
     - cd $TRAVIS_BUILD_DIR && coverage run --source=rebound setup.py test
     - cd $TRAVIS_BUILD_DIR/examples/ && make
     - cd $TRAVIS_BUILD_DIR/src && make clean
-    - cd $TRAVIS_BUILD_DIR/ && make
     - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py EccAndIncDamping.ipynb | python 
     - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py GeneralRelativity.ipynb | python 
     - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Migration.ipynb | python 
