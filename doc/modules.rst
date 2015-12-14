@@ -1,3 +1,5 @@
+.. _modules:
+
 REBx Effects & Parameters
 =========================
 

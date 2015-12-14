@@ -77,6 +77,7 @@ Table of Contents
     modules
     c_version
     c_examples
+    python_version
     ipython_examples
 
 Indices and tables
