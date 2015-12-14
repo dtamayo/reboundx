@@ -14,7 +14,9 @@ install:
     - pip install -e .
 compiler:
     - gcc
+
 script:
+    - cd $TRAVIS_BUILD_DIR/../ && git clone https://github.com/hannorein/rebound
     - cd $TRAVIS_BUILD_DIR && coverage run --source=rebound setup.py test
     - cd $TRAVIS_BUILD_DIR/examples/ && make
     - cd $TRAVIS_BUILD_DIR/src && make clean
