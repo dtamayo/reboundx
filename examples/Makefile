@@ -24,7 +24,7 @@ SUBDIRS := $(wildcard */.)
 all: librebound.so libreboundx.so
 	@echo ""
 	@echo "Compiling problem file ..."
-	$(CC) -g -I../src/ -I$(REB_DIR)/src/ -Wl,-rpath,./ $(OPT) $(PREDEF) problem.c -L. -lreboundx -lrebound $(LIB) -o rebound
+	$(CC) -I../src/ -I$(REB_DIR)/src/ -Wl,-rpath,./ $(OPT) $(PREDEF) problem.c -L. -lreboundx -lrebound $(LIB) -o rebound
 	@echo ""
 	@echo "Problem file compiled successfully."
 
