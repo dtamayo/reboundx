@@ -15,7 +15,7 @@ ifndef REB_DIR # REBOUND is not in default location and REB_DIR is not set
 endif
 
 include $(REB_DIR)/src/Makefile.defs
-OPT+= -fPIC -DLIBREBOUNDX -ferror-limit=50
+OPT+= -fPIC -DLIBREBOUNDX
 
 SOURCES=gr.c modify_orbits.c radiation_forces.c reboundx.c rebxtools.c 
 OBJECTS=$(SOURCES:.c=.o)
