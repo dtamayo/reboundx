@@ -19,14 +19,13 @@ OPT+= -fPIC -DLIBREBOUNDX -ferror-limit=50
 
 SOURCES=gr.c modify_orbits.c radiation_forces.c reboundx.c rebxtools.c 
 OBJECTS=$(SOURCES:.c=.o)
-HEADERS=$(SOURCES:.c=.h)
+HEADERS=rebound.h rebxtools.h reboundx.h
 
 all: $(SOURCES) libreboundx.so
 	
 %.o: %.c $(HEADERS)
-	@echo $(OPT)
 	@echo "Compiling source file $< ..."
-	$(CC) -g -c $(OPT) $(PREDEF) -o $@ $<
+	$(CC) -c $(OPT) $(PREDEF) -o $@ $<
 
 libreboundx.so: $(OBJECTS)
 	@echo ""        
@@ -34,7 +33,7 @@ libreboundx.so: $(OBJECTS)
 	$(CC) $(OPT) -shared  $(OBJECTS) $(LIB) -o $@ 
 	
 	@echo ""        
-	@echo "The shared library $< has been created successfully."
+	@echo "The shared library $@ has been created successfully."
 	
 	
 clean:
