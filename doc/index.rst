@@ -46,8 +46,12 @@ If you are unsure, I recommend you try out the Python version, as it enables you
 It also allows for a less verbose interface.
 You'll find installation instructions in the links below.
 
-:ref:`c_version`
+Issues
+------
 
+If you have problems, please check out the :ref:`faq` page for possible answers, as well as for how to contact us for help!
+
+:ref:`c_version`
 :ref:`python_version`
 
 Table of Contents
@@ -61,6 +65,7 @@ Table of Contents
     c_examples
     python_version
     ipython_examples
+    faq
 
 Indices and tables
 ==================

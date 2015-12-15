@@ -90,7 +90,7 @@ int main(int argc, char* argv[]){
 
 	reb_move_to_com(sim);
 
-	system("rm -v a.txt");	
+	int result = system("rm -v a.txt");	
 
 	reb_integrate(sim, tmax);
 	rebx_free(rebx);				/* free memory allocated by REBOUNDx */
