@@ -48,5 +48,7 @@ setup(name='reboundx',
     keywords='astronomy astrophysics nbody integrator',
     packages=['reboundx'],
     install_requires=['rebound>=2.11.0'],
+    tests_require=["numpy","matplotlib"],
+    test_suite="reboundx.tests",
     ext_modules = [libreboundxmodule],
     zip_safe=False)
