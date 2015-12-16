@@ -30,6 +30,8 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
+#define TWOPI 6.2831853071795862
+
 void rebx_modify_orbits_direct(struct reb_simulation* const sim){
 	struct rebx_extras* rebx = sim->extras;
 	struct rebx_params_modify_orbits modparams = rebx->modify_orbits_direct;
@@ -59,14 +61,17 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim){
 		const double tau_inc = rebx_get_tau_inc(p);
 		const double tau_omega = rebx_get_tau_omega(p);
 		const double tau_Omega = rebx_get_tau_Omega(p);
+		const double a0 = o.a;
+		const double e0 = o.e;
+		const double inc0 = o.inc;
+		
+		o.a = a0*exp(dt/tau_a);
+		o.e = e0*exp(dt/tau_e);
+		o.inc = inc0*exp(dt/tau_inc);
+		o.omega += TWOPI*dt/tau_omega;
+		o.Omega += TWOPI*dt/tau_Omega;
 
-		o.a = o.a*exp(dt/tau_a);
-		o.e = o.e*exp(dt/tau_e);
-		o.inc = o.inc*exp(dt/tau_inc);
-		o.omega += 2*M_PI*dt/tau_omega;
-		o.Omega += 2*M_PI*dt/tau_Omega;
-
-		o.a += 2.*o.a*o.e*o.e*modparams.p*dt/tau_e; // Coupling term between e and a
+		o.a += 2.*a0*e0*e0*modparams.p*dt/tau_e; // Coupling term between e and a
 
 		rebxtools_orbit2p(sim->G, p, &com, &o);
 		if(modparams.coordinates == JACOBI){
