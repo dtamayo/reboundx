@@ -6,6 +6,15 @@ with open("version.txt") as f:
     reboundxversion = f.readlines()[0].strip()
     print "Updating version to "+reboundxversion
 
+with open("README.rst") as f:
+    readme = f.readlines()
+
+with open("README.rst","w") as f:
+    for i in range(0,len(readme)):
+        if "badge/REBOUNDx-v" in readme[i]:
+            readme[i] = ".. image:: http://img.shields.io/badge/REBOUNDx-v"+reboundversion+"-green.svg?style=flat\n"
+        f.write(readme[i])
+
 with open("src/reboundx.c") as f:
     reboundxlines = f.readlines()
     for i,l in enumerate(reboundxlines):
