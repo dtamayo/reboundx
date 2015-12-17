@@ -49,6 +49,6 @@ setup(name='reboundx',
     packages=['reboundx'],
     install_requires=['rebound>=2.11.0'],
     tests_require=["numpy","matplotlib"],
-    test_suite="reboundx.tests",
+    test_suite="reboundx.test",
     ext_modules = [libreboundxmodule],
     zip_safe=False)
