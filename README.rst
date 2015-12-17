@@ -1,7 +1,10 @@
-.. image:: https://github.com/dtamayo/dtamayo.github.io/blob/master/pix/reboundx.png
-
 .. image:: https://travis-ci.org/dtamayo/reboundx.svg?branch=master
     :target: https://travis-ci.org/dtamayo/reboundx
+.. image:: https://github.com/dtamayo/dtamayo.github.io/blob/master/pix/reboundx.png
+    :width: 200px
+    :height: 200px
+    :align: center
+
 Welcome to REBOUNDx (eXtras)
 ====================================
 
