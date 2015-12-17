@@ -10,7 +10,7 @@ addons:
             - python-numpy
             - python-matplotlib
 install:
-    - virtualenv -p python2.7 --system-site-packages venv && source venv/bin/activate
+    - virtualenv -p python3.3 --system-site-packages venv && source venv/bin/activate
     - pip install coveralls
     - pip install -e .
 compiler:
