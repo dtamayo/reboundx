@@ -1,5 +1,7 @@
 .. image:: https://github.com/dtamayo/dtamayo.github.io/blob/master/pix/reboundx.png
 
+.. image:: https://travis-ci.org/dtamayo/reboundx.svg?branch=master
+    :target: https://travis-ci.org/dtamayo/reboundx
 Welcome to REBOUNDx (eXtras)
 ====================================
 
