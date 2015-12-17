@@ -12,7 +12,7 @@ with open("README.rst") as f:
 with open("README.rst","w") as f:
     for i in range(0,len(readme)):
         if "badge/REBOUNDx-v" in readme[i]:
-            readme[i] = ".. image:: http://img.shields.io/badge/REBOUNDx-v"+reboundversion+"-green.svg?style=flat\n"
+            readme[i] = ".. image:: http://img.shields.io/badge/REBOUNDx-v"+reboundxversion+"-green.svg?style=flat\n"
         f.write(readme[i])
 
 with open("src/reboundx.c") as f:
