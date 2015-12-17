@@ -1,5 +1,5 @@
 .. image:: http://img.shields.io/badge/REBOUNDx-v2.2.1-green.svg?style=flat
-    :target: http://reboundx/readthedocs.org
+    :target: http://reboundx.readthedocs.org
 .. image:: https://badge.fury.io/py/reboundx.svg
     :target: https://badge.fury.io/py/reboundx
 .. image:: https://travis-ci.org/dtamayo/reboundx.svg?branch=master
@@ -9,7 +9,7 @@
 .. image:: http://img.shields.io/badge/license-GPL-green.svg?style=flat 
     :target: https://github.com/dtamayo/rebound/blob/master/LICENSE
 .. image:: https://readthedocs.org/projects/pip/badge/?version=latest
-    :target: http://reboundx/readthedocs.org/
+    :target: http://reboundx.readthedocs.org/
 
 Welcome to REBOUNDx (eXtras)
 ====================================
