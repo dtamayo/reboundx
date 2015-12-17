@@ -1,4 +1,2 @@
-include src/*.c
-include src/*.h
 include README.rst
 include LICENSE
