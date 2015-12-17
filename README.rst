@@ -7,7 +7,7 @@
 .. image:: https://coveralls.io/repos/dtamayo/reboundx/badge.svg?branch=master&service=github 
     :target: https://coveralls.io/github/dtamayo/reboundx?branch=master
 .. image:: http://img.shields.io/badge/license-GPL-green.svg?style=flat 
-    :target: https://github.com/dtamayo/rebound/blob/master/LICENSE
+    :target: https://github.com/dtamayo/reboundx/blob/master/LICENSE
 .. image:: https://readthedocs.org/projects/pip/badge/?version=latest
     :target: http://reboundx.readthedocs.org/
 
