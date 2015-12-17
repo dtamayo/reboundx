@@ -6,6 +6,20 @@ with open("version.txt") as f:
     reboundxversion = f.readlines()[0].strip()
     print "Updating version to "+reboundxversion
 
+with open("doc/index.rst") as f:
+    index = f.readlines()
+
+with open("doc/index.rst","w") as f:
+    for i in range(0,len(index)):
+        if "Welcome to REBOUNDx" in index[i]:
+            index[i] = "Welcome to REBOUNDx ("+reboundxversion+")\n"
+            underline = ""
+            for j in range(len(index[i])-1):
+                underline += "="
+            underline += "\n"
+            index[i+1] = underline
+        f.write(index[i])
+
 with open("README.rst") as f:
     readme = f.readlines()
 
