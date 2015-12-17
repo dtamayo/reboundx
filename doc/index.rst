@@ -52,6 +52,7 @@ Issues
 If you have problems, please check out the :ref:`faq` page for possible answers, as well as for how to contact us for help!
 
 :ref:`c_version`
+
 :ref:`python_version`
 
 Table of Contents
