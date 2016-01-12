@@ -33,12 +33,6 @@
 #include "rebound.h"
 #include "rebxtools.h"
 
-void rebx_modify_orbits_forces(struct reb_simulation* const sim);
-void rebx_modify_orbits_direct(struct reb_simulation* const sim);
-void rebx_gr_full(struct reb_simulation* const sim);
-void rebx_gr_potential(struct reb_simulation* const sim);
-void rebx_gr(struct reb_simulation* const sim);
-void rebx_radiation_forces(struct reb_simulation* const sim);
 
 extern const char* rebx_build_str;		///< Date and time build string.
 extern const char* rebx_version_str;	///<Version string.
@@ -161,12 +155,31 @@ enum REBX_PARAMS{
 	RAD_BETA,							// Ratio of radiation pressure force to gravitational force from the star.
 };
 
+/*	Enumeration for the different effects that can be added in REBOUNDx.  See reboundx.readthedocs.org for details on the implementation.*/
+enum REBX_EFFECTS{
+	RADIATION_FORCES,
+	MODIFY_ORBITS_DIRECT,
+	MODIFY_ORBITS_FORCES,
+	GR,
+	GR_FULL,
+	GR_POTENTIAL,
+};
+
 /* 	Main structure used for all parameters added to particles.
  	These get added as nodes to a linked list for each particle, stored at particles[i].ap.*/
 struct rebx_param{
 	void* paramPtr;						// Pointer to the parameter (void* so it can point to different types of structs).
 	enum REBX_PARAMS param_type;		// Identifier for the type of parameter.
 	struct rebx_param* next;			// Pointer to the next parameter in the linked list.
+};
+
+/*  Structure for all REBOUNDx effects.
+ *  These get added as nodes to the effects linked list in the rebx_extras structure.*/
+struct rebx_effect{
+	void* paramsPtr;						// Pointer to the effect params structure (void* so it can point to different effect structs).
+	void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect);	// Pointer to the function to carry out the additional effect.
+	enum REBX_EFFECTS effect_type;		// Identifier for the type of effect.
+	struct rebx_effect* next;			// Pointer to the next effect in the linked list.
 };
 
 /*	Nodes for a linked list to all the parameters that have been allocated by REBOUNDx (so it can later free them).*/
@@ -221,17 +234,8 @@ Main REBOUNDx structure
 struct rebx_extras {	
 	struct reb_simulation* sim;								// Pointer to the simulation REBOUNDx is linked to.
 	struct rebx_param_to_be_freed* params_to_be_freed; 		// Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
-
-	void (**ptm) (struct reb_simulation* const sim);		// Pointer to an array of function pointers for all the post-timestep modifications added by user.
-	void (**forces) (struct reb_simulation* const sim);		// Pointer to an array of function pointers for all the force-based modifications added by user.
-
-	int Nptm;												// Number of post-timestep modifications currently in simulation.
-	int Nforces;											// Number of force-based modifications currently in simulation.
-
-	struct rebx_params_modify_orbits modify_orbits_forces;	// Structure for migration/ecc,inc damping/precession using forces.
-	struct rebx_params_modify_orbits modify_orbits_direct;	// Structure for migration/ecc,inc damping/precession directly altering orbital elements.
-	struct rebx_params_gr gr;								// Structure for post-Newtonian corrections.
-	struct rebx_params_radiation_forces radiation_forces;	// Structure for radiation forces.
+	struct rebx_effect* ptm;								// Linked list with pointers to all the post-timestep modifications added to the simulation.
+	struct rebx_effect* forces;							// Linked list with pointers to all the additional forces added to the simulation.
 };
 
 /****************************************
@@ -258,4 +262,11 @@ void rebx_add_param_orb_tau(struct reb_particle* p);		// add a rebx_orb_tau para
 
 /** @} */
 #endif
+
+void rebx_modify_orbits_forces(struct reb_simulation* const sim);
+void rebx_modify_orbits_direct(struct reb_simulation* const sim);
+void rebx_gr_full(struct reb_simulation* const sim);
+void rebx_gr_potential(struct reb_simulation* const sim);
+void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr);
+void rebx_radiation_forces(struct reb_simulation* const sim);
 

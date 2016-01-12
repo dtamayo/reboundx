@@ -27,7 +27,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include "reboundx.h"
-
+/*
 void rebx_radiation_forces(struct reb_simulation* const sim){
 	struct reb_particle* particles = sim->particles;
 	const struct rebx_extras* rebx = sim->extras;
@@ -57,4 +57,4 @@ void rebx_radiation_forces(struct reb_simulation* const sim){
 		particles[i].ay += a_rad*((1.-rdot/c)*dy/dr - dvy/c);
 		particles[i].az += a_rad*((1.-rdot/c)*dz/dr - dvz/c);
 	}
-}
+}*/
