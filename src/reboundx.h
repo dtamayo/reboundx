@@ -116,6 +116,7 @@ void rebx_add_custom_forces(struct rebx_extras* rebx, void (*custom_forces)(stru
  * @{
  */
 
+// Getter setter landmark for add_param.py
 void rebx_set_tau_a(struct reb_particle* p, double value); 
 double rebx_get_tau_a(struct reb_particle* p);
 void rebx_set_tau_e(struct reb_particle* p, double value); 
