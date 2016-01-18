@@ -235,7 +235,7 @@ struct rebx_extras {
 	struct reb_simulation* sim;								// Pointer to the simulation REBOUNDx is linked to.
 	struct rebx_param_to_be_freed* params_to_be_freed; 		// Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
 	struct rebx_effect* ptm;								// Linked list with pointers to all the post-timestep modifications added to the simulation.
-	struct rebx_effect* forces;							// Linked list with pointers to all the additional forces added to the simulation.
+	struct rebx_effect* forces;                             // Linked list with pointers to all the additional forces added to the simulation.
 };
 
 /****************************************
