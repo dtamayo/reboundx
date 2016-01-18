@@ -157,7 +157,7 @@ void rebx_add_gr(struct rebx_extras* rebx, double c){
 	sim->additional_forces = rebx_forces;
 	sim->force_is_velocity_dependent = 1;
 	
-	struct rebx_gr_params* gr_params = malloc(sizeof(*gr_params));
+	struct rebx_params_gr* gr_params = malloc(sizeof(*gr_params));
 	gr_params->c = c;
 
 	struct rebx_effect* gr = malloc(sizeof(*gr));
