@@ -378,3 +378,16 @@ double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, doub
 	const double c = rebx->radiation_forces.c;
 	return 3.*L*Q_pr/(16.*M_PI*mu*c*density*beta);	
 }
+
+/* Function to test whether REBOUNDx can load librebound.so and call REBOUND functions. */
+
+double install_test(void){
+	struct reb_simulation* sim = reb_create_simulation();
+	struct reb_particle p = {0};
+	p.m = 1.; 
+	reb_add(sim, p); 
+	struct reb_particle p1 = reb_tools_orbit2d_to_particle(sim->G, p, 0., 1., 0.2, 0., 0.);
+	reb_add(sim, p1);
+	reb_integrate(sim, 1.);
+	return sim->particles[1].x;
+}

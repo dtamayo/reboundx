@@ -257,5 +257,9 @@ void rebx_add_param_double(struct reb_particle* p, enum REBX_PARAMS param_type, 
 void rebx_add_param_orb_tau(struct reb_particle* p);		// add a rebx_orb_tau parameter to particle p
 
 /** @} */
+
+/* Function for testing whether REBOUNDx can load librebound.so and call REBOUND functions. */
+double install_test(void);
+
 #endif
 
