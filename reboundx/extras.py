@@ -201,23 +201,23 @@ def install_test(setup):
         try:
             clibreboundx.install_test.restype = c_double
         except Exception as e:
-            f.write(setup+': FAILED')
+            f.write(setup+': FAILED\n')
             f.write(e)
             return
         try:
             x = clibreboundx.install_test()
         except Exception as e:
-            f.write(setup+': FAILED')
+            f.write(setup+': FAILED\n')
             f.write(e)
             return
         try:
             if abs(x-0.17599665767) > 1.e-6:
-                f.write(setup+': FAILED')
+                f.write(setup+': FAILED\n')
                 f.write('Did not integrate to correct value of particles[1].x')
                 return
         except Exception as e:
-            f.write(setup+': FAILED')
+            f.write(setup+': FAILED\n')
             f.write(e)
             return
         
-        f.write(setup+': OK')
+        f.write(setup+': OK\n')
