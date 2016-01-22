@@ -4,13 +4,29 @@ except ImportError:
     from distutils.core import setup, Extension
 from codecs import open
 import os
+import inspect
+import sys 
+
+import rebound
+rebdir = os.path.dirname(inspect.getfile(rebound))
+
+if sys.platform == 'darwin':
+    from distutils import sysconfig
+    vars = sysconfig.get_config_vars()
+    vars['LDSHARED'] = vars['LDSHARED'].replace('-bundle', '-shared')
+    extra_link_args=['-Wl,-install_name,@rpath/../libreboundx.so']
+    extra_link_args.append('-Wl,-rpath,'+rebdir)
 
 libreboundxmodule = Extension('libreboundx',
-                    sources = [ 'src/gr.c', 'src/modify_orbits.c', 'src/radiation_forces.c', 'src/reboundx.c', 'src/rebxtools.c'],
-                    include_dirs = ['src'],
+                    sources = [ 'src/reboundx.c', 'src/gr.c', 'src/modify_orbits.c', 'src/radiation_forces.c', 'src/rebxtools.c'],
+                    include_dirs = ['src', rebdir],
+                    library_dirs = [rebdir+'/../'],
+                    runtime_library_dirs = [rebdir+'/../'],
+                    libraries=['rebound'],
                     define_macros=[ ('LIBREBOUNDX', None) ],
-                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-D_GNU_SOURCE', '-fPIC', '-Wpointer-arith'],
-                                    )
+                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-fPIC', '-Wpointer-arith'],
+                    extra_link_args=extra_link_args,
+                    )
 
 here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
