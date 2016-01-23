@@ -10,6 +10,7 @@ import sys
 import rebound
 rebdir = os.path.dirname(inspect.getfile(rebound))
 
+extra_link_args=[]
 if sys.platform == 'darwin':
     from distutils import sysconfig
     vars = sysconfig.get_config_vars()
