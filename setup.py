@@ -14,8 +14,8 @@ if sys.platform == 'darwin':
     from distutils import sysconfig
     vars = sysconfig.get_config_vars()
     vars['LDSHARED'] = vars['LDSHARED'].replace('-bundle', '-shared')
-    extra_link_args=['-Wl,-install_name,@rpath/../libreboundx.so']
-    extra_link_args.append('-Wl,-rpath,'+rebdir)
+    extra_link_args=['-Wl,-install_name,@rpath/libreboundx.so']
+    extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
 
 libreboundxmodule = Extension('libreboundx',
                     sources = [ 'src/reboundx.c', 'src/gr.c', 'src/modify_orbits.c', 'src/radiation_forces.c', 'src/rebxtools.c'],
