@@ -5,7 +5,7 @@
 # virtualenv venv
 # set venv to the name of the environment
 
-venv=t4
+venv=newt
 
 # ***Setup***
 
@@ -36,10 +36,10 @@ with open('results.txt', 'a') as f:
 			f.write('OK\n')
 		else:
 			f.write('FAILED\n')
-			f.write(e)
+			f.write(str(e)+'\n')
 	except Exception as e:
 		f.write('FAILED\n')
-		f.write(str(e))
+		f.write(str(e)+'\n')
 "
 
 # ***Run all combinations***
@@ -69,12 +69,12 @@ setup="REBOUND: PyPI REBOUNDx: PyPI: "
 cd ~/install_test_temp/rebound
 python setup.py clean --all
 cd ~/install_test_temp
-pip install -i https://testpypi.python.org/pypi rebound
+pip install -i https://testpypi.python.org/pypi --no-cache-dir rebound
 
 cd ~/install_test_temp/reboundx
 python setup.py clean --all
 cd ~/install_test_temp
-pip install -i https://testpypi.python.org/pypi reboundx
+pip install -i https://testpypi.python.org/pypi --no-cache-dir reboundx
 
 cd ~/install_test_temp
 python -c "
@@ -91,7 +91,7 @@ setup="REBOUND: PyPI REBOUNDx: Local: "
 cd ~/install_test_temp/rebound
 python setup.py clean --all
 cd ~/install_test_temp
-pip install -i https://testpypi.python.org/pypi rebound
+pip install -i https://testpypi.python.org/pypi --no-cache-dir rebound
 
 cd ~/install_test_temp/reboundx
 python setup.py clean --all
@@ -107,27 +107,27 @@ python -c "$pyscript"
 pip uninstall -y reboundx
 pip uninstall -y rebound
 
-#setup="REBOUND: Local REBOUNDx: PyPI: "
-#
-#cd ~/install_test_temp/rebound
-#python setup.py clean --all
-#pip install -e .
-#
-#cd ~/install_test_temp/reboundx
-#python setup.py clean --all
-#cd ~/install_test_temp
-#pip install -i https://testpypi.python.org/pypi reboundx
-#
-#cd ~/install_test_temp
-#python -c "
-#with open ('results.txt', 'a') as f:
-#	f.write('$setup')
-#"
-#python -c "$pyscript"
-#
-#pip uninstall -y reboundx
-#pip uninstall -y rebound
-#
+setup="REBOUND: Local REBOUNDx: PyPI: "
+
+cd ~/install_test_temp/rebound
+python setup.py clean --all
+pip install -e .
+
+cd ~/install_test_temp/reboundx
+python setup.py clean --all
+cd ~/install_test_temp
+pip install -i https://testpypi.python.org/pypi --no-cache-dir reboundx
+
+cd ~/install_test_temp
+python -c "
+with open ('results.txt', 'a') as f:
+	f.write('$setup')
+"
+python -c "$pyscript"
+
+pip uninstall -y reboundx
+pip uninstall -y rebound
+
 cat ~/install_test_temp/results.txt
 
 cd ~/
