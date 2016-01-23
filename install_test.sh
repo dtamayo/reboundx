@@ -107,27 +107,27 @@ python -c "$pyscript"
 pip uninstall -y reboundx
 pip uninstall -y rebound
 
-setup="REBOUND: Local REBOUNDx: PyPI: "
-
-cd ~/install_test_temp/rebound
-python setup.py clean --all
-pip install -e .
-
-cd ~/install_test_temp/reboundx
-python setup.py clean --all
-cd ~/install_test_temp
-pip install -i https://testpypi.python.org/pypi reboundx
-
-cd ~/install_test_temp
-python -c "
-with open ('results.txt', 'a') as f:
-	f.write('$setup')
-"
-python -c "$pyscript"
-
-pip uninstall -y reboundx
-pip uninstall -y rebound
-
+#setup="REBOUND: Local REBOUNDx: PyPI: "
+#
+#cd ~/install_test_temp/rebound
+#python setup.py clean --all
+#pip install -e .
+#
+#cd ~/install_test_temp/reboundx
+#python setup.py clean --all
+#cd ~/install_test_temp
+#pip install -i https://testpypi.python.org/pypi reboundx
+#
+#cd ~/install_test_temp
+#python -c "
+#with open ('results.txt', 'a') as f:
+#	f.write('$setup')
+#"
+#python -c "$pyscript"
+#
+#pip uninstall -y reboundx
+#pip uninstall -y rebound
+#
 cat ~/install_test_temp/results.txt
 
 cd ~/
