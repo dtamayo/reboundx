@@ -7,6 +7,11 @@ import os
 import inspect
 import sys 
 
+import sysconfig
+suffix = sysconfig.get_config_var('EXT_SUFFIX')
+if suffix is None:
+    suffix = ".so"
+
 import rebound
 rebdir = os.path.dirname(inspect.getfile(rebound))
 
@@ -15,7 +20,7 @@ if sys.platform == 'darwin':
     from distutils import sysconfig
     vars = sysconfig.get_config_vars()
     vars['LDSHARED'] = vars['LDSHARED'].replace('-bundle', '-shared')
-    extra_link_args=['-Wl,-install_name,@rpath/libreboundx.so']
+    extra_link_args=['-Wl,-install_name,@rpath/libreboundx'+suffix]
     extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
 
 libreboundxmodule = Extension('libreboundx',
@@ -23,7 +28,7 @@ libreboundxmodule = Extension('libreboundx',
                     include_dirs = ['src', rebdir],
                     library_dirs = [rebdir+'/../'],
                     runtime_library_dirs = [rebdir+'/../'],
-                    libraries=['rebound'],
+                    libraries=['rebound'+suffix[:-3]], #take off .so from the suffix
                     define_macros=[ ('LIBREBOUNDX', None) ],
                     extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-fPIC', '-Wpointer-arith'],
                     extra_link_args=extra_link_args,
