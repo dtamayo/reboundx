@@ -1,17 +1,15 @@
 #!/bin/bash
 
-# make and activate a new virtual environment (or conda environment) with pip installed
+# make a new virtual environment (or conda environment) no need to activate
 # conda create -n venv pip
 # virtualenv venv
-# set venv to the name of the environment
-
-venv=newt
+# call this with env name as argument, e.g., ./install_test.sh venv
 
 # ***Setup***
 
 # try both virtualenv and conda
-source $venv/bin/activate
-source activate $venv
+source $1/bin/activate
+source activate $1
 
 cd ~/
 mkdir install_test_temp
