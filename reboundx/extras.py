@@ -195,29 +195,20 @@ Extras._fields_ = [("sim", POINTER(rebound.Simulation)),
                 ("gr", rebx_params_gr),
                 ("radiation_forces", rebx_params_radiation_forces)]
 
-def install_test(setup):
-    with open("results.txt", "a") as f:
-        ok = True
-        try:
-            clibreboundx.install_test.restype = c_double
-        except Exception as e:
-            f.write(setup+': FAILED\n')
-            f.write(e)
-            return
-        try:
-            x = clibreboundx.install_test()
-        except Exception as e:
-            f.write(setup+': FAILED\n')
-            f.write(e)
-            return
-        try:
-            if abs(x-0.17599665767) > 1.e-6:
-                f.write(setup+': FAILED\n')
-                f.write('Did not integrate to correct value of particles[1].x')
-                return
-        except Exception as e:
-            f.write(setup+': FAILED\n')
-            f.write(e)
-            return
-        
-        f.write(setup+': OK\n')
+def install_test():
+    e = None
+    try:
+        clibreboundx.install_test.restype = c_double
+    except Exception as e:
+        return e
+    try:
+        x = clibreboundx.install_test()
+    except Exception as e:
+        return e
+    try:
+        if abs(x-0.17599665767) > 1.e-6:
+            return 'Did not integrate to correct value of particles[1].x'
+    except Exception as e:
+        return e
+    
+    return e
