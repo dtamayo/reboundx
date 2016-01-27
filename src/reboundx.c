@@ -32,7 +32,7 @@
 #include "reboundx.h"
 
 const char* rebx_build_str = __DATE__ " " __TIME__;	// Date and time build string. 
-const char* rebx_version_str = "2.3.5";			// **VERSIONLINE** This line gets updated automatically. Do not edit manually.
+const char* rebx_version_str = "2.4.0";			// **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 
 /* Main routines called each timestep. */
 
