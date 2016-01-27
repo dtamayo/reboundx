@@ -39,7 +39,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='reboundx',
-    version='2.3.5',
+    version='2.4.0',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
     url='http://github.com/dtamayo/reboundx',
@@ -69,7 +69,7 @@ setup(name='reboundx',
     ],
     keywords='astronomy astrophysics nbody integrator',
     packages=['reboundx'],
-    install_requires=['rebound>=2.11.0'],
+    install_requires=['rebound>=2.12.0'],
     tests_require=["numpy","matplotlib"],
     test_suite="reboundx.test",
     ext_modules = [libreboundxmodule],
