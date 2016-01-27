@@ -12,7 +12,12 @@ suffix = sysconfig.get_config_var('EXT_SUFFIX')
 if suffix is None:
     suffix = ".so"
 
-import rebound
+try:
+    import rebound
+except ImportError as e:
+    print("You must first install REBOUND.  See http://rebound.readthedocs.org/en/latest/python_quickstart.html")
+    sys.exit(1)
+
 rebdir = os.path.dirname(inspect.getfile(rebound))
 
 extra_link_args=[]
