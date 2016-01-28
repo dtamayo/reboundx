@@ -14,6 +14,10 @@ if suffix is None:
 
 try:
     import rebound
+    from distutils.version import LooseVersion
+    if LooseVersion(rebound.__version__) < LooseVersion("2.12.0"):
+        print("REBOUNDx requires a REBOUND version > 2.12.0.  Please upgrade.  See 5.3 in http://rebound.readthedocs.org/en/latest/python_quickstart.html")
+        sys.exit(1)
 except ImportError as e:
     print("You must first install REBOUND.  See http://rebound.readthedocs.org/en/latest/python_quickstart.html")
     sys.exit(1)
@@ -74,7 +78,7 @@ setup(name='reboundx',
     ],
     keywords='astronomy astrophysics nbody integrator',
     packages=['reboundx'],
-    install_requires=['rebound>=2.12.0'],
+    #install_requires=['rebound>=2.12.0'],
     tests_require=["numpy","matplotlib"],
     test_suite="reboundx.test",
     ext_modules = [libreboundxmodule],
