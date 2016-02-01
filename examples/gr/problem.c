@@ -33,7 +33,7 @@ int main(int argc, char* argv[]){
     double c = C_DEFAULT; // Have to set the speed of light in appropriate units (set by G and your initial conditions).  Here we use the value in default units of AU/(yr/2pi) 
     rebx_add_gr(rebx,c); // add postnewtonian correction.  
     /*add_gr only treats particles[0] as massive for the post-newtonian corrections.  See reboundx.readthedocs.org for more options.*/
-    double tmax = 5.e5;
+    double tmax = 2.e-2;
     reb_integrate(sim, tmax); 
     rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 
 }

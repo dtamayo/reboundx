@@ -78,12 +78,23 @@ void rebx_free_params(struct rebx_extras* rebx){
     }
 }
 
-void rebx_free_pointers(struct rebx_extras* rebx){
-    rebx_free_params(rebx);
-    free(rebx->forces);
-    free(rebx->ptm);
+void rebx_free_effects(struct rebx_effect* effects){
+    struct rebx_effect* current = effects;
+    struct rebx_effect* temp_next;
+
+    while(current != NULL){
+        temp_next = current->next;
+        free(current->paramsPtr);
+        free(current);
+        current = temp_next;
+    }
 }
 
+void rebx_free_pointers(struct rebx_extras* rebx){
+    rebx_free_params(rebx);
+    rebx_free_effects(rebx->forces);
+    rebx_free_effects(rebx->ptm);
+}
 
 /* Internal utility functions. */
 
@@ -120,7 +131,7 @@ void rebx_add_param_double(struct reb_particle* p, enum REBX_PARAMS param_type, 
     rebx_add_param_to_be_freed(p->sim->extras, newparam);
 }   
 
-void rebx_add_param_orb_tau(struct reb_particle* p){
+/*void rebx_add_param_orb_tau(struct reb_particle* p){
     struct rebx_param* newparam = malloc(sizeof(*newparam));
     newparam->paramPtr = malloc(sizeof(struct rebx_orb_tau));
     struct rebx_orb_tau orb_tau = {INFINITY, INFINITY, INFINITY, INFINITY, INFINITY}; // set all timescales to infinity (i.e. no effect)
@@ -131,7 +142,7 @@ void rebx_add_param_orb_tau(struct reb_particle* p){
     p->ap = newparam;
 
     rebx_add_param_to_be_freed(p->sim->extras, newparam);
-}
+}*/
 
 /****************************************
 User API
@@ -153,22 +164,6 @@ Functions for specific REBOUNDx effects
  *****************************************/
 
 void rebx_add_gr(struct rebx_extras* rebx, double c){
-<<<<<<< HEAD
-    struct reb_simulation* sim = rebx->sim;
-    sim->additional_forces = rebx_forces;
-    sim->force_is_velocity_dependent = 1;
-
-    rebx->Nforces++;
-    rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
-    rebx->forces[rebx->Nforces-1] = rebx_gr;
-    rebx->gr.c = c;
-}
-
-void rebx_add_gr_full(struct rebx_extras* rebx, double c){
-    struct reb_simulation* sim = rebx->sim;
-    sim->additional_forces = rebx_forces;
-    sim->force_is_velocity_dependent = 1;
-=======
 	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
 	sim->force_is_velocity_dependent = 1;
@@ -189,7 +184,6 @@ void rebx_add_gr_full(struct rebx_extras* rebx, double c){
 	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
 	sim->force_is_velocity_dependent = 1;
->>>>>>> multifx
 
     rebx->Nforces++;
     rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
@@ -259,6 +253,7 @@ void rebx_add_custom_forces(struct rebx_extras* rebx, void (*custom_forces)(stru
     rebx->forces[rebx->Nforces-1] = custom_forces;
 }
 */
+
 /****************************************
 Functions for getting and setting particle parameters
  *****************************************/
