@@ -28,7 +28,7 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-void rebx_gr_full(struct reb_simulation* const sim){
+/*void rebx_gr_full(struct reb_simulation* const sim){
     struct rebx_params_gr modparams = ((struct rebx_extras*) (sim->extras))->gr;
     const double C = modparams.c;
     const int _N_real = sim->N - sim->N_var;
@@ -196,7 +196,7 @@ void rebx_gr_full(struct reb_simulation* const sim){
             fprintf(d, "number %d: %d: %.30e \n", k, i, dx);
             fclose(d);
             }*/
-            if ((dx<1.e-30) && (dy <1.e-30) && (dz<1.e-30)){
+            /*if ((dx<1.e-30) && (dy <1.e-30) && (dz<1.e-30)){
                 breakout += 1;
             }
         }
@@ -213,7 +213,7 @@ void rebx_gr_full(struct reb_simulation* const sim){
     }
                     
 }
-
+*/
 void rebx_gr(struct reb_simulation* const sim){
     struct rebx_params_gr modparams = ((struct rebx_extras*)(sim->extras))->gr;
     const double C = modparams.c;
@@ -250,7 +250,7 @@ void rebx_gr(struct reb_simulation* const sim){
         particles[0].az -= massratio*daz;
     }
 }
-
+/*
 void rebx_gr_potential(struct reb_simulation* const sim){
     // Nobili & Roxburgh 1986
     struct rebx_params_gr modparams = ((struct rebx_extras*)(sim->extras))->gr;
@@ -273,4 +273,4 @@ void rebx_gr_potential(struct reb_simulation* const sim){
         particles[i].az -= prefac*dz;
     }
 }
-
+*/
