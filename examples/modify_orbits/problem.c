@@ -15,58 +15,58 @@
 #include "reboundx.h"
 
 int main(int argc, char* argv[]){
-	struct reb_simulation* sim = reb_create_simulation();
-	// Setup constants
-	sim->dt 			= 0.012;		// initial timestep.
-	sim->integrator	= REB_INTEGRATOR_IAS15;
+    struct reb_simulation* sim = reb_create_simulation();
+    // Setup constants
+    sim->dt             = 0.012;        // initial timestep.
+    sim->integrator = REB_INTEGRATOR_IAS15;
 
-	struct reb_particle p = {0}; 
-	p.m  	= 1.;	
-	reb_add(sim, p); 
+    struct reb_particle p = {0}; 
+    p.m     = 1.;   
+    reb_add(sim, p); 
 
-	double m = 0.;
-	double a1 = 1.;
-	double a2 = 2.;
-	double e = 0.4;
-	double omega = 0.;
-	double f = 0.;
+    double m = 0.;
+    double a1 = 1.;
+    double a2 = 2.;
+    double e = 0.4;
+    double omega = 0.;
+    double f = 0.;
 
-	struct reb_particle p1 = reb_tools_orbit2d_to_particle(sim->G, p, m, a1, e, omega, f);
-	struct reb_particle p2 = reb_tools_orbit2d_to_particle(sim->G, p, m, a2, e, omega, f);
-	reb_add(sim,p1);
-	reb_add(sim,p2);
-	reb_move_to_com(sim);
+    struct reb_particle p1 = reb_tools_orbit2d_to_particle(sim->G, p, m, a1, e, omega, f);
+    struct reb_particle p2 = reb_tools_orbit2d_to_particle(sim->G, p, m, a2, e, omega, f);
+    reb_add(sim,p1);
+    reb_add(sim,p2);
+    reb_move_to_com(sim);
 
-	struct rebx_extras* rebx = rebx_init(sim);	// first initialize rebx
+    struct rebx_extras* rebx = rebx_init(sim);  // first initialize rebx
 
-	// There are two options for how to modify orbits.  You would only choose one (comment the other out).  
-	// modify_orbits_forces doesn't have precession implemented yet.
+    // There are two options for how to modify orbits.  You would only choose one (comment the other out).  
+    // modify_orbits_forces doesn't have precession implemented yet.
 
-	rebx_add_modify_orbits_direct(rebx);	// directly update particles' orbital elements each timestep
-	//rebx_add_modify_orbits_forces(rebx);	// add forces that orbit-average to give exponential a and e damping
+    rebx_add_modify_orbits_direct(rebx);    // directly update particles' orbital elements each timestep
+    //rebx_add_modify_orbits_forces(rebx);  // add forces that orbit-average to give exponential a and e damping
 
-	// Set the timescales for each particle.  Parameter getter and setter functions always take the address of the particle (&)
-	
-	rebx_set_tau_a(&sim->particles[1], -1.e5); // add semimajor axis damping on inner planet (e-folding timescale)
-	rebx_set_tau_omega(&sim->particles[1], -1.e4); // add linear precession on inner planet (precession period)	
-	rebx_set_tau_e(&sim->particles[2], -1.e4); // add eccentricity damping on particles[2] (e-folding timescale)
+    // Set the timescales for each particle.  Parameter getter and setter functions always take the address of the particle (&)
+    
+    rebx_set_tau_a(&sim->particles[1], -1.e5); // add semimajor axis damping on inner planet (e-folding timescale)
+    rebx_set_tau_omega(&sim->particles[1], -1.e4); // add linear precession on inner planet (precession period) 
+    rebx_set_tau_e(&sim->particles[2], -1.e4); // add eccentricity damping on particles[2] (e-folding timescale)
 
-	printf("Semimajor axis damping timescale for inner planet is %f.\n", -1.*rebx_get_tau_a(&sim->particles[1]));
-	printf("Precession timescale for inner planet is %f.\n", -1.*rebx_get_tau_omega(&sim->particles[1]));
-	printf("Eccentricity damping timescale for outer planet is %f.\n", -1.*rebx_get_tau_e(&sim->particles[2]));
-	
-	/* One can also adjust a coupling parameter between eccentricity and semimajor axis damping.  We use the parameter p
-	 * as defined by Deck & Batygin (2015).  The default p=0 corresponds to no coupling, while p=1 corresponds to e-damping
-	 * at constant angular momentum.  This is only implemented for modify_orbits_direct (not modify_orbits_forces).
-	 *
-	 * Additionally, the damping by default is done in Jacobi coordinates.  If you'd prefer to use barycentric or heliocentric
-	 * coordinates, set rebx->modify_orbits_forces.coordinates to BARYCENTRIC or HELIOCENTRIC, respectively. (also works for
-	 * modify_orbits_direct)*/
+    printf("Semimajor axis damping timescale for inner planet is %f.\n", -1.*rebx_get_tau_a(&sim->particles[1]));
+    printf("Precession timescale for inner planet is %f.\n", -1.*rebx_get_tau_omega(&sim->particles[1]));
+    printf("Eccentricity damping timescale for outer planet is %f.\n", -1.*rebx_get_tau_e(&sim->particles[2]));
+    
+    /* One can also adjust a coupling parameter between eccentricity and semimajor axis damping.  We use the parameter p
+     * as defined by Deck & Batygin (2015).  The default p=0 corresponds to no coupling, while p=1 corresponds to e-damping
+     * at constant angular momentum.  This is only implemented for modify_orbits_direct (not modify_orbits_forces).
+     *
+     * Additionally, the damping by default is done in Jacobi coordinates.  If you'd prefer to use barycentric or heliocentric
+     * coordinates, set rebx->modify_orbits_forces.coordinates to BARYCENTRIC or HELIOCENTRIC, respectively. (also works for
+     * modify_orbits_direct)*/
 
-	rebx->modify_orbits_direct.p = 1.;						// damp eccentricity at constant angular momentum	
-	rebx->modify_orbits_direct.coordinates = HELIOCENTRIC; 	// calculate orbital elements relative to sim->particles[0]
+    rebx->modify_orbits_direct.p = 1.;                      // damp eccentricity at constant angular momentum   
+    rebx->modify_orbits_direct.coordinates = HELIOCENTRIC;  // calculate orbital elements relative to sim->particles[0]
 
-	double tmax = 5.e4;
-	reb_integrate(sim, tmax);
-	rebx_free(rebx);	// Free all the memory allocated by rebx
+    double tmax = 5.e4;
+    reb_integrate(sim, tmax);
+    rebx_free(rebx);    // Free all the memory allocated by rebx
 }

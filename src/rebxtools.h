@@ -1,9 +1,9 @@
 /**
- * @file 	rebxtools.h
- * @brief 	Helper functions for reboundx
- * @author 	Dan Tamayo <tamayo.daniel@gmail.com>
+ * @file    rebxtools.h
+ * @brief   Helper functions for reboundx
+ * @author  Dan Tamayo <tamayo.daniel@gmail.com>
  * 
- * @section 	LICENSE
+ * @section     LICENSE
  * Copyright (c) 2015 Dan Tamayo, Hanno Rein
  *
  * This file is part of reboundx.
