@@ -2,12 +2,13 @@
 
 import sys
 
-if len(sys.argv) is not 3:
-    print("Error\n*****\nMust pass name of parameter and description, e.g. python add_param.py tau_a 'semimajor axis decay timescale'")
+if len(sys.argv) is not 4:
+    print("Error\n*****\nMust pass name of parameter, default value, and description, e.g. python add_param.py tau_a INFINITY 'semimajor axis decay timescale'")
     sys.exit()
 
 param_name = str(sys.argv[1])
-param_desc = str(sys.argv[2])
+param_default = str(sys.argv[2])
+param_desc = str(sys.argv[3])
 
 tab = "    " # 4 space tab
 with open("../src/reboundx.h") as f:
@@ -42,7 +43,7 @@ with open("../src/reboundx.c", "w") as f:
             f.write("double rebx_get_{0}(struct reb_particle* p){{\n".format(param_name))
             f.write(tab+"double* {0}Ptr = rebx_search_param(p, {1});\n".format(param_name, param_name.upper()))
             f.write(tab+"if({0}Ptr == NULL){{\n".format(param_name))
-            f.write(tab+tab+"return 0.;\n")
+            f.write(tab+tab+"return {0};\n".format(param_default))
             f.write(tab+"}\n")
             f.write(tab+"else{\n")
             f.write(tab+tab+"return *{0}Ptr;\n".format(param_name))
