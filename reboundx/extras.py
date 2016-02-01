@@ -115,26 +115,12 @@ class Extras(Structure):
 
     def add_Particle_props(self):
         @property
-        def tau_a(self):
-            clibreboundx.rebx_get_tau_a.restype = c_double
-            return clibreboundx.rebx_get_tau_a(byref(self))
-        @tau_a.setter
-        def tau_a(self, value):
-            clibreboundx.rebx_set_tau_a(byref(self), c_double(value))
-        @property
-        def tau_e(self):
-            clibreboundx.rebx_get_tau_e.restype = c_double
-            return clibreboundx.rebx_get_tau_e(byref(self))
-        @tau_e.setter
-        def tau_e(self, value):
-            clibreboundx.rebx_set_tau_e(byref(self), c_double(value))
-        @property
-        def tau_inc(self):
-            clibreboundx.rebx_get_tau_inc.restype = c_double
-            return clibreboundx.rebx_get_tau_inc(byref(self))
-        @tau_inc.setter
-        def tau_inc(self, value):
-            clibreboundx.rebx_set_tau_inc(byref(self), c_double(value))
+        def beta(self):
+            clibreboundx.rebx_get_beta.restype = c_double
+            return clibreboundx.rebx_get_beta(byref(self))
+        @beta.setter
+        def beta(self, value):
+            clibreboundx.rebx_set_beta(byref(self), c_double(value))
         @property
         def tau_omega(self):
             clibreboundx.rebx_get_tau_omega.restype = c_double
@@ -150,20 +136,34 @@ class Extras(Structure):
         def tau_Omega(self, value):
             clibreboundx.rebx_set_tau_Omega(byref(self), c_double(value))
         @property
-        def beta(self):
-            clibreboundx.rebx_get_beta.restype = c_double
-            return clibreboundx.rebx_get_beta(byref(self))
-        @beta.setter
-        def beta(self, value):
-            clibreboundx.rebx_set_beta(byref(self), c_double(value))
+        def tau_inc(self):
+            clibreboundx.rebx_get_tau_inc.restype = c_double
+            return clibreboundx.rebx_get_tau_inc(byref(self))
+        @tau_inc.setter
+        def tau_inc(self, value):
+            clibreboundx.rebx_set_tau_inc(byref(self), c_double(value))
+        @property
+        def tau_e(self):
+            clibreboundx.rebx_get_tau_e.restype = c_double
+            return clibreboundx.rebx_get_tau_e(byref(self))
+        @tau_e.setter
+        def tau_e(self, value):
+            clibreboundx.rebx_set_tau_e(byref(self), c_double(value))
+        @property
+        def tau_a(self):
+            clibreboundx.rebx_get_tau_a.restype = c_double
+            return clibreboundx.rebx_get_tau_a(byref(self))
+        @tau_a.setter
+        def tau_a(self, value):
+            clibreboundx.rebx_set_tau_a(byref(self), c_double(value))
 
         #Monkeypatch landmark for add_param.py
-        rebound.Particle.tau_a = tau_a
-        rebound.Particle.tau_e = tau_e
-        rebound.Particle.tau_inc = tau_inc
+        rebound.Particle.beta = beta
         rebound.Particle.tau_omega = tau_omega
         rebound.Particle.tau_Omega = tau_Omega
-        rebound.Particle.beta = beta 
+        rebound.Particle.tau_inc = tau_inc
+        rebound.Particle.tau_e = tau_e
+        rebound.Particle.tau_a = tau_a
 
     def rad_calc_beta(self, particle_radius, density, Q_pr, L):
         """
