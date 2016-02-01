@@ -214,9 +214,9 @@
                     
 }
 */
-void rebx_gr(struct reb_simulation* const sim){
-    struct rebx_params_gr modparams = ((struct rebx_extras*)(sim->extras))->gr;
-    const double C = modparams.c;
+void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
+    const struct rebx_params_gr* params = gr->paramsPtr;
+    const double C = params->c;
     const int _N_real = sim->N - sim->N_var;
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
