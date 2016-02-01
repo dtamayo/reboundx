@@ -14,12 +14,13 @@ if suffix is None:
 
 try:
     import rebound
-    from distutils.version import LooseVersion
-    if LooseVersion(rebound.__version__) < LooseVersion("2.12.0"):
-        print("REBOUNDx requires a REBOUND version > 2.12.0.  Please upgrade.  See 5.3 in http://rebound.readthedocs.org/en/latest/python_quickstart.html")
-        sys.exit(1)
-except ImportError as e:
+except ImportError:
     print("You must first install REBOUND.  See http://rebound.readthedocs.org/en/latest/python_quickstart.html")
+    sys.exit(1)
+
+from distutils.version import LooseVersion
+if LooseVersion(rebound.__version__) < LooseVersion("2.12.0"): # Only after 2.12.0 can you link to librebound.so 
+    print("REBOUNDx requires REBOUND version > 2.12.0.  Please upgrade.  See 5.3 in http://rebound.readthedocs.org/en/latest/python_quickstart.html")
     sys.exit(1)
 
 rebdir = os.path.dirname(inspect.getfile(rebound))
