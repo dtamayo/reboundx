@@ -33,7 +33,7 @@ with open("src/reboundx.c") as f:
     reboundxlines = f.readlines()
     for i,l in enumerate(reboundxlines):
         if "**VERSIONLINE**" in l:
-            reboundxlines[i] = "const char* rebx_version_str = \""+reboundxversion+"\";			// **VERSIONLINE** This line gets updated automatically. Do not edit manually.\n"
+            reboundxlines[i] = "const char* rebx_version_str = \""+reboundxversion+"\";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.\n"
 
     with open("src/reboundx.c", "w") as f:
         f.writelines(reboundxlines)
