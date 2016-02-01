@@ -17,7 +17,7 @@ with open("../src/reboundx.h", "w") as f:
     for i in range(len(rebxh)):
         f.write(rebxh[i])
         if "enum REBX_PARAMS{" in rebxh[i]:
-            f.write(tab+"{0},"+tab+tab+tab+tab+tab+tab+tab+tab+"// {1}\n".format(param_name.upper(), param_desc))
+            f.write(tab+"{0},".format(param_name.upper())+tab+tab+tab+tab+tab+tab+tab+tab+"// {0}\n".format(param_desc))
         if "Getter setter landmark" in rebxh[i]:
             f.write("void rebx_set_{0}(struct reb_particle* p, double value);\n".format(param_name))
             f.write("double rebx_get_{0}(struct reb_particle* p);\n".format(param_name))
