@@ -9,10 +9,10 @@ if len(sys.argv) is not 3:
 param_name = str(sys.argv[1])
 param_desc = str(sys.argv[2])
 
-with open("src/reboundx.h") as f:
+with open("../src/reboundx.h") as f:
     rebxh = f.readlines()
 
-with open("src/reboundx.h", "w") as f:
+with open("../src/reboundx.h", "w") as f:
     for i in range(len(rebxh)):
         f.write(rebxh[i])
         if "enum REBX_PARAMS{" in rebxh[i]:
@@ -21,10 +21,10 @@ with open("src/reboundx.h", "w") as f:
             f.write("void rebx_set_{0}(struct reb_particle* p, double value);\n".format(param_name))
             f.write("double rebx_get_{0}(struct reb_particle* p);\n".format(param_name))
 
-with open("src/reboundx.c") as f:
+with open("../src/reboundx.c") as f:
     rebxc = f.readlines()
 
-with open("src/reboundx.c", "w") as f:
+with open("../src/reboundx.c", "w") as f:
     for i in range(len(rebxc)):
         f.write(rebxc[i])
         if "Getter setter landmark" in rebxc[i]:
@@ -48,10 +48,10 @@ with open("src/reboundx.c", "w") as f:
             f.write("\t}\n")
             f.write("}\n\n")
 
-with open("reboundx/extras.py") as f:
+with open("../reboundx/extras.py") as f:
     extras = f.readlines()
 
-with open("reboundx/extras.py", "w") as f:
+with open("../reboundx/extras.py", "w") as f:
     for i in range(len(extras)):
         f.write(extras[i])
         if "def add_Particle_props" in extras[i]:
@@ -65,10 +65,10 @@ with open("reboundx/extras.py", "w") as f:
         if "Monkeypatch landmark" in extras[i]:
             f.write("\t\trebound.Particle.{0} = {1}\n".format(param_name, param_name))
 
-with open("doc/modules.rst") as f:
+with open("../doc/modules.rst") as f:
     mod = f.readlines()
 
-with open("doc/modules.rst", "w") as f:
+with open("../doc/modules.rst", "w") as f:
     for i in range(len(mod)):
         f.write(mod[i])
         if ".. Parameters (marker for add_param.py)" in mod[i]:
