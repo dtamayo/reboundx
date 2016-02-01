@@ -58,8 +58,8 @@ with open("../reboundx/extras.py", "w") as f:
         if "def add_Particle_props" in extras[i]:
             f.write(tab+tab+"@property\n")
             f.write(tab+tab+"def {0}(self):\n".format(param_name))
-            f.write(tab+tab+"tab+clibreboundx.rebx_get_{0}.restype = c_double\n".format(param_name))
-            f.write(tab+tab+"tab+return clibreboundx.rebx_get_{0}(byref(self))\n".format(param_name))
+            f.write(tab+tab+tab+"clibreboundx.rebx_get_{0}.restype = c_double\n".format(param_name))
+            f.write(tab+tab+tab+"return clibreboundx.rebx_get_{0}(byref(self))\n".format(param_name))
             f.write(tab+tab+"@{0}.setter\n".format(param_name))
             f.write(tab+tab+"def {0}(self, value):\n".format(param_name))
             f.write(tab+tab+tab+"clibreboundx.rebx_set_{0}(byref(self), c_double(value))\n".format(param_name))
