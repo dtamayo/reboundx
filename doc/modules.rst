@@ -77,6 +77,7 @@ There are plenty of examples in :ref:`c_examples` and :ref:`ipython_examples`.
 =============== ========================================= ============================================ 
 Parameter name  Effect                                    Description
 =============== ========================================= ============================================ 
+.. Parameters (marker for add_param.py) 
 tau_a           modify_orbit_direct, modify_orbits_forces Semimajor axis exponential growth/damping timescale
 tau_e           modify_orbit_direct, modify_orbits_forces Eccentricity exponential growth/damping timescale
 tau_inc         modify_orbit_direct, modify_orbits_forces Inclination axis exponential growth/damping timescale

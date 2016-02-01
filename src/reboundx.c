@@ -249,6 +249,7 @@ void rebx_add_custom_forces(struct rebx_extras* rebx, void (*custom_forces)(stru
 Functions for getting and setting particle parameters
  *****************************************/
 
+// Getter setter landmark for add_param.py
 void rebx_set_tau_a(struct reb_particle* p, double value){
     struct rebx_orb_tau* orb_tau = rebx_search_param(p, ORB_TAU);
     if(orb_tau == NULL){
