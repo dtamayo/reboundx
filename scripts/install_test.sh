@@ -14,12 +14,11 @@ source activate $1
 cd ~/
 mkdir install_test_temp
 cd install_test_temp
-git clone https://github.com/dtamayo/rebound.git
+git clone https://github.com/hannorein/rebound.git
 git clone https://github.com/dtamayo/reboundx.git
-cd rebound
+cd reboundx
 git checkout pypi
-cd ../reboundx
-git checkout pypi
+cd ~/install_test_temp
 
 pip uninstall -y reboundx
 pip uninstall -y rebound
@@ -67,7 +66,7 @@ setup="REBOUND: PyPI REBOUNDx: PyPI: "
 cd ~/install_test_temp/rebound
 python setup.py clean --all
 cd ~/install_test_temp
-pip install -i https://testpypi.python.org/pypi --no-cache-dir rebound
+pip install --no-cache-dir rebound
 
 cd ~/install_test_temp/reboundx
 python setup.py clean --all
@@ -89,7 +88,7 @@ setup="REBOUND: PyPI REBOUNDx: Local: "
 cd ~/install_test_temp/rebound
 python setup.py clean --all
 cd ~/install_test_temp
-pip install -i https://testpypi.python.org/pypi --no-cache-dir rebound
+pip install --no-cache-dir rebound
 
 cd ~/install_test_temp/reboundx
 python setup.py clean --all
