@@ -117,6 +117,18 @@ void rebx_add_custom_forces(struct rebx_extras* rebx, void (*custom_forces)(stru
  */
 
 // Getter setter landmark for add_param.py
+void rebx_set_beta(struct reb_particle* p, double value);
+double rebx_get_beta(struct reb_particle* p);
+void rebx_set_tau_omega(struct reb_particle* p, double value);
+double rebx_get_tau_omega(struct reb_particle* p);
+void rebx_set_tau_Omega(struct reb_particle* p, double value);
+double rebx_get_tau_Omega(struct reb_particle* p);
+void rebx_set_tau_inc(struct reb_particle* p, double value);
+double rebx_get_tau_inc(struct reb_particle* p);
+void rebx_set_tau_e(struct reb_particle* p, double value);
+double rebx_get_tau_e(struct reb_particle* p);
+void rebx_set_tau_a(struct reb_particle* p, double value);
+double rebx_get_tau_a(struct reb_particle* p);
 
 /** @} */
 
@@ -146,6 +158,12 @@ Basic types in REBOUNDx
 
 /*  Enumeration for the different groups of parameters that can be added to particles.*/
 enum REBX_PARAMS{
+    BETA,                               // Ratio of radiation to gravitational force (Burns et al. 1979)
+    TAU_LITTLE_OMEGA,                   // Period of linear apsidal precession/regression
+    TAU_BIG_OMEGA,                      // Period of linear nodal precession/regression
+    TAU_INC,                            // Inclination exponential growth/damping timescale
+    TAU_E,                              // Eccentricity exponential growth/damping timescale
+    TAU_A,                              // Semimajor axis exponential growth/damping timescale
     ORB_TAU,                            // Parameter holding timescales for orbit modifications (migration etc.).
     RAD_BETA,                           // Ratio of radiation pressure force to gravitational force from the star.
 };

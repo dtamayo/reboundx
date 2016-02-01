@@ -77,12 +77,11 @@ There are plenty of examples in :ref:`c_examples` and :ref:`ipython_examples`.
 =============== ========================================= ============================================ 
 Parameter name  Effect                                    Description
 =============== ========================================= ============================================ 
-.. Parameters (marker for add_param.py) 
 tau_a           modify_orbit_direct, modify_orbits_forces Semimajor axis exponential growth/damping timescale
 tau_e           modify_orbit_direct, modify_orbits_forces Eccentricity exponential growth/damping timescale
 tau_inc         modify_orbit_direct, modify_orbits_forces Inclination axis exponential growth/damping timescale
-tau_Omega       modify_orbit_direct, modify_orbits_forces Period of linear nodal precession/regression
-tau_omega       modify_orbit_direct, modify_orbits_forces Period of linear apsidal precession/regression
+tau_Omega       modify_orbit_direct                       Period of linear nodal precession/regression
+tau_omega       modify_orbit_direct                       Period of linear apsidal precession/regression
 beta            radiation_forces                          Ratio of radiation to gravitational force (Burns et al. 1979)
 =============== ========================================= ============================================ 
 

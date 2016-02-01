@@ -250,6 +250,126 @@ Functions for getting and setting particle parameters
  *****************************************/
 
 // Getter setter landmark for add_param.py
+void rebx_set_beta(struct reb_particle* p, double value){
+    double* betaPtr = rebx_search_param(p, BETA);
+    if(betaPtr == NULL){
+        rebx_add_param_double(p, BETA, value);
+    }
+    else{
+        *betaPtr = value;
+    }
+}
+
+double rebx_get_beta(struct reb_particle* p){
+    double* betaPtr = rebx_search_param(p, BETA);
+    if(betaPtr == NULL){
+        return 0.;
+    }
+    else{
+        return *betaPtr;
+    }
+}
+
+void rebx_set_tau_omega(struct reb_particle* p, double value){
+    double* tau_omegaPtr = rebx_search_param(p, TAU_LITTLE_OMEGA);
+    if(tau_omegaPtr == NULL){
+        rebx_add_param_double(p, TAU_LITTLE_OMEGA, value);
+    }
+    else{
+        *tau_omegaPtr = value;
+    }
+}
+
+double rebx_get_tau_omega(struct reb_particle* p){
+    double* tau_omegaPtr = rebx_search_param(p, TAU_LITTLE_OMEGA);
+    if(tau_omegaPtr == NULL){
+        return INFINITY;
+    }
+    else{
+        return *tau_omegaPtr;
+    }
+}
+
+void rebx_set_tau_Omega(struct reb_particle* p, double value){
+    double* tau_OmegaPtr = rebx_search_param(p, TAU_BIG_OMEGA);
+    if(tau_OmegaPtr == NULL){
+        rebx_add_param_double(p, TAU_BIG_OMEGA, value);
+    }
+    else{
+        *tau_OmegaPtr = value;
+    }
+}
+
+double rebx_get_tau_Omega(struct reb_particle* p){
+    double* tau_OmegaPtr = rebx_search_param(p, TAU_BIG_OMEGA);
+    if(tau_OmegaPtr == NULL){
+        return INFINITY;
+    }
+    else{
+        return *tau_OmegaPtr;
+    }
+}
+
+void rebx_set_tau_inc(struct reb_particle* p, double value){
+    double* tau_incPtr = rebx_search_param(p, TAU_INC);
+    if(tau_incPtr == NULL){
+        rebx_add_param_double(p, TAU_INC, value);
+    }
+    else{
+        *tau_incPtr = value;
+    }
+}
+
+double rebx_get_tau_inc(struct reb_particle* p){
+    double* tau_incPtr = rebx_search_param(p, TAU_INC);
+    if(tau_incPtr == NULL){
+        return INFINITY;
+    }
+    else{
+        return *tau_incPtr;
+    }
+}
+
+void rebx_set_tau_e(struct reb_particle* p, double value){
+    double* tau_ePtr = rebx_search_param(p, TAU_E);
+    if(tau_ePtr == NULL){
+        rebx_add_param_double(p, TAU_E, value);
+    }
+    else{
+        *tau_ePtr = value;
+    }
+}
+
+double rebx_get_tau_e(struct reb_particle* p){
+    double* tau_ePtr = rebx_search_param(p, TAU_E);
+    if(tau_ePtr == NULL){
+        return INFINITY;
+    }
+    else{
+        return *tau_ePtr;
+    }
+}
+
+void rebx_set_tau_a(struct reb_particle* p, double value){
+    double* tau_aPtr = rebx_search_param(p, TAU_A);
+    if(tau_aPtr == NULL){
+        rebx_add_param_double(p, TAU_A, value);
+    }
+    else{
+        *tau_aPtr = value;
+    }
+}
+
+double rebx_get_tau_a(struct reb_particle* p){
+    double* tau_aPtr = rebx_search_param(p, TAU_A);
+    if(tau_aPtr == NULL){
+        return INFINITY;
+    }
+    else{
+        return *tau_aPtr;
+    }
+}
+
 
 /****************************************
 Convenience Functions (include modification in function name in some form)
