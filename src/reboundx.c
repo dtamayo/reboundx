@@ -37,17 +37,19 @@ const char* rebx_version_str = "2.4.2";         // **VERSIONLINE** This line get
 /* Main routines called each timestep. */
 
 void rebx_forces(struct reb_simulation* sim){
-    struct rebx_extras* rebx = sim->extras;
-    for(int i=0; i<rebx->Nforces; i++){
-        rebx->forces[i](sim);
-    }
+	struct rebx_extras* rebx = sim->extras;
+	struct rebx_effect* current = rebx->forces;
+	while(current != NULL){
+		current->functionPtr(sim, current);
+		current = current->next;
+	}
 }
 
 void rebx_ptm(struct reb_simulation* sim){
-    struct rebx_extras* rebx = sim->extras;
-    for(int i=0; i<rebx->Nptm; i++){
-        rebx->ptm[i](sim);
-    }
+	/*struct rebx_extras* rebx = sim->extras;
+	for(int i=0; i<rebx->Nptm; i++){
+		rebx->ptm[i](sim);
+	}*/
 }
 
 /* Initialization routine. */
@@ -57,20 +59,9 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     sim->extras = rebx;
     rebx->sim = sim;
 
-    rebx->params_to_be_freed = NULL;
-    rebx->ptm = NULL;
-    rebx->forces = NULL;
-
-    rebx->modify_orbits_forces.p = 0;
-    rebx->modify_orbits_forces.coordinates = JACOBI;
-    rebx->modify_orbits_direct.p = 0;
-    rebx->modify_orbits_direct.coordinates = JACOBI;
-    rebx->gr.c = C_DEFAULT; 
-    rebx->radiation_forces.c = C_DEFAULT;
-    rebx->radiation_forces.source = NULL;
-
-    rebx->Nptm = 0;
-    rebx->Nforces = 0;
+	rebx->params_to_be_freed = NULL;
+	rebx->ptm = NULL;
+	rebx->forces = NULL;
 }
 
 /* Garbage collection routines. */
@@ -162,6 +153,7 @@ Functions for specific REBOUNDx effects
  *****************************************/
 
 void rebx_add_gr(struct rebx_extras* rebx, double c){
+<<<<<<< HEAD
     struct reb_simulation* sim = rebx->sim;
     sim->additional_forces = rebx_forces;
     sim->force_is_velocity_dependent = 1;
@@ -176,6 +168,28 @@ void rebx_add_gr_full(struct rebx_extras* rebx, double c){
     struct reb_simulation* sim = rebx->sim;
     sim->additional_forces = rebx_forces;
     sim->force_is_velocity_dependent = 1;
+=======
+	struct reb_simulation* sim = rebx->sim;
+	sim->additional_forces = rebx_forces;
+	sim->force_is_velocity_dependent = 1;
+	
+	struct rebx_params_gr* gr_params = malloc(sizeof(*gr_params));
+	gr_params->c = c;
+
+	struct rebx_effect* gr = malloc(sizeof(*gr));
+	gr->paramsPtr = gr_params;
+	gr->functionPtr = rebx_gr;
+	gr->effect_type = GR;
+
+	gr->next = rebx->forces;
+	rebx->forces = gr;
+}
+
+/*void rebx_add_gr_full(struct rebx_extras* rebx, double c){
+	struct reb_simulation* sim = rebx->sim;
+	sim->additional_forces = rebx_forces;
+	sim->force_is_velocity_dependent = 1;
+>>>>>>> multifx
 
     rebx->Nforces++;
     rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
@@ -244,7 +258,7 @@ void rebx_add_custom_forces(struct rebx_extras* rebx, void (*custom_forces)(stru
     rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
     rebx->forces[rebx->Nforces-1] = custom_forces;
 }
-
+*/
 /****************************************
 Functions for getting and setting particle parameters
  *****************************************/
@@ -374,7 +388,7 @@ double rebx_get_tau_a(struct reb_particle* p){
 /****************************************
 Convenience Functions (include modification in function name in some form)
  *****************************************/
-
+/*
 double rebx_rad_calc_beta(struct rebx_extras* rebx, double particle_radius, double density, double Q_pr, double L){
     double mu = rebx->sim->G*rebx->radiation_forces.source->m;
     const double c = rebx->radiation_forces.c;
@@ -384,7 +398,7 @@ double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, doub
     const double mu = rebx->sim->G*rebx->radiation_forces.source->m;
     const double c = rebx->radiation_forces.c;
     return 3.*L*Q_pr/(16.*M_PI*mu*c*density*beta);  
-}
+}*/
 
 /* Function to test whether REBOUNDx can load librebound.so and call REBOUND functions. */
 

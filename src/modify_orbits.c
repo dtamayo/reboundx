@@ -32,7 +32,7 @@
 
 #define TWOPI 6.2831853071795862
 
-void rebx_modify_orbits_direct(struct reb_simulation* const sim){
+/*void rebx_modify_orbits_direct(struct reb_simulation* const sim){
     struct rebx_extras* rebx = sim->extras;
     struct rebx_params_modify_orbits modparams = rebx->modify_orbits_direct;
     
@@ -166,10 +166,10 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim){
                 sim->particles[0].ay -= p->m/sim->particles[0].m*a_over_r*dy;
                 sim->particles[0].az -= p->m/sim->particles[0].m*a_over_r*dz;
             }*/
-        }
+ /*       }
         if(modparams.coordinates == JACOBI){
             rebxtools_update_com_without_particle(&com, p);
         }
     }
 }
-
+*/

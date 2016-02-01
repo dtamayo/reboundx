@@ -27,7 +27,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include "reboundx.h"
-
+/*
 void rebx_radiation_forces(struct reb_simulation* const sim){
     struct reb_particle* particles = sim->particles;
     const struct rebx_extras* rebx = sim->extras;
@@ -53,8 +53,8 @@ void rebx_radiation_forces(struct reb_simulation* const sim){
 
         // Equation (5) of Burns, Lamy & Soter (1979)
 
-        particles[i].ax += a_rad*((1.-rdot/c)*dx/dr - dvx/c);
-        particles[i].ay += a_rad*((1.-rdot/c)*dy/dr - dvy/c);
-        particles[i].az += a_rad*((1.-rdot/c)*dz/dr - dvz/c);
-    }
-}
+		particles[i].ax += a_rad*((1.-rdot/c)*dx/dr - dvx/c);
+		particles[i].ay += a_rad*((1.-rdot/c)*dy/dr - dvy/c);
+		particles[i].az += a_rad*((1.-rdot/c)*dz/dr - dvz/c);
+	}
+}*/
