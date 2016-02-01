@@ -19,8 +19,8 @@ except ImportError:
     sys.exit(1)
 
 from distutils.version import LooseVersion
-if LooseVersion(rebound.__version__) < LooseVersion("2.12.0"): # Only after 2.12.0 can you link to librebound.so 
-    print("REBOUNDx requires REBOUND version > 2.12.0.  Please upgrade.  See 5.3 in http://rebound.readthedocs.org/en/latest/python_quickstart.html")
+if LooseVersion(rebound.__version__) < LooseVersion("2.12.1"): # Only after 2.12.1 can you link to librebound.so 
+    print("REBOUNDx requires REBOUND version > 2.12.1.  Please upgrade.  See 5.3 in http://rebound.readthedocs.org/en/latest/python_quickstart.html")
     sys.exit(1)
 
 rebdir = os.path.dirname(inspect.getfile(rebound))
