@@ -27,17 +27,17 @@ pip uninstall -y rebound
 # ***Script to run each time***
 pyscript="
 with open('results.txt', 'a') as f:
-	try:
-		import reboundx
-		exception = reboundx.install_test()
-		if exception is None:
-			f.write('OK\n')
-		else:
-			f.write('FAILED\n')
-			f.write(str(e)+'\n')
-	except Exception as e:
-		f.write('FAILED\n')
-		f.write(str(e)+'\n')
+    try:
+        import reboundx
+        exception = reboundx.install_test()
+        if exception is None:
+            f.write('OK\n')
+        else:
+            f.write('FAILED\n')
+            f.write(str(e)+'\n')
+    except Exception as e:
+        f.write('FAILED\n')
+        f.write(str(e)+'\n')
 "
 
 # ***Run all combinations***
@@ -55,7 +55,7 @@ pip install -e .
 cd ~/install_test_temp
 python -c "
 with open ('results.txt', 'a') as f:
-	f.write('$setup')
+    f.write('$setup')
 "
 python -c "$pyscript"
 
@@ -77,7 +77,7 @@ pip install -i https://testpypi.python.org/pypi --no-cache-dir reboundx
 cd ~/install_test_temp
 python -c "
 with open ('results.txt', 'a') as f:
-	f.write('$setup')
+    f.write('$setup')
 "
 python -c "$pyscript"
 
@@ -98,7 +98,7 @@ pip install -e .
 cd ~/install_test_temp
 python -c "
 with open ('results.txt', 'a') as f:
-	f.write('$setup')
+    f.write('$setup')
 "
 python -c "$pyscript"
 
@@ -119,7 +119,7 @@ pip install -i https://testpypi.python.org/pypi --no-cache-dir reboundx
 cd ~/install_test_temp
 python -c "
 with open ('results.txt', 'a') as f:
-	f.write('$setup')
+    f.write('$setup')
 "
 python -c "$pyscript"
 
