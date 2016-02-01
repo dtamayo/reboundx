@@ -19,13 +19,13 @@ OPT+= -fPIC -DLIBREBOUNDX
 
 SOURCES=gr.c modify_orbits.c radiation_forces.c reboundx.c rebxtools.c 
 OBJECTS=$(SOURCES:.c=.o)
-HEADERS=rebound.h rebxtools.h reboundx.h
+HEADERS=rebxtools.h reboundx.h
 
 all: $(SOURCES) libreboundx.so
 	
 %.o: %.c $(HEADERS)
 	@echo "Compiling source file $< ..."
-	$(CC) -c $(OPT) $(PREDEF) -o $@ $<
+	$(CC) -c $(OPT) $(PREDEF) -I$(REB_DIR)/src -o $@ $<
 
 libreboundx.so: $(OBJECTS)
 	@echo ""        
