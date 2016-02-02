@@ -45,22 +45,23 @@ void rebx_forces(struct reb_simulation* sim){
 	}
 }
 
-void rebx_ptm(struct reb_simulation* sim){
-	/*struct rebx_extras* rebx = sim->extras;
-	for(int i=0; i<rebx->Nptm; i++){
-		rebx->ptm[i](sim);
-	}*/
+void rebx_post_timestep_modifications(struct reb_simulation* sim){
+	struct rebx_extras* rebx = sim->extras;
+	struct rebx_effect* current = rebx->post_timestep_modifications;
+	while(current != NULL){
+		current->functionPtr(sim, current);
+		current = current->next;
+	}
 }
 
 /* Initialization routine. */
-
 
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     sim->extras = rebx;
     rebx->sim = sim;
 
 	rebx->params_to_be_freed = NULL;
-	rebx->ptm = NULL;
+	rebx->post_timestep_modifications = NULL;
 	rebx->forces = NULL;
 }
 
@@ -93,7 +94,7 @@ void rebx_free_effects(struct rebx_effect* effects){
 void rebx_free_pointers(struct rebx_extras* rebx){
     rebx_free_params(rebx);
     rebx_free_effects(rebx->forces);
-    rebx_free_effects(rebx->ptm);
+    rebx_free_effects(rebx->post_timestep_modifications);
 }
 
 /* Internal utility functions. */
@@ -163,96 +164,108 @@ void rebx_free(struct rebx_extras* rebx){
 Functions for specific REBOUNDx effects
  *****************************************/
 
-void rebx_add_gr(struct rebx_extras* rebx, double c){
+void rebx_add_force(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type, void* paramsPtr, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect)){
+    struct rebx_effect* effect = malloc(sizeof(*effect));
+    effect->paramsPtr = paramsPtr;
+    effect->functionPtr = functionPtr;
+    effect->effect_type = effect_type;
+    effect->next = rebx->forces;
+    rebx->forces = effect;
+}
+
+void rebx_add_post_timestep_modification(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type, void* paramsPtr, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect)){
+    struct rebx_effect* effect = malloc(sizeof(*effect));
+    effect->paramsPtr = paramsPtr;
+    effect->functionPtr = functionPtr;
+    effect->effect_type = effect_type;
+    effect->next = rebx->forces;
+    rebx->forces = effect;
+}
+
+void rebx_add_gr(struct rebx_extras* rebx, struct reb_particle* source, double c){
 	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
-	sim->force_is_velocity_dependent = 1;
 	
 	struct rebx_params_gr* gr_params = malloc(sizeof(*gr_params));
 	gr_params->c = c;
-
-	struct rebx_effect* gr = malloc(sizeof(*gr));
-	gr->paramsPtr = gr_params;
-	gr->functionPtr = rebx_gr;
-	gr->effect_type = GR;
-
-	gr->next = rebx->forces;
-	rebx->forces = gr;
+    gr_params->source_index = reb_get_particle_index(source);
+	
+    sim->force_is_velocity_dependent = 1;
+    rebx_add_force(rebx, GR, gr_params, rebx_gr);
 }
 
-/*void rebx_add_gr_full(struct rebx_extras* rebx, double c){
+void rebx_add_gr_full(struct rebx_extras* rebx, double c){
 	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
-	sim->force_is_velocity_dependent = 1;
-
-    rebx->Nforces++;
-    rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
-    rebx->forces[rebx->Nforces-1] = rebx_gr_full;
-    rebx->gr.c = c;
+	
+	struct rebx_params_gr* gr_params = malloc(sizeof(*gr_params));
+	gr_params->c = c;
+	
+    sim->force_is_velocity_dependent = 1;
+    rebx_add_force(rebx, GR_FULL, gr_params, rebx_gr_full);
 }
 
-void rebx_add_gr_potential(struct rebx_extras* rebx, double c){
-    struct reb_simulation* sim = rebx->sim;
-    sim->additional_forces = rebx_forces;
-
-    rebx->Nforces++;
-    rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
-    rebx->forces[rebx->Nforces-1] = rebx_gr_potential;
-    rebx->gr.c = c;
+void rebx_add_gr_potential(struct rebx_extras* rebx, struct reb_particle* source, double c){
+	struct reb_simulation* sim = rebx->sim;
+	sim->additional_forces = rebx_forces;
+	
+	struct rebx_params_gr* gr_params = malloc(sizeof(*gr_params));
+	gr_params->c = c;
+    gr_params->source_index = reb_get_particle_index(source);
+	
+    rebx_add_force(rebx, GR_POTENTIAL, gr_params, rebx_gr_potential);
 }
 
 void rebx_add_modify_orbits_forces(struct rebx_extras* rebx){
-    struct reb_simulation* sim = rebx->sim;
-    sim->additional_forces = rebx_forces;
+	struct reb_simulation* sim = rebx->sim;
+	sim->additional_forces = rebx_forces;
+	
+	struct rebx_params_modify_orbits* mod_params = malloc(sizeof(*mod_params));
+	mod_params->p = 0;
+    mod_params->coordinates = JACOBI;
+	
     sim->force_is_velocity_dependent = 1;
-
-    rebx->Nforces++;
-    rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
-    rebx->forces[rebx->Nforces-1] = rebx_modify_orbits_forces;
+    rebx_add_force(rebx, MODIFY_ORBITS_FORCES, mod_params, rebx_modify_orbits_forces);
 }
 
 void rebx_add_modify_orbits_direct(struct rebx_extras* rebx){
-    struct reb_simulation* sim = rebx->sim;
-    sim->post_timestep_modifications = rebx_ptm;
-
-    rebx->Nptm++;
-    rebx->ptm = realloc(rebx->ptm, sizeof(*rebx->ptm)*rebx->Nptm);
-    rebx->ptm[rebx->Nptm-1] = rebx_modify_orbits_direct;
+	struct reb_simulation* sim = rebx->sim;
+	sim->post_timestep_modifications = rebx_post_timestep_modifications;
+	
+	struct rebx_params_modify_orbits* mod_params = malloc(sizeof(*mod_params));
+	mod_params->p = 0;
+    mod_params->coordinates = JACOBI;
+	
+    rebx_add_post_timestep_modification(rebx, MODIFY_ORBITS_DIRECT, mod_params, rebx_modify_orbits_direct);
 }
 
 void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source, double c){
-    struct reb_simulation* sim = rebx->sim;
-    sim->additional_forces = rebx_forces;
+	struct reb_simulation* sim = rebx->sim;
+	sim->additional_forces = rebx_forces;
+	
+	struct rebx_params_radiation_forces* rad_params = malloc(sizeof(*rad_params));
+	rad_params->c = c;
+    rad_params->source_index = reb_get_particle_index(source);
+	
     sim->force_is_velocity_dependent = 1;
-
-    rebx->Nforces++;
-    rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
-    rebx->forces[rebx->Nforces-1] = rebx_radiation_forces;
-    rebx->radiation_forces.source = source;
-    rebx->radiation_forces.c = c;
+    rebx_add_force(rebx, RADIATION_FORCES, rad_params, rebx_radiation_forces);
 }
 
-void rebx_add_custom_ptm(struct rebx_extras* rebx, void (*custom_ptm)(struct reb_simulation* const r) ){
+void rebx_add_custom_post_timestep_modifications(struct rebx_extras* rebx, void (*custom_post_timestep_modifications)(struct reb_simulation* const sim, struct rebx_effect* custom_effect), void* custom_params){
     struct reb_simulation* sim = rebx->sim;
-    sim->post_timestep_modifications = rebx_ptm;
+    sim->post_timestep_modifications = rebx_post_timestep_modifications;
 
-    rebx->Nptm++;
-    rebx->ptm = realloc(rebx->ptm, sizeof(*rebx->ptm)*rebx->Nptm);
-    rebx->ptm[rebx->Nptm-1] = custom_ptm;
+    rebx_add_post_timestep_modification(rebx, CUSTOM, custom_params, custom_post_timestep_modifications);
 }
 
-void rebx_add_custom_forces(struct rebx_extras* rebx, void (*custom_forces)(struct reb_simulation* const r), int force_is_velocity_dependent){
+void rebx_add_custom_forces(struct rebx_extras* rebx, void (*custom_forces)(struct reb_simulation* const sim, struct rebx_effect* custom_effect), int force_is_velocity_dependent, void* custom_params){
     struct reb_simulation* sim = rebx->sim;
     sim->additional_forces = rebx_forces;
     if (force_is_velocity_dependent){
         sim->force_is_velocity_dependent = 1;
     }
-
-    rebx->Nforces++;
-    rebx->forces = realloc(rebx->forces, sizeof(*rebx->forces)*rebx->Nforces);
-    rebx->forces[rebx->Nforces-1] = custom_forces;
+    rebx_add_force(rebx, CUSTOM, custom_params, custom_forces);
 }
-*/
 
 /****************************************
 Functions for getting and setting particle parameters
@@ -260,9 +273,9 @@ Functions for getting and setting particle parameters
 
 // Getter setter landmark for add_param.py
 void rebx_set_beta(struct reb_particle* p, double value){
-    double* betaPtr = rebx_search_param(p, BETA);
+    double* betaPtr = rebx_search_param(p, RAD_BETA);
     if(betaPtr == NULL){
-        rebx_add_param_double(p, BETA, value);
+        rebx_add_param_double(p, RAD_BETA, value);
     }
     else{
         *betaPtr = value;
@@ -270,7 +283,7 @@ void rebx_set_beta(struct reb_particle* p, double value){
 }
 
 double rebx_get_beta(struct reb_particle* p){
-    double* betaPtr = rebx_search_param(p, BETA);
+    double* betaPtr = rebx_search_param(p, RAD_BETA);
     if(betaPtr == NULL){
         return 0.;
     }
