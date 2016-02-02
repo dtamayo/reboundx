@@ -32,12 +32,11 @@
 
 #define TWOPI 6.2831853071795862
 
-/*void rebx_modify_orbits_direct(struct reb_simulation* const sim){
-    struct rebx_extras* rebx = sim->extras;
-    struct rebx_params_modify_orbits modparams = rebx->modify_orbits_direct;
+void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const mod){
+    const struct rebx_params_modify_orbits* const params = mod->paramsPtr;
     
     struct reb_particle com = {0};
-    switch(modparams.coordinates){
+    switch(params->coordinates){
     case JACOBI:
         rebxtools_get_com(sim, sim->N-1, &com); // We start with outermost particle, so get COM for the first N-1 particles
         break;
@@ -71,22 +70,21 @@
         o.omega += TWOPI*dt/tau_omega;
         o.Omega += TWOPI*dt/tau_Omega;
 
-        o.a += 2.*a0*e0*e0*modparams.p*dt/tau_e; // Coupling term between e and a
+        o.a += 2.*a0*e0*e0*params->p*dt/tau_e; // Coupling term between e and a
 
         rebxtools_orbit2p(sim->G, p, &com, &o);
-        if(modparams.coordinates == JACOBI){
+        if(params->coordinates == JACOBI){
             rebxtools_update_com_without_particle(&com, p);
         }
     }
     //rebxtools_move_to_com(sim);
 }
 
-void rebx_modify_orbits_forces(struct reb_simulation* const sim){
-    struct rebx_extras* rebx = sim->extras;
-    struct rebx_params_modify_orbits modparams = rebx->modify_orbits_forces;
+void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const mod){
+    const struct rebx_params_modify_orbits* const params = mod->paramsPtr;
 
     struct reb_particle com = {0};
-    switch(modparams.coordinates){
+    switch(params->coordinates){
     case JACOBI:
         rebxtools_get_com(sim, sim->N-1, &com); // We start with outermost particle, so get COM for the first N-1 particles
         break;
@@ -142,7 +140,7 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim){
             const double e = sqrt( ex*ex + ey*ey + ez*ez );     // eccentricity
                  *
                  * const double a = -mu/( v*v - 2.*mu/r ); // semi major axis
-                const double prefac1 = 1./tau_e/1.5*(1.+modparams->e_damping_p/2.*e*e);
+                const double prefac1 = 1./tau_e/1.5*(1.+params->p/2.*e*e);
                 const double prefac2 = 1./(r*h) * sqrt(mu/a/(1.-e*e))/tau_e/1.5;
 
                 p->ax += -dvx*prefac1 + (hy*dz-hz*dy)*prefac2;
@@ -166,10 +164,10 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim){
                 sim->particles[0].ay -= p->m/sim->particles[0].m*a_over_r*dy;
                 sim->particles[0].az -= p->m/sim->particles[0].m*a_over_r*dz;
             }*/
- /*       }
-        if(modparams.coordinates == JACOBI){
+        }
+        if(params->coordinates == JACOBI){
             rebxtools_update_com_without_particle(&com, p);
         }
     }
 }
-*/
+

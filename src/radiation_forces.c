@@ -27,34 +27,39 @@
 #include <math.h>
 #include <stdlib.h>
 #include "reboundx.h"
-/*
-void rebx_radiation_forces(struct reb_simulation* const sim){
+
+void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const rad){
+    const struct rebx_params_radiation_forces* const params = rad->paramsPtr;
+    const double c = params->c;
+    const int source_index = params->source_index;
     struct reb_particle* particles = sim->particles;
-    const struct rebx_extras* rebx = sim->extras;
-    const struct reb_particle star = *rebx->radiation_forces.source;
-    const double mu = sim->G*star.m;
-    const double c = rebx->radiation_forces.c;
-    const int N = sim->N;
+    const struct reb_particle source = particles[source_index];
+    const double mu = sim->G*source.m;
+
+    const int _N_real = sim->N - sim->N_var;
 #pragma omp parallel for
-    for (int i=0;i<N;i++){
-        const struct reb_particle p = particles[i];
+    for (int i=0;i<_N_real;i++){
+        if(i == source_index){
+            continue;
+        }
+        const struct reb_particle p = sim->particles[i];
         double* betaPtr = rebx_search_param(&p, RAD_BETA);
         if(betaPtr == NULL) continue; // only particles with Q_pr set feel radiation forces
-        const double dx = p.x - star.x; 
-        const double dy = p.y - star.y;
-        const double dz = p.z - star.z;
+        const double dx = p.x - source.x; 
+        const double dy = p.y - source.y;
+        const double dz = p.z - source.z;
         const double dr = sqrt(dx*dx + dy*dy + dz*dz); // distance to star
         
-        const double dvx = p.vx - star.vx;
-        const double dvy = p.vy - star.vy;
-        const double dvz = p.vz - star.vz;
+        const double dvx = p.vx - source.vx;
+        const double dvy = p.vy - source.vy;
+        const double dvz = p.vz - source.vz;
         const double rdot = (dx*dvx + dy*dvy + dz*dvz)/dr; // radial velocity
         const double a_rad = *betaPtr*mu/(dr*dr);
 
         // Equation (5) of Burns, Lamy & Soter (1979)
 
-		particles[i].ax += a_rad*((1.-rdot/c)*dx/dr - dvx/c);
-		particles[i].ay += a_rad*((1.-rdot/c)*dy/dr - dvy/c);
-		particles[i].az += a_rad*((1.-rdot/c)*dz/dr - dvz/c);
+		particles[source_index].ax += a_rad*((1.-rdot/c)*dx/dr - dvx/c);
+		particles[source_index].ay += a_rad*((1.-rdot/c)*dy/dr - dvy/c);
+		particles[source_index].az += a_rad*((1.-rdot/c)*dz/dr - dvz/c);
 	}
-}*/
+}

@@ -1,7 +1,7 @@
 /**
  * @file    gr.c
  * @brief   Post-newtonian general relativity corrections
- * @author  Pengshuai (Sam) Shi, Hanno Rein <tamayo.daniel@gmail.com>
+ * @author  Pengshuai (Sam) Shi, Hanno Rein, Dan Tamayo <tamayo.daniel@gmail.com>
  * 
  * @section     LICENSE
  * Copyright (c) 2015 Pengshuai (Sam) Shi, Hanno Rein, Dan Tamayo
@@ -28,9 +28,9 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-/*void rebx_gr_full(struct reb_simulation* const sim){
-    struct rebx_params_gr modparams = ((struct rebx_extras*) (sim->extras))->gr;
-    const double C = modparams.c;
+void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr){
+    const struct rebx_params_gr* const params = gr->paramsPtr;
+    const double C = params->c;
     const int _N_real = sim->N - sim->N_var;
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
@@ -196,7 +196,7 @@
             fprintf(d, "number %d: %d: %.30e \n", k, i, dx);
             fclose(d);
             }*/
-            /*if ((dx<1.e-30) && (dy <1.e-30) && (dz<1.e-30)){
+            if ((dx<1.e-30) && (dy <1.e-30) && (dz<1.e-30)){
                 breakout += 1;
             }
         }
@@ -213,64 +213,72 @@
     }
                     
 }
-*/
+
 void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
-    const struct rebx_params_gr* params = gr->paramsPtr;
+    const struct rebx_params_gr* const params = gr->paramsPtr;
     const double C = params->c;
+    const int source_index = params->source_index;
     const int _N_real = sim->N - sim->N_var;
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
-
-    const struct reb_particle sun = particles[0];
-    for (int i=1; i<_N_real; i++){
-        const double dx = particles[i].x - sun.x;
-        const double dy = particles[i].y - sun.y;
-        const double dz = particles[i].z - sun.z;
+    const struct reb_particle source = sim->particles[source_index];
+    for (int i=0; i<_N_real; i++){
+        if(i == source_index){
+            continue;
+        }
+        const struct reb_particle p = sim->particles[i];
+        const double dx = p.x - source.x;
+        const double dy = p.y - source.y;
+        const double dz = p.z - source.z;
         const double r2 = dx*dx + dy*dy + dz*dz;
         const double _r = sqrt(r2);
-        const double dvx = particles[i].vx - sun.vx;
-        const double dvy = particles[i].vy - sun.vy;
-        const double dvz = particles[i].vz - sun.vz;
+        const double dvx = p.vx - source.vx;
+        const double dvy = p.vy - source.vy;
+        const double dvz = p.vz - source.vz;
         // Benitez and Gallardo 2008
-        const double alpha = G*sun.m/(_r*_r*_r*C*C);
+        const double alpha = G*source.m/(_r*_r*_r*C*C);
         const double v2 = dvx*dvx + dvy*dvy + dvz*dvz;
-        const double beta = 4.*G*sun.m/_r - v2;
+        const double beta = 4.*G*source.m/_r - v2;
         const double gamma = 4.*(dvx*dx + dvy*dy + dvz*dz);
 
         const double dax = alpha*(beta*dx + gamma*dvx);
         const double day = alpha*(beta*dy + gamma*dvy);
         const double daz = alpha*(beta*dz + gamma*dvz);
-        const double massratio = particles[i].m/particles[0].m;
+        //const double massratio = particles[i].m/source.m;
 
         particles[i].ax += dax;
         particles[i].ay += day;
         particles[i].az += daz;
-        particles[0].ax -= massratio*dax;
-        particles[0].ay -= massratio*day;
-        particles[0].az -= massratio*daz;
+        //particles[source_index].ax -= massratio*dax;
+        //particles[source_index].ay -= massratio*day;
+        //particles[source_index].az -= massratio*daz;
     }
 }
-/*
-void rebx_gr_potential(struct reb_simulation* const sim){
+
+void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* gr){
     // Nobili & Roxburgh 1986
-    struct rebx_params_gr modparams = ((struct rebx_extras*)(sim->extras))->gr;
-    const double C = modparams.c;
+    const struct rebx_params_gr* const params = gr->paramsPtr;
+    const double C = params->c;
+    const int source_index = params->source_index;
     const int _N_real = sim->N - sim->N_var;
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
+    const struct reb_particle source = sim->particles[source_index];
     
-    const struct reb_particle sun = particles[0];
-    const double prefac1 = 6.*(G*sun.m)*(G*sun.m)/(C*C);
-    for (int i=1; i<_N_real; i++){
-        const double dx = particles[i].x - sun.x;
-        const double dy = particles[i].y - sun.y;
-        const double dz = particles[i].z - sun.z;
+    const double prefac1 = 6.*(G*source.m)*(G*source.m)/(C*C);
+    for (int i=0; i<_N_real; i++){
+        if(i == source_index){
+            continue;
+        }
+        const struct reb_particle p = sim->particles[i];
+        const double dx = p.x - source.x;
+        const double dy = p.y - source.y;
+        const double dz = p.z - source.z;
         const double r2 = dx*dx + dy*dy + dz*dz;
         const double prefac = prefac1/(r2*r2);
         
-        particles[i].ax -= prefac*dx;
-        particles[i].ay -= prefac*dy;
-        particles[i].az -= prefac*dz;
+        particles[source_index].ax -= prefac*dx;
+        particles[source_index].ay -= prefac*dy;
+        particles[source_index].az -= prefac*dz;
     }
 }
-*/
