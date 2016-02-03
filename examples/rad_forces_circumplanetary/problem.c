@@ -90,26 +90,22 @@ int main(int argc, char* argv[]){
 
     reb_move_to_com(sim);
 
-    int result = system("rm -v a.txt"); 
-
     reb_integrate(sim, tmax);
     rebx_free(rebx);                /* free memory allocated by REBOUNDx */
 }
 
 void heartbeat(struct reb_simulation* sim){
-    if(reb_output_check(sim, 1.e8)){
-        reb_output_timing(sim, tmax);
-    }
-    if(reb_output_check(sim, 1.e8)){ /* output every year */
-        FILE* f = fopen("a.txt","a");
+    if(reb_output_check(sim, 1.e7)){
         const struct reb_particle* particles = sim->particles;
         const struct reb_particle saturn = particles[1];
         const double t = sim->t;
         const int N = sim->N;
         for (int i=2;i<N;i++){
             const struct reb_orbit orbit = reb_tools_particle_to_orbit(sim->G, sim->particles[i], saturn); /* calculate orbit of particles[i] around Saturn */
-            fprintf(f,"%e\t%e\t%e\n",t,orbit.a, orbit.e);
+            printf("%e\t%e\t%e\n",t,orbit.a, orbit.e);
         }
-        fclose(f);
+        
+        //reb_output_timing(sim, tmax);
     }
+    
 }
