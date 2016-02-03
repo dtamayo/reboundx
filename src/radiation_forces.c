@@ -39,12 +39,13 @@ void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect*
     const int _N_real = sim->N - sim->N_var;
 #pragma omp parallel for
     for (int i=0;i<_N_real;i++){
-        if(i == source_index){
-            continue;
-        }
-        const struct reb_particle p = sim->particles[i];
+        
+        if(i == source_index) continue;
+        
+        const struct reb_particle p = particles[i];
         double* betaPtr = rebx_search_param(&p, RAD_BETA);
         if(betaPtr == NULL) continue; // only particles with Q_pr set feel radiation forces
+        
         const double dx = p.x - source.x; 
         const double dy = p.y - source.y;
         const double dz = p.z - source.z;
@@ -58,8 +59,8 @@ void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect*
 
         // Equation (5) of Burns, Lamy & Soter (1979)
 
-		particles[source_index].ax += a_rad*((1.-rdot/c)*dx/dr - dvx/c);
-		particles[source_index].ay += a_rad*((1.-rdot/c)*dy/dr - dvy/c);
-		particles[source_index].az += a_rad*((1.-rdot/c)*dz/dr - dvz/c);
+		particles[i].ax += a_rad*((1.-rdot/c)*dx/dr - dvx/c);
+		particles[i].ay += a_rad*((1.-rdot/c)*dy/dr - dvy/c);
+		particles[i].az += a_rad*((1.-rdot/c)*dz/dr - dvz/c);
 	}
 }
