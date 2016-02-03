@@ -19,7 +19,7 @@ int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
     /* Setup constants */
     double AU = 1.5e11;                 /* in meters */
-    sim->integrator     = REB_INTEGRATOR_WHFAST;
+    sim->integrator     = REB_INTEGRATOR_IAS15;
     sim->G              = 6.674e-11;    /* Use SI units */
     sim->dt             = 1e8;          /* At ~100 AU, orbital periods are ~1000 yrs, so here we use ~1% of that, in sec */
     sim->N_active       = 1;            /* The dust particles do not interact with one another gravitationally */
@@ -31,7 +31,7 @@ int main(int argc, char* argv[]){
     reb_add(sim, sun);
     
     /* To add radiation forces, we have to pass a pointer to the radiation source, as well as the speed of light.*/
-    struct rebx_extras* rebx = rebx_init(sim); 
+    struct rebx_extras* rebx = rebx_init(sim);
     double c = 3.e8;                    /* speed of light in SI units */
     rebx_add_radiation_forces(rebx, &sim->particles[0], c);
 
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]){
 
     double amin = 100.*AU;
     double awidth = 20.*AU;
-    double e = 0.01;
+    double e = 0.1;
     double Ndust = 1000;                /* Number of dust particles */
 
     int seed = 3;                       /* random number generator seed */
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]){
 
 void heartbeat(struct reb_simulation* sim){
     if(reb_output_check(sim, 1.e8)){
-        reb_output_timing(sim, tmax);
+        //reb_output_timing(sim, tmax);
     }
     /* You could also write output to a file here.*/
 }
