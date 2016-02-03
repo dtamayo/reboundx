@@ -19,12 +19,12 @@ int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
     /* Setup constants */
     double AU = 1.5e11;                 /* in meters */
-    sim->integrator     = REB_INTEGRATOR_IAS15;
+    sim->integrator     = REB_INTEGRATOR_WHFAST;
     sim->G              = 6.674e-11;    /* Use SI units */
     sim->dt             = 1e8;          /* At ~100 AU, orbital periods are ~1000 yrs, so here we use ~1% of that, in sec */
     sim->N_active       = 1;            /* The dust particles do not interact with one another gravitationally */
     sim->heartbeat      = heartbeat;
-
+    
     /* sun */
     struct reb_particle sun = {0};
     sun.m  = 1.99e30;                   /* mass of Sun in kg */
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]){
 
 void heartbeat(struct reb_simulation* sim){
     if(reb_output_check(sim, 1.e8)){
-        //reb_output_timing(sim, tmax);
+        reb_output_timing(sim, tmax);
     }
     /* You could also write output to a file here.*/
 }

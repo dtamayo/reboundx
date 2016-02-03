@@ -12,12 +12,15 @@
 #include "reboundx.h"
 
 // A very simple post timestep modification to change the planet's orbit
-void simple_drag(struct reb_simulation* const r){
-    r->particles[2].vx *= 1. - 1e-5*r->dt_last_done;
-    r->particles[2].vy *= 1. - 1e-5*r->dt_last_done;
-    r->particles[2].vz *= 1. - 1e-5*r->dt_last_done;
-}
+// The custom function *has* to take (struct reb_simulation* const sim, struct rebx_effect* const effect)
+// (you can just ignore the effect struct in your function body if you don't want to use it)
 
+void simple_drag(struct reb_simulation* const sim, struct rebx_effect* const effect);
+
+// Each effect has its own parameters structure.  You can define your own:
+struct custom_params{
+    double coefficient;
+};
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
     // Setup constants
@@ -43,9 +46,28 @@ int main(int argc, char* argv[]){
 
     struct rebx_extras* rebx = rebx_init(sim);  // first initialize rebx
 
-    rebx_add_custom_ptm(rebx,simple_drag);      // Add additional post timestep modifications
-
+    
+    
+    struct custom_params* params = malloc(sizeof(*params));
+    params->coefficient = 1.e-5;
+    
+    // We now add our custom post_timestep_modification
+    // We pass rebx, the function that should be called, and a pointer to our params structure.
+    // You don't have to use a params structure (you would just pass NULL for the last argument).
+    // In this example, you could hardcode 1.e-5 in simple_drag and not use a params structure.
+    rebx_add_custom_post_timestep_modification(rebx, simple_drag, params);
+    
     double tmax = 5.e4;
     reb_integrate(sim, tmax);
     rebx_free(rebx);                // Free all the memory allocated by rebx
+}
+
+void simple_drag(struct reb_simulation* const sim, struct rebx_effect* const effect)
+{
+    struct custom_params* params = effect->paramsPtr;
+    double c = params->coefficient;
+ 
+    sim->particles[2].vx *= 1. - c*sim->dt_last_done;
+    sim->particles[2].vy *= 1. - c*sim->dt_last_done;
+    sim->particles[2].vz *= 1. - c*sim->dt_last_done;
 }

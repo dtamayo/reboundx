@@ -77,7 +77,7 @@ struct rebx_param{
  *  These get added as nodes to the effects linked list in the rebx_extras structure.*/
 struct rebx_effect{
 	void* paramsPtr;						// Pointer to the effect params structure (void* so it can point to different effect structs).
-	void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect);	// Pointer to the function to carry out the additional effect.
+	void (*functionPtr) (struct reb_simulation* const sim, struct rebx_effect* const effect);	// Pointer to the function to carry out the additional effect.
 	enum REBX_EFFECTS effect_type;		// Identifier for the type of effect.
 	struct rebx_effect* next;			// Pointer to the next effect in the linked list.
 };
@@ -144,7 +144,12 @@ void rebx_free_effects(struct rebx_effect* effects);        // Frees all effects
 void rebx_free_pointers(struct rebx_extras* rebx);          // Frees all the remaining pointers in rebx_extras.
 
 /* Internal utility functions. */
-void* rebx_search_param(const struct reb_particle* p, enum REBX_PARAMS param);  // returns rebx_param corresponding to the passed param in the passed particle.  If it doesn't exist, returns NULL.
+void* rebx_find_param(const struct reb_particle* p, enum REBX_PARAMS param);  // returns rebx_param corresponding to the passed param in the passed particle.  If it doesn't exist, returns NULL.
+struct rebx_effect* rebx_find_effect(struct rebx_effect* effects, enum REBX_EFFECTS effect_type);
+// returns the first effect in the linked list effects that matches effect_type
+void* rebx_find_effect_params(struct rebx_effect* effects, enum REBX_EFFECTS effect_type);
+// returns the pointer to the parameters for the first effect in the linked list effects that matches effect_type
+    
 void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
 
 /* Internal parameter adders (need a different one for each REBX_PARAM type). */
@@ -215,7 +220,7 @@ void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* so
  * @param custom_post_timestep_modifications Custom post-timestep modification function.
  * @param custom_params Custom parameters container.  Pass NULL if you don't want to use it.
  */
-void rebx_add_custom_post_timestep_modifications(struct rebx_extras* rebx, void (*custom_post_timestep_modifications)(struct reb_simulation* const sim, struct rebx_effect* const custom_effect), void* custom_params);
+void rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, void (*custom_post_timestep_modification)(struct reb_simulation* const sim, struct rebx_effect* const custom_effect), void* custom_params);
 
 /**
  * @brief Allows user to specify their own extra forces. Behaviour is identical to setting up extra forces  in REBOUND itself.
@@ -223,7 +228,7 @@ void rebx_add_custom_post_timestep_modifications(struct rebx_extras* rebx, void 
  * @param force_is_velocity_dependent Set to 1 if force is velocity dependent.
  * @param custom_params Custom parameters container.  Pass NULL if you don't want to use it.
  */
-void rebx_add_custom_forces(struct rebx_extras* rebx, void (*custom_forces)(struct reb_simulation* const sim, struct rebx_effect* const custom_effect), int force_is_velocity_dependent, void* custom_params);
+void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* const custom_effect), int force_is_velocity_dependent, void* custom_params);
 /** @} */
 
 /**
