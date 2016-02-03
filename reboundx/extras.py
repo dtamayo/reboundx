@@ -5,9 +5,16 @@ c_default = 10064.915
 
 class rebx_param(Structure): # need to define fields afterward because of circular ref in linked list
     pass    
-rebx_param._fields_ = [("valPtr", c_void_p),
-            ("param", c_int),
+rebx_param._fields_ = [("paramPtr", c_void_p),
+            ("param_type", c_int),
             ("next", POINTER(rebx_param))]
+
+class rebx_effect(Structure):
+    pass
+rebx_effect._fields_ = [("paramsPtr", c_void_p),
+                        ("functionPtr", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))),
+                        ("effect_type", c_int),
+                        ("next", POINTER(rebx_effect))]
 
 class rebx_param_to_be_freed(Structure):
     pass
@@ -19,10 +26,11 @@ class rebx_params_modify_orbits(Structure):
                 ("coordinates", c_int)]
 
 class rebx_params_gr(Structure):
-    _fields_ = [("c", c_double)]
+    _fields_ = [("source_index", c_int),
+                ("c", c_double)]
 
 class rebx_params_radiation_forces(Structure):
-    _fields_ = [("source", POINTER(rebound.Particle)),
+    _fields_ = [("source_index", c_int),
                 ("c", c_double)]
 
 class Extras(Structure):
@@ -72,15 +80,17 @@ class Extras(Structure):
         else:
             raise ValueError("If you change G, you must pass c (speed of light) in appropriate units to add_gr, add_gr_potential, add_gr_full, and radiation_forces.  Setting the units in the simulation does not work with REBOUNDx.  See ipython_examples/GeneralRelativity.ipynb and ipython_examples/Radiation_Forces_Debris_Disk.ipynb")
 
-    def add_gr(self, c=None):
+    def add_gr(self, source=None, c=None):
         """
-        Add general relativity corrections, treating only particles[0] as massive 
+        Add general relativity corrections from a single body, specified by source (defaults to particles[0]).
         (see :ref:`effectList` for details on the implementation). 
         Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
         See :ref:`ipython_examples` for an example.
         """
+        if source is None:
+            source = self.sim.contents.particles[0]
         c = self.check_c(c)
-        clibreboundx.rebx_add_gr(byref(self), c_double(c))
+        clibreboundx.rebx_add_gr(byref(self), byref(source), c_double(c))
     
     def add_gr_full(self, c=None):
         """
@@ -94,13 +104,17 @@ class Extras(Structure):
 
     def add_gr_potential(self, c=None):
         """
-        Add general relativity corrections, using a simple potential that gets the precession right.
+        Add general relativity corrections from a single body, specified by source (defaults to particles[0]).
+        Uses a simple potential that gets the precession right.
         (see :ref:`effectList` for details on the implementation). 
         Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
         See :ref:`ipython_examples` for an example.
         """
+        if source is None:
+            source = self.sim.contents.particles[0]
         c = self.check_c(c)
         clibreboundx.rebx_add_gr_potential(byref(self), c_double(c))
+        clibreboundx.rebx_add_gr(byref(self), byref(source), c_double(c))
     
     def add_radiation_forces(self, source, c=None):
         """
@@ -110,6 +124,8 @@ class Extras(Structure):
         as well as the Particle in the Simulation that is the source of the radiation.
         See :ref:`ipython_examples` for an example.
         """
+        if source is None:
+            source = self.sim.contents.particles[0]
         c = self.check_c(c)
         clibreboundx.rebx_add_radiation_forces(byref(self), byref(source), c_double(c))
 
@@ -186,15 +202,9 @@ class Extras(Structure):
 
 # Need to put fields after class definition because of self-referencing
 Extras._fields_ = [("sim", POINTER(rebound.Simulation)),
-                ("params_to_be_freed", POINTER(rebx_param_to_be_freed)),
-                ("forces", POINTER(CFUNCTYPE(None, POINTER(rebound.Simulation)))),
-                ("ptm", POINTER(CFUNCTYPE(None, POINTER(rebound.Simulation)))),
-                ("Nptm", c_int),
-                ("Nforces", c_int),
-                ("modify_orbits_forces", rebx_params_modify_orbits),
-                ("modify_orbits_direct", rebx_params_modify_orbits),
-                ("gr", rebx_params_gr),
-                ("radiation_forces", rebx_params_radiation_forces)]
+                ("post_timestep_modifications", POINTER(rebx_effect)),
+                ("forces", POINTER(rebx_effect)),
+                ("params_to_be_freed", POINTER(rebx_param_to_be_freed))]
 
 def install_test():
     e = None
