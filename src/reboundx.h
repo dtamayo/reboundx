@@ -253,39 +253,6 @@ double rebx_get_tau_a(struct reb_particle* p);
 /** @} */
 
 /**
- * @defgroup GettersSetters
- * @{
- */
-
-// Getter setter landmark for add_effect.py
-double rebx_get_modify_orbits_direct_p(struct rebx_extras* rebx);
-void rebx_set_modify_orbits_direct_p(struct rebx_extras* rebx, double value);
-enum REBX_COORDINATES rebx_get_modify_orbits_direct_coordinates(struct rebx_extras* rebx);
-void rebx_set_modify_orbits_direct_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES value);
-double rebx_get_modify_orbits_forces_p(struct rebx_extras* rebx);
-void rebx_set_modify_orbits_forces_p(struct rebx_extras* rebx, double value);
-enum REBX_COORDINATES rebx_get_modify_orbits_forces_coordinates(struct rebx_extras* rebx);
-void rebx_set_modify_orbits_forces_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES value);
-double rebx_get_gr_c(struct rebx_extras* rebx);
-void rebx_set_gr_c(struct rebx_extras* rebx, double value);
-int rebx_get_gr_source_index(struct rebx_extras* rebx);
-void rebx_set_gr_source_index(struct rebx_extras* rebx, int value);
-double rebx_get_gr_full_c(struct rebx_extras* rebx);
-void rebx_set_gr_full_c(struct rebx_extras* rebx, double value);
-int rebx_get_gr_full_source_index(struct rebx_extras* rebx);
-void rebx_set_gr_full_source_index(struct rebx_extras* rebx, int value);
-double rebx_get_gr_potential_c(struct rebx_extras* rebx);
-void rebx_set_gr_potential_c(struct rebx_extras* rebx, double value);
-int rebx_get_gr_potential_source_index(struct rebx_extras* rebx);
-void rebx_set_gr_potential_source_index(struct rebx_extras* rebx, int value);
-double rebx_get_radiation_forces_c(struct rebx_extras* rebx);
-void rebx_set_radiation_forces_c(struct rebx_extras* rebx, double value);
-int rebx_get_radiation_forces_source_index(struct rebx_extras* rebx);
-void rebx_set_radiation_forces_source_index(struct rebx_extras* rebx, int value);
-
-/** @} */
-
-/**
  * @defgroup ConvFunc
  * @{
  */
