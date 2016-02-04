@@ -291,7 +291,7 @@ void rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, void (
     struct reb_simulation* sim = rebx->sim;
     sim->post_timestep_modifications = rebx_post_timestep_modifications;
 
-    rebx_add_post_timestep_modification(rebx, CUSTOM, custom_params, custom_post_timestep_modification);
+    rebx_add_post_timestep_modification(rebx, CUSTOM_POST_TIMESTEP_MODIFICATION, custom_params, custom_post_timestep_modification);
 }
 
 void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* custom_effect), int force_is_velocity_dependent, void* custom_params){
@@ -300,7 +300,7 @@ void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct
     if (force_is_velocity_dependent){
         sim->force_is_velocity_dependent = 1;
     }
-    rebx_add_force(rebx, CUSTOM, custom_params, custom_force);
+    rebx_add_force(rebx, CUSTOM_POST_TIMESTEP_MODIFICATION, custom_params, custom_force);
 }
 
 /****************************************************
