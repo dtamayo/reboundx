@@ -43,7 +43,7 @@ void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect*
         if(i == source_index) continue;
         
         const struct reb_particle p = particles[i];
-        double* betaPtr = rebx_find_param(&p, RAD_BETA);
+        double* betaPtr = rebx_get_param(&p, RAD_BETA);
         if(betaPtr == NULL) continue; // only particles with Q_pr set feel radiation forces
         
         const double dx = p.x - source.x; 

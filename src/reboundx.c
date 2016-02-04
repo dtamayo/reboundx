@@ -99,6 +99,24 @@ void rebx_free_pointers(struct rebx_extras* rebx){
 
 /* Internal utility functions. */
 
+void rebx_add_force(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type, void* paramsPtr, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect)){
+    struct rebx_effect* effect = malloc(sizeof(*effect));
+    effect->paramsPtr = paramsPtr;
+    effect->functionPtr = functionPtr;
+    effect->effect_type = effect_type;
+    effect->next = rebx->forces;
+    rebx->forces = effect;
+}
+
+void rebx_add_post_timestep_modification(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type, void* paramsPtr, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect)){
+    struct rebx_effect* effect = malloc(sizeof(*effect));
+    effect->paramsPtr = paramsPtr;
+    effect->functionPtr = functionPtr;
+    effect->effect_type = effect_type;
+    effect->next = rebx->post_timestep_modifications;
+    rebx->post_timestep_modifications = effect;
+}
+
 void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param){
     struct rebx_param_to_be_freed* newparam = malloc(sizeof(*newparam));
     newparam->param = param;
@@ -107,7 +125,7 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
     rebx->params_to_be_freed = newparam;
 }
 
-void* rebx_find_param(const struct reb_particle* p, enum REBX_PARAMS param){
+void* rebx_get_param(const struct reb_particle* p, enum REBX_PARAMS param){
     struct rebx_param* current = p->ap;
     while(current != NULL){
         if(current->param_type == param){
@@ -118,7 +136,7 @@ void* rebx_find_param(const struct reb_particle* p, enum REBX_PARAMS param){
     return NULL;
 }
 
-struct rebx_effect* rebx_find_effect(struct rebx_effect* effects, enum REBX_EFFECTS effect_type){
+struct rebx_effect* rebx_get_effect_in(struct rebx_effect* effects, enum REBX_EFFECTS effect_type){
     struct rebx_effect* current = effects;
     while(current != NULL){
         if(current->effect_type == effect_type){
@@ -129,8 +147,18 @@ struct rebx_effect* rebx_find_effect(struct rebx_effect* effects, enum REBX_EFFE
     return NULL;
 }
 
-void* rebx_find_effect_params(struct rebx_effect* effects, enum REBX_EFFECTS effect_type){
-    struct rebx_effect* effect = rebx_find_effect(effects, effect_type);
+struct rebx_effect* rebx_get_effect(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type){
+    /* Effects can't be in both forces and post_timestep_modifications, so simply check both*/
+    struct rebx_effect* effect = rebx_get_effect_in(rebx->forces, effect_type);
+    if(effect == NULL){
+        effect = rebx_get_effect_in(rebx->post_timestep_modifications, effect_type);
+    }
+    return effect;
+}
+
+
+void* rebx_get_effect_params_in(struct rebx_effect* effects, enum REBX_EFFECTS effect_type){
+    struct rebx_effect* effect = rebx_get_effect_in(effects, effect_type);
     if(effect == NULL){
         return NULL;
     }
@@ -185,22 +213,13 @@ void rebx_free(struct rebx_extras* rebx){
 Functions for specific REBOUNDx effects
  *****************************************/
 
-void rebx_add_force(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type, void* paramsPtr, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect)){
-    struct rebx_effect* effect = malloc(sizeof(*effect));
-    effect->paramsPtr = paramsPtr;
-    effect->functionPtr = functionPtr;
-    effect->effect_type = effect_type;
-    effect->next = rebx->forces;
-    rebx->forces = effect;
-}
-
-void rebx_add_post_timestep_modification(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type, void* paramsPtr, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect)){
-    struct rebx_effect* effect = malloc(sizeof(*effect));
-    effect->paramsPtr = paramsPtr;
-    effect->functionPtr = functionPtr;
-    effect->effect_type = effect_type;
-    effect->next = rebx->post_timestep_modifications;
-    rebx->post_timestep_modifications = effect;
+void* rebx_get_effect_params(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type){
+    /* Effects can't be in both forces and post_timestep_modifications, so simply check both*/
+    void* params = rebx_get_effect_params_in(rebx->forces, effect_type);
+    if(params == NULL){
+        params = rebx_get_effect_params_in(rebx->post_timestep_modifications, effect_type);
+    }
+    return params;
 }
 
 void rebx_add_gr(struct rebx_extras* rebx, struct reb_particle* source, double c){
@@ -309,7 +328,7 @@ Functions for getting and setting particle parameters
 
 // Getter setter landmark for add_param.py
 void rebx_set_beta(struct reb_particle* p, double value){
-    double* betaPtr = rebx_find_param(p, RAD_BETA);
+    double* betaPtr = rebx_get_param(p, RAD_BETA);
     if(betaPtr == NULL){
         rebx_add_param_double(p, RAD_BETA, value);
     }
@@ -319,7 +338,7 @@ void rebx_set_beta(struct reb_particle* p, double value){
 }
 
 double rebx_get_beta(struct reb_particle* p){
-    double* betaPtr = rebx_find_param(p, RAD_BETA);
+    double* betaPtr = rebx_get_param(p, RAD_BETA);
     if(betaPtr == NULL){
         return 0.;
     }
@@ -329,7 +348,7 @@ double rebx_get_beta(struct reb_particle* p){
 }
 
 void rebx_set_tau_omega(struct reb_particle* p, double value){
-    double* tau_omegaPtr = rebx_find_param(p, TAU_LITTLE_OMEGA);
+    double* tau_omegaPtr = rebx_get_param(p, TAU_LITTLE_OMEGA);
     if(tau_omegaPtr == NULL){
         rebx_add_param_double(p, TAU_LITTLE_OMEGA, value);
     }
@@ -339,7 +358,7 @@ void rebx_set_tau_omega(struct reb_particle* p, double value){
 }
 
 double rebx_get_tau_omega(struct reb_particle* p){
-    double* tau_omegaPtr = rebx_find_param(p, TAU_LITTLE_OMEGA);
+    double* tau_omegaPtr = rebx_get_param(p, TAU_LITTLE_OMEGA);
     if(tau_omegaPtr == NULL){
         return INFINITY;
     }
@@ -349,7 +368,7 @@ double rebx_get_tau_omega(struct reb_particle* p){
 }
 
 void rebx_set_tau_Omega(struct reb_particle* p, double value){
-    double* tau_OmegaPtr = rebx_find_param(p, TAU_BIG_OMEGA);
+    double* tau_OmegaPtr = rebx_get_param(p, TAU_BIG_OMEGA);
     if(tau_OmegaPtr == NULL){
         rebx_add_param_double(p, TAU_BIG_OMEGA, value);
     }
@@ -359,7 +378,7 @@ void rebx_set_tau_Omega(struct reb_particle* p, double value){
 }
 
 double rebx_get_tau_Omega(struct reb_particle* p){
-    double* tau_OmegaPtr = rebx_find_param(p, TAU_BIG_OMEGA);
+    double* tau_OmegaPtr = rebx_get_param(p, TAU_BIG_OMEGA);
     if(tau_OmegaPtr == NULL){
         return INFINITY;
     }
@@ -369,7 +388,7 @@ double rebx_get_tau_Omega(struct reb_particle* p){
 }
 
 void rebx_set_tau_inc(struct reb_particle* p, double value){
-    double* tau_incPtr = rebx_find_param(p, TAU_INC);
+    double* tau_incPtr = rebx_get_param(p, TAU_INC);
     if(tau_incPtr == NULL){
         rebx_add_param_double(p, TAU_INC, value);
     }
@@ -379,7 +398,7 @@ void rebx_set_tau_inc(struct reb_particle* p, double value){
 }
 
 double rebx_get_tau_inc(struct reb_particle* p){
-    double* tau_incPtr = rebx_find_param(p, TAU_INC);
+    double* tau_incPtr = rebx_get_param(p, TAU_INC);
     if(tau_incPtr == NULL){
         return INFINITY;
     }
@@ -389,7 +408,7 @@ double rebx_get_tau_inc(struct reb_particle* p){
 }
 
 void rebx_set_tau_e(struct reb_particle* p, double value){
-    double* tau_ePtr = rebx_find_param(p, TAU_E);
+    double* tau_ePtr = rebx_get_param(p, TAU_E);
     if(tau_ePtr == NULL){
         rebx_add_param_double(p, TAU_E, value);
     }
@@ -399,7 +418,7 @@ void rebx_set_tau_e(struct reb_particle* p, double value){
 }
 
 double rebx_get_tau_e(struct reb_particle* p){
-    double* tau_ePtr = rebx_find_param(p, TAU_E);
+    double* tau_ePtr = rebx_get_param(p, TAU_E);
     if(tau_ePtr == NULL){
         return INFINITY;
     }
@@ -409,7 +428,7 @@ double rebx_get_tau_e(struct reb_particle* p){
 }
 
 void rebx_set_tau_a(struct reb_particle* p, double value){
-    double* tau_aPtr = rebx_find_param(p, TAU_A);
+    double* tau_aPtr = rebx_get_param(p, TAU_A);
     if(tau_aPtr == NULL){
         rebx_add_param_double(p, TAU_A, value);
     }
@@ -419,7 +438,7 @@ void rebx_set_tau_a(struct reb_particle* p, double value){
 }
 
 double rebx_get_tau_a(struct reb_particle* p){
-    double* tau_aPtr = rebx_find_param(p, TAU_A);
+    double* tau_aPtr = rebx_get_param(p, TAU_A);
     if(tau_aPtr == NULL){
         return INFINITY;
     }
@@ -433,13 +452,13 @@ Convenience Functions (include modification in function name in some form)
  *****************************************/
 
 double rebx_rad_calc_beta(struct rebx_extras* rebx, double particle_radius, double density, double Q_pr, double L){
-    struct rebx_params_radiation_forces* params = rebx_find_effect_params(rebx->forces, RADIATION_FORCES);
+    struct rebx_params_radiation_forces* params = rebx_get_effect_params_in(rebx->forces, RADIATION_FORCES);
     double mu = rebx->sim->G*rebx->sim->particles[params->source_index].m;
     const double c = params->c;
     return 3.*L*Q_pr/(16.*M_PI*mu*c*density*particle_radius);   
 }
 double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, double density, double Q_pr, double L){
-    struct rebx_params_radiation_forces* params = rebx_find_effect_params(rebx->forces, RADIATION_FORCES);
+    struct rebx_params_radiation_forces* params = rebx_get_effect_params_in(rebx->forces, RADIATION_FORCES);
     double mu = rebx->sim->G*rebx->sim->particles[params->source_index].m;
     const double c = params->c;
     return 3.*L*Q_pr/(16.*M_PI*mu*c*density*beta);
