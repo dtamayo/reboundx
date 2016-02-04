@@ -142,9 +142,11 @@ class Extras(Structure):
         See :ref:`ipython_examples` for an example.
         """
         c = self.check_c(c)
-        clibreboundx.rebx_add_gr_potential(byref(self), byref(source), c_double(c))
+        if source is not None:
+            source = byref(source)
+        clibreboundx.rebx_add_gr_potential(byref(self), source, c_double(c))
     
-    def add_radiation_forces(self, source, c=None):
+    def add_radiation_forces(self, source=None, c=None):
         """
         Add radiation forces to the simulation (radiation pressure and Poynting-Robertson drag).
         (see :ref:`effectList` for details on the implementation). 
@@ -153,7 +155,9 @@ class Extras(Structure):
         See :ref:`ipython_examples` for an example.
         """
         c = self.check_c(c)
-        clibreboundx.rebx_add_radiation_forces(byref(self), byref(source), c_double(c))
+        if source is not None:
+            source = byref(source)
+        clibreboundx.rebx_add_radiation_forces(byref(self), source, c_double(c))
 
     def add_Particle_props(self):
         @property
