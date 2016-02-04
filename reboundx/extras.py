@@ -72,12 +72,12 @@ class Extras(Structure):
     def gr_full(self):
         clibreboundx.rebx_get_effect_params_in.restype = POINTER(rebx_params_gr)
         return clibreboundx.rebx_get_effect_params_in(self.forces, self.effects["GR_FULL"]).contents
-    
+
     @property
     def gr_potential(self):
         clibreboundx.rebx_get_effect_params_in.restype = POINTER(rebx_params_gr)
-        return clibreboundx.rebx_get_effect_params_in(self.forces, self.effects["GR_POTENTIAL"].contents
-    
+        return clibreboundx.rebx_get_effect_params_in(self.forces, self.effects["GR_POTENTIAL"]).contents
+
     def __del__(self):
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_pointers(byref(self))
