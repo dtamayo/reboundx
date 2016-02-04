@@ -63,8 +63,9 @@ int main(int argc, char* argv[]){
      * coordinates, set rebx->modify_orbits_forces.coordinates to BARYCENTRIC or HELIOCENTRIC, respectively. (also works for
      * modify_orbits_direct)*/
 
-    rebx_set_modify_orbits_direct_p(rebx, 1.);                      // set p to 1
-    rebx_set_modify_orbits_direct_coordinates(rebx, HELIOCENTRIC);  // calculate orbital elements relative to sim->particles[0]
+    struct rebx_params_modify_orbits* params = rebx_get_effect_params(rebx, MODIFY_ORBITS_DIRECT);
+    params->p = 1.;
+    params->coordinates = HELIOCENTRIC;
 
     double tmax = 5.e4;
     reb_integrate(sim, tmax);

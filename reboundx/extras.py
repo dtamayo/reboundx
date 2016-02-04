@@ -50,33 +50,33 @@ class Extras(Structure):
 
     @property
     def radiation_forces(self):
-        clibreboundx.rebx_find_effect_params.restype = POINTER(rebx_params_radiation_forces)
-        return clibreboundx.rebx_find_effect_params(self.forces, self.effects["RADIATION_FORCES"]).contents
+        clibreboundx.rebx_get_effect_params_in.restype = POINTER(rebx_params_radiation_forces)
+        return clibreboundx.rebx_get_effect_params_in(self.forces, self.effects["RADIATION_FORCES"]).contents
 
     @property
     def modify_orbits_direct(self):
-        clibreboundx.rebx_find_effect_params.restype = POINTER(rebx_params_modify_orbits)
-        return clibreboundx.rebx_find_effect_params(self.post_timestep_modifications, self.effects["MODIFY_ORBITS_DIRECT"]).contents
+        clibreboundx.rebx_get_effect_params_in.restype = POINTER(rebx_params_modify_orbits)
+        return clibreboundx.rebx_get_effect_params_in(self.post_timestep_modifications, self.effects["MODIFY_ORBITS_DIRECT"]).contents
     
     @property
     def modify_orbits_forces(self):
-        clibreboundx.rebx_find_effect_params.restype = POINTER(rebx_params_modify_orbits)
-        return clibreboundx.rebx_find_effect_params(self.forces, self.effects["MODIFY_ORBITS_FORCES"]).contents
+        clibreboundx.rebx_get_effect_params_in.restype = POINTER(rebx_params_modify_orbits)
+        return clibreboundx.rebx_get_effect_params_in(self.forces, self.effects["MODIFY_ORBITS_FORCES"]).contents
 
     @property
     def gr(self):
-        clibreboundx.rebx_find_effect_params.restype = POINTER(rebx_params_gr)
-        return clibreboundx.rebx_find_effect_params(self.forces, self.effects["GR"]).contents
+        clibreboundx.rebx_get_effect_params_in.restype = POINTER(rebx_params_gr)
+        return clibreboundx.rebx_get_effect_params_in(self.forces, self.effects["GR"]).contents
 
     @property
     def gr_full(self):
-        clibreboundx.rebx_find_effect_params.restype = POINTER(rebx_params_gr)
-        return clibreboundx.rebx_find_effect_params(self.forces, self.effects["GR_FULL"]).contents
+        clibreboundx.rebx_get_effect_params_in.restype = POINTER(rebx_params_gr)
+        return clibreboundx.rebx_get_effect_params_in(self.forces, self.effects["GR_FULL"]).contents
     
     @property
     def gr_potential(self):
-        clibreboundx.rebx_find_effect_params.restype = POINTER(rebx_params_gr)
-        return clibreboundx.rebx_find_effect_params(self.forces, self.effects["GR_POTENTIAL"]).contents
+        clibreboundx.rebx_get_effect_params_in.restype = POINTER(rebx_params_gr)
+        return clibreboundx.rebx_get_effect_params_in(self.forces, self.effects["GR_POTENTIAL"].contents
     
     def __del__(self):
         if self._b_needsfree_ == 1:

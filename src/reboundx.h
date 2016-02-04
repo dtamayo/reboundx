@@ -144,10 +144,11 @@ void rebx_free_effects(struct rebx_effect* effects);        // Frees all effects
 void rebx_free_pointers(struct rebx_extras* rebx);          // Frees all the remaining pointers in rebx_extras.
 
 /* Internal utility functions. */
-void* rebx_find_param(const struct reb_particle* p, enum REBX_PARAMS param);  // returns rebx_param corresponding to the passed param in the passed particle.  If it doesn't exist, returns NULL.
-struct rebx_effect* rebx_find_effect(struct rebx_effect* effects, enum REBX_EFFECTS effect_type);
+void* rebx_get_param(const struct reb_particle* p, enum REBX_PARAMS param);  // returns rebx_param corresponding to the passed param in the passed particle.  If it doesn't exist, returns NULL.
+struct rebx_effect* rebx_get_effect_in(struct rebx_effect* effects, enum REBX_EFFECTS effect_type);
 // returns the first effect in the linked list effects that matches effect_type
-void* rebx_find_effect_params(struct rebx_effect* effects, enum REBX_EFFECTS effect_type);
+struct rebx_effect* rebx_get_effect(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type);   // searches both forces and post_timestep_modifications and returns first effect mathing effect_type
+void* rebx_get_effect_params_in(struct rebx_effect* effects, enum REBX_EFFECTS effect_type);
 // returns the pointer to the parameters for the first effect in the linked list effects that matches effect_type
     
 void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
@@ -232,7 +233,7 @@ void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct
 /** @} */
 
 /**
- * @defgroup GettersSetters
+ * @defgroup GettersSette
  * @{
  */
 
@@ -249,6 +250,12 @@ void rebx_set_tau_e(struct reb_particle* p, double value);
 double rebx_get_tau_e(struct reb_particle* p);
 void rebx_set_tau_a(struct reb_particle* p, double value);
 double rebx_get_tau_a(struct reb_particle* p);
+
+/**
+ * @brief Searches all added effects and returns the parameters for the FIRST encountered effect of effect_type
+ * @param effect_type enum for the type of effect to search for (take name from call to rebx_add, in all caps, e.g., GR_FULL)
+ */
+void* rebx_get_effect_params(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type);
 
 /** @} */
 
