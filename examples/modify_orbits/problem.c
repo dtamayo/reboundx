@@ -54,17 +54,17 @@ int main(int argc, char* argv[]){
     printf("Semimajor axis damping timescale for inner planet is %f.\n", -1.*rebx_get_tau_a(&sim->particles[1]));
     printf("Precession timescale for inner planet is %f.\n", -1.*rebx_get_tau_omega(&sim->particles[1]));
     printf("Eccentricity damping timescale for outer planet is %f.\n", -1.*rebx_get_tau_e(&sim->particles[2]));
-    
+   
     /* One can also adjust a coupling parameter between eccentricity and semimajor axis damping.  We use the parameter p
      * as defined by Deck & Batygin (2015).  The default p=0 corresponds to no coupling, while p=1 corresponds to e-damping
-     * at constant angular momentum.  This is only implemented for modify_orbits_direct (not modify_orbits_forces).
+     * at constant angular momentum.  This is currently only implemented for modify_orbits_direct (not modify_orbits_forces).
      *
      * Additionally, the damping by default is done in Jacobi coordinates.  If you'd prefer to use barycentric or heliocentric
      * coordinates, set rebx->modify_orbits_forces.coordinates to BARYCENTRIC or HELIOCENTRIC, respectively. (also works for
      * modify_orbits_direct)*/
 
-    rebx->modify_orbits_direct.p = 1.;                      // damp eccentricity at constant angular momentum   
-    rebx->modify_orbits_direct.coordinates = HELIOCENTRIC;  // calculate orbital elements relative to sim->particles[0]
+    rebx_set_modify_orbits_direct_p(rebx, 1.);                      // set p to 1
+    rebx_set_modify_orbits_direct_coordinates(rebx, HELIOCENTRIC);  // calculate orbital elements relative to sim->particles[0]
 
     double tmax = 5.e4;
     reb_integrate(sim, tmax);

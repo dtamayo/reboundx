@@ -45,8 +45,39 @@ class Extras(Structure):
         clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
         self.add_Particle_props()
         self.coordinates = {"JACOBI":0, "BARYCENTRIC":1, "HELIOCENTRIC":2} # to use C version's REBX_COORDINATES enum
+        self.effects = {"RADIATION_FORCES":0, "MODIFY_ORBITS_DIRECT":1, "MODIFY_ORBITS_FORCES":2, "GR":3, "GR_FULL":4, "GR_POTENTIAL":5, "CUSTOM_POST_TIMESTEP_MODIFICATION":6} # matches C's REBX_EFFECTS enum
         sim._extras_ref = self # add a reference to this instance in sim to make sure it's not garbage collected
 
+    @property
+    def radiation_forces(self):
+        clibreboundx.rebx_find_effect_params.restype = POINTER(rebx_params_radiation_forces)
+        return clibreboundx.rebx_find_effect_params(self.forces, self.effects["RADIATION_FORCES"]).contents
+
+    @property
+    def modify_orbits_direct(self):
+        clibreboundx.rebx_find_effect_params.restype = POINTER(rebx_params_modify_orbits)
+        return clibreboundx.rebx_find_effect_params(self.post_timestep_modifications, self.effects["MODIFY_ORBITS_DIRECT"]).contents
+    
+    @property
+    def modify_orbits_forces(self):
+        clibreboundx.rebx_find_effect_params.restype = POINTER(rebx_params_modify_orbits)
+        return clibreboundx.rebx_find_effect_params(self.forces, self.effects["MODIFY_ORBITS_FORCES"]).contents
+
+    @property
+    def gr(self):
+        clibreboundx.rebx_find_effect_params.restype = POINTER(rebx_params_gr)
+        return clibreboundx.rebx_find_effect_params(self.forces, self.effects["GR"]).contents
+
+    @property
+    def gr_full(self):
+        clibreboundx.rebx_find_effect_params.restype = POINTER(rebx_params_gr)
+        return clibreboundx.rebx_find_effect_params(self.forces, self.effects["GR_FULL"]).contents
+    
+    @property
+    def gr_potential(self):
+        clibreboundx.rebx_find_effect_params.restype = POINTER(rebx_params_gr)
+        return clibreboundx.rebx_find_effect_params(self.forces, self.effects["GR_POTENTIAL"]).contents
+    
     def __del__(self):
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_pointers(byref(self))
@@ -87,10 +118,10 @@ class Extras(Structure):
         Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
         See :ref:`ipython_examples` for an example.
         """
-        if source is None:
-            source = self.sim.contents.particles[0]
         c = self.check_c(c)
-        clibreboundx.rebx_add_gr(byref(self), byref(source), c_double(c))
+        if source is not None:
+            source = byref(source)
+        clibreboundx.rebx_add_gr(byref(self), source, c_double(c)) # Sets source to particles[0] in C code when passed NULL (=None)
     
     def add_gr_full(self, c=None):
         """
@@ -102,7 +133,7 @@ class Extras(Structure):
         c = self.check_c(c)
         clibreboundx.rebx_add_gr_full(byref(self), c_double(c))
 
-    def add_gr_potential(self, c=None):
+    def add_gr_potential(self, source=None, c=None):
         """
         Add general relativity corrections from a single body, specified by source (defaults to particles[0]).
         Uses a simple potential that gets the precession right.
@@ -110,11 +141,8 @@ class Extras(Structure):
         Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
         See :ref:`ipython_examples` for an example.
         """
-        if source is None:
-            source = self.sim.contents.particles[0]
         c = self.check_c(c)
-        clibreboundx.rebx_add_gr_potential(byref(self), c_double(c))
-        clibreboundx.rebx_add_gr(byref(self), byref(source), c_double(c))
+        clibreboundx.rebx_add_gr_potential(byref(self), byref(source), c_double(c))
     
     def add_radiation_forces(self, source, c=None):
         """
@@ -124,8 +152,6 @@ class Extras(Structure):
         as well as the Particle in the Simulation that is the source of the radiation.
         See :ref:`ipython_examples` for an example.
         """
-        if source is None:
-            source = self.sim.contents.particles[0]
         c = self.check_c(c)
         clibreboundx.rebx_add_radiation_forces(byref(self), byref(source), c_double(c))
 

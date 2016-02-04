@@ -209,7 +209,12 @@ void rebx_add_gr(struct rebx_extras* rebx, struct reb_particle* source, double c
 	
 	struct rebx_params_gr* gr_params = malloc(sizeof(*gr_params));
 	gr_params->c = c;
-    gr_params->source_index = reb_get_particle_index(source);
+    if(source == NULL){
+        gr_params->source_index = 0;
+    }
+    else{
+        gr_params->source_index = reb_get_particle_index(source);
+    }
 	
     sim->force_is_velocity_dependent = 1;
     rebx_add_force(rebx, GR, gr_params, rebx_gr);
@@ -232,7 +237,12 @@ void rebx_add_gr_potential(struct rebx_extras* rebx, struct reb_particle* source
 	
 	struct rebx_params_gr* gr_params = malloc(sizeof(*gr_params));
 	gr_params->c = c;
-    gr_params->source_index = reb_get_particle_index(source);
+    if(source == NULL){
+        gr_params->source_index = 0;
+    }
+    else{
+        gr_params->source_index = reb_get_particle_index(source);
+    }
 	
     rebx_add_force(rebx, GR_POTENTIAL, gr_params, rebx_gr_potential);
 }
@@ -266,7 +276,12 @@ void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* so
 	
 	struct rebx_params_radiation_forces* rad_params = malloc(sizeof(*rad_params));
 	rad_params->c = c;
-    rad_params->source_index = reb_get_particle_index(source);
+    if(source == NULL){
+        rad_params->source_index = 0;
+    }
+    else{
+        rad_params->source_index = reb_get_particle_index(source);
+    }
 	
     sim->force_is_velocity_dependent = 1;
     rebx_add_force(rebx, RADIATION_FORCES, rad_params, rebx_radiation_forces);
@@ -288,9 +303,9 @@ void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct
     rebx_add_force(rebx, CUSTOM, custom_params, custom_force);
 }
 
-/****************************************
+/****************************************************
 Functions for getting and setting particle parameters
- *****************************************/
+ ****************************************************/
 
 // Getter setter landmark for add_param.py
 void rebx_set_beta(struct reb_particle* p, double value){
@@ -413,11 +428,255 @@ double rebx_get_tau_a(struct reb_particle* p){
     }
 }
 
+/**************************************************
+Functions for getting and setting effect parameters
+ **************************************************/
+
+double rebx_get_modify_orbits_direct_p(struct rebx_extras* rebx){
+    struct rebx_params_modify_orbits* params = rebx_find_effect_params(rebx->post_timestep_modifications, MODIFY_ORBITS_DIRECT);
+    if(params == NULL){
+        reb_warning("Need to add modify_orbits_direct to the simulation before accessing parameters.  Returning default value.\n");
+        return 0.;
+    }
+    else{
+        return params->p;
+    }
+}
+
+void rebx_set_modify_orbits_direct_p(struct rebx_extras* rebx, double value){
+    struct rebx_params_modify_orbits* params = rebx_find_effect_params(rebx->post_timestep_modifications, MODIFY_ORBITS_DIRECT);
+    if(params == NULL){
+        reb_warning("Need to add modify_orbits_direct to the simulation before setting parameters.  Setting p did nothing.\n");
+        return;
+    }
+    else{
+        params->p = value;
+    }
+}
+
+enum REBX_COORDINATES rebx_get_modify_orbits_direct_coordinates(struct rebx_extras* rebx){
+    struct rebx_params_modify_orbits* params = rebx_find_effect_params(rebx->post_timestep_modifications, MODIFY_ORBITS_DIRECT);
+    if(params == NULL){
+        reb_warning("Need to add modify_orbits_direct to the simulation before accessing parameters.  Returning default value.\n");
+        return JACOBI;
+    }
+    else{
+        return params->coordinates;
+    }
+}
+
+void rebx_set_modify_orbits_direct_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES value){
+    struct rebx_params_modify_orbits* params = rebx_find_effect_params(rebx->post_timestep_modifications, MODIFY_ORBITS_DIRECT);
+    if(params == NULL){
+        reb_warning("Need to add modify_orbits_direct to the simulation before setting parameters.  Setting coordinates did nothing.\n");
+        return;
+    }
+    else{
+        params->coordinates = value;
+    }
+}
+
+double rebx_get_modify_orbits_forces_p(struct rebx_extras* rebx){
+    struct rebx_params_modify_orbits* params = rebx_find_effect_params(rebx->forces, MODIFY_ORBITS_FORCES);
+    if(params == NULL){
+        reb_warning("Need to add modify_orbits_forces to the simulation before accessing parameters.  Returning default value.\n");
+        return 0.;
+    }
+    else{
+        return params->p;
+    }
+}
+
+void rebx_set_modify_orbits_forces_p(struct rebx_extras* rebx, double value){
+    struct rebx_params_modify_orbits* params = rebx_find_effect_params(rebx->forces, MODIFY_ORBITS_FORCES);
+    if(params == NULL){
+        reb_warning("Need to add modify_orbits_forces to the simulation before setting parameters.  Setting p did nothing.\n");
+        return;
+    }
+    else{
+        params->p = value;
+    }
+}
+
+enum REBX_COORDINATES rebx_get_modify_orbits_forces_coordinates(struct rebx_extras* rebx){
+    struct rebx_params_modify_orbits* params = rebx_find_effect_params(rebx->forces, MODIFY_ORBITS_FORCES);
+    if(params == NULL){
+        reb_warning("Need to add modify_orbits_forces to the simulation before accessing parameters.  Returning default value.\n");
+        return JACOBI;
+    }
+    else{
+        return params->coordinates;
+    }
+}
+
+void rebx_set_modify_orbits_forces_coordinates(struct rebx_extras* rebx, enum REBX_COORDINATES value){
+    struct rebx_params_modify_orbits* params = rebx_find_effect_params(rebx->forces, MODIFY_ORBITS_FORCES);
+    if(params == NULL){
+        reb_warning("Need to add modify_orbits_forces to the simulation before setting parameters.  Setting coordinates did nothing.\n");
+        return;
+    }
+    else{
+        params->coordinates = value;
+    }
+}
+
+double rebx_get_gr_c(struct rebx_extras* rebx){
+    struct rebx_params_gr* params = rebx_find_effect_params(rebx->forces, GR);
+    if(params == NULL){
+        reb_warning("Need to add gr to the simulation before accessing parameters.  Returning default value.\n");
+        return INFINITY;
+    }
+    else{
+        return params->c;
+    }
+}
+
+void rebx_set_gr_c(struct rebx_extras* rebx, double value){
+    struct rebx_params_gr* params = rebx_find_effect_params(rebx->forces, GR);
+    if(params == NULL){
+        reb_warning("Need to add gr to the simulation before setting parameters.  Setting c did nothing.\n");
+        return;
+    }
+    else{
+        params->c = value;
+    }
+}
+
+int rebx_get_gr_source_index(struct rebx_extras* rebx){
+    struct rebx_params_gr* params = rebx_find_effect_params(rebx->forces, GR);
+    if(params == NULL){
+        reb_warning("Need to add gr to the simulation before accessing parameters.  Returning default value.\n");
+        return 0;
+    }
+    else{
+        return params->source_index;
+    }
+}
+
+void rebx_set_gr_source_index(struct rebx_extras* rebx, int value){
+    struct rebx_params_gr* params = rebx_find_effect_params(rebx->forces, GR);
+    if(params == NULL){
+        reb_warning("Need to add gr to the simulation before setting parameters.  Setting source did nothing.\n");
+        return;
+    }
+    else{
+        params->source_index = value;
+    }
+}
+
+double rebx_get_gr_full_c(struct rebx_extras* rebx){
+    struct rebx_params_gr* params = rebx_find_effect_params(rebx->forces, GR_FULL);
+    if(params == NULL){
+        reb_warning("Need to add gr_full to the simulation before accessing parameters.  Returning default value.\n");
+        return INFINITY;
+    }
+    else{
+        return params->c;
+    }
+}
+
+void rebx_set_gr_full_c(struct rebx_extras* rebx, double value){
+    struct rebx_params_gr* params = rebx_find_effect_params(rebx->forces, GR_FULL);
+    if(params == NULL){
+        reb_warning("Need to add gr_full to the simulation before setting parameters.  Setting c did nothing.\n");
+        return;
+    }
+    else{
+        params->c = value;
+    }
+}
+
+double rebx_get_gr_potential_c(struct rebx_extras* rebx){
+    struct rebx_params_gr* params = rebx_find_effect_params(rebx->forces, GR_POTENTIAL);
+    if(params == NULL){
+        reb_warning("Need to add gr_potential to the simulation before accessing parameters.  Returning default value.\n");
+        return INFINITY;
+    }
+    else{
+        return params->c;
+    }
+}
+
+void rebx_set_gr_potential_c(struct rebx_extras* rebx, double value){
+    struct rebx_params_gr* params = rebx_find_effect_params(rebx->forces, GR_POTENTIAL);
+    if(params == NULL){
+        reb_warning("Need to add gr_potential to the simulation before setting parameters.  Setting c did nothing.\n");
+        return;
+    }
+    else{
+        params->c = value;
+    }
+}
+
+int rebx_get_gr_potential_source_index(struct rebx_extras* rebx){
+    struct rebx_params_gr* params = rebx_find_effect_params(rebx->forces, GR_POTENTIAL);
+    if(params == NULL){
+        reb_warning("Need to add gr_potential to the simulation before accessing parameters.  Returning default value.\n");
+        return 0;
+    }
+    else{
+        return params->source_index;
+    }
+}
+
+void rebx_set_gr_potential_source_index(struct rebx_extras* rebx, int value){
+    struct rebx_params_gr* params = rebx_find_effect_params(rebx->forces, GR_POTENTIAL);
+    if(params == NULL){
+        reb_warning("Need to add gr_potential to the simulation before setting parameters.  Setting source did nothing.\n");
+        return;
+    }
+    else{
+        params->source_index = value;
+    }
+}
+
+double rebx_get_radiation_forces_c(struct rebx_extras* rebx){
+    struct rebx_params_radiation_forces* params = rebx_find_effect_params(rebx->forces, RADIATION_FORCES);
+    if(params == NULL){
+        reb_warning("Need to add radiation_forces to the simulation before accessing parameters.  Returning default value.\n");
+        return INFINITY;
+    }
+    else{
+        return params->c;
+    }
+}
+
+void rebx_set_radiation_forces_c(struct rebx_extras* rebx, double value){
+    struct rebx_params_radiation_forces* params = rebx_find_effect_params(rebx->forces, RADIATION_FORCES);
+    if(params == NULL){
+        reb_warning("Need to add radiation_forces to the simulation before setting parameters.  Setting c did nothing.\n");
+        return;
+    }
+    else{
+        params->c = value;
+    }
+}
+
+int rebx_get_radiation_forces_source_index(struct rebx_extras* rebx){
+    struct rebx_params_radiation_forces* params = rebx_find_effect_params(rebx->forces, RADIATION_FORCES);
+    if(params == NULL){
+        reb_warning("Need to add radiation_forces to the simulation before accessing parameters.  Returning default value.\n");
+        return 0;
+    }
+    else{
+        return params->source_index;
+    }
+}
+
+void rebx_set_radiation_forces_source_index(struct rebx_extras* rebx, int value){
+    struct rebx_params_radiation_forces* params = rebx_find_effect_params(rebx->forces, RADIATION_FORCES);
+    if(params == NULL){
+        reb_warning("Need to add radiation_forces to the simulation before setting parameters.  Setting source did nothing.\n");
+        return;
+    }
+    else{
+        params->source_index = value;
+    }
+}
 
 /****************************************
 Convenience Functions (include modification in function name in some form)
  *****************************************/
-
 
 double rebx_rad_calc_beta(struct rebx_extras* rebx, double particle_radius, double density, double Q_pr, double L){
     struct rebx_params_radiation_forces* params = rebx_find_effect_params(rebx->forces, RADIATION_FORCES);
