@@ -67,6 +67,8 @@ with open("../reboundx/extras.py", "w") as f:
         if "Monkeypatch landmark" in extras[i]:
             f.write(tab+tab+"rebound.Particle.{0} = {1}\n".format(param_name, param_name))
 
+# TODO add documentation automatically.
+# add to test suite automatically
 with open("../doc/modules.rst") as f:
     mod = f.readlines()
 
@@ -75,3 +77,5 @@ with open("../doc/modules.rst", "w") as f:
         f.write(mod[i])
         if ".. Parameters (marker for add_param.py)" in mod[i]:
            pass 
+
+
