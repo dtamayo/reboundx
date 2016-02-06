@@ -197,7 +197,7 @@ void rebx_add_modify_orbits_forces(struct rebx_extras* rebx);
 /**
  * @brief Adds orbit modifications (migration, damping, precession), altering the orbital elements directly.
  */
-void rebx_add_modify_orbits_direct(struct rebx_extras* rebx);
+struct rebx_params_modify_orbits* rebx_add_modify_orbits_direct(struct rebx_extras* rebx);
 /**
  * @brief Adds post-Newtonian corrections arising only from a single particle (specified by source).  Gets precessions and mean motions right.  Accurate and fast.
  */
@@ -285,5 +285,13 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
 void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* const gr);
 void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const gr);
 void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const rad);
+
+
+/****************************************
+  New hash based functions
+*****************************************/
+
+void rebx_set_param_double(struct reb_particle* p, const char* param_name, double value);
+double rebx_get_param_double(struct reb_particle* p, const char* param_name);
 
 #endif

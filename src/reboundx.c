@@ -278,7 +278,7 @@ void rebx_add_modify_orbits_forces(struct rebx_extras* rebx){
     rebx_add_force(rebx, MODIFY_ORBITS_FORCES, mod_params, rebx_modify_orbits_forces);
 }
 
-void rebx_add_modify_orbits_direct(struct rebx_extras* rebx){
+struct rebx_params_modify_orbits* rebx_add_modify_orbits_direct(struct rebx_extras* rebx){
 	struct reb_simulation* sim = rebx->sim;
 	sim->post_timestep_modifications = rebx_post_timestep_modifications;
 	
@@ -287,6 +287,7 @@ void rebx_add_modify_orbits_direct(struct rebx_extras* rebx){
     mod_params->coordinates = JACOBI;
 	
     rebx_add_post_timestep_modification(rebx, MODIFY_ORBITS_DIRECT, mod_params, rebx_modify_orbits_direct);
+    return mod_params;
 }
 
 void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source, double c){
@@ -475,4 +476,86 @@ double install_test(void){
     reb_add(sim, p1);
     reb_integrate(sim, 1.);
     return sim->particles[1].x;
+}
+
+
+/****************************************
+ Hash related functions
+ *****************************************/
+#define ROT32(x, y) ((x << y) | (x >> (32 - y))) // avoid effort
+uint32_t rebx_murmur3_32(const char *key, uint32_t len, uint32_t seed) {
+    // Source: Wikipedia
+    static const uint32_t c1 = 0xcc9e2d51;
+    static const uint32_t c2 = 0x1b873593;
+    static const uint32_t r1 = 15;
+    static const uint32_t r2 = 13;
+    static const uint32_t m = 5;
+    static const uint32_t n = 0xe6546b64;
+
+    uint32_t hash = seed;
+
+    const int nblocks = len / 4;
+    const uint32_t *blocks = (const uint32_t *) key;
+    int i;
+    uint32_t k;
+    for (i = 0; i < nblocks; i++) {
+        k = blocks[i];
+        k *= c1;
+        k = ROT32(k, r1);
+        k *= c2;
+
+        hash ^= k;
+        hash = ROT32(hash, r2) * m + n;
+    }
+
+    const uint8_t *tail = (const uint8_t *) (key + nblocks * 4);
+    uint32_t k1 = 0;
+
+    switch (len & 3) {
+    case 3:
+        k1 ^= tail[2] << 16;
+    case 2:
+        k1 ^= tail[1] << 8;
+    case 1:
+        k1 ^= tail[0];
+
+        k1 *= c1;
+        k1 = ROT32(k1, r1);
+        k1 *= c2;
+        hash ^= k1;
+    }
+
+    hash ^= len;
+    hash ^= (hash >> 16);
+    hash *= 0x85ebca6b;
+    hash ^= (hash >> 13);
+    hash *= 0xc2b2ae35;
+    hash ^= (hash >> 16);
+
+    return hash;
+}
+
+uint32_t rebx_hash(const char* str){
+    const int reb_seed = 1983;
+    return rebx_murmur3_32(str,strlen(str),reb_seed);
+}
+
+void rebx_set_param_double(struct reb_particle* p, const char* param_name, double value){
+    uint32_t h = rebx_hash(param_name);
+    double* ptr = rebx_get_param(p, h);
+    if(ptr == NULL){
+        rebx_add_param_double(p, h, value);
+    }else{
+        *ptr = value;
+    }
+
+}
+double rebx_get_param_double(struct reb_particle* p, const char* param_name){
+    uint32_t h = rebx_hash(param_name);
+    double* ptr = rebx_get_param(p, h);
+    if(ptr == NULL){
+        return INFINITY;
+    }else{
+        return *ptr;
+    }
 }
