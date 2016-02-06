@@ -51,7 +51,6 @@ enum REBX_PARAMS{
     TAU_BIG_OMEGA,                      // Period of linear nodal precession/regression
     TAU_INC,                            // Inclination exponential growth/damping timescale
     TAU_E,                              // Eccentricity exponential growth/damping timescale
-    TAU_A,                              // Semimajor axis exponential growth/damping timescale
 };
 
 /*	Enumeration for the different effects that can be added in REBOUNDx.  See reboundx.readthedocs.org for details on the implementation.*/
@@ -248,8 +247,6 @@ void rebx_set_tau_inc(struct reb_particle* p, double value);
 double rebx_get_tau_inc(struct reb_particle* p);
 void rebx_set_tau_e(struct reb_particle* p, double value);
 double rebx_get_tau_e(struct reb_particle* p);
-void rebx_set_tau_a(struct reb_particle* p, double value);
-double rebx_get_tau_a(struct reb_particle* p);
 
 /**
  * @brief Searches all added effects and returns the parameters for the FIRST encountered effect of effect_type

@@ -428,26 +428,6 @@ double rebx_get_tau_e(struct reb_particle* p){
     }
 }
 
-void rebx_set_tau_a(struct reb_particle* p, double value){
-    double* tau_aPtr = rebx_get_param(p, TAU_A);
-    if(tau_aPtr == NULL){
-        rebx_add_param_double(p, TAU_A, value);
-    }
-    else{
-        *tau_aPtr = value;
-    }
-}
-
-double rebx_get_tau_a(struct reb_particle* p){
-    double* tau_aPtr = rebx_get_param(p, TAU_A);
-    if(tau_aPtr == NULL){
-        return INFINITY;
-    }
-    else{
-        return *tau_aPtr;
-    }
-}
-
 /****************************************
 Convenience Functions (include modification in function name in some form)
  *****************************************/
@@ -537,7 +517,7 @@ uint32_t rebx_murmur3_32(const char *key, uint32_t len, uint32_t seed) {
 
 uint32_t rebx_hash(const char* str){
     const int reb_seed = 1983;
-    return rebx_murmur3_32(str,strlen(str),reb_seed);
+    return rebx_murmur3_32(str,(uint32_t)strlen(str),reb_seed);
 }
 
 void rebx_set_param_double(struct reb_particle* p, const char* param_name, double value){
