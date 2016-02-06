@@ -10,6 +10,8 @@
     :target: https://github.com/dtamayo/reboundx/blob/master/LICENSE
 .. image:: https://readthedocs.org/projects/pip/badge/?version=latest
     :target: http://reboundx.readthedocs.org/
+.. image:: https://img.shields.io/badge/launch-binder-ff69b4.svg?style=flat
+    :target: http://mybinder.org/repo/dtamayo/reboundx
 
 Update: New Version!
 ====================
