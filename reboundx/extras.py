@@ -195,13 +195,20 @@ class Extras(Structure):
         @tau_e.setter
         def tau_e(self, value):
             clibreboundx.rebx_set_tau_e(byref(self), c_double(value))
-        @property
-        def tau_a(self):
-            clibreboundx.rebx_get_tau_a.restype = c_double
-            return clibreboundx.rebx_get_tau_a(byref(self))
-        @tau_a.setter
-        def tau_a(self, value):
-            clibreboundx.rebx_set_tau_a(byref(self), c_double(value))
+
+        def monkeyset(self, name, value):
+            if not hasattr(self, name):
+                # create new param in c
+                clibreboundx.rebx_set_param_double(byref(self), c_char_p(name), c_double(value))
+            super(rebound.Particle, self).__setattr__(name, value)
+                
+        def monkeyget(self, name):
+            if not hasattr(self, name):
+                # check param in c
+                clibreboundx.rebx_get_param_double.restype = c_double
+                return clibreboundx.rebx_get_param_double(byref(self), c_char_p(name))
+            return super(rebound.Particle, self).__getattr__(name, value)
+
 
         #Monkeypatch landmark for add_param.py
         rebound.Particle.beta = beta
@@ -209,7 +216,8 @@ class Extras(Structure):
         rebound.Particle.tau_Omega = tau_Omega
         rebound.Particle.tau_inc = tau_inc
         rebound.Particle.tau_e = tau_e
-        rebound.Particle.tau_a = tau_a
+        rebound.Particle.__setattr__ = monkeyset
+        rebound.Particle.__getattr__ = monkeyget
 
     def rad_calc_beta(self, particle_radius, density, Q_pr, L):
         """
