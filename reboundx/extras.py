@@ -197,17 +197,20 @@ class Extras(Structure):
             clibreboundx.rebx_set_tau_e(byref(self), c_double(value))
 
         def monkeyset(self, name, value):
-            if not hasattr(super(rebound.Particle, self), name):
+            if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
                 # create new param in c
+                print name
                 clibreboundx.rebx_set_param_double(byref(self), c_char_p(name), c_double(value))
-            super(rebound.Particle, self).__setattr__(name, value)
+            else:
+                rebound.Particle.default_set(self, name, value)
                 
         def monkeyget(self, name):
-            if not hasattr(super(rebound.Particle,self), name):
+            if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
                 # check param in c
                 clibreboundx.rebx_get_param_double.restype = c_double
                 return clibreboundx.rebx_get_param_double(byref(self), c_char_p(name))
-            return super(rebound.Particle, self).__getattr__(name, value)
+            else:
+                return super(rebound.Particle, self).__getattr__(name)
 
 
         #Monkeypatch landmark for add_param.py
@@ -216,6 +219,7 @@ class Extras(Structure):
         rebound.Particle.tau_Omega = tau_Omega
         rebound.Particle.tau_inc = tau_inc
         rebound.Particle.tau_e = tau_e
+        rebound.Particle.default_set = rebound.Particle.__setattr__
         rebound.Particle.__setattr__ = monkeyset
         rebound.Particle.__getattr__ = monkeyget
 
