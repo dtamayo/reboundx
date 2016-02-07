@@ -199,14 +199,14 @@ class Extras(Structure):
         def monkeyset(self, name, value):
             if not hasattr(super(rebound.Particle, self), name):
                 # create new param in c
-                clibreboundx.rebx_set_param_double(byref(self), c_char_p(name), c_double(value))
+                clibreboundx.rebx_set_param_double(byref(self), c_char_p(name.encode('utf-8')), c_double(value))
             super(rebound.Particle, self).__setattr__(name, value)
                 
         def monkeyget(self, name):
             if not hasattr(super(rebound.Particle,self), name):
                 # check param in c
                 clibreboundx.rebx_get_param_double.restype = c_double
-                return clibreboundx.rebx_get_param_double(byref(self), c_char_p(name))
+                return clibreboundx.rebx_get_param_double(byref(self), c_char_p(name.encode('utf-8')))
             return super(rebound.Particle, self).__getattr__(name, value)
 
 
