@@ -34,7 +34,7 @@ if sys.platform == 'darwin':
     extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
 
 libreboundxmodule = Extension('libreboundx',
-                    sources = [ 'src/reboundx.c', 'src/modify_orbits_forces.c', 'src/modify_orbits_direct.c', 'src/rebxtools.c', 'src/core.c'],
+                    sources = [ 'src/core.c', 'src/gr.c', 'src/gr_full.c', 'src/gr_potential.c', 'src/hashtest.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/radiation_forces.c', 'src/reboundx.c', 'src/rebxtools.c'],
                     include_dirs = ['src', rebdir],
                     library_dirs = [rebdir+'/../'],
                     runtime_library_dirs = [rebdir+'/../'],
