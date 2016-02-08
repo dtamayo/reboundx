@@ -35,166 +35,6 @@
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
 const char* rebx_version_str = "2.5.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 
-/* Main routines called each timestep. */
-
-void rebx_forces(struct reb_simulation* sim){
-	struct rebx_extras* rebx = sim->extras;
-	struct rebx_effect* current = rebx->forces;
-	while(current != NULL){
-		current->functionPtr(sim, current);
-		current = current->next;
-	}
-}
-
-void rebx_post_timestep_modifications(struct reb_simulation* sim){
-	struct rebx_extras* rebx = sim->extras;
-	struct rebx_effect* current = rebx->post_timestep_modifications;
-	while(current != NULL){
-		current->functionPtr(sim, current);
-		current = current->next;
-	}
-}
-
-/* Initialization routine. */
-
-void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
-    sim->extras = rebx;
-    rebx->sim = sim;
-
-	rebx->params_to_be_freed = NULL;
-	rebx->post_timestep_modifications = NULL;
-	rebx->forces = NULL;
-}
-
-/* Garbage collection routines. */
-
-void rebx_free_params(struct rebx_extras* rebx){
-    struct rebx_param_to_be_freed* current = rebx->params_to_be_freed;
-    struct rebx_param_to_be_freed* temp_next;
-    while(current != NULL){
-        temp_next = current->next;
-        free(current->param->paramPtr);
-        free(current->param);
-        free(current);
-        current = temp_next;
-    }
-}
-
-void rebx_free_effects(struct rebx_effect* effects){
-    struct rebx_effect* current = effects;
-    struct rebx_effect* temp_next;
-
-    while(current != NULL){
-        temp_next = current->next;
-        free(current->paramsPtr);
-        free(current);
-        current = temp_next;
-    }
-}
-
-void rebx_free_pointers(struct rebx_extras* rebx){
-    rebx_free_params(rebx);
-    rebx_free_effects(rebx->forces);
-    rebx_free_effects(rebx->post_timestep_modifications);
-}
-
-/* Internal utility functions. */
-
-void rebx_add_force(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type, void* paramsPtr, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect)){
-    struct rebx_effect* effect = malloc(sizeof(*effect));
-    effect->paramsPtr = paramsPtr;
-    effect->functionPtr = functionPtr;
-    effect->effect_type = effect_type;
-    effect->next = rebx->forces;
-    rebx->forces = effect;
-}
-
-void rebx_add_post_timestep_modification(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type, void* paramsPtr, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect)){
-    struct rebx_effect* effect = malloc(sizeof(*effect));
-    effect->paramsPtr = paramsPtr;
-    effect->functionPtr = functionPtr;
-    effect->effect_type = effect_type;
-    effect->next = rebx->post_timestep_modifications;
-    rebx->post_timestep_modifications = effect;
-}
-
-void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param){
-    struct rebx_param_to_be_freed* newparam = malloc(sizeof(*newparam));
-    newparam->param = param;
-
-    newparam->next = rebx->params_to_be_freed;
-    rebx->params_to_be_freed = newparam;
-}
-
-void* rebx_get_param(const struct reb_particle* p, enum REBX_PARAMS param){
-    struct rebx_param* current = p->ap;
-    while(current != NULL){
-        if(current->param_type == param){
-            return current->paramPtr;
-        }
-        current = current->next;
-    }
-    return NULL;
-}
-
-struct rebx_effect* rebx_get_effect_in(struct rebx_effect* effects, enum REBX_EFFECTS effect_type){
-    struct rebx_effect* current = effects;
-    while(current != NULL){
-        if(current->effect_type == effect_type){
-            return current;
-        }
-        current = current->next;
-    }
-    return NULL;
-}
-
-struct rebx_effect* rebx_get_effect(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type){
-    /* Effects can't be in both forces and post_timestep_modifications, so simply check both*/
-    struct rebx_effect* effect = rebx_get_effect_in(rebx->forces, effect_type);
-    if(effect == NULL){
-        effect = rebx_get_effect_in(rebx->post_timestep_modifications, effect_type);
-    }
-    return effect;
-}
-
-
-void* rebx_get_effect_params_in(struct rebx_effect* effects, enum REBX_EFFECTS effect_type){
-    struct rebx_effect* effect = rebx_get_effect_in(effects, effect_type);
-    if(effect == NULL){
-        return NULL;
-    }
-    else{
-        return effect->paramsPtr;
-    }
-}
-
-/* Internal parameter adders (need a different one for each REBX_PARAM type). */
-/* Generic adder for params that are a single double value */
-void rebx_add_param_double(struct reb_particle* p, enum REBX_PARAMS param_type, double value){
-    struct rebx_param* newparam = malloc(sizeof(*newparam));
-    newparam->paramPtr = malloc(sizeof(double));
-    *(double*) newparam->paramPtr = value;
-    newparam->param_type = param_type;
-
-    newparam->next = p->ap;
-    p->ap = newparam;
-
-    rebx_add_param_to_be_freed(p->sim->extras, newparam);
-}   
-
-/*void rebx_add_param_orb_tau(struct reb_particle* p){
-    struct rebx_param* newparam = malloc(sizeof(*newparam));
-    newparam->paramPtr = malloc(sizeof(struct rebx_orb_tau));
-    struct rebx_orb_tau orb_tau = {INFINITY, INFINITY, INFINITY, INFINITY, INFINITY}; // set all timescales to infinity (i.e. no effect)
-    *(struct rebx_orb_tau*) newparam->paramPtr = orb_tau;
-    newparam->param_type = (enum REBX_PARAMS)ORB_TAU;
-
-    newparam->next = p->ap;
-    p->ap = newparam;
-
-    rebx_add_param_to_be_freed(p->sim->extras, newparam);
-}*/
-
 /****************************************
 User API
 *****************************************/
@@ -214,8 +54,7 @@ void rebx_free(struct rebx_extras* rebx){
 Functions for specific REBOUNDx effects
  *****************************************/
 
-void* rebx_get_effect_params(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type){
-    /* Effects can't be in both forces and post_timestep_modifications, so simply check both*/
+/*void* rebx_get_effect_params(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type){
     void* params = rebx_get_effect_params_in(rebx->forces, effect_type);
     if(params == NULL){
         params = rebx_get_effect_params_in(rebx->post_timestep_modifications, effect_type);
@@ -279,17 +118,6 @@ void rebx_add_modify_orbits_forces(struct rebx_extras* rebx){
     rebx_add_force(rebx, MODIFY_ORBITS_FORCES, mod_params, rebx_modify_orbits_forces);
 }
 
-struct rebx_params_modify_orbits* rebx_add_modify_orbits_direct(struct rebx_extras* rebx){
-	struct reb_simulation* sim = rebx->sim;
-	sim->post_timestep_modifications = rebx_post_timestep_modifications;
-	
-	struct rebx_params_modify_orbits* mod_params = malloc(sizeof(*mod_params));
-	mod_params->p = 0;
-    mod_params->coordinates = JACOBI;
-	
-    rebx_add_post_timestep_modification(rebx, MODIFY_ORBITS_DIRECT, mod_params, rebx_modify_orbits_direct);
-    return mod_params;
-}
 
 void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source, double c){
 	struct reb_simulation* sim = rebx->sim;
@@ -323,13 +151,13 @@ void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct
     }
     rebx_add_force(rebx, CUSTOM_POST_TIMESTEP_MODIFICATION, custom_params, custom_force);
 }
-
+*/
 /****************************************************
 Functions for getting and setting particle parameters
  ****************************************************/
 
 // Getter setter landmark for add_param.py
-void rebx_set_beta(struct reb_particle* p, double value){
+/*void rebx_set_beta(struct reb_particle* p, double value){
     double* betaPtr = rebx_get_param(p, RAD_BETA);
     if(betaPtr == NULL){
         rebx_add_param_double(p, RAD_BETA, value);
@@ -428,12 +256,12 @@ double rebx_get_tau_e(struct reb_particle* p){
         return *tau_ePtr;
     }
 }
-
+*/
 /****************************************
 Convenience Functions (include modification in function name in some form)
  *****************************************/
 
-double rebx_rad_calc_beta(struct rebx_extras* rebx, double particle_radius, double density, double Q_pr, double L){
+/*double rebx_rad_calc_beta(struct rebx_extras* rebx, double particle_radius, double density, double Q_pr, double L){
     struct rebx_params_radiation_forces* params = rebx_get_effect_params_in(rebx->forces, RADIATION_FORCES);
     double mu = rebx->sim->G*rebx->sim->particles[params->source_index].m;
     const double c = params->c;
@@ -445,7 +273,7 @@ double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, doub
     const double c = params->c;
     return 3.*L*Q_pr/(16.*M_PI*mu*c*density*beta);
 }
-
+*/
 /* Function to test whether REBOUNDx can load librebound.so and call REBOUND functions. */
 
 double install_test(void){
@@ -457,86 +285,4 @@ double install_test(void){
     reb_add(sim, p1);
     reb_integrate(sim, 1.);
     return sim->particles[1].x;
-}
-
-
-/****************************************
- Hash related functions
- *****************************************/
-#define ROT32(x, y) ((x << y) | (x >> (32 - y))) // avoid effort
-uint32_t rebx_murmur3_32(const char *key, uint32_t len, uint32_t seed) {
-    // Source: Wikipedia
-    static const uint32_t c1 = 0xcc9e2d51;
-    static const uint32_t c2 = 0x1b873593;
-    static const uint32_t r1 = 15;
-    static const uint32_t r2 = 13;
-    static const uint32_t m = 5;
-    static const uint32_t n = 0xe6546b64;
-
-    uint32_t hash = seed;
-
-    const int nblocks = len / 4;
-    const uint32_t *blocks = (const uint32_t *) key;
-    int i;
-    uint32_t k;
-    for (i = 0; i < nblocks; i++) {
-        k = blocks[i];
-        k *= c1;
-        k = ROT32(k, r1);
-        k *= c2;
-
-        hash ^= k;
-        hash = ROT32(hash, r2) * m + n;
-    }
-
-    const uint8_t *tail = (const uint8_t *) (key + nblocks * 4);
-    uint32_t k1 = 0;
-
-    switch (len & 3) {
-    case 3:
-        k1 ^= tail[2] << 16;
-    case 2:
-        k1 ^= tail[1] << 8;
-    case 1:
-        k1 ^= tail[0];
-
-        k1 *= c1;
-        k1 = ROT32(k1, r1);
-        k1 *= c2;
-        hash ^= k1;
-    }
-
-    hash ^= len;
-    hash ^= (hash >> 16);
-    hash *= 0x85ebca6b;
-    hash ^= (hash >> 13);
-    hash *= 0xc2b2ae35;
-    hash ^= (hash >> 16);
-
-    return hash;
-}
-
-uint32_t rebx_hash(const char* str){
-    const int reb_seed = 1983;
-    return rebx_murmur3_32(str,(uint32_t)strlen(str),reb_seed);
-}
-
-void rebx_set_param_double(struct reb_particle* p, const char* param_name, double value){
-    uint32_t h = rebx_hash(param_name);
-    double* ptr = rebx_get_param(p, h);
-    if(ptr == NULL){
-        rebx_add_param_double(p, h, value);
-    }else{
-        *ptr = value;
-    }
-
-}
-double rebx_get_param_double(struct reb_particle* p, const char* param_name){
-    uint32_t h = rebx_hash(param_name);
-    double* ptr = rebx_get_param(p, h);
-    if(ptr == NULL){
-        return INFINITY;
-    }else{
-        return *ptr;
-    }
 }

@@ -32,54 +32,6 @@
 
 #define TWOPI 6.2831853071795862
 
-void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const mod){
-    const struct rebx_params_modify_orbits* const params = mod->paramsPtr;
-    
-    struct reb_particle com = {0};
-    switch(params->coordinates){
-    case JACOBI:
-        rebxtools_get_com(sim, sim->N-1, &com); // We start with outermost particle, so get COM for the first N-1 particles
-        break;
-    case BARYCENTRIC:
-        rebxtools_get_com(sim, sim->N, &com); // COM of whole system
-        break;
-    case HELIOCENTRIC:
-        com = sim->particles[0];
-        break;
-    default:
-        fprintf(stderr, "Coordinate system not set in modify_orbits_direct?! \n");
-        exit(1);
-    }
-
-    for(int i=sim->N-1;i>0;--i){
-        struct reb_particle* p = &(sim->particles[i]);
-        struct reb_orbit o = rebxtools_particle_to_orbit(sim->G, p, &com);
-        const double dt = sim->dt_last_done;
-        const double tau_a = rebx_get_param_double(p,"tau_a");
-        const double tau_e = rebx_get_tau_e(p);
-        const double tau_inc = rebx_get_tau_inc(p);
-        const double tau_omega = rebx_get_tau_omega(p);
-        const double tau_Omega = rebx_get_tau_Omega(p);
-        const double a0 = o.a;
-        const double e0 = o.e;
-        const double inc0 = o.inc;
-        
-        o.a = a0*exp(dt/tau_a);
-        o.e = e0*exp(dt/tau_e);
-        o.inc = inc0*exp(dt/tau_inc);
-        o.omega += TWOPI*dt/tau_omega;
-        o.Omega += TWOPI*dt/tau_Omega;
-
-        o.a += 2.*a0*e0*e0*params->p*dt/tau_e; // Coupling term between e and a
-
-        rebxtools_orbit2p(sim->G, p, &com, &o);
-        if(params->coordinates == JACOBI){
-            rebxtools_update_com_without_particle(&com, p);
-        }
-    }
-    //rebxtools_move_to_com(sim);
-}
-
 void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const mod){
     const struct rebx_params_modify_orbits* const params = mod->paramsPtr;
 
