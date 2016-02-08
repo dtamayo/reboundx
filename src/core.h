@@ -84,10 +84,6 @@ Enums and structs for the particular modifications.
 
 
 /*  Structure for adding post-Newtonian corrections.*/
-struct rebx_params_gr {
-    int source_index;                   // Index of particle in particles array causing GR corrections.
-    double c;                           // Speed of light in units appropriate for sim->G and initial conditions.
-};
 
 /*  Structure for adding radiation forces to the simulation.*/
 struct rebx_params_radiation_forces{

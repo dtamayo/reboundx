@@ -62,49 +62,7 @@ Functions for specific REBOUNDx effects
     return params;
 }
 
-void rebx_add_gr(struct rebx_extras* rebx, struct reb_particle* source, double c){
-	struct reb_simulation* sim = rebx->sim;
-	sim->additional_forces = rebx_forces;
-	
-	struct rebx_params_gr* gr_params = malloc(sizeof(*gr_params));
-	gr_params->c = c;
-    if(source == NULL){
-        gr_params->source_index = 0;
-    }
-    else{
-        gr_params->source_index = reb_get_particle_index(source);
-    }
-	
-    sim->force_is_velocity_dependent = 1;
-    rebx_add_force(rebx, GR, gr_params, rebx_gr);
-}
 
-void rebx_add_gr_full(struct rebx_extras* rebx, double c){
-	struct reb_simulation* sim = rebx->sim;
-	sim->additional_forces = rebx_forces;
-	
-	struct rebx_params_gr* gr_params = malloc(sizeof(*gr_params));
-	gr_params->c = c;
-	
-    sim->force_is_velocity_dependent = 1;
-    rebx_add_force(rebx, GR_FULL, gr_params, rebx_gr_full);
-}
-
-void rebx_add_gr_potential(struct rebx_extras* rebx, struct reb_particle* source, double c){
-	struct reb_simulation* sim = rebx->sim;
-	sim->additional_forces = rebx_forces;
-	
-	struct rebx_params_gr* gr_params = malloc(sizeof(*gr_params));
-	gr_params->c = c;
-    if(source == NULL){
-        gr_params->source_index = 0;
-    }
-    else{
-        gr_params->source_index = reb_get_particle_index(source);
-    }
-	
-    rebx_add_force(rebx, GR_POTENTIAL, gr_params, rebx_gr_potential);
-}
 
 
 

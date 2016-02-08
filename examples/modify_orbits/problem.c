@@ -42,8 +42,8 @@ int main(int argc, char* argv[]){
     // There are two options for how to modify orbits.  You would only choose one (comment the other out).  
     // modify_orbits_forces doesn't have precession implemented yet.
 
-    struct rebx_params_modify_orbits_direct* params = rebx_add_modify_orbits_direct(rebx);    // directly update particles' orbital elements each timestep
-    //struct rebx_params_modify_orbits_forces* params = rebx_add_modify_orbits_forces(rebx);  // add forces that orbit-average to give exponential a and e damping
+    //struct rebx_params_modify_orbits_direct* params = rebx_add_modify_orbits_direct(rebx);    // directly update particles' orbital elements each timestep
+    struct rebx_params_modify_orbits_forces* params = rebx_add_modify_orbits_forces(rebx);  // add forces that orbit-average to give exponential a and e damping
 
     // Set the timescales for each particle.  Parameter getter and setter functions always take the address of the particle (&)
     
