@@ -29,7 +29,7 @@
 #include "modify_orbits_direct.h"
 #include "rebound.h"
 #include "reboundx.h"
-#include <inttypes.h>
+
 #define TWOPI 6.2831853071795862
 
 struct rebx_params_modify_orbits_direct* rebx_add_modify_orbits_direct(struct rebx_extras* rebx){
@@ -46,24 +46,25 @@ struct rebx_params_modify_orbits_direct* rebx_add_modify_orbits_direct(struct re
 
 void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect){
     const struct rebx_params_modify_orbits_direct* const params = effect->paramsPtr;
-    
-    struct reb_particle com = {0};
+    const int N_real = sim->N - sim->N_var;
+
+    struct reb_particle com;
     switch(params->coordinates){
-        case JACOBI:
-            rebxtools_get_com(sim, sim->N-1, &com); // We start with outermost particle, so get COM for the first N-1 particles
-            break;
-        case BARYCENTRIC:
-            rebxtools_get_com(sim, sim->N, &com); // COM of whole system
-            break;
-        case HELIOCENTRIC:
-            com = sim->particles[0];
-            break;
-        default:
-            fprintf(stderr, "coordinates in parameters for modify_orbits_direct are not supported.\n");
-            exit(1);
+    case JACOBI:
+        com = reb_get_jacobi_com(&sim->particles[N_real-1]);    // We start with outermost particle, so get its jacobi COM
+        break;
+    case BARYCENTRIC:
+        com = reb_get_com(sim);                           // COM of whole system
+        break;
+    case HELIOCENTRIC:
+        com = sim->particles[0];                    // Use the central body as the reference
+        break;
+    default:
+        fprintf(stderr, "coordinates in parameters for modify_orbits_direct are not supported.\n");
+        exit(1);
     }
 
-    for(int i=sim->N-1;i>0;--i){
+    for(int i=N_real-1;i>0;--i){
         struct reb_particle* p = &(sim->particles[i]);
         struct reb_orbit o = rebxtools_particle_to_orbit(sim->G, p, &com);
         const double dt = sim->dt_last_done;

@@ -106,17 +106,6 @@ void rebx_add_gr_potential(struct rebx_extras* rebx, struct reb_particle* source
     rebx_add_force(rebx, GR_POTENTIAL, gr_params, rebx_gr_potential);
 }
 
-void rebx_add_modify_orbits_forces(struct rebx_extras* rebx){
-	struct reb_simulation* sim = rebx->sim;
-	sim->additional_forces = rebx_forces;
-	
-	struct rebx_params_modify_orbits* mod_params = malloc(sizeof(*mod_params));
-	mod_params->p = 0;
-    mod_params->coordinates = JACOBI;
-	
-    sim->force_is_velocity_dependent = 1;
-    rebx_add_force(rebx, MODIFY_ORBITS_FORCES, mod_params, rebx_modify_orbits_forces);
-}
 
 
 void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source, double c){
