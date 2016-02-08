@@ -1,6 +1,6 @@
 /**
- * @file    modify_orbits_direct.h
- * @brief   Update orbital with prescribed timescales by directly changing orbital elements after each timestep.
+ * @file    modify_orbits_forces.h
+ * @brief   Update orbital elements with prescribed timescales using forces.
  * @author  Dan Tamayo <tamayo.daniel@gmail.com>
  * 
  * @section     LICENSE
@@ -22,12 +22,12 @@
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef REBX_MODIFY_ORBITS_DIRECT_H
-#define REBX_MODIFY_ORBITS_DIRECT_H
+#ifndef REBX_MODIFY_ORBITS_FORCES_H
+#define REBX_MODIFY_ORBITS_FORCES_H
 
 struct reb_simulation;
 struct rebx_effect;
 
-void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const mod);
+void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const mod);
 
 #endif

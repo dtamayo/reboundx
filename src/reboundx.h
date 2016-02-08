@@ -46,9 +46,12 @@ enum REBX_COORDINATES{
     HELIOCENTRIC                        // Uses coordinates referenced to sim->particles[0].
 };
 
-/* Structure for orbit modifications (modify_orbits_direct and modify_orbits_forces).*/
 struct rebx_params_modify_orbits_direct{
     double p;                           // p parameter from Deck & Batygin (2015) for how e-damping couples to a-damping at order e^2.  p=0 : no damping (default), p=1 : e-damping at constant angular momentum.
+    enum REBX_COORDINATES coordinates;  // Identifier for the coordinate system that should be used for the damping.
+};
+
+struct rebx_params_modify_orbits_forces{
     enum REBX_COORDINATES coordinates;  // Identifier for the coordinate system that should be used for the damping.
 };
 
@@ -88,7 +91,7 @@ struct rebx_params_modify_orbits_direct* rebx_add_modify_orbits_direct(struct re
 /**
  * @brief Adds orbit modifications (migration, damping, precession), implemented as forces.
  */
-void rebx_add_modify_orbits_forces(struct rebx_extras* rebx);
+struct rebx_params_modify_orbits_forces* rebx_add_modify_orbits_forces(struct rebx_extras* rebx);
 /**
  * @brief Adds post-Newtonian corrections arising only from a single particle (specified by source).  Gets precessions and mean motions right.  Accurate and fast.
  */
