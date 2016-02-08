@@ -77,6 +77,11 @@ struct rebx_params_gr_full {
     double c;                           // Speed of light in units appropriate for sim->G and initial conditions.
 };
 
+struct rebx_params_radiation_forces {
+    int source_index;                   // Index of particle in particles array that is the source of the radiation.
+    double c;                           // Speed of light in units appropriate for sim->G and initial conditions.
+};
+
 /****************************************
   General REBOUNDx Functions
 *****************************************/
@@ -140,7 +145,7 @@ struct rebx_params_gr_full* rebx_add_gr_full(struct rebx_extras* rebx, double c)
  * @param source particle that is the source of the radiation.
  * @param c Speed of light.
  */
-void rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source, double c);
+struct rebx_params_radiation_forces* rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source, double c);
 /**
  * @brief Allows user to specify their own post timestep modifications. Behaviour is identical to setting up post timestep modifications in REBOUND itself.
  * @param custom_post_timestep_modifications Custom post-timestep modification function.
@@ -157,17 +162,6 @@ void rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, void (
 void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* const custom_effect), int force_is_velocity_dependent, void* custom_params);
 /** @} */
 
-/**
- * @defgroup GettersSette
- * @{
- */
-
-// Getter setter landmark for add_param.py
-void rebx_set_beta(struct reb_particle* p, double value);
-double rebx_get_beta(struct reb_particle* p);
-
-/** @} */
-
 /******************************************
   Convenience functions for various effects
 *******************************************/
@@ -180,11 +174,11 @@ double rebx_get_beta(struct reb_particle* p);
 /**
  * @brief Calculates beta, the ratio between the radiation pressure force and the gravitational force from the star.
  */
-double rebx_rad_calc_beta(struct rebx_extras* rebx, double particle_radius, double density, double Q_pr, double L);
+double rebx_rad_calc_beta(struct rebx_extras* rebx, struct rebx_params_radiation_forces* params, double particle_radius, double density, double Q_pr, double L);
 /**
  * @brief Calculates the particle radius from physical parameters and beta, the ratio of radiation to gravitational forces from the star.
  */
-double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, double density, double Q_pr, double L);
+double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, struct rebx_params_radiation_forces* params, double beta, double density, double Q_pr, double L);
 
 /** @} */
 

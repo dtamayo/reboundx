@@ -23,8 +23,10 @@
  *
  */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "gr.h"
 #include "rebound.h"
 #include "reboundx.h"
 
