@@ -122,10 +122,10 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
     rebx->params_to_be_freed = newparam;
 }
 
-void* rebx_get_param(const struct reb_particle* p, enum REBX_PARAMS param){
+void* rebx_get_param(const struct reb_particle* p, uint32_t param_type){
     struct rebx_param* current = p->ap;
     while(current != NULL){
-        if(current->param_type == param){
+        if(current->param_type == param_type){
             return current->paramPtr;
         }
         current = current->next;
@@ -163,9 +163,9 @@ void* rebx_get_effect_params_in(struct rebx_effect* effects, enum REBX_EFFECTS e
     }
 }
 */
-/* Internal parameter adders (need a different one for each REBX_PARAM type). */
+/* Internal parameter adders (need a different one for each particle parameter type). */
 /* Generic adder for params that are a single double value */
-void rebx_add_param_double(struct reb_particle* p, enum REBX_PARAMS param_type, double value){
+void rebx_add_param_double(struct reb_particle* p, uint32_t param_type, double value){
     struct rebx_param* newparam = malloc(sizeof(*newparam));
     newparam->paramPtr = malloc(sizeof(double));
     *(double*) newparam->paramPtr = value;
@@ -176,19 +176,6 @@ void rebx_add_param_double(struct reb_particle* p, enum REBX_PARAMS param_type, 
 
     rebx_add_param_to_be_freed(p->sim->extras, newparam);
 }   
-
-/*void rebx_add_param_orb_tau(struct reb_particle* p){
-    struct rebx_param* newparam = malloc(sizeof(*newparam));
-    newparam->paramPtr = malloc(sizeof(struct rebx_orb_tau));
-    struct rebx_orb_tau orb_tau = {INFINITY, INFINITY, INFINITY, INFINITY, INFINITY}; // set all timescales to infinity (i.e. no effect)
-    *(struct rebx_orb_tau*) newparam->paramPtr = orb_tau;
-    newparam->param_type = (enum REBX_PARAMS)ORB_TAU;
-
-    newparam->next = p->ap;
-    p->ap = newparam;
-
-    rebx_add_param_to_be_freed(p->sim->extras, newparam);
-}*/
 
 /****************************************
  Hash related functions

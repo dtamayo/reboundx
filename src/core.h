@@ -33,26 +33,6 @@
 Basic types in REBOUNDx
 *****************************************/
 
-/*  Enumeration for the different groups of parameters that can be added to particles.*/
-enum REBX_PARAMS{
-    RAD_BETA,                               // Ratio of radiation to gravitational force (Burns et al. 1979)
-    TAU_LITTLE_OMEGA,                   // Period of linear apsidal precession/regression
-    TAU_BIG_OMEGA,                      // Period of linear nodal precession/regression
-    TAU_INC,                            // Inclination exponential growth/damping timescale
-    TAU_E,                              // Eccentricity exponential growth/damping timescale
-};
-
-/*	Enumeration for the different effects that can be added in REBOUNDx.  See reboundx.readthedocs.org for details on the implementation.*/
-enum REBX_EFFECTS{
-	RADIATION_FORCES,
-	MODIFY_ORBITS_DIRECT,
-	MODIFY_ORBITS_FORCES,
-	GR,
-	GR_FULL,
-	GR_POTENTIAL,
-    CUSTOM_POST_TIMESTEP_MODIFICATION,
-};
-
 /* 	Main structure used for all parameters added to particles.
  	These get added as nodes to a linked list for each particle, stored at particles[i].ap.*/
 struct rebx_param{
@@ -75,20 +55,6 @@ struct rebx_effect{
 struct rebx_param_to_be_freed{
     struct rebx_param* param;           // Pointer to a parameter node allocated by REBOUNDx.
     struct rebx_param_to_be_freed* next;// Pointer to the next node in the linked list rebx_extras.params_to_be_freed.
-};
-
-/****************************************
-Enums and structs for the particular modifications.
-*****************************************/
-
-
-
-/*  Structure for adding post-Newtonian corrections.*/
-
-/*  Structure for adding radiation forces to the simulation.*/
-struct rebx_params_radiation_forces{
-    int source_index;                   // Index of particle in particles array that provides radiation.
-    double c;                           // Speed of light
 };
 
 /****************************************
@@ -118,17 +84,12 @@ void rebx_free_effects(struct rebx_effect* effects);        // Frees all effects
 void rebx_free_pointers(struct rebx_extras* rebx);          // Frees all the remaining pointers in rebx_extras.
 
 /* Internal utility functions. */
-void* rebx_get_param(const struct reb_particle* p, enum REBX_PARAMS param);  // returns rebx_param corresponding to the passed param in the passed particle.  If it doesn't exist, returns NULL.
-struct rebx_effect* rebx_get_effect_in(struct rebx_effect* effects, enum REBX_EFFECTS effect_type);
-// returns the first effect in the linked list effects that matches effect_type
-struct rebx_effect* rebx_get_effect(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type);   // searches both forces and post_timestep_modifications and returns first effect mathing effect_type
-void* rebx_get_effect_params_in(struct rebx_effect* effects, enum REBX_EFFECTS effect_type);
-// returns the pointer to the parameters for the first effect in the linked list effects that matches effect_type
+void* rebx_get_param(const struct reb_particle* p, uint32_t param_type);  // returns rebx_param corresponding to the passed param in the passed particle.  If it doesn't exist, returns NULL.
     
 void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
 
-/* Internal parameter adders (need a different one for each REBX_PARAM type). */
-void rebx_add_param_double(struct reb_particle* p, enum REBX_PARAMS param_type, double value);
+/* Internal parameter adders (need a different one for each type of particle parameter). */
+void rebx_add_param_double(struct reb_particle* p, uint32_t param_type, double value);
 
 /** @} */
 
