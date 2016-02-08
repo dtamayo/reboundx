@@ -39,12 +39,20 @@
 extern const char* rebx_build_str;      ///< Date and time build string.
 extern const char* rebx_version_str;    ///<Version string.
 
+/******************************************
+  Enums that might be shared across effects
+*******************************************/
+
 /*  Enumeration for different types of coordinate systems.*/
 enum REBX_COORDINATES{
     JACOBI,                             // Default.  Uses Jacobi coordinates.
     BARYCENTRIC,                        // Uses coordinates referenced to the center of mass of the whole system.
     HELIOCENTRIC                        // Uses coordinates referenced to sim->particles[0].
 };
+
+/*****************************************
+  Parameter structures for various effects
+******************************************/
 
 struct rebx_params_modify_orbits_direct{
     double p;                           // p parameter from Deck & Batygin (2015) for how e-damping couples to a-damping at order e^2.  p=0 : no damping (default), p=1 : e-damping at constant angular momentum.
@@ -55,8 +63,22 @@ struct rebx_params_modify_orbits_forces{
     enum REBX_COORDINATES coordinates;  // Identifier for the coordinate system that should be used for the damping.
 };
 
+struct rebx_params_gr {
+    int source_index;                   // Index of particle in particles array causing GR corrections.
+    double c;                           // Speed of light in units appropriate for sim->G and initial conditions.
+};
+
+struct rebx_params_gr_potential {
+    int source_index;                   // Index of particle in particles array causing GR corrections.
+    double c;                           // Speed of light in units appropriate for sim->G and initial conditions.
+};
+
+struct rebx_params_gr_full {
+    double c;                           // Speed of light in units appropriate for sim->G and initial conditions.
+};
+
 /****************************************
-  User API
+  General REBOUNDx Functions
 *****************************************/
 
 /**
@@ -80,6 +102,10 @@ struct rebx_extras* rebx_init(struct reb_simulation* sim);
 void rebx_free(struct rebx_extras* rebx);
 /** @} */
 
+/****************************************
+  Functions for adding effects
+*****************************************/
+
 /**
  * @defgroup AddEffect
  * @{
@@ -94,16 +120,21 @@ struct rebx_params_modify_orbits_direct* rebx_add_modify_orbits_direct(struct re
 struct rebx_params_modify_orbits_forces* rebx_add_modify_orbits_forces(struct rebx_extras* rebx);
 /**
  * @brief Adds post-Newtonian corrections arising only from a single particle (specified by source).  Gets precessions and mean motions right.  Accurate and fast.
+ * @param source particle that is the source of the post-newtonian corrections.
+ * @param c Speed of light.
  */
-void rebx_add_gr(struct rebx_extras* rebx, struct reb_particle* source, double c);
-/**
- * @brief Adds post-Newtonian corrections arising from all bodies in the simulation.  Safe, but slower.
- */
-void rebx_add_gr_full(struct rebx_extras* rebx, double c);
+struct rebx_params_gr* rebx_add_gr(struct rebx_extras* rebx, struct reb_particle* source, double c);
 /**
  * @brief Adds simple potential for post-Newtonian corrections arising only from a single particle (specified by source).  Gets precessions but not mean motions correct.  Fastest.
+ * @param source particle that is the source of the post-newtonian corrections.
+ * @param c Speed of light.
  */
-void rebx_add_gr_potential(struct rebx_extras* rebx, struct reb_particle* source, double c);
+struct rebx_params_gr_potential* rebx_add_gr_potential(struct rebx_extras* rebx, struct reb_particle* source, double c);
+/**
+ * @brief Adds post-Newtonian corrections arising from all bodies in the simulation.  Safe, but slower.
+ * @param c Speed of light.
+ */
+struct rebx_params_gr_full* rebx_add_gr_full(struct rebx_extras* rebx, double c);
 /**
  * @brief Adds radiation forces to the simulation (i.e., radiation pressure and Poynting-Robertson drag).
  * @param source particle that is the source of the radiation.
@@ -134,22 +165,12 @@ void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct
 // Getter setter landmark for add_param.py
 void rebx_set_beta(struct reb_particle* p, double value);
 double rebx_get_beta(struct reb_particle* p);
-void rebx_set_tau_omega(struct reb_particle* p, double value);
-double rebx_get_tau_omega(struct reb_particle* p);
-void rebx_set_tau_Omega(struct reb_particle* p, double value);
-double rebx_get_tau_Omega(struct reb_particle* p);
-void rebx_set_tau_inc(struct reb_particle* p, double value);
-double rebx_get_tau_inc(struct reb_particle* p);
-void rebx_set_tau_e(struct reb_particle* p, double value);
-double rebx_get_tau_e(struct reb_particle* p);
-
-/**
- * @brief Searches all added effects and returns the parameters for the FIRST encountered effect of effect_type
- * @param effect_type enum for the type of effect to search for (take name from call to rebx_add, in all caps, e.g., GR_FULL)
- */
-void* rebx_get_effect_params(struct rebx_extras* rebx, enum REBX_EFFECTS effect_type);
 
 /** @} */
+
+/******************************************
+  Convenience functions for various effects
+*******************************************/
 
 /**
  * @defgroup ConvFunc
@@ -166,16 +187,5 @@ double rebx_rad_calc_beta(struct rebx_extras* rebx, double particle_radius, doub
 double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, double beta, double density, double Q_pr, double L);
 
 /** @} */
-
-/****************************************
-  Function prototypes
-*****************************************/
-
-void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const mod);
-void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr);
-void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* const gr);
-void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const gr);
-void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const rad);
-
 
 #endif
