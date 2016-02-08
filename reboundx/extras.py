@@ -1,37 +1,6 @@
 from . import clibreboundx
-from ctypes import *
+from ctypes import Structure, c_double, POINTER, c_int, c_uint, c_long, c_ulong, c_void_p, c_char_p, CFUNCTYPE, byref, c_uint32
 import rebound
-c_default = 10064.915
-
-class rebx_param(Structure): # need to define fields afterward because of circular ref in linked list
-    pass    
-rebx_param._fields_ = [("paramPtr", c_void_p),
-            ("param_type", c_int),
-            ("next", POINTER(rebx_param))]
-
-class rebx_effect(Structure):
-    pass
-rebx_effect._fields_ = [("paramsPtr", c_void_p),
-                        ("functionPtr", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))),
-                        ("effect_type", c_int),
-                        ("next", POINTER(rebx_effect))]
-
-class rebx_param_to_be_freed(Structure):
-    pass
-rebx_param_to_be_freed._fields_ = [("param", POINTER(rebx_param)),
-            ("next", POINTER(rebx_param_to_be_freed))]
-
-class rebx_params_modify_orbits(Structure):
-    _fields_ = [("p", c_double),
-                ("coordinates", c_int)]
-
-class rebx_params_gr(Structure):
-    _fields_ = [("source_index", c_int),
-                ("c", c_double)]
-
-class rebx_params_radiation_forces(Structure):
-    _fields_ = [("source_index", c_int),
-                ("c", c_double)]
 
 class Extras(Structure):
     """
@@ -48,117 +17,10 @@ class Extras(Structure):
         self.effects = {"RADIATION_FORCES":0, "MODIFY_ORBITS_DIRECT":1, "MODIFY_ORBITS_FORCES":2, "GR":3, "GR_FULL":4, "GR_POTENTIAL":5, "CUSTOM_POST_TIMESTEP_MODIFICATION":6} # matches C's REBX_EFFECTS enum
         sim._extras_ref = self # add a reference to this instance in sim to make sure it's not garbage collected
 
-    @property
-    def radiation_forces(self):
-        clibreboundx.rebx_get_effect_params_in.restype = POINTER(rebx_params_radiation_forces)
-        return clibreboundx.rebx_get_effect_params_in(self.forces, self.effects["RADIATION_FORCES"]).contents
-
-    @property
-    def modify_orbits_direct(self):
-        clibreboundx.rebx_get_effect_params_in.restype = POINTER(rebx_params_modify_orbits)
-        return clibreboundx.rebx_get_effect_params_in(self.post_timestep_modifications, self.effects["MODIFY_ORBITS_DIRECT"]).contents
-    
-    @property
-    def modify_orbits_forces(self):
-        clibreboundx.rebx_get_effect_params_in.restype = POINTER(rebx_params_modify_orbits)
-        return clibreboundx.rebx_get_effect_params_in(self.forces, self.effects["MODIFY_ORBITS_FORCES"]).contents
-
-    @property
-    def gr(self):
-        clibreboundx.rebx_get_effect_params_in.restype = POINTER(rebx_params_gr)
-        return clibreboundx.rebx_get_effect_params_in(self.forces, self.effects["GR"]).contents
-
-    @property
-    def gr_full(self):
-        clibreboundx.rebx_get_effect_params_in.restype = POINTER(rebx_params_gr)
-        return clibreboundx.rebx_get_effect_params_in(self.forces, self.effects["GR_FULL"]).contents
-
-    @property
-    def gr_potential(self):
-        clibreboundx.rebx_get_effect_params_in.restype = POINTER(rebx_params_gr)
-        return clibreboundx.rebx_get_effect_params_in(self.forces, self.effects["GR_POTENTIAL"]).contents
-
     def __del__(self):
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_pointers(byref(self))
-
-    def add_modify_orbits_direct(self):
-        """
-        Adds orbit modifications to the simulation, modifying orbital elements directly after each timestep.
-        You must still set the relevant timescales on the individual particles.
-        See :ref:`modules` for additional information, and for definitions of the relevant timescales.
-        See :ref:`ipython_examples` for an example.
-        """
-        clibreboundx.rebx_add_modify_orbits_direct(byref(self))
-
-    def add_modify_orbits_forces(self):
-        """
-        Adds orbit modifications to the simulation, implemented as forces that yield the desired effect.
-        You must still set the relevant timescales on the individual particles.
-        See :ref:`modules` for additional information, and for definitions of the relevant timescales.
-        See :ref:`ipython_examples` for an example.
-        """
-        clibreboundx.rebx_add_modify_orbits_forces(byref(self))
-
-    def check_c(self, c):
-        if c is not None: # user passed c explicitly
-            return c
-      
-        # c was not passed by user
-         
-        if self.sim.contents.G == 1: # if G = 1 (default) return default c
-            return c_default
-        else:
-            raise ValueError("If you change G, you must pass c (speed of light) in appropriate units to add_gr, add_gr_potential, add_gr_full, and radiation_forces.  Setting the units in the simulation does not work with REBOUNDx.  See ipython_examples/GeneralRelativity.ipynb and ipython_examples/Radiation_Forces_Debris_Disk.ipynb")
-
-    def add_gr(self, source=None, c=None):
-        """
-        Add general relativity corrections from a single body, specified by source (defaults to particles[0]).
-        (see :ref:`effectList` for details on the implementation). 
-        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
-        See :ref:`ipython_examples` for an example.
-        """
-        c = self.check_c(c)
-        if source is not None:
-            source = byref(source)
-        clibreboundx.rebx_add_gr(byref(self), source, c_double(c)) # Sets source to particles[0] in C code when passed NULL (=None)
     
-    def add_gr_full(self, c=None):
-        """
-        Add general relativity corrections, treating all particles as massive.
-        (see :ref:`effectList` for details on the implementation). 
-        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
-        See :ref:`ipython_examples` for an example.
-        """
-        c = self.check_c(c)
-        clibreboundx.rebx_add_gr_full(byref(self), c_double(c))
-
-    def add_gr_potential(self, source=None, c=None):
-        """
-        Add general relativity corrections from a single body, specified by source (defaults to particles[0]).
-        Uses a simple potential that gets the precession right.
-        (see :ref:`effectList` for details on the implementation). 
-        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
-        See :ref:`ipython_examples` for an example.
-        """
-        c = self.check_c(c)
-        if source is not None:
-            source = byref(source)
-        clibreboundx.rebx_add_gr_potential(byref(self), source, c_double(c))
-    
-    def add_radiation_forces(self, source=None, c=None):
-        """
-        Add radiation forces to the simulation (radiation pressure and Poynting-Robertson drag).
-        (see :ref:`effectList` for details on the implementation). 
-        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi),
-        as well as the Particle in the Simulation that is the source of the radiation.
-        See :ref:`ipython_examples` for an example.
-        """
-        c = self.check_c(c)
-        if source is not None:
-            source = byref(source)
-        clibreboundx.rebx_add_radiation_forces(byref(self), source, c_double(c))
-
     def add_Particle_props(self):
         @property
         def beta(self):
@@ -167,34 +29,6 @@ class Extras(Structure):
         @beta.setter
         def beta(self, value):
             clibreboundx.rebx_set_beta(byref(self), c_double(value))
-        @property
-        def tau_omega(self):
-            clibreboundx.rebx_get_tau_omega.restype = c_double
-            return clibreboundx.rebx_get_tau_omega(byref(self))
-        @tau_omega.setter
-        def tau_omega(self, value):
-            clibreboundx.rebx_set_tau_omega(byref(self), c_double(value))
-        @property
-        def tau_Omega(self):
-            clibreboundx.rebx_get_tau_Omega.restype = c_double
-            return clibreboundx.rebx_get_tau_Omega(byref(self))
-        @tau_Omega.setter
-        def tau_Omega(self, value):
-            clibreboundx.rebx_set_tau_Omega(byref(self), c_double(value))
-        @property
-        def tau_inc(self):
-            clibreboundx.rebx_get_tau_inc.restype = c_double
-            return clibreboundx.rebx_get_tau_inc(byref(self))
-        @tau_inc.setter
-        def tau_inc(self, value):
-            clibreboundx.rebx_set_tau_inc(byref(self), c_double(value))
-        @property
-        def tau_e(self):
-            clibreboundx.rebx_get_tau_e.restype = c_double
-            return clibreboundx.rebx_get_tau_e(byref(self))
-        @tau_e.setter
-        def tau_e(self, value):
-            clibreboundx.rebx_set_tau_e(byref(self), c_double(value))
 
         def monkeyset(self, name, value):
             if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
@@ -215,13 +49,84 @@ class Extras(Structure):
 
         #Monkeypatch landmark for add_param.py
         rebound.Particle.beta = beta
-        rebound.Particle.tau_omega = tau_omega
-        rebound.Particle.tau_Omega = tau_Omega
-        rebound.Particle.tau_inc = tau_inc
-        rebound.Particle.tau_e = tau_e
         rebound.Particle.default_set = rebound.Particle.__setattr__
         rebound.Particle.__setattr__ = monkeyset
         rebound.Particle.__getattr__ = monkeyget
+
+    #######################################
+    # Functions for adding REBOUNDx effects
+    #######################################
+
+    def add_modify_orbits_direct(self):
+        """
+        Adds orbit modifications to the simulation, modifying orbital elements directly after each timestep.
+        You must still set the relevant timescales on the individual particles.
+        See :ref:`modules` for additional information, and for definitions of the relevant timescales.
+        See :ref:`ipython_examples` for an example.
+        """
+        clibreboundx.rebx_add_modify_orbits_direct.restype = POINTER(rebx_params_modify_orbits_direct)
+        return clibreboundx.rebx_add_modify_orbits_direct(byref(self)).contents
+
+    def add_modify_orbits_forces(self):
+        """
+        Adds orbit modifications to the simulation, implemented as forces that yield the desired effect.
+        You must still set the relevant timescales on the individual particles.
+        See :ref:`modules` for additional information, and for definitions of the relevant timescales.
+        See :ref:`ipython_examples` for an example.
+        """
+        clibreboundx.rebx_add_modify_orbits_forces(byref(self))
+
+    def add_gr(self, source=None, c=None):
+        """
+        Add general relativity corrections from a single body, specified by source (defaults to particles[0]).
+        (see :ref:`effectList` for details on the implementation). 
+        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
+        See :ref:`ipython_examples` for an example.
+        """
+        c = self.check_c(c)
+        if source is not None:
+            source = byref(source)
+        clibreboundx.rebx_add_gr(byref(self), source, c_double(c)) # Sets source to particles[0] in C code when passed NULL (=None)
+    
+    def add_gr_full(self, c=None):
+        """
+        Add general relativity corrections, treating all particles as massive.
+        (see :ref:`effectList` for details on the implementation). 
+        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
+        See :ref:`ipython_examples` for an example.
+        """
+        c = self.check_c(self, c)
+        clibreboundx.rebx_add_gr_full(byref(self), c_double(c))
+
+    def add_gr_potential(self, source=None, c=None):
+        """
+        Add general relativity corrections from a single body, specified by source (defaults to particles[0]).
+        Uses a simple potential that gets the precession right.
+        (see :ref:`effectList` for details on the implementation). 
+        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
+        See :ref:`ipython_examples` for an example.
+        """
+        c = self.check_c(self, c)
+        if source is not None:
+            source = byref(source)
+        clibreboundx.rebx_add_gr_potential(byref(self), source, c_double(c))
+    
+    def add_radiation_forces(self, source=None, c=None):
+        """
+        Add radiation forces to the simulation (radiation pressure and Poynting-Robertson drag).
+        (see :ref:`effectList` for details on the implementation). 
+        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi),
+        as well as the Particle in the Simulation that is the source of the radiation.
+        See :ref:`ipython_examples` for an example.
+        """
+        c = self.check_c(self, c)
+        if source is not None:
+            source = byref(source)
+        clibreboundx.rebx_add_radiation_forces(byref(self), source, c_double(c))
+    
+    #######################################
+    # Convenience Functions
+    #######################################
 
     def rad_calc_beta(self, particle_radius, density, Q_pr, L):
         """
@@ -240,6 +145,44 @@ class Extras(Structure):
         """
         clibreboundx.rebx_rad_calc_particle_radius.restype = c_double
         return clibreboundx.rebx_rad_calc_particle_radius(byref(self), c_double(beta), c_double(density), c_double(Q_pr), c_double(L))
+    
+#######################################
+# Effect parameter class definitions
+#######################################
+
+class rebx_params_modify_orbits_direct(Structure):
+    _fields_ = [("p", c_double),
+                ("coordinates", c_int)]
+
+class rebx_params_gr(Structure):
+    _fields_ = [("source_index", c_int),
+                ("c", c_double)]
+
+class rebx_params_radiation_forces(Structure):
+    _fields_ = [("source_index", c_int),
+                ("c", c_double)]
+
+#######################################
+# Generic REBOUNDx definitions
+#######################################
+
+class rebx_param(Structure): # need to define fields afterward because of circular ref in linked list
+    pass    
+rebx_param._fields_ = [("paramPtr", c_void_p),
+            ("param_type", c_int),
+            ("next", POINTER(rebx_param))]
+
+class rebx_effect(Structure):
+    pass
+rebx_effect._fields_ = [("paramsPtr", c_void_p),
+                        ("functionPtr", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))),
+                        ("effect_type", c_int),
+                        ("next", POINTER(rebx_effect))]
+
+class rebx_param_to_be_freed(Structure):
+    pass
+rebx_param_to_be_freed._fields_ = [("param", POINTER(rebx_param)),
+            ("next", POINTER(rebx_param_to_be_freed))]
 
 
 # Need to put fields after class definition because of self-referencing
@@ -248,6 +191,23 @@ Extras._fields_ = [("sim", POINTER(rebound.Simulation)),
                 ("forces", POINTER(rebx_effect)),
                 ("params_to_be_freed", POINTER(rebx_param_to_be_freed))]
 
+#######################################
+# Internal functions (not used by user)
+#######################################
+
+#internal function to make sure c is passed when it needs to be
+def check_c(rebx, c):
+    if c is not None: # user passed c explicitly
+        return c
+  
+    # c was not passed by user
+     
+    if rebx.sim.contents.G == 1: # if G = 1 (default) return default c
+        return 10064.915 # speed of light in AU, yr/2pi
+    else:
+        raise ValueError("If you change G, you must pass c (speed of light) in appropriate units to add_gr, add_gr_potential, add_gr_full, and radiation_forces.  Setting the units in the simulation does not work with REBOUNDx.  See ipython_examples/GeneralRelativity.ipynb and ipython_examples/Radiation_Forces_Debris_Disk.ipynb")
+
+#function to test whether REBOUND shared library can be located and called correctly
 def install_test():
     e = None
     try:
