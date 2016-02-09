@@ -51,13 +51,13 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_eff
     struct reb_particle com;
     switch(params->coordinates){
     case JACOBI:
-        com = reb_get_jacobi_com(&sim->particles[N_real-1]);    // We start with outermost particle, so get its jacobi COM
+        com = reb_get_jacobi_com(&sim->particles[N_real-1]);// We start with outermost particle, so get its jacobi COM
         break;
     case BARYCENTRIC:
-        com = reb_get_com(sim);                           // COM of whole system
+        com = reb_get_com(sim);                             // COM of whole system
         break;
     case HELIOCENTRIC:
-        com = sim->particles[0];                    // Use the central body as the reference
+        com = sim->particles[0];                            // Use the central body as the reference
         break;
     default:
         fprintf(stderr, "coordinates in parameters for modify_orbits_direct are not supported.\n");
@@ -79,19 +79,19 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_eff
         const double inc0 = o.inc;
 
         if(!isnan(tau_a)){
-            o.a = a0*exp(dt/tau_a);
+            o.a += a0*(dt/tau_a);
         }
         if(!isnan(tau_e)){
-        o.e = e0*exp(dt/tau_e);
+            o.e += e0*(dt/tau_e);
         }
         if(!isnan(tau_inc)){
-        o.inc = inc0*exp(dt/tau_inc);
+            o.inc += inc0*(dt/tau_inc);
         }
         if(!isnan(tau_omega)){
-        o.omega += TWOPI*dt/tau_omega;
+            o.omega += TWOPI*dt/tau_omega;
         }
         if(!isnan(tau_Omega)){
-        o.Omega += TWOPI*dt/tau_Omega;
+            o.Omega += TWOPI*dt/tau_Omega;
         }
         if(!isnan(tau_e)){
             o.a += 2.*a0*e0*e0*params->p*dt/tau_e; // Coupling term between e and a
@@ -102,7 +102,6 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_eff
             rebxtools_update_com_without_particle(&com, p);
         }
     }
-    //rebxtools_move_to_com(sim);
 }
 
 
