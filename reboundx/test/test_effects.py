@@ -14,40 +14,38 @@ class Test_effects(unittest.TestCase):
         """
         Assign all the particle to two particles, and make sure we get the same values back
         """
-        self.rebx.add_radiation_forces()
-        self.rebx.add_modify_orbits_direct()
-        self.rebx.add_modify_orbits_forces()
-        self.rebx.add_gr()
-        self.rebx.add_gr_full()
-        self.rebx.add_gr_potential()
+        rf = self.rebx.add_radiation_forces()
+        mod = self.rebx.add_modify_orbits_direct()
+        mof = self.rebx.add_modify_orbits_forces()
+        gr = self.rebx.add_gr()
+        grf = self.rebx.add_gr_full()
+        grp = self.rebx.add_gr_potential()
 
-        self.rebx.radiation_forces.c = 3.
-        self.assertAlmostEqual(self.rebx.radiation_forces.c, 3.)
-        self.rebx.radiation_forces.source_index = 2
-        self.assertEqual(self.rebx.radiation_forces.source_index, 2)
+        rf.c = 3.
+        self.assertAlmostEqual(rf.c, 3.)
+        rf.source_index = 2
+        self.assertEqual(rf.source_index, 2)
 
-        self.rebx.gr.c = 3.
-        self.assertAlmostEqual(self.rebx.gr.c, 3.)
-        self.rebx.gr.source_index = 2
-        self.assertEqual(self.rebx.gr.source_index, 2)
+        gr.c = 3.
+        self.assertAlmostEqual(gr.c, 3.)
+        gr.source_index = 2
+        self.assertEqual(gr.source_index, 2)
         
-        self.rebx.gr_potential.c = 3.
-        self.assertAlmostEqual(self.rebx.gr_potential.c, 3.)
-        self.rebx.gr_potential.source_index = 2
-        self.assertEqual(self.rebx.gr_potential.source_index, 2)
+        grp.c = 3.
+        self.assertAlmostEqual(grp.c, 3.)
+        grp.source_index = 2
+        self.assertEqual(grp.source_index, 2)
         
-        self.rebx.gr_full.c = 3.
-        self.assertAlmostEqual(self.rebx.gr_full.c, 3.)
+        grf.c = 3.
+        self.assertAlmostEqual(grf.c, 3.)
 
-        self.rebx.modify_orbits_direct.p = 0.2
-        self.assertAlmostEqual(self.rebx.modify_orbits_direct.p, 0.2)
-        self.rebx.modify_orbits_direct.coordinates = 3
-        self.assertEqual(self.rebx.modify_orbits_direct.coordinates, 3)
+        mod.p = 0.2
+        self.assertAlmostEqual(mod.p, 0.2)
+        mod.coordinates = 3
+        self.assertEqual(mod.coordinates, 3)
 
-        self.rebx.modify_orbits_forces.p = 0.2
-        self.assertAlmostEqual(self.rebx.modify_orbits_forces.p, 0.2)
-        self.rebx.modify_orbits_forces.coordinates = 3
-        self.assertEqual(self.rebx.modify_orbits_forces.coordinates, 3)
+        mof.coordinates = 3
+        self.assertEqual(mof.coordinates, 3)
 
 if __name__ == '__main__':
     unittest.main()
