@@ -36,7 +36,7 @@ int main(int argc, char* argv[]){
     /* To add radiation forces, we have to pass a pointer to the radiation source, as well as the speed of light.*/
     struct rebx_extras* rebx = rebx_init(sim); 
     double c = 3.e8;                    /* speed of light in SI units */
-    rebx_add_radiation_forces(rebx, &sim->particles[0], c); /* add radiation forces */
+    struct rebx_params_radiation_forces* params = rebx_add_radiation_forces(rebx, &sim->particles[0], c); /* add radiation forces with particles[0] as the source of radiation*/
     
     /* Saturn (simulation set up in Saturn's orbital plane, i.e., inc=0, so only need 4 orbital elements */
     double mass_sat = 5.68e26;          /* Mass of Saturn */
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]){
 
     /* We can only call REBOUNDx parameter setters on particles in the sim->particles array, so we do this after adding the particle to sim. For the first particle we simply specify beta directly.*/
     double beta = 0.1;
-    rebx_set_beta(&sim->particles[2], beta);    
+    rebx_set_param_double(&sim->particles[2], "beta", beta);    
 
     /* We now add a 2nd particle on the same orbit, but set its beta using physical parameters.  Note that callingreb_add(sim, p) a second time will add a second particle on the same orbit, but their beta paramters will be linked (see read_me_first example) */ 
     struct reb_particle p2 = reb_tools_orbit_to_particle(sim->G, sim->particles[1], 0., a_dust, e_dust, inc_dust, Omega_dust, omega_dust, f_dust); 
@@ -83,10 +83,10 @@ int main(int argc, char* argv[]){
     double Q_pr = 1.;               /* Equals 1 in limit where particle radius >> wavelength of radiation */
     double L = 3.85e26;             /* Luminosity of the sun in Watts */
 
-    beta = rebx_rad_calc_beta(rebx, particle_radius, density, Q_pr, L);
-    rebx_set_beta(&sim->particles[3], beta);    
+    beta = rebx_rad_calc_beta(rebx, params, particle_radius, density, Q_pr, L);
+    rebx_set_param_double(&sim->particles[3], "beta", beta);    
 
-    printf("Particle has beta = %f\n", rebx_get_beta(&sim->particles[3]));
+    printf("Particle has beta = %f\n", rebx_get_param_double(&sim->particles[3], "beta"));
 
     reb_move_to_com(sim);
 
