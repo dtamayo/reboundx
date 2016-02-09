@@ -69,9 +69,22 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_eff
 
     for(int i=N_real-1;i>0;--i){
         struct reb_particle* p = &sim->particles[i];
-        const double tau_a = rebx_get_param_double(p, "tau_a");
-        const double tau_e = rebx_get_param_double(p, "tau_e");
-        const double tau_inc = rebx_get_param_double(p, "tau_inc");
+        double tau_a = rebx_get_param_double(p, "tau_a");
+        double tau_e = rebx_get_param_double(p, "tau_e");
+        double tau_inc = rebx_get_param_double(p, "tau_inc");
+
+        if(isnan(tau_a)){
+            rebx_set_param_double(p, "tau_a", INFINITY);
+            tau_a = INFINITY;
+        }
+        if(isnan(tau_e)){
+            rebx_set_param_double(p, "tau_e", INFINITY);
+            tau_e = INFINITY;
+        }
+        if(isnan(tau_inc)){
+            rebx_set_param_double(p, "tau_inc", INFINITY);
+            tau_inc = INFINITY;
+        }
 
         const double dvx = p->vx - com.vx;
         const double dvy = p->vy - com.vy;
@@ -85,7 +98,7 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_eff
         ay =  dvy/(2.*tau_a);
         az =  dvz/(2.*tau_a);
 
-        if (!isnan(tau_e) || !isnan(tau_inc)){   // need h and e vectors for both types
+        if (tau_e < INFINITY || tau_inc < INFINITY){   // need h and e vectors for both types
             const double dx = p->x-com.x;
             const double dy = p->y-com.y;
             const double dz = p->z-com.z;
