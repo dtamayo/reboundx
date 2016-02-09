@@ -2,6 +2,27 @@ from . import clibreboundx
 from ctypes import Structure, c_double, POINTER, c_int, c_uint, c_long, c_ulong, c_void_p, c_char_p, CFUNCTYPE, byref, c_uint32
 import rebound
 
+# When reboundx is imported, first  monkey patch rebound.Particle so that we can add new parameters to the particles:
+
+def monkeyset(self, name, value):
+    if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
+        # create new param in c
+        clibreboundx.rebx_set_param_double(byref(self), c_char_p(name.encode('utf-8')), c_double(value))
+    else:
+        rebound.Particle.default_set(self, name, value)
+        
+def monkeyget(self, name):
+    if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
+        # check param in c
+        clibreboundx.rebx_get_param_double.restype = c_double
+        return clibreboundx.rebx_get_param_double(byref(self), c_char_p(name.encode('utf-8')))
+    else:
+        return super(rebound.Particle, self).__getattr__(name)
+
+rebound.Particle.default_set = rebound.Particle.__setattr__
+rebound.Particle.__setattr__ = monkeyset
+rebound.Particle.__getattr__ = monkeyget
+
 class Extras(Structure):
     """
     Main object used for all REBOUNDx operations, tied to a particular REBOUND simulation.
@@ -12,9 +33,7 @@ class Extras(Structure):
 
     def __init__(self, sim):
         clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
-        self.add_Particle_props()
         self.coordinates = {"JACOBI":0, "BARYCENTRIC":1, "HELIOCENTRIC":2} # to use C version's REBX_COORDINATES enum
-        self.effects = {"RADIATION_FORCES":0, "MODIFY_ORBITS_DIRECT":1, "MODIFY_ORBITS_FORCES":2, "GR":3, "GR_FULL":4, "GR_POTENTIAL":5, "CUSTOM_POST_TIMESTEP_MODIFICATION":6} # matches C's REBX_EFFECTS enum
         sim._extras_ref = self # add a reference to this instance in sim to make sure it's not garbage collected
 
     def __del__(self):
@@ -22,36 +41,7 @@ class Extras(Structure):
             clibreboundx.rebx_free_pointers(byref(self))
     
     def add_Particle_props(self):
-        @property
-        def beta(self):
-            clibreboundx.rebx_get_beta.restype = c_double
-            return clibreboundx.rebx_get_beta(byref(self))
-        @beta.setter
-        def beta(self, value):
-            clibreboundx.rebx_set_beta(byref(self), c_double(value))
-
-        def monkeyset(self, name, value):
-            if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
-                # create new param in c
-                print(name)
-                clibreboundx.rebx_set_param_double(byref(self), c_char_p(name.encode('utf-8')), c_double(value))
-            else:
-                rebound.Particle.default_set(self, name, value)
-                
-        def monkeyget(self, name):
-            if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
-                # check param in c
-                clibreboundx.rebx_get_param_double.restype = c_double
-                return clibreboundx.rebx_get_param_double(byref(self), c_char_p(name.encode('utf-8')))
-            else:
-                return super(rebound.Particle, self).__getattr__(name)
-
-
-        #Monkeypatch landmark for add_param.py
-        rebound.Particle.beta = beta
-        rebound.Particle.default_set = rebound.Particle.__setattr__
-        rebound.Particle.__setattr__ = monkeyset
-        rebound.Particle.__getattr__ = monkeyget
+        print("monkey")
 
     #######################################
     # Functions for adding REBOUNDx effects
@@ -74,7 +64,8 @@ class Extras(Structure):
         See :ref:`modules` for additional information, and for definitions of the relevant timescales.
         See :ref:`ipython_examples` for an example.
         """
-        clibreboundx.rebx_add_modify_orbits_forces(byref(self))
+        clibreboundx.rebx_add_modify_orbits_forces.restype = POINTER(rebx_params_modify_orbits_forces)
+        return clibreboundx.rebx_add_modify_orbits_forces(byref(self)).contents
 
     def add_gr(self, source=None, c=None):
         """
@@ -83,10 +74,11 @@ class Extras(Structure):
         Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
         See :ref:`ipython_examples` for an example.
         """
-        c = self.check_c(c)
+        c = check_c(self, c)
         if source is not None:
             source = byref(source)
-        clibreboundx.rebx_add_gr(byref(self), source, c_double(c)) # Sets source to particles[0] in C code when passed NULL (=None)
+        clibreboundx.rebx_add_gr.restype = POINTER(rebx_params_gr)
+        return clibreboundx.rebx_add_gr(byref(self), source, c_double(c)).contents # Sets source to particles[0] in C code when passed NULL (=None)
     
     def add_gr_full(self, c=None):
         """
@@ -95,8 +87,9 @@ class Extras(Structure):
         Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
         See :ref:`ipython_examples` for an example.
         """
-        c = self.check_c(self, c)
-        clibreboundx.rebx_add_gr_full(byref(self), c_double(c))
+        c = check_c(self, c)
+        clibreboundx.rebx_add_gr_full.restype = POINTER(rebx_params_gr_full)
+        return clibreboundx.rebx_add_gr_full(byref(self), c_double(c)).contents
 
     def add_gr_potential(self, source=None, c=None):
         """
@@ -106,10 +99,11 @@ class Extras(Structure):
         Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
         See :ref:`ipython_examples` for an example.
         """
-        c = self.check_c(self, c)
+        c = check_c(self, c)
         if source is not None:
             source = byref(source)
-        clibreboundx.rebx_add_gr_potential(byref(self), source, c_double(c))
+        clibreboundx.rebx_add_gr_potential.restype = POINTER(rebx_params_gr_potential)
+        return clibreboundx.rebx_add_gr_potential(byref(self), source, c_double(c)).contents
     
     def add_radiation_forces(self, source=None, c=None):
         """
@@ -119,32 +113,36 @@ class Extras(Structure):
         as well as the Particle in the Simulation that is the source of the radiation.
         See :ref:`ipython_examples` for an example.
         """
-        c = self.check_c(self, c)
+        c = check_c(self, c)
         if source is not None:
             source = byref(source)
-        clibreboundx.rebx_add_radiation_forces(byref(self), source, c_double(c))
+        clibreboundx.rebx_add_radiation_forces.restype = POINTER(rebx_params_radiation_forces)
+        return clibreboundx.rebx_add_radiation_forces(byref(self), source, c_double(c)).contents
     
     #######################################
     # Convenience Functions
     #######################################
 
-    def rad_calc_beta(self, particle_radius, density, Q_pr, L):
+    def rad_calc_beta(self, params, particle_radius, density, Q_pr, L):
+
         """
         Calculates a particle's beta parameter (the ratio of the radiation force to the gravitational force) given
-        the particle's physical radius, density, radiation pressure coefficient ``Q_pr``, and the star's luminosity.
+        the params returned from add_radiation_forces, the particle's physical radius, density, radiation pressure 
+        coefficient ``Q_pr``, and the star's luminosity.
         All values must be passed in the same units as used for the simulation as a whole (e.g., AU, Msun, yr/2pi).
         See the circumplanetary dust example in :ref:`ipython_examples`.
         """
         clibreboundx.rebx_rad_calc_beta.restype = c_double
-        return clibreboundx.rebx_rad_calc_beta(byref(self), c_double(particle_radius), c_double(density), c_double(Q_pr), c_double(L))
-    def rad_calc_particle_radius(self, beta, density, Q_pr, L):
+        return clibreboundx.rebx_rad_calc_beta(byref(self), byref(params), c_double(particle_radius), c_double(density), c_double(Q_pr), c_double(L))
+    def rad_calc_particle_radius(self, params, beta, density, Q_pr, L):
         """
-        Calculates a particle's physical radius given its beta parameter (the ratio of the radiation force to the gravitational force),
+        Calculates a particle's physical radius given the params returned from add_radiation_forces, the particle's
+        beta parameter (the ratio of the radiation force to the gravitational force),
         density, radiation pressure coefficient ``Q_pr``, and the star's luminosity.
         All values must be passed in the same units as used for the simulation as a whole (e.g., AU, Msun, yr/2pi).
         """
         clibreboundx.rebx_rad_calc_particle_radius.restype = c_double
-        return clibreboundx.rebx_rad_calc_particle_radius(byref(self), c_double(beta), c_double(density), c_double(Q_pr), c_double(L))
+        return clibreboundx.rebx_rad_calc_particle_radius(byref(self), byref(params), c_double(beta), c_double(density), c_double(Q_pr), c_double(L))
     
 #######################################
 # Effect parameter class definitions
@@ -154,9 +152,19 @@ class rebx_params_modify_orbits_direct(Structure):
     _fields_ = [("p", c_double),
                 ("coordinates", c_int)]
 
+class rebx_params_modify_orbits_forces(Structure):
+    _fields_ = [("coordinates", c_int)]
+
 class rebx_params_gr(Structure):
     _fields_ = [("source_index", c_int),
                 ("c", c_double)]
+
+class rebx_params_gr_potential(Structure):
+    _fields_ = [("source_index", c_int),
+                ("c", c_double)]
+
+class rebx_params_gr_full(Structure):
+    _fields_ = [("c", c_double)]
 
 class rebx_params_radiation_forces(Structure):
     _fields_ = [("source_index", c_int),
