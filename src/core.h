@@ -62,8 +62,7 @@ Main REBOUNDx structure
 *****************************************/
 struct rebx_extras {	
 	struct reb_simulation* sim;								// Pointer to the simulation REBOUNDx is linked to.
-	struct rebx_effect* post_timestep_modifications;		// Linked list with pointers to all the post-timestep modifications added to the simulation.
-	struct rebx_effect* forces;                             // Linked list with pointers to all the additional forces added to the simulation.
+	struct rebx_effect* effects;		                    // Linked list with pointers to all the effects added to the simulation.
 	struct rebx_param_to_be_freed* params_to_be_freed; 		// Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
 
 };
@@ -80,7 +79,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx); // I
 
 /* Garbage collection routines. */
 void rebx_free_params(struct rebx_extras* rebx);            // Steps through linked list to free all allocated parameters.
-void rebx_free_effects(struct rebx_effect* effects);        // Frees all effects in effects linked list (forces or post_timestep_modifications)
+void rebx_free_effects(struct rebx_extras* rebx);        // Frees all effects in effects linked list 
 void rebx_free_pointers(struct rebx_extras* rebx);          // Frees all the remaining pointers in rebx_extras.
 
 /* Internal utility functions. */

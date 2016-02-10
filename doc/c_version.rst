@@ -10,7 +10,7 @@ Navigate to the parent directory that holds the ``rebound`` folder (see below if
 
     git clone https://github.com/dtamayo/reboundx.git
 
-(install git if you don't have it).  *If you do use* a custom install location for REBOUNDx, you have to additionally set the ``REB_DIR`` environment variable to the path to REBOUND (you might add this to your shell's startup files)::
+(install git if you don't have it).  *If you do use* a custom install location for REBOUNDx, you have to additionally set the ``REB_DIR`` environment variable to the path to REBOUND. You might add this to your shell's startup files, e.g. with bash,::
     
     export REB_DIR=/Users/dtamayo/rebound
 
@@ -21,13 +21,13 @@ We assume we've already set up a ``reb_simulation`` called ``sim``.  We always b
     
     struct rebx_extras rebx = rebx_init(sim);
 
-We then add the effect we are interested in::
+We then add the effect we are interested in, which returns a pointer to a parameter struct that you can later modify::
 
-    rebx_add_effect(rebx);
+    struct rebx_params_effect* params = rebx_add_effect(rebx);
 
-where ``effect`` is one of the effects in :ref:`effectList`.  Some effects need parameters to set up, see :ref:`add-effects`.  We then set the particle-specific parameters::
+where ``effect`` is one of the effects in :ref:`effectList`.  Some effects adders require you to pass parameter values, see :ref:`add-effects`.  We then set particle-specific parameters with::
 
-    rebx_set_param(&sim->particles[1], 1.e4);
+    rebx_set_param_double(&sim->particles[1], "tau_a", 1.e4);
 
 where ``param`` is one of the parameters in :ref:`paramList`.  Here we set the hypothetical ``param`` parameter for ``particles[1]`` to a value of 1.e4.  Then we run the REBOUND simulation as usual::
 

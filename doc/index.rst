@@ -35,8 +35,7 @@ So far we include:
 
 It provides a general and easily extendable framework for including other effects, so please contact me
 (tamayo.daniel@gmail.com) if you'd like to work on a new modification
-and I can help you incorporate it (or even better send me a pull
-request!)
+and I can help you incorporate it (or even better send me a pull request!)
 
 Get Started!
 ------------
@@ -46,14 +45,14 @@ If you are unsure, I recommend you try out the Python version, as it enables you
 It also allows for a less verbose interface.
 You'll find installation instructions in the links below.
 
+:ref:`c_version`
+
+:ref:`python_version`
+
 Issues
 ------
 
 If you have problems, please check out the :ref:`faq` page for possible answers, as well as for how to contact us for help!
-
-:ref:`c_version`
-
-:ref:`python_version`
 
 Table of Contents
 -----------------
