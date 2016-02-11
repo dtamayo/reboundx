@@ -33,6 +33,5 @@ try:
 except:
     pass    # this check fails in python 3. Problem with setuptools
 
-from .extras import Extras
-from .extras import install_test
-__all__ = ["Extras"]
+from .extras import *
+__all__ = ["Extras", "rebx_params_gr_potential"]

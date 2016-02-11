@@ -93,11 +93,13 @@ class Extras(Structure):
 
     def add_gr_potential(self, source=None, c=None):
         """
-        Add general relativity corrections from a single body, specified by source (defaults to particles[0]).
-        Uses a simple potential that gets the precession right.
-        (see :ref:`effectList` for details on the implementation). 
-        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
-        See :ref:`ipython_examples` for an example.
+        
+        :param source: Source of GR effect. Defaults to sim.particles[0].
+        :param c: Speed of light in appropriate units. Defaults to AU/(yr/2pi)
+        :type source: rebound.Particle
+        :type c: double
+        :rtype: rebx_params_gr_potential
+
         """
         c = check_c(self, c)
         if source is not None:
@@ -160,7 +162,17 @@ class rebx_params_gr(Structure):
                 ("c", c_double)]
 
 class rebx_params_gr_potential(Structure):
-    _fields_ = [("source_index", c_int),
+    """
+    Parameter structure for :meth:`Extras.add_gr_potential`.
+
+    Attributes
+    ----------
+    source_index    : int
+        Index in the particles structure for the particle responsible for the GR effect.
+    c               : float
+        Speed of light
+    """
+    _fields_ = [("source_index", c_int), # testing
                 ("c", c_double)]
 
 class rebx_params_gr_full(Structure):
@@ -170,9 +182,9 @@ class rebx_params_radiation_forces(Structure):
     _fields_ = [("source_index", c_int),
                 ("c", c_double)]
 
-#######################################
-# Generic REBOUNDx definitions
-#######################################
+#################################################
+# Generic REBOUNDx definitions (Not used by user)
+#################################################
 
 class rebx_param(Structure): # need to define fields afterward because of circular ref in linked list
     pass    
@@ -184,7 +196,8 @@ class rebx_effect(Structure):
     pass
 rebx_effect._fields_ = [("paramsPtr", c_void_p),
                         ("functionPtr", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))),
-                        ("effect_type", c_int),
+                        ("effect_type", c_uint32),
+                        ("is_force", c_int),
                         ("next", POINTER(rebx_effect))]
 
 class rebx_param_to_be_freed(Structure):
@@ -195,8 +208,7 @@ rebx_param_to_be_freed._fields_ = [("param", POINTER(rebx_param)),
 
 # Need to put fields after class definition because of self-referencing
 Extras._fields_ = [("sim", POINTER(rebound.Simulation)),
-                ("post_timestep_modifications", POINTER(rebx_effect)),
-                ("forces", POINTER(rebx_effect)),
+                ("effects", POINTER(rebx_effect)),
                 ("params_to_be_freed", POINTER(rebx_param_to_be_freed))]
 
 #######################################
@@ -233,3 +245,4 @@ def install_test():
         return e
     
     return e
+

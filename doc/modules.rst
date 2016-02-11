@@ -63,6 +63,63 @@ To see what particle parameters should be set for each effect, see :ref:`paramli
     This adds radiation forces, following Eq. 5 of Burns, Lamy & Soter (1979).  
     It incorporates both radiation pressure and Poynting-Robertson drag.  
 
+.. _effectDescriptions:
+
+Effect Descriptions
+-------------------
+
+General Relativity
+^^^^^^^^^^^^^^^^^^
+
+gr
+**
+
+gr_potential
+************
+
++-----------------------+-----------------------------------------------+
+| Authors               | H. Rein, D. Tamayo                            |
++=======================+===============================================+
+| Authors               | H. Rein, D. Tamayo                            |
++-----------------------+-----------------------------------------------+
+| Authors               | H. Rein, D. Tamayo                            |
++-----------------------+-----------------------------------------------+
+
+===================== ===============================================
+Authors               H. Rein, D. Tamayo
+===================== ===============================================
+Implementation Paper  *In progress*
+===================== ===============================================
+
+**Authors**: H. Rein, D. Tamayo
+
+**Implementation paper**: *In progress*
+
+**Based on**: `Nobili and Roxburgh 1986 <http://labs.adsabs.harvard.edu/adsabs/abs/1986IAUS..114..105N/>`_.
+
+**C Example**:
+        
+**Python Example**: `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+
+This is the simplest potential you can use for general relativity.
+It adds corrections from a single massive body, specified by `source`.
+It gets the precession right, but gets the mean motion wrong by :math:`\mathcal{O}(GM/ac^2)`.  
+It's the fastest option, and because it's not velocity-dependent, it automatically keeps WHFast symplectic.  
+Nice if you don't need to get GR exactly right and want speed.
+
+**Particle Parameters**
+
+*None*
+
+===================== ======== ===============================================
+Name                  Required Description
+===================== ======== ===============================================
+===================== ======== ===============================================
+
+gr_full
+*******
+
+
 .. _paramlist:
 
 Table of Particle Parameters

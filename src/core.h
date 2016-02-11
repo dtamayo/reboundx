@@ -47,8 +47,8 @@ struct rebx_effect{
 	void* paramsPtr;					// Pointer to the effect params structure (void* so it can point to different effect structs).
 	void (*functionPtr) (struct reb_simulation* const sim, struct rebx_effect* const effect);	// Pointer to the function to carry out the additional effect.
 	uint32_t effect_type;       		// Identifier for the type of effect.
-	struct rebx_effect* next;			// Pointer to the next effect in the linked list.
     int is_force;                       // Flag for whether effect is a force (1) or post_timestep_modification (0)
+	struct rebx_effect* next;			// Pointer to the next effect in the linked list.
 };
 
 /*	Nodes for a linked list to all the parameters that have been allocated by REBOUNDx (so it can later free them).*/

@@ -1,4 +1,4 @@
-.. _python_version:
+G.. _python_version:
 
 Python Version
 ==============
@@ -100,5 +100,5 @@ various modifications.
 Python API
 ----------
 
-.. autoclass:: reboundx.Extras
+.. automodule:: reboundx
     :members:
