@@ -23,7 +23,7 @@ import glob
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 if read_the_docs_build:
     subprocess.call('cd doxygen; doxygen', shell=True)
-
+'''
 # C Example update
 with open("c_examples.rst","w") as fd:
     fd.write(".. _c_examples:\n\n")
@@ -77,7 +77,8 @@ if 1:
             fd.write("https://github.com/dtamayo/reboundx/tree/master/ipython_examples\n")
     finally:
         os.chdir("../")
-        
+'''        
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -96,6 +97,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
+    'numpydoc',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'breathe'
