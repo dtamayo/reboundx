@@ -23,7 +23,7 @@ import glob
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 if read_the_docs_build:
     subprocess.call('cd doxygen; doxygen', shell=True)
-'''
+
 # C Example update
 with open("c_examples.rst","w") as fd:
     fd.write(".. _c_examples:\n\n")
@@ -32,6 +32,7 @@ with open("c_examples.rst","w") as fd:
     for problemc in glob.glob("../examples/*/problem.c"):
         will_output = 0
         with open(problemc) as pf:
+            fd.write(".. _c_example_{0}:\n\n".format(problemc.split('/', 2)[-1].split('/',1)[0])) # make a label c_example_name_of_effect for cross-referencing
             did_output=0
             empty_lines = 0
             for line in pf:
@@ -58,7 +59,7 @@ with open("c_examples.rst","w") as fd:
             fd.write("\n\nThis example is located in the directory `examples/"+problemc.split("/")[2]+"`\n\n")
             if did_output==0:
                 print "Warning: Did not find description in "+problemc
-
+'''
 # iPython examples:
 import shutil
 if os.path.exists("ipython"):
