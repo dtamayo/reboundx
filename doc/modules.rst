@@ -14,17 +14,9 @@ To see what particle parameters should be set for each effect, see :ref:`paramli
 
 *   *Modifying Orbital Elements*
 
-    REBOUNDx offers two ways of modifying orbital elements (semimajor axis/eccentricity/inclination damping, precession, etc.)
-    In both cases, each particle is assigned evolution timescales for each orbital element.  
-    Positive timescales correspond to growth / progression, negative timescales correspond to damping / regression.  
-    Semimajor axes, eccentricities and inclinations grow / damp exponentially.  
-    Pericenters and nodes progress/regress linearly.
 
     *   **modify_orbits_direct**
         
-        This updates particles' positions and velocities between timesteps to achieve the desired changes to the osculating orbital elements.  
-        This is the approach of Lee & Peale (2002).  
-        This nicely isolates changes to particular osculating elements, making it easier to interpret the resulting dynamics.  
 
     *   **modify_orbits_forces**
         
@@ -71,54 +63,106 @@ Effect Descriptions
 General Relativity
 ^^^^^^^^^^^^^^^^^^
 
+.. _gr:
+
 gr
 **
 
-gr_potential
-************
+======================= ===============================================
+Authors                 P. Shi, D. Tamayo, H. Rein
+Implementation Paper    *In progress*
+Based on                `Anderson et al. 1975 <http://labs.adsabs.harvard.edu/adsabs/abs/1975ApJ...200..221A/>`_.
+C Example               :ref:`c_example_gr`
+Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+======================= ===============================================
 
-+-----------------------+-----------------------------------------------+
-| Authors               | H. Rein, D. Tamayo                            |
-+=======================+===============================================+
-| Authors               | H. Rein, D. Tamayo                            |
-+-----------------------+-----------------------------------------------+
-| Authors               | H. Rein, D. Tamayo                            |
-+-----------------------+-----------------------------------------------+
-
-===================== ===============================================
-Authors               H. Rein, D. Tamayo
-===================== ===============================================
-Implementation Paper  *In progress*
-===================== ===============================================
-
-**Authors**: H. Rein, D. Tamayo
-
-**Implementation paper**: *In progress*
-
-**Based on**: `Nobili and Roxburgh 1986 <http://labs.adsabs.harvard.edu/adsabs/abs/1986IAUS..114..105N/>`_.
-
-**C Example**:
-        
-**Python Example**: `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
-
-This is the simplest potential you can use for general relativity.
-It adds corrections from a single massive body, specified by `source`.
-It gets the precession right, but gets the mean motion wrong by :math:`\mathcal{O}(GM/ac^2)`.  
-It's the fastest option, and because it's not velocity-dependent, it automatically keeps WHFast symplectic.  
-Nice if you don't need to get GR exactly right and want speed.
+This assumes that the masses are dominated by a single central body, and should be good enough for most applications with planets orbiting single stars.
+It ignores terms that are smaller by of order the mass ratio with the central body.
+It gets both the mean motion and precession correct, and will be significantly faster than :ref:`gr_full`, particularly with several bodies.
 
 **Particle Parameters**
 
 *None*
 
-===================== ======== ===============================================
-Name                  Required Description
-===================== ======== ===============================================
-===================== ======== ===============================================
+.. _gr_potential:
+
+gr_potential
+************
+
+======================= ===============================================
+Authors                 H. Rein, D. Tamayo
+Implementation Paper    *In progress*
+Based on                `Nobili and Roxburgh 1986 <http://labs.adsabs.harvard.edu/adsabs/abs/1986IAUS..114..105N/>`_.
+C Example               :ref:`c_example_gr`
+Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+======================= ===============================================
+
+This is the simplest potential you can use for general relativity.
+It assumes that the masses are dominated by a single central body.
+It gets the precession right, but gets the mean motion wrong by :math:`\mathcal{O}(GM/ac^2)`.  
+It's the fastest option, and because it's not velocity-dependent, it automatically keeps WHFast symplectic.  
+Nice if you have a single-star system, don't need to get GR exactly right, and want speed.
+
+**Particle Parameters**
+
+*None*
+
+.. _gr_full:
 
 gr_full
 *******
 
+======================= ===============================================
+Authors                 P. Shi, H. Rein, D. Tamayo
+Implementation Paper    *In progress*
+Based on                `Newhall et al. 1983 <http://labs.adsabs.harvard.edu/adsabs/abs/1983A%26A...125..150N/>`_.
+C Example               :ref:`c_example_gr`
+Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+======================= ===============================================
+
+This algorithm incorporates GR effects from all bodies in the system, and is necessary for multiple massive bodies like stellar binaries.
+
+**Particle Parameters**
+
+*None*
+
+Orbit Modifications
+^^^^^^^^^^^^^^^^^^^
+
+REBOUNDx offers two ways of modifying orbital elements (semimajor axis/eccentricity/inclination damping, precession, etc.)
+In both cases, each particle is assigned evolution timescales for each orbital element.  
+Positive timescales correspond to growth / progression, negative timescales correspond to damping / regression.  
+Semimajor axes, eccentricities and inclinations grow / damp exponentially.  
+Pericenters and nodes progress/regress linearly.
+
+.. _modify_orbits_direct:
+
+modify_orbits_direct
+********************
+
+======================= ===============================================
+Authors                 D. Tamayo
+Implementation Paper    *In progress*
+Based on                `Lee & Peale 2002 <http://labs.adsabs.harvard.edu/adsabs/abs/2002ApJ...567..596L/>`_. 
+C Example               :ref:`c_example_modify_orbits`
+Python Example          `Migration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Migration.ipynb>`_
+                        `EccAndIncDamping.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/EccAndIncDamping.ipynb>`_.
+======================= ===============================================
+
+This updates particles' positions and velocities between timesteps to achieve the desired changes to the osculating orbital elements (exponential growth/decay for a, e, inc, linear progression/regression for Omega/omega.
+This nicely isolates changes to particular osculating elements, making it easier to interpret the resulting dynamics.  
+
+**Particle Parameters**
+
+======================= =========== ================================================
+Parameter name          Required    Description
+======================= =========== ================================================
+tau_a                   No          Semimajor axis exponential growth/damping timescale
+tau_e                   No          Eccentricity exponential growth/damping timescale
+tau_inc                 No          Inclination axis exponential growth/damping timescale
+tau_Omega               No          Period of linear nodal precession/regression
+tau_omega               No          Period of linear apsidal precession/regression
+======================= =========== ================================================
 
 .. _paramlist:
 
