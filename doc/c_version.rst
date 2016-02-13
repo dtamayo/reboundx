@@ -14,6 +14,8 @@ Navigate to the parent directory that holds the ``rebound`` folder (see below if
     
     export REB_DIR=/Users/dtamayo/rebound
 
+.. _c_qs:
+
 Quick Start Guide
 -----------------
 

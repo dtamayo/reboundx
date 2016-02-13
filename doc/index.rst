@@ -60,11 +60,10 @@ Table of Contents
     :numbered:
 
     self
-    modules
+    effects 
     c_version
     c_examples
     python_version
-    ipython_examples
     faq
 
 Indices and tables
