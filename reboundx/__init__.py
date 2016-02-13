@@ -33,5 +33,28 @@ try:
 except:
     pass    # this check fails in python 3. Problem with setuptools
 
-from .extras import *
-__all__ = ["Extras", "rebx_params_gr_potential"]
+# When reboundx is imported, first monkey patch rebound.Particle so that we can add new parameters to the particles:
+
+import rebound
+def monkeyset(self, name, value):
+    if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
+        # create new param in c
+        clibreboundx.rebx_set_param_double(byref(self), c_char_p(name.encode('utf-8')), c_double(value))
+    else:
+        rebound.Particle.default_set(self, name, value)
+        
+def monkeyget(self, name):
+    if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
+        # check param in c
+        clibreboundx.rebx_get_param_double.restype = c_double
+        return clibreboundx.rebx_get_param_double(byref(self), c_char_p(name.encode('utf-8')))
+    else:
+        return super(rebound.Particle, self).__getattr__(name)
+
+rebound.Particle.default_set = rebound.Particle.__setattr__
+rebound.Particle.__setattr__ = monkeyset
+rebound.Particle.__getattr__ = monkeyget
+
+from .extras import Extras
+from .tools import coordinates, install_test
+__all__ = ["Extras", "coordinates", "install_test"]
