@@ -3,13 +3,11 @@
 REBx Effects & Parameters
 =========================
 
-Each of these effects can be added to a REBOUND simulation with the corresponding function in :ref:`add-effects`.  Each of these effects has at least one corresponding examples in both :ref:`c_examples` and :ref:`ipython_examples`. Make sure to look at the corresponding iPython example, which has further details on the physical model for the particular effect.
+Below are descriptions for each of the effects included in REBOUNDx.
+Different implementations for the same effect are grouped together.
+All effects follow the same recipes for usage, see the Python quick-start guide (:ref:`python_qs`) or C quick-start guide (:ref:`c_qs`).
+Probably the quickest way to get up and running is to edit one of the linked examples for the effect you're interested in.
 
-In the Python version, particle parameters can be accessed with ``sim.particles[1].param`` or set with ``sim.particles[1].param = value``, where ``param`` is a parameter name from the table below.  
-
-In the C version, you get with 
-
-There are plenty of examples in :ref:`c_examples` and :ref:`ipython_examples`.
 General Relativity
 ^^^^^^^^^^^^^^^^^^
 

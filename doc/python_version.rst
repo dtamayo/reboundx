@@ -1,4 +1,4 @@
-G.. _python_version:
+.. _python_version:
 
 Python Version
 ==============
@@ -37,6 +37,8 @@ To use a custom install location for REBOUNDx, you have to set the ``REB_DIR`` e
 variable to the path to REBOUND (you might add this to your shell's startup files)::
     
     export REB_DIR=/Users/dtamayo/rebound
+
+.. _python_qs:
 
 Quick Start Guide
 -----------------
