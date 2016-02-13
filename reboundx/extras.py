@@ -163,6 +163,7 @@ class rebx_params_gr(Structure):
 
 class rebx_params_gr_potential(Structure):
     """
+    :ref:`gr_potential`
     Parameter structure for :meth:`Extras.add_gr_potential`.
 
     Attributes
