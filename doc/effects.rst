@@ -232,21 +232,3 @@ Name (C type)               Required    Description
 beta (double)               No          Ratio of the radiation force to the gravitational force
                                         from the radiation source.
 =========================== =========== ======================================================
-
-.. _paramlist:
-
-Table of Particle Parameters
-----------------------------
-
-
-=============== ========================================= ============================================ 
-Parameter name  Effect                                    Description
-=============== ========================================= ============================================ 
-tau_a           modify_orbit_direct, modify_orbits_forces Semimajor axis exponential growth/damping timescale
-tau_e           modify_orbit_direct, modify_orbits_forces Eccentricity exponential growth/damping timescale
-tau_inc         modify_orbit_direct, modify_orbits_forces Inclination axis exponential growth/damping timescale
-tau_Omega       modify_orbit_direct                       Period of linear nodal precession/regression
-tau_omega       modify_orbit_direct                       Period of linear apsidal precession/regression
-beta            radiation_forces                          Ratio of radiation to gravitational force (Burns et al. 1979)
-=============== ========================================= ============================================ 
-

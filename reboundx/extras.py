@@ -1,27 +1,7 @@
 from . import clibreboundx
 from ctypes import Structure, c_double, POINTER, c_int, c_uint, c_long, c_ulong, c_void_p, c_char_p, CFUNCTYPE, byref, c_uint32
+from .tools import check_c
 import rebound
-
-# When reboundx is imported, first  monkey patch rebound.Particle so that we can add new parameters to the particles:
-
-def monkeyset(self, name, value):
-    if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
-        # create new param in c
-        clibreboundx.rebx_set_param_double(byref(self), c_char_p(name.encode('utf-8')), c_double(value))
-    else:
-        rebound.Particle.default_set(self, name, value)
-        
-def monkeyget(self, name):
-    if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
-        # check param in c
-        clibreboundx.rebx_get_param_double.restype = c_double
-        return clibreboundx.rebx_get_param_double(byref(self), c_char_p(name.encode('utf-8')))
-    else:
-        return super(rebound.Particle, self).__getattr__(name)
-
-rebound.Particle.default_set = rebound.Particle.__setattr__
-rebound.Particle.__setattr__ = monkeyset
-rebound.Particle.__getattr__ = monkeyget
 
 class Extras(Structure):
     """
@@ -33,7 +13,6 @@ class Extras(Structure):
 
     def __init__(self, sim):
         clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
-        self.coordinates = {"JACOBI":0, "BARYCENTRIC":1, "HELIOCENTRIC":2} # to use C version's REBX_COORDINATES enum
         sim._extras_ref = self # add a reference to this instance in sim to make sure it's not garbage collected
 
     def __del__(self):
@@ -162,17 +141,6 @@ class rebx_params_gr(Structure):
                 ("c", c_double)]
 
 class rebx_params_gr_potential(Structure):
-    """
-    :ref:`gr_potential`
-    Parameter structure for :meth:`Extras.add_gr_potential`.
-
-    Attributes
-    ----------
-    source_index    : int
-        Index in the particles structure for the particle responsible for the GR effect.
-    c               : float
-        Speed of light
-    """
     _fields_ = [("source_index", c_int), # testing
                 ("c", c_double)]
 
@@ -184,7 +152,7 @@ class rebx_params_radiation_forces(Structure):
                 ("c", c_double)]
 
 #################################################
-# Generic REBOUNDx definitions (Not used by user)
+# Generic REBOUNDx definitions
 #################################################
 
 class rebx_param(Structure): # need to define fields afterward because of circular ref in linked list
@@ -211,39 +179,3 @@ rebx_param_to_be_freed._fields_ = [("param", POINTER(rebx_param)),
 Extras._fields_ = [("sim", POINTER(rebound.Simulation)),
                 ("effects", POINTER(rebx_effect)),
                 ("params_to_be_freed", POINTER(rebx_param_to_be_freed))]
-
-#######################################
-# Internal functions (not used by user)
-#######################################
-
-#internal function to make sure c is passed when it needs to be
-def check_c(rebx, c):
-    if c is not None: # user passed c explicitly
-        return c
-  
-    # c was not passed by user
-     
-    if rebx.sim.contents.G == 1: # if G = 1 (default) return default c
-        return 10064.915 # speed of light in AU, yr/2pi
-    else:
-        raise ValueError("If you change G, you must pass c (speed of light) in appropriate units to add_gr, add_gr_potential, add_gr_full, and radiation_forces.  Setting the units in the simulation does not work with REBOUNDx.  See ipython_examples/GeneralRelativity.ipynb and ipython_examples/Radiation_Forces_Debris_Disk.ipynb")
-
-#function to test whether REBOUND shared library can be located and called correctly
-def install_test():
-    e = None
-    try:
-        clibreboundx.install_test.restype = c_double
-    except Exception as e:
-        return e
-    try:
-        x = clibreboundx.install_test()
-    except Exception as e:
-        return e
-    try:
-        if abs(x-0.17599665767) > 1.e-6:
-            return 'Did not integrate to correct value of particles[1].x'
-    except Exception as e:
-        return e
-    
-    return e
-
