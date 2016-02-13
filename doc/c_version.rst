@@ -56,22 +56,9 @@ See :ref:`effectList` for additional details on the implementation of each effec
 
 .. doxygengroup:: AddEffect
 
-Functions For Getting and Setting Particle Parameters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Both getters and setters always take a *pointer* to the particle.  
-See :ref:`paramList` for definitions of the various parameters.
-
-.. doxygengroup:: GettersSetters
-
 Convenience Functions for Particular Effects
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These are functions provided for convenience for calculating various parameters.
 
 .. doxygengroup:: ConvFunc
-
-Internal Functions and Data Structures
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-For documentation of the code that the user does not diretly interface with, refer to the reboundx.h file.
