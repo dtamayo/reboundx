@@ -26,13 +26,6 @@ Welcome to REBOUNDx (2.5.0)
 REBOUNDx (eXtras) allows you to easily incorporate additional physics into your REBOUND simulations.
 All the computationally expensive parts of the code are written in C, so that the code will run much faster than if you define your own custom ``additional_forces`` functions in Python.
 
-So far we include:
-
-* General relativity corrections
-* Semimajor axis and eccentricity damping, implemented as forces
-* Direct modifications to particles' orbital elements after each timestep
-* Radiation Forces
-
 It provides a general and easily extendable framework for including other effects, so please contact me
 (tamayo.daniel@gmail.com) if you'd like to work on a new modification
 and I can help you incorporate it (or even better send me a pull request!)
@@ -45,9 +38,9 @@ If you are unsure, I recommend you try out the Python version, as it enables you
 It also allows for a less verbose interface.
 You'll find installation instructions in the links below.
 
-:ref:`c_version`
+:ref:`c_quickstart`
 
-:ref:`python_version`
+:ref:`python_quickstartn`
 
 Issues
 ------
@@ -61,9 +54,12 @@ Table of Contents
 
     self
     effects 
-    c_version
+    python_quickstart
+    c_quickstart
+    python_api
+    c_api
+    c_develop_api
     c_examples
-    python_version
     faq
 
 Indices and tables
