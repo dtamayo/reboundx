@@ -1,7 +1,7 @@
-.. _c_version:
+.. _c_quickstart:
 
-C Version
-=========
+Quickstart Guide (C)
+====================
 
 Installation
 ------------
@@ -38,8 +38,3 @@ where ``param`` is one of the parameters in :ref:`paramList`.  Here we set the h
 The best way to get started is to use the examples as a starting point and modify them as needed.  You can find at least one example for each REBOUNDx effect in the ``reboundx/examples`` folder (see a listing at :ref:`c_examples`).
 
 Even if you are using the C version, you should also take a look at the iPython examples at :ref:`ipython_examples`, as the iPython notebooks nicely incorporate text and they therefore have a bit longer discussions about the physical details for each effect.
-
-C API
------
-
-.. doxygenfile:: reboundx.h
