@@ -43,54 +43,60 @@ extern const char* rebx_version_str;    ///<Version string.
   Enums that might be shared across effects
 *******************************************/
 
-/*  Enumeration for different types of coordinate systems.*/
+/**
+ * @brief Enumeration for different coordinate systems.
+ */
 enum REBX_COORDINATES{
-    JACOBI,                             // Default.  Uses Jacobi coordinates.
-    BARYCENTRIC,                        // Uses coordinates referenced to the center of mass of the whole system.
-    HELIOCENTRIC                        // Uses coordinates referenced to sim->particles[0].
+    JACOBI,                             ///< Jacobi coordinates.  Default for REBOUND/REBOUNDx.
+    BARYCENTRIC,                        ///< Coordinates referenced to the center of mass of the whole system.
+    HELIOCENTRIC                        ///< Coordinates referenced to particles[0] in the simulation.
 };
 
 /*****************************************
-  Parameter structures for various effects
+  Parameter structures for each effect
 ******************************************/
 
 struct rebx_params_modify_orbits_direct{
-    double p;                           // p parameter from Deck & Batygin (2015) for how e-damping couples to a-damping at order e^2.  p=0 : no damping (default), p=1 : e-damping at constant angular momentum.
-    enum REBX_COORDINATES coordinates;  // Identifier for the coordinate system that should be used for the damping.
+    double p;                           ///< Coupling parameter between eccentricity and semimajor axis evolution.
+    enum REBX_COORDINATES coordinates;  ///< Coordinate system that should be used for the calculations.
 };
 
 struct rebx_params_modify_orbits_forces{
-    enum REBX_COORDINATES coordinates;  // Identifier for the coordinate system that should be used for the damping.
+    enum REBX_COORDINATES coordinates;  ///< Coordinate system that should be used for the calculations.
 };
 
 struct rebx_params_gr {
-    int source_index;                   // Index of particle in particles array causing GR corrections.
-    double c;                           // Speed of light in units appropriate for sim->G and initial conditions.
+    int source_index;                   ///< Index of particle in particles array causing GR corrections.
+    double c;                           ///< Speed of light in units appropriate for sim->G and initial conditions.
 };
 
 struct rebx_params_gr_potential {
-    int source_index;                   // Index of particle in particles array causing GR corrections.
-    double c;                           // Speed of light in units appropriate for sim->G and initial conditions.
+    int source_index;                   ///< Index of particle in particles array causing GR corrections.
+    double c;                           ///< Speed of light in units appropriate for sim->G and initial conditions.
 };
 
 struct rebx_params_gr_full {
-    double c;                           // Speed of light in units appropriate for sim->G and initial conditions.
+    double c;                           ///< Speed of light in units appropriate for sim->G and initial conditions.
 };
 
 struct rebx_params_radiation_forces {
-    int source_index;                   // Index of particle in particles array that is the source of the radiation.
-    double c;                           // Speed of light in units appropriate for sim->G and initial conditions.
+    int source_index;                   ///< Index of particle in particles array that is the source of the radiation.
+    double c;                           ///< Speed of light in units appropriate for sim->G and initial conditions.
 };
 
 /****************************************
   General REBOUNDx Functions
 *****************************************/
-
+/**
+ * \name Main REBOUNDx Functions
+ * @{
+ */
 /**
  * @defgroup MainRebxFunctions 
  * @details These are the top level routines that one needs when using REBOUNDx.
  * @{
  */
+
 /**
  * @brief Adds REBOUNDx functionality to a passed REBOUND simulation.
  * @details Allocates memory for a REBOUNDx structure, initializes all variables and returns a pointer to
@@ -106,48 +112,64 @@ struct rebx_extras* rebx_init(struct reb_simulation* sim);
  */
 void rebx_free(struct rebx_extras* rebx);
 /** @} */
+/** @} */
 
 /****************************************
   Functions for adding effects
 *****************************************/
 
 /**
+ * \name Adder Functions for Each REBOUNDx Effect
+ * @{
+ */
+/**
  * @defgroup AddEffect
  * @{
  */
 /**
- * @brief Adds orbit modifications (migration, damping, precession), altering the orbital elements directly.
+ * @brief Adds orbit modifications, altering the orbital elements directly.
+ * @details Silently sets the effect struct's p member to 0, and coordinates to JACOBI.
+ * User can modify if needed.
+ * @param rebx pointer to the rebx_extras instance
  */
 struct rebx_params_modify_orbits_direct* rebx_add_modify_orbits_direct(struct rebx_extras* rebx);
 /**
- * @brief Adds orbit modifications (migration, damping, precession), implemented as forces.
+ * @brief Adds orbit modifications, implemented as forces.
+ * @details Silently sets the effect struct's coordinates member to JACOBI.
+ * User can modify if needed.
+ * @param rebx pointer to the rebx_extras instance
  */
 struct rebx_params_modify_orbits_forces* rebx_add_modify_orbits_forces(struct rebx_extras* rebx);
 /**
- * @brief Adds post-Newtonian corrections arising only from a single particle (specified by source).  Gets precessions and mean motions right.  Accurate and fast.
+ * @brief Adds post-Newtonian corrections arising only from a single particle.  
+ * @param rebx pointer to the rebx_extras instance
  * @param source particle that is the source of the post-newtonian corrections.
  * @param c Speed of light.
  */
 struct rebx_params_gr* rebx_add_gr(struct rebx_extras* rebx, struct reb_particle* source, double c);
 /**
- * @brief Adds simple potential for post-Newtonian corrections arising only from a single particle (specified by source).  Gets precessions but not mean motions correct.  Fastest.
+ * @brief Adds simple potential for post-Newtonian corrections arising only from a single particle.
+ * @param rebx pointer to the rebx_extras instance
  * @param source particle that is the source of the post-newtonian corrections.
  * @param c Speed of light.
  */
 struct rebx_params_gr_potential* rebx_add_gr_potential(struct rebx_extras* rebx, struct reb_particle* source, double c);
 /**
- * @brief Adds post-Newtonian corrections arising from all bodies in the simulation.  Safe, but slower.
+ * @brief Adds post-Newtonian corrections arising from all bodies in the simulation.
+ * @param rebx pointer to the rebx_extras instance
  * @param c Speed of light.
  */
 struct rebx_params_gr_full* rebx_add_gr_full(struct rebx_extras* rebx, double c);
 /**
  * @brief Adds radiation forces to the simulation (i.e., radiation pressure and Poynting-Robertson drag).
+ * @param rebx pointer to the rebx_extras instance
  * @param source particle that is the source of the radiation.
  * @param c Speed of light.
  */
 struct rebx_params_radiation_forces* rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source, double c);
 /**
- * @brief Allows user to specify their own post timestep modifications. Behaviour is identical to setting up post timestep modifications in REBOUND itself.
+ * @brief Allows user to specify their own post timestep modifications. Behavior is identical to setting up post timestep modifications in REBOUND itself.
+ * @param rebx pointer to the rebx_extras instance
  * @param custom_post_timestep_modifications Custom post-timestep modification function.
  * @param custom_params Custom parameters container.  Pass NULL if you don't want to use it.
  */
@@ -155,11 +177,13 @@ void rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, void (
 
 /**
  * @brief Allows user to specify their own extra forces. Behaviour is identical to setting up extra forces  in REBOUND itself.
+ * @param rebx pointer to the rebx_extras instance
  * @param custom_forces Custom forces function.
  * @param force_is_velocity_dependent Set to 1 if force is velocity dependent.
  * @param custom_params Custom parameters container.  Pass NULL if you don't want to use it.
  */
 void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* const custom_effect), int force_is_velocity_dependent, void* custom_params);
+/** @} */
 /** @} */
 
 /******************************************
@@ -167,19 +191,37 @@ void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct
 *******************************************/
 
 /**
+ * \name Convenience Functions for Various Effects
+ * @{
+ */
+/**
  * @defgroup ConvFunc
+ * @brief Convenience functions for different REBOUNDx effects.
  * @{
  */
 
 /**
  * @brief Calculates beta, the ratio between the radiation pressure force and the gravitational force from the star.
+ * @param rebx pointer to the rebx_extras instance.
+ * @param params parameters structure returned when adding effect.
+ * @param particle_radius radius of grain.
+ * @param density density of particle.
+ * @param Q_pr Radiation pressure coefficient (Burns et al. 1979).
+ * @param L Luminosity of radiation source.
  */
 double rebx_rad_calc_beta(struct rebx_extras* rebx, struct rebx_params_radiation_forces* params, double particle_radius, double density, double Q_pr, double L);
 /**
  * @brief Calculates the particle radius from physical parameters and beta, the ratio of radiation to gravitational forces from the star.
+ * @param rebx pointer to the rebx_extras instance.
+ * @param params parameters structure returned when adding effect.
+ * @param beta ratio of radiation force to gravitational force from the radiation source body.
+ * @param density density of particle.
+ * @param Q_pr Radiation pressure coefficient (Burns et al. 1979).
+ * @param L Luminosity of radiation source.
  */
 double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, struct rebx_params_radiation_forces* params, double beta, double density, double Q_pr, double L);
 
+/** @} */
 /** @} */
 
 #endif
