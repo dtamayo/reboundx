@@ -42,23 +42,4 @@ Even if you are using the C version, you should also take a look at the iPython 
 C API
 -----
 
-Top Level REBOUNDx Functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. doxygengroup:: MainRebxFunctions
-
-.. _add-effects:
-
-Functions For Adding REBOUNDx Effects
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-See :ref:`effectList` for additional details on the implementation of each effect.
-
-.. doxygengroup:: AddEffect
-
-Convenience Functions for Particular Effects
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-These are functions provided for convenience for calculating various parameters.
-
-.. doxygengroup:: ConvFunc
+.. doxygenfile:: reboundx.h
