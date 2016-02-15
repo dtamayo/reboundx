@@ -37,7 +37,7 @@ const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build strin
 const char* rebx_version_str = "2.5.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 
 /****************************************
-User API
+General Functions
 *****************************************/
 
 struct rebx_extras* rebx_init(struct reb_simulation* sim){
@@ -50,6 +50,10 @@ void rebx_free(struct rebx_extras* rebx){
     rebx_free_pointers(rebx);
     free(rebx);
 }
+
+/****************************************
+Custom Effect Adders
+*****************************************/
 
 void rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, void (*custom_post_timestep_modification)(struct reb_simulation* const sim, struct rebx_effect* custom_effect), void* custom_params){
     struct reb_simulation* sim = rebx->sim;

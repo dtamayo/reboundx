@@ -21,20 +21,43 @@ Quick Start Guide
 
 We assume we've already set up a ``reb_simulation`` called ``sim``.  We always begin by adding REBOUNDx to our simulation::
     
-    struct rebx_extras rebx = rebx_init(sim);
+    struct rebx_extras* rebx = rebx_init(sim);
 
 We then add the effect we are interested in, which returns a pointer to a parameter struct that you can later modify::
 
     struct rebx_params_effect* params = rebx_add_effect(rebx);
 
-where ``effect`` is one of the effects in :ref:`effectList`.  Some effects adders require you to pass parameter values, see :ref:`add-effects`.  We then set particle-specific parameters with::
+where ``effect`` is one of the effects in :ref:`effects`.
+Some effects adders require you to pass parameter values, see :ref:`c_api`.
+We can now set effect parameters directly, e.g.,::
+
+    params->c = 3.e8;
+
+We then set particle-specific parameters with::
 
     rebx_set_param_double(&sim->particles[1], "tau_a", 1.e4);
 
-where ``param`` is one of the parameters in :ref:`paramList`.  Here we set the hypothetical ``param`` parameter for ``particles[1]`` to a value of 1.e4.  Then we run the REBOUND simulation as usual::
+Note that
+    * There is a different setter function for each type, named ``rebx_set_param_type`` (replace type, as above).
+    * We always pass the address to a particle in a simulation.
+    * We pass the name of the parameter we want to change.
+
+We can then check the value of a particle's parameter with::
+
+    rebx_get_param_double(&sim->particles[1], "tau_a");
+
+In general, each effect has its own particular set of parameters, both for the effect as a whole, and for individual particles.
+**The main reference point in the documentation is** :ref:`effects` **,which has descriptions for each effect and its parameters, citations, and links to examples.**
+You can find descriptions of each effect's adder function and any convenience functions at :ref:`c_api`.
+
+
+You can add as many modifications as you'd like in the same simulation (even the same effect more than once).
+Once you're done setting up all the modifications you want, just run the REBOUND simulation as usual::
 
     reb_integrate(sim, tmax);
 
-The best way to get started is to use the examples as a starting point and modify them as needed.  You can find at least one example for each REBOUNDx effect in the ``reboundx/examples`` folder (see a listing at :ref:`c_examples`).
+Probably the quickest way to get up and running is to modify an existing example for your effect.
+You can find links to the appropriate examples here: :ref:`effects`.
+You can find the example files in the ``reboundx/examples`` folder.
 
-Even if you are using the C version, you should also take a look at the iPython examples at :ref:`ipython_examples`, as the iPython notebooks nicely incorporate text and they therefore have a bit longer discussions about the physical details for each effect.
+Even if you are using the C version, you might also take a look at the python example links at :ref:`effects`, as the iPython notebooks nicely incorporate text and they therefore have a bit longer discussions about the physical details for each effect.

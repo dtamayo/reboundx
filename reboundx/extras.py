@@ -19,39 +19,31 @@ class Extras(Structure):
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_pointers(byref(self))
     
-    def add_Particle_props(self):
-        print("monkey")
-
     #######################################
     # Functions for adding REBOUNDx effects
     #######################################
 
     def add_modify_orbits_direct(self):
         """
-        Adds orbit modifications to the simulation, modifying orbital elements directly after each timestep.
-        You must still set the relevant timescales on the individual particles.
-        See :ref:`modules` for additional information, and for definitions of the relevant timescales.
-        See :ref:`ipython_examples` for an example.
+        :rtype: rebx_params_modify_orbits_direct
         """
         clibreboundx.rebx_add_modify_orbits_direct.restype = POINTER(rebx_params_modify_orbits_direct)
         return clibreboundx.rebx_add_modify_orbits_direct(byref(self)).contents
 
     def add_modify_orbits_forces(self):
         """
-        Adds orbit modifications to the simulation, implemented as forces that yield the desired effect.
-        You must still set the relevant timescales on the individual particles.
-        See :ref:`modules` for additional information, and for definitions of the relevant timescales.
-        See :ref:`ipython_examples` for an example.
+        :rtype: rebx_params_modify_orbits_forces
         """
         clibreboundx.rebx_add_modify_orbits_forces.restype = POINTER(rebx_params_modify_orbits_forces)
         return clibreboundx.rebx_add_modify_orbits_forces(byref(self)).contents
 
     def add_gr(self, source=None, c=None):
         """
-        Add general relativity corrections from a single body, specified by source (defaults to particles[0]).
-        (see :ref:`effectList` for details on the implementation). 
-        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
-        See :ref:`ipython_examples` for an example.
+        :param source: Source of GR effect. **Defaults to sim.particles[0]**.
+        :param c: Speed of light in appropriate units. **Defaults to AU/(yr/2pi)**.
+        :type source: rebound.Particle
+        :type c: double
+        :rtype: rebx_params_gr
         """
         c = check_c(self, c)
         if source is not None:
@@ -61,10 +53,9 @@ class Extras(Structure):
     
     def add_gr_full(self, c=None):
         """
-        Add general relativity corrections, treating all particles as massive.
-        (see :ref:`effectList` for details on the implementation). 
-        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi)
-        See :ref:`ipython_examples` for an example.
+        :param c: Speed of light in appropriate units. **Defaults to AU/(yr/2pi)**.
+        :type c: double
+        :rtype: rebx_params_gr_full
         """
         c = check_c(self, c)
         clibreboundx.rebx_add_gr_full.restype = POINTER(rebx_params_gr_full)
@@ -72,13 +63,11 @@ class Extras(Structure):
 
     def add_gr_potential(self, source=None, c=None):
         """
-        
-        :param source: Source of GR effect. Defaults to sim.particles[0].
-        :param c: Speed of light in appropriate units. Defaults to AU/(yr/2pi)
+        :param source: Source of GR effect. **Defaults to sim.particles[0]**.
+        :param c: Speed of light in appropriate units. **Defaults to AU/(yr/2pi)**.
         :type source: rebound.Particle
         :type c: double
         :rtype: rebx_params_gr_potential
-
         """
         c = check_c(self, c)
         if source is not None:
@@ -88,11 +77,11 @@ class Extras(Structure):
     
     def add_radiation_forces(self, source=None, c=None):
         """
-        Add radiation forces to the simulation (radiation pressure and Poynting-Robertson drag).
-        (see :ref:`effectList` for details on the implementation). 
-        Must pass the value of the speed of light if using non-default units (AU, Msun, yr/2pi),
-        as well as the Particle in the Simulation that is the source of the radiation.
-        See :ref:`ipython_examples` for an example.
+        :param source: Source of radiation. **Defaults to sim.particles[0]**.
+        :param c: Speed of light in appropriate units. **Defaults to AU/(yr/2pi)**.
+        :type source: rebound.Particle
+        :type c: double
+        :rtype: rebx_params_radiation_forces
         """
         c = check_c(self, c)
         if source is not None:
@@ -107,20 +96,39 @@ class Extras(Structure):
     def rad_calc_beta(self, params, particle_radius, density, Q_pr, L):
 
         """
-        Calculates a particle's beta parameter (the ratio of the radiation force to the gravitational force) given
-        the params returned from add_radiation_forces, the particle's physical radius, density, radiation pressure 
-        coefficient ``Q_pr``, and the star's luminosity.
+        Calculates a particle's beta parameter (the ratio of the radiation force to the gravitational force).
         All values must be passed in the same units as used for the simulation as a whole (e.g., AU, Msun, yr/2pi).
-        See the circumplanetary dust example in :ref:`ipython_examples`.
+
+        :param params: parameters instance returned by add_radiation_forces.
+        :param particle_radius: grain's physical radius
+        :param density: particle bulk density
+        :param Q_pr: radiation pressure coefficient
+        :param L: Radiation source's luminosity
+        :type params: rebx_params_radiation_forces
+        :type particle_radius: float
+        :type density: float
+        :type Q_pr: float
+        :type L: float
+        :rtype: float
         """
         clibreboundx.rebx_rad_calc_beta.restype = c_double
         return clibreboundx.rebx_rad_calc_beta(byref(self), byref(params), c_double(particle_radius), c_double(density), c_double(Q_pr), c_double(L))
     def rad_calc_particle_radius(self, params, beta, density, Q_pr, L):
         """
-        Calculates a particle's physical radius given the params returned from add_radiation_forces, the particle's
-        beta parameter (the ratio of the radiation force to the gravitational force),
-        density, radiation pressure coefficient ``Q_pr``, and the star's luminosity.
+        Calculates a particle's physical radius given its beta parameter.
         All values must be passed in the same units as used for the simulation as a whole (e.g., AU, Msun, yr/2pi).
+
+        :param params: parameters instance returned by add_radiation_forces.
+        :param beta: ratio of radiation pressure force to gravitational force from the radiation source.
+        :param density: particle bulk density
+        :param Q_pr: radiation pressure coefficient
+        :param L: Radiation source's luminosity
+        :type params: rebx_params_radiation_forces
+        :type beta: float
+        :type density: float
+        :type Q_pr: float
+        :type L: float
+        :rtype: float
         """
         clibreboundx.rebx_rad_calc_particle_radius.restype = c_double
         return clibreboundx.rebx_rad_calc_particle_radius(byref(self), byref(params), c_double(beta), c_double(density), c_double(Q_pr), c_double(L))
