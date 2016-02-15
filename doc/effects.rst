@@ -8,98 +8,6 @@ Different implementations for the same effect are grouped together.
 All effects follow the same recipes for usage, see the Python quick-start guide (:ref:`python_qs`) or C quick-start guide (:ref:`c_qs`).
 Probably the quickest way to get up and running is to edit one of the linked examples for the effect you're interested in.
 
-General Relativity
-^^^^^^^^^^^^^^^^^^
-
-.. _gr:
-
-gr
-**
-
-======================= ===============================================
-Authors                 P. Shi, D. Tamayo, H. Rein
-Implementation Paper    *In progress*
-Based on                `Anderson et al. 1975 <http://labs.adsabs.harvard.edu/adsabs/abs/1975ApJ...200..221A/>`_.
-C Example               :ref:`c_example_gr`
-Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
-======================= ===============================================
-
-This assumes that the masses are dominated by a single central body, and should be good enough for most applications with planets orbiting single stars.
-It ignores terms that are smaller by of order the mass ratio with the central body.
-It gets both the mean motion and precession correct, and will be significantly faster than :ref:`gr_full`, particularly with several bodies.
-
-**Effect Structure**: *rebx_params_gr*
-
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-c (double)                  Speed of light in the units used for the simulation.
-source_index (int)          Index in the `particles` array for the massive central body.
-=========================== ==================================================================
-
-**Particle Parameters**
-
-*None*
-
-.. _gr_potential:
-
-gr_potential
-************
-
-======================= ===============================================
-Authors                 H. Rein, D. Tamayo
-Implementation Paper    *In progress*
-Based on                `Nobili and Roxburgh 1986 <http://labs.adsabs.harvard.edu/adsabs/abs/1986IAUS..114..105N/>`_.
-C Example               :ref:`c_example_gr`
-Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
-======================= ===============================================
-
-This is the simplest potential you can use for general relativity.
-It assumes that the masses are dominated by a single central body.
-It gets the precession right, but gets the mean motion wrong by :math:`\mathcal{O}(GM/ac^2)`.  
-It's the fastest option, and because it's not velocity-dependent, it automatically keeps WHFast symplectic.  
-Nice if you have a single-star system, don't need to get GR exactly right, and want speed.
-
-**Effect Structure**: *rebx_params_gr_potential*
-
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-c (double)                  Speed of light in the units used for the simulation.
-source_index (int)          Index in the `particles` array for the massive central body.
-=========================== ==================================================================
-
-**Particle Parameters**
-
-*None*
-
-.. _gr_full:
-
-gr_full
-*******
-
-======================= ===============================================
-Authors                 P. Shi, H. Rein, D. Tamayo
-Implementation Paper    *In progress*
-Based on                `Newhall et al. 1983 <http://labs.adsabs.harvard.edu/adsabs/abs/1983A%26A...125..150N/>`_.
-C Example               :ref:`c_example_gr`
-Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
-======================= ===============================================
-
-This algorithm incorporates GR effects from all bodies in the system, and is necessary for multiple massive bodies like stellar binaries.
-
-**Effect Structure**: *rebx_params_gr_full*
-
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-c (double)                  Speed of light in the units used for the simulation.
-=========================== ==================================================================
-
-**Particle Parameters**
-
-*None*
-
 Orbit Modifications
 ^^^^^^^^^^^^^^^^^^^
 
@@ -192,6 +100,98 @@ tau_Omega (double)          No          Period of linear nodal precession/regres
 tau_omega (double)          No          Period of linear apsidal precession/regression
 =========================== =========== ======================================================
 
+General Relativity
+^^^^^^^^^^^^^^^^^^
+
+.. _gr:
+
+gr
+**
+
+======================= ===============================================
+Authors                 P. Shi, D. Tamayo, H. Rein
+Implementation Paper    *In progress*
+Based on                `Anderson et al. 1975 <http://labs.adsabs.harvard.edu/adsabs/abs/1975ApJ...200..221A/>`_.
+C Example               :ref:`c_example_gr`
+Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+======================= ===============================================
+
+This assumes that the masses are dominated by a single central body, and should be good enough for most applications with planets orbiting single stars.
+It ignores terms that are smaller by of order the mass ratio with the central body.
+It gets both the mean motion and precession correct, and will be significantly faster than :ref:`gr_full`, particularly with several bodies.
+
+**Effect Structure**: *rebx_params_gr*
+
+=========================== ==================================================================
+Field (C type)              Description
+=========================== ==================================================================
+c (double)                  Speed of light in the units used for the simulation.
+source_index (int)          Index in the `particles` array for the massive central body.
+=========================== ==================================================================
+
+**Particle Parameters**
+
+*None*
+
+.. _gr_potential:
+
+gr_potential
+************
+
+======================= ===============================================
+Authors                 H. Rein, D. Tamayo
+Implementation Paper    *In progress*
+Based on                `Nobili and Roxburgh 1986 <http://labs.adsabs.harvard.edu/adsabs/abs/1986IAUS..114..105N/>`_.
+C Example               :ref:`c_example_gr`
+Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+======================= ===============================================
+
+This is the simplest potential you can use for general relativity.
+It assumes that the masses are dominated by a single central body.
+It gets the precession right, but gets the mean motion wrong by :math:`\mathcal{O}(GM/ac^2)`.  
+It's the fastest option, and because it's not velocity-dependent, it automatically keeps WHFast symplectic.  
+Nice if you have a single-star system, don't need to get GR exactly right, and want speed.
+
+**Effect Structure**: *rebx_params_gr_potential*
+
+=========================== ==================================================================
+Field (C type)              Description
+=========================== ==================================================================
+c (double)                  Speed of light in the units used for the simulation.
+source_index (int)          Index in the `particles` array for the massive central body.
+=========================== ==================================================================
+
+**Particle Parameters**
+
+*None*
+
+.. _gr_full:
+
+gr_full
+*******
+
+======================= ===============================================
+Authors                 P. Shi, H. Rein, D. Tamayo
+Implementation Paper    *In progress*
+Based on                `Newhall et al. 1983 <http://labs.adsabs.harvard.edu/adsabs/abs/1983A%26A...125..150N/>`_.
+C Example               :ref:`c_example_gr`
+Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+======================= ===============================================
+
+This algorithm incorporates GR effects from all bodies in the system, and is necessary for multiple massive bodies like stellar binaries.
+
+**Effect Structure**: *rebx_params_gr_full*
+
+=========================== ==================================================================
+Field (C type)              Description
+=========================== ==================================================================
+c (double)                  Speed of light in the units used for the simulation.
+=========================== ==================================================================
+
+**Particle Parameters**
+
+*None*
+
 Radiation Forces
 ^^^^^^^^^^^^^^^^
 
@@ -230,3 +230,21 @@ Name (C type)               Required    Description
 beta (double)               No          Ratio of the radiation force to the gravitational force
                                         from the radiation source.
 =========================== =========== ======================================================
+
+.. _custom:
+
+custom_force, custom_post_timestep_modification
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+======================= ===============================================
+Authors                 H. Rein, D. Tamayo
+Implementation Paper    N/A
+Based on                N/A
+C Example               :ref:`c_example_custom_ptm`_.
+Python Example          N/A
+======================= ===============================================
+
+This is in case you want to use your own quick-and-dirty force or post-timestep modification function in your ``problem.c`` file (i.e. with the C version).
+If you want to use it in Python, you might as well set up a new effect in the REBOUNDx framework (see the add an effect section).
+You can also write your own quick-and-dirty Python function, but this will switch between C and Python every timestep and will be slower than implementing the effect in C by a factor of a few.
+See `Forces.ipynb <https://github.com/hannorein/rebound/blob/master/ipython_examples/Forces.ipynb>`_ for how to do this.

@@ -38,9 +38,9 @@ If you are unsure, I recommend you try out the Python version, as it enables you
 It also allows for a less verbose interface.
 You'll find installation instructions in the links below.
 
-:ref:`c_quickstart`
+:ref:`python_quickstart`
 
-:ref:`python_quickstartn`
+:ref:`c_quickstart`
 
 Issues
 ------

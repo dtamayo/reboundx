@@ -186,6 +186,21 @@ void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct
 /** @} */
 /** @} */
 
+/********************************
+ * Parameter getters and setters
+ *******************************/
+
+/**
+ * \name Getters and Setters for particle parameters
+ * @{
+ */
+/**
+ * @defgroup GetterSetter
+ * @brief Getters and setters for particle parameters (one for each variable type).
+ * @{
+ */
+
+
 /******************************************
   Convenience functions for various effects
 *******************************************/
@@ -199,6 +214,24 @@ void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct
  * @brief Convenience functions for different REBOUNDx effects.
  * @{
  */
+
+/**
+ * @brief Sets a parameter of type double for a particular particle.
+ * @param p Pointer to the particle in the simulation to which we want to add the parameter.
+ * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org)
+ * @param value Value to which we want to set the parameter.
+ */
+void rebx_set_param_double(struct reb_particle* p, const char* param_name, double value);
+
+/**
+ * @brief Gets the parameter value of a particular particle.
+ * @param p Pointer to the particle we want the parameter value for.
+ * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
+ */
+double rebx_get_param_double(struct reb_particle* p, const char* param_name);
+
+/** @} */
+/** @} */
 
 /**
  * @brief Calculates beta, the ratio between the radiation pressure force and the gravitational force from the star.

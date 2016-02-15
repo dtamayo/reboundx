@@ -101,9 +101,7 @@ double install_test(void);
 
 uint32_t rebx_hash(const char* str);
 void rebx_set_param_double_hash(struct reb_particle* p, uint32_t h, double value);
-void rebx_set_param_double(struct reb_particle* p, const char* param_name, double value);
 double rebx_get_param_double_hash(struct reb_particle* p, uint32_t h);
-double rebx_get_param_double(struct reb_particle* p, const char* param_name);
 
 void rebx_add_force(struct rebx_extras* rebx, void* paramsPtr, const char* name, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect));
 void rebx_add_post_timestep_modification(struct rebx_extras* rebx, void* paramsPtr, const char* name, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect));

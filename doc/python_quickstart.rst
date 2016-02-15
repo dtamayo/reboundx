@@ -71,6 +71,7 @@ These are set directly through the particle:
 .. code:: python
 
     sim.particles[1].tau_a = -1000.
+    print(sim.particles[1].tau_a)
 
 Here we set the timescale for semimajor axis decay for ``particles[1]``.
 In general, each effect has its own particular set of parameters, both for the effect as a whole, and for individual particles.
