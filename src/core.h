@@ -67,44 +67,73 @@ struct rebx_extras {
 
 };
 
-/****************************************
-Internal functions
-*****************************************/
-
-/* Main routines called each timestep. */
-void rebx_forces(struct reb_simulation* sim);               // Calls all the forces that have been added to the simulation.
-void rebx_post_timestep_modifications(struct reb_simulation* sim);                  // Calls all the post-timestep modifications that have been added to the simulation.
+/*****************************
+ Internal initialization routine.
+ ****************************/
 
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx); // Initializes all pointers and values.
 
-/* Garbage collection routines. */
-void rebx_free_params(struct rebx_extras* rebx);            // Steps through linked list to free all allocated parameters.
-void rebx_free_effects(struct rebx_extras* rebx);        // Frees all effects in effects linked list 
-void rebx_free_pointers(struct rebx_extras* rebx);          // Frees all the remaining pointers in rebx_extras.
+/*****************************
+ Garbage Collection Routines
+ ****************************/
 
-/* Internal utility functions. */
-void* rebx_get_param(const struct reb_particle* p, uint32_t param_type);  // returns rebx_param corresponding to the passed param in the passed particle.  If it doesn't exist, returns NULL.
-    
+void rebx_free_params(struct rebx_extras* rebx);            // Steps through linked list to free all allocated particle parameters.
+void rebx_free_effects(struct rebx_extras* rebx);           // Frees all effects in effects linked list 
+
+/**********************************************
+ Functions executing forces & ptm each timestep
+ *********************************************/
+
+void rebx_forces(struct reb_simulation* sim);                       // Calls all the forces that have been added to the simulation.
+void rebx_post_timestep_modifications(struct reb_simulation* sim);  // Calls all the post-timestep modifications that have been added to the simulation.
+
+/**********************************************
+ Adders for linked lists in extras structure
+ *********************************************/
+
+// Add a force to the effects linked list in the extras structure
+void rebx_add_force(struct rebx_extras* rebx, void* paramsPtr, const char* name, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect));
+// Add a post_timestep_modification to the effects linked list in the extras structure
+void rebx_add_post_timestep_modification(struct rebx_extras* rebx, void* paramsPtr, const char* name, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect));
+// Add a parameter to the params_to_be_freed linked list for later freeing.
 void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
 
-/* Internal parameter adders (need a different one for each type of particle parameter). */
-void rebx_add_param_double(struct reb_particle* p, uint32_t param_type, double value);
+/****************************************
+ Hash functions
+ *****************************************/
 
-/** @} */
+uint32_t rebx_murmur3_32(const char *key, uint32_t len, uint32_t seed); // hash function
+uint32_t rebx_hash(const char* str);                                    // takes a string and returns a hash code
 
-/* Function for testing whether REBOUNDx can load librebound.so and call REBOUND functions. */
-double install_test(void);
+/*********************************************************************************
+ General particle parameter getter
+ ********************************************************************************/
+
+void* rebx_get_param(const struct reb_particle* p, uint32_t param_type);// Generic parameter getter to be used by variable-type-specific functions below.  Returns rebx_param corresponding to the param_type hash code.  If it doesn't exist, returns NULL.
+
+/*********************************************************************************
+ Getters and Setters for particle parameters (need new set for each variable type)
+ ********************************************************************************/
+
+void rebx_set_param_double_hash(struct reb_particle* p, uint32_t h, double value);      // set parameter using hash code
+void rebx_add_param_double(struct reb_particle* p, uint32_t param_type, double value);  // add a new parameter to linked list and set to value
+
+double rebx_get_param_double_hash(struct reb_particle* p, uint32_t h);                  // get parameter using hash code
 
 /****************************************
-  New hash based functions
+Custom Effect Adders
 *****************************************/
 
-uint32_t rebx_hash(const char* str);
-void rebx_set_param_double_hash(struct reb_particle* p, uint32_t h, double value);
-double rebx_get_param_double_hash(struct reb_particle* p, uint32_t h);
+// Add a custom post timestep modification.  See reboundx/examples/custom_ptm.
+void rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, void (*custom_post_timestep_modification)(struct reb_simulation* const sim, struct rebx_effect* custom_effect), void* custom_params);
 
-void rebx_add_force(struct rebx_extras* rebx, void* paramsPtr, const char* name, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect));
-void rebx_add_post_timestep_modification(struct rebx_extras* rebx, void* paramsPtr, const char* name, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect));
+// Add a custom force.  See reboundx/examples/custom_ptm.
+void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* custom_effect), int force_is_velocity_dependent, void* custom_params);
 
+/***********************************************************************************
+ * Miscellaneous Functions
+***********************************************************************************/
+
+double install_test(void);  // Function for testing whether REBOUNDx can load librebound.so and call REBOUND functions. */
 
 #endif
