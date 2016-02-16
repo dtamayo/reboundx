@@ -240,7 +240,7 @@ custom_force, custom_post_timestep_modification
 Authors                 H. Rein, D. Tamayo
 Implementation Paper    N/A
 Based on                N/A
-C Example               :ref:`c_example_custom_ptm`_.
+C Example               :ref:`c_example_custom_ptm`.
 Python Example          N/A
 ======================= ===============================================
 
