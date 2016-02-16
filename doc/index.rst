@@ -58,7 +58,6 @@ Table of Contents
     c_quickstart
     python_api
     c_api
-    c_develop_api
     c_examples
     faq
 

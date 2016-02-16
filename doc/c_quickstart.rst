@@ -47,7 +47,9 @@ We can then check the value of a particle's parameter with::
     rebx_get_param_double(&sim->particles[1], "tau_a");
 
 In general, each effect has its own particular set of parameters, both for the effect as a whole, and for individual particles.
+
 **The main reference point in the documentation is** :ref:`effects` **,which has descriptions for each effect and its parameters, citations, and links to examples.**
+
 You can find descriptions of each effect's adder function and any convenience functions at :ref:`c_api`.
 
 
