@@ -104,6 +104,8 @@ effect.c and effect.h
 Now we add two new files for your effect in ``reboundx/src``, ``effect.c`` and ``effect.h``.
 You should copy existing ones from other effects, so that you have the license and right code structure to work from.
 
+In ``effect.h``, you only have to modify the file, brief, and author fields at the top, the include guards (ifndef, define lines) and substitute the name of your effect in the function name.  
+Everything else should be kept exactly the same.
 
 Is your effect an additional force, or a post timestep modification (i.e., omething to do between REBOUND timesteps)?
 
