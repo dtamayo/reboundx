@@ -31,6 +31,9 @@
 #include "core.h"
 #include "rebound.h"
 
+const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
+const char* rebx_version_str = "2.5.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
+
 void rebx_forces(struct reb_simulation* sim){
 	struct rebx_extras* rebx = sim->extras;
 	struct rebx_effect* current = rebx->effects;
@@ -53,7 +56,13 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
 	}
 }
 
-/* Initialization routine. */
+/* Initialization routines. */
+
+struct rebx_extras* rebx_init(struct reb_simulation* sim){
+    struct rebx_extras* rebx = malloc(sizeof(*rebx));
+    rebx_initialize(sim, rebx);
+    return rebx;
+}
 
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     sim->extras = rebx;
@@ -64,6 +73,11 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
 }
 
 /* Garbage collection routines. */
+
+void rebx_free(struct rebx_extras* rebx){
+    rebx_free_pointers(rebx);
+    free(rebx);
+}
 
 void rebx_free_params(struct rebx_extras* rebx){
     struct rebx_param_to_be_freed* current = rebx->params_to_be_freed;
@@ -236,4 +250,37 @@ double rebx_get_param_double_hash(struct reb_particle* p, uint32_t h){
 double rebx_get_param_double(struct reb_particle* p, const char* param_name){
     uint32_t h = rebx_hash(param_name);
     return rebx_get_param_double_hash(p, h);
+}
+
+/****************************************
+Custom Effect Adders
+*****************************************/
+
+void rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, void (*custom_post_timestep_modification)(struct reb_simulation* const sim, struct rebx_effect* custom_effect), void* custom_params){
+    struct reb_simulation* sim = rebx->sim;
+    sim->post_timestep_modifications = rebx_post_timestep_modifications;
+
+    rebx_add_post_timestep_modification(rebx, custom_params, "custom_post_timestep_modification", custom_post_timestep_modification);
+}
+
+void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* custom_effect), int force_is_velocity_dependent, void* custom_params){
+    struct reb_simulation* sim = rebx->sim;
+    sim->additional_forces = rebx_forces;
+    if (force_is_velocity_dependent){
+        sim->force_is_velocity_dependent = 1;
+    }
+    rebx_add_force(rebx, custom_params, "custom_force", custom_force);
+}
+
+/* Function to test whether REBOUNDx can load librebound.so and call REBOUND functions. */
+
+double install_test(void){
+    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_particle p = {0};
+    p.m = 1.; 
+    reb_add(sim, p); 
+    struct reb_particle p1 = reb_tools_orbit2d_to_particle(sim->G, p, 0., 1., 0.2, 0., 0.);
+    reb_add(sim, p1);
+    reb_integrate(sim, 1.);
+    return sim->particles[1].x;
 }

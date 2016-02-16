@@ -18,7 +18,7 @@ include $(REB_DIR)/src/Makefile.defs
 
 REBOUNDXDIR=../src/
 DEBUGOPT = -std=c99 -Wpointer-arith -D_GNU_SOURCE -O0 -march=native -I/usr/local/include -Wall -Wno-deprecated -g
-SOURCES=$(REBOUNDXDIR)core.c $(REBOUNDXDIR)gr.c $(REBOUNDXDIR)gr_full.c $(REBOUNDXDIR)gr_potential.c $(REBOUNDXDIR)modify_orbits_direct.c $(REBOUNDXDIR)modify_orbits_forces.c $(REBOUNDXDIR)radiation_forces.c $(REBOUNDXDIR)reboundx.c $(REBOUNDXDIR)rebxtools.c 
+SOURCES=$(REBOUNDXDIR)core.c $(REBOUNDXDIR)gr.c $(REBOUNDXDIR)gr_full.c $(REBOUNDXDIR)gr_potential.c $(REBOUNDXDIR)modify_orbits_direct.c $(REBOUNDXDIR)modify_orbits_forces.c $(REBOUNDXDIR)radiation_forces.c $(REBOUNDXDIR)rebxtools.c 
 SUBDIRS := $(wildcard */.)
 
 all: librebound.so libreboundx.so
