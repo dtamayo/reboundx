@@ -30,18 +30,13 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-struct rebx_params_gr* rebx_add_gr(struct rebx_extras* rebx, struct reb_particle* source, double c){
+struct rebx_params_gr* rebx_add_gr(struct rebx_extras* rebx, int source_index, double c){
 	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
 	
 	struct rebx_params_gr* params = malloc(sizeof(*params));
 	params->c = c;
-    if(source == NULL){
-        params->source_index = 0;
-    }
-    else{
-        params->source_index = reb_get_particle_index(source);
-    }
+    params->source_index = source_index;
 	
     sim->force_is_velocity_dependent = 1;
     rebx_add_force(rebx, params, "gr", rebx_gr);
