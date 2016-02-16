@@ -30,11 +30,11 @@ int main(int argc, char* argv[]){
     sun.m  = 1.99e30;                   /* mass of Sun in kg */
     reb_add(sim, sun);
     
-    /* To add radiation forces, we have to pass a pointer to the radiation source, as well as the speed of light.*/
     struct rebx_extras* rebx = rebx_init(sim);
     double c = 3.e8;                    /* speed of light in SI units */
-    rebx_add_radiation_forces(rebx, &sim->particles[0], c);
-
+    int source_index = 0;               /* index of particle that is the source of radiation. */
+    struct rebx_params_radiation_forces* params = rebx_add_radiation_forces(rebx, source_index, c);
+    
     /* Dust particles
      * We idealize a perfectly coplanar debris disk with particles that have semimajor axes between 100 and 120 AU.
      * We initialize particles with 0.01 eccentricity, random pericenters and azimuths, and uniformly distributed
@@ -65,12 +65,19 @@ int main(int argc, char* argv[]){
         reb_add(sim, p); 
         
         /*We can only call rebx parameter setters on particles in the sim->particles array, so we do this after adding the particle to sim.*/
-        rebx_set_beta(&sim->particles[i], beta);    /* Only particles with beta set will feel radiation forces */
+        rebx_set_param_double(&sim->particles[i], "beta", beta);    /* Only particles with beta set will feel radiation forces */
     }
 
     reb_move_to_com(sim);
 
     reb_integrate(sim, tmax);
+    /* Note that the debris disk will seem to undergo oscillations at first.  
+     This is actually the correct behavior.  We set up the
+     particles with orbital elements (that assume only gravity is acting).  When we turn on radiation,
+     all of a sudden particles are moving too fast for the reduced gravity they feel (due to radiation
+     pressure), so they're all at pericenter.  All the particles therefore move outward in phase.  It
+     takes a few cycles before the differential motion randomizes the phases. */
+    
     rebx_free(rebx);                                /* free memory allocated by REBOUNDx */
 }
 

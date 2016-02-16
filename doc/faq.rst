@@ -24,9 +24,13 @@ Then activate your newly created environment (as described in 5.1.1) and::
     
     pip install numpy matplotlib
 
-(and any other packages you like).
+or::
+
+    conda install numpy matplotlib
+
+if you're using Anaconda (and any other packages you like).
 Then follow 5.1.3 to install REBOUND if you'd like the source code and examples, or 5.1.2 for the quick installation.
-Finally, follow the installation instructions for REBOUNDx (with your environment activated) at :ref:`c_version` or :ref:`python_version`.
+Finally, follow the installation instructions for REBOUNDx (with your environment activated) at :ref:`python_quickstart`.
 
 If this does not resolve your problem, please open an issue on github including the output from the terminal you used to launch the ipython notebook.
 
@@ -46,5 +50,3 @@ This is likely because you assigned one particle to another, e.g., ::
 Here we added ``particles[0]`` to the simulation again, so the simulation now has two copies, i.e., ``particles[1] == particles[0]``.
 However, by default copies are shallow, i.e., they don't copy memory pointed to by pointers, which is how the particle parameters are stored.
 This means that the two particles share the same memory, so when we change one, it changes the other too.
-
-If someone who needs this feature wants to implement a deep copy function, that would be great!

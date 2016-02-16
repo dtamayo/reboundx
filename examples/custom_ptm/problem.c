@@ -21,6 +21,7 @@ void simple_drag(struct reb_simulation* const sim, struct rebx_effect* const eff
 struct custom_params{
     double coefficient;
 };
+
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
     // Setup constants
@@ -46,8 +47,6 @@ int main(int argc, char* argv[]){
 
     struct rebx_extras* rebx = rebx_init(sim);  // first initialize rebx
 
-    
-    
     struct custom_params* params = malloc(sizeof(*params));
     params->coefficient = 1.e-5;
     
