@@ -205,6 +205,26 @@ uint32_t rebx_murmur3_32(const char *key, uint32_t len, uint32_t seed) {
     return hash;
 }
 
+uint32_t rebx_hash(const char* str){
+    const int reb_seed = 1983;
+    return rebx_murmur3_32(str,(uint32_t)strlen(str),reb_seed);
+}
+
+/*********************************************************************************
+ General particle parameter getter
+ ********************************************************************************/
+
+void* rebx_get_param(const struct reb_particle* p, uint32_t param_type){
+    struct rebx_param* current = p->ap;
+    while(current != NULL){
+        if(current->param_type == param_type){
+            return current->paramPtr;
+        }
+        current = current->next;
+    }
+    return NULL;
+}
+
 /*********************************************************************************
  Getters and Setters for particle parameters (need new set for each variable type)
  ********************************************************************************/
@@ -217,9 +237,9 @@ void rebx_set_param_double(struct reb_particle* p, const char* param_name, doubl
 void rebx_set_param_double_hash(struct reb_particle* p, uint32_t h, double value){
     double* ptr = rebx_get_param(p, h);
     if(ptr == NULL){
-        rebx_add_param_double(p, h, value);
+        rebx_add_param_double(p, h, value); // add a new parameter with value if it doesn't exist already
     }else{
-        *ptr = value;
+        *ptr = value;                       // update existing value
     }
 }
 
@@ -247,11 +267,6 @@ double rebx_get_param_double_hash(struct reb_particle* p, uint32_t h){
     }else{
         return *ptr;
     }
-}
-
-uint32_t rebx_hash(const char* str){
-    const int reb_seed = 1983;
-    return rebx_murmur3_32(str,(uint32_t)strlen(str),reb_seed);
 }
 
 /****************************************

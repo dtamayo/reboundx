@@ -37,10 +37,10 @@ int main(int argc, char* argv[]){
     reb_add(sim,p2);
     reb_move_to_com(sim);
 
-    struct rebx_extras* rebx = rebx_init(sim);  // first initialize rebx
+    struct rebx_extras* rebx = rebx_init(sim);
 
     // There are two options for how to modify orbits.  You would only choose one (comment the other out).  
-    // modify_orbits_forces doesn't have precession implemented yet.
+    // modify_orbits_forces doesn't have precession separately settable.
 
     struct rebx_params_modify_orbits_direct* params = rebx_add_modify_orbits_direct(rebx);    // directly update particles' orbital elements each timestep
     //struct rebx_params_modify_orbits_forces* params = rebx_add_modify_orbits_forces(rebx);  // add forces that orbit-average to give exponential a and e damping
