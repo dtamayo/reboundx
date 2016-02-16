@@ -34,31 +34,12 @@
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
 const char* rebx_version_str = "2.5.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 
-void rebx_forces(struct reb_simulation* sim){
-	struct rebx_extras* rebx = sim->extras;
-	struct rebx_effect* current = rebx->effects;
-	while(current != NULL){
-        if(current->is_force == 1){
-		    current->functionPtr(sim, current);
-        }
-		current = current->next;
-	}
-}
 
-void rebx_post_timestep_modifications(struct reb_simulation* sim){
-	struct rebx_extras* rebx = sim->extras;
-	struct rebx_effect* current = rebx->effects;
-	while(current != NULL){
-        if(current->is_force == 0){
-		    current->functionPtr(sim, current);
-        }
-		current = current->next;
-	}
-}
+/*****************************
+ Initialization routines.
+ ****************************/
 
-/* Initialization routines. */
-
-struct rebx_extras* rebx_init(struct reb_simulation* sim){
+struct rebx_extras* rebx_init(struct reb_simulation* sim){  // reboundx.h
     struct rebx_extras* rebx = malloc(sizeof(*rebx));
     rebx_initialize(sim, rebx);
     return rebx;
@@ -72,9 +53,11 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
 	rebx->effects = NULL;
 }
 
-/* Garbage collection routines. */
+/*****************************
+ Garbage Collection Routines
+ ****************************/
 
-void rebx_free(struct rebx_extras* rebx){
+void rebx_free(struct rebx_extras* rebx){                   // reboundx.h
     rebx_free_pointers(rebx);
     free(rebx);
 }
@@ -108,7 +91,35 @@ void rebx_free_pointers(struct rebx_extras* rebx){
     rebx_free_effects(rebx);
 }
 
-/* Internal utility functions. */
+/**********************************************
+ Functions executing forces & ptm each timestep
+ *********************************************/
+
+void rebx_forces(struct reb_simulation* sim){
+	struct rebx_extras* rebx = sim->extras;
+	struct rebx_effect* current = rebx->effects;
+	while(current != NULL){
+        if(current->is_force == 1){
+		    current->functionPtr(sim, current);
+        }
+		current = current->next;
+	}
+}
+
+void rebx_post_timestep_modifications(struct reb_simulation* sim){
+	struct rebx_extras* rebx = sim->extras;
+	struct rebx_effect* current = rebx->effects;
+	while(current != NULL){
+        if(current->is_force == 0){
+		    current->functionPtr(sim, current);
+        }
+		current = current->next;
+	}
+}
+
+/**********************************************
+ Adders for linked lists in extras structure
+ *********************************************/
 
 void rebx_add_force(struct rebx_extras* rebx, void* paramsPtr, const char* name, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect)){
     struct rebx_effect* effect = malloc(sizeof(*effect));
@@ -138,33 +149,8 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
     rebx->params_to_be_freed = newparam;
 }
 
-void* rebx_get_param(const struct reb_particle* p, uint32_t param_type){
-    struct rebx_param* current = p->ap;
-    while(current != NULL){
-        if(current->param_type == param_type){
-            return current->paramPtr;
-        }
-        current = current->next;
-    }
-    return NULL;
-}
-
-/* Internal parameter adders (need a different one for each variable type). */
-
-void rebx_add_param_double(struct reb_particle* p, uint32_t param_type, double value){
-    struct rebx_param* newparam = malloc(sizeof(*newparam));
-    newparam->paramPtr = malloc(sizeof(double));
-    *(double*) newparam->paramPtr = value;
-    newparam->param_type = param_type;
-
-    newparam->next = p->ap;
-    p->ap = newparam;
-
-    rebx_add_param_to_be_freed(p->sim->extras, newparam);
-}   
-
 /****************************************
- Hash related functions
+ Hash function
  *****************************************/
 #define ROT32(x, y) ((x << y) | (x >> (32 - y))) // avoid effort
 uint32_t rebx_murmur3_32(const char *key, uint32_t len, uint32_t seed) {
@@ -219,9 +205,13 @@ uint32_t rebx_murmur3_32(const char *key, uint32_t len, uint32_t seed) {
     return hash;
 }
 
-uint32_t rebx_hash(const char* str){
-    const int reb_seed = 1983;
-    return rebx_murmur3_32(str,(uint32_t)strlen(str),reb_seed);
+/*********************************************************************************
+ Getters and Setters for particle parameters (need new set for each variable type)
+ ********************************************************************************/
+
+void rebx_set_param_double(struct reb_particle* p, const char* param_name, double value){
+    uint32_t h = rebx_hash(param_name);
+    rebx_set_param_double_hash(p, h, value);
 }
 
 void rebx_set_param_double_hash(struct reb_particle* p, uint32_t h, double value){
@@ -233,9 +223,21 @@ void rebx_set_param_double_hash(struct reb_particle* p, uint32_t h, double value
     }
 }
 
-void rebx_set_param_double(struct reb_particle* p, const char* param_name, double value){
+void rebx_add_param_double(struct reb_particle* p, uint32_t param_type, double value){
+    struct rebx_param* newparam = malloc(sizeof(*newparam));
+    newparam->paramPtr = malloc(sizeof(double));
+    *(double*) newparam->paramPtr = value;
+    newparam->param_type = param_type;
+
+    newparam->next = p->ap;
+    p->ap = newparam;
+
+    rebx_add_param_to_be_freed(p->sim->extras, newparam);
+}   
+
+double rebx_get_param_double(struct reb_particle* p, const char* param_name){
     uint32_t h = rebx_hash(param_name);
-    rebx_set_param_double_hash(p, h, value);
+    return rebx_get_param_double_hash(p, h);
 }
 
 double rebx_get_param_double_hash(struct reb_particle* p, uint32_t h){
@@ -247,9 +249,9 @@ double rebx_get_param_double_hash(struct reb_particle* p, uint32_t h){
     }
 }
 
-double rebx_get_param_double(struct reb_particle* p, const char* param_name){
-    uint32_t h = rebx_hash(param_name);
-    return rebx_get_param_double_hash(p, h);
+uint32_t rebx_hash(const char* str){
+    const int reb_seed = 1983;
+    return rebx_murmur3_32(str,(uint32_t)strlen(str),reb_seed);
 }
 
 /****************************************
@@ -272,7 +274,9 @@ void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct
     rebx_add_force(rebx, custom_params, "custom_force", custom_force);
 }
 
-/* Function to test whether REBOUNDx can load librebound.so and call REBOUND functions. */
+/***********************************************************************************
+ * Miscellaneous Functions
+***********************************************************************************/
 
 double install_test(void){
     struct reb_simulation* sim = reb_create_simulation();
