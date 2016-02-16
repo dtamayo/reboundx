@@ -58,7 +58,8 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
  ****************************/
 
 void rebx_free(struct rebx_extras* rebx){                   // reboundx.h
-    rebx_free_pointers(rebx);
+    rebx_free_params(rebx);
+    rebx_free_effects(rebx);
     free(rebx);
 }
 
@@ -84,11 +85,6 @@ void rebx_free_effects(struct rebx_extras* rebx){
         free(current);
         current = temp_next;
     }
-}
-
-void rebx_free_pointers(struct rebx_extras* rebx){
-    rebx_free_params(rebx);
-    rebx_free_effects(rebx);
 }
 
 /**********************************************
