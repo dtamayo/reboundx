@@ -1,6 +1,6 @@
 /**
- * @file    gr.c
- * @brief   Post-newtonian general relativity corrections arising from a single massive body
+ * @file    gr_potential.c
+ * @brief   Post-newtonian general relativity corrections using a simple potential that gets the pericenter precession right.
  * @author  Pengshuai (Sam) Shi, Hanno Rein, Dan Tamayo <tamayo.daniel@gmail.com>
  * 
  * @section     LICENSE
@@ -26,24 +26,24 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "gr.h"
+#include "gr_potential.h"
 #include "rebound.h"
 #include "reboundx.h"
 
-struct rebx_params_gr* rebx_add_gr(struct rebx_extras* rebx, int source_index, double c){
+struct rebx_params_gr_potential* rebx_add_gr_potential(struct rebx_extras* rebx, int source_index, double c){
 	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
 	
-	struct rebx_params_gr* params = malloc(sizeof(*params));
+	struct rebx_params_gr_potential* params = malloc(sizeof(*params));
 	params->c = c;
     params->source_index = source_index;
-	
-    sim->force_is_velocity_dependent = 1;
-    rebx_add_force(rebx, params, "gr", rebx_gr);
+
+    rebx_add_force(rebx, params, "gr_potential", rebx_gr_potential);
     return params;
 }
 
-void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
+void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* gr){
+    // Nobili & Roxburgh 1986
     const struct rebx_params_gr* const params = gr->paramsPtr;
     const double C = params->c;
     const int source_index = params->source_index;
@@ -51,6 +51,8 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
     const struct reb_particle source = sim->particles[source_index];
+    
+    const double prefac1 = 6.*(G*source.m)*(G*source.m)/(C*C);
     for (int i=0; i<_N_real; i++){
         if(i == source_index){
             continue;
@@ -60,27 +62,11 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
         const double dy = p.y - source.y;
         const double dz = p.z - source.z;
         const double r2 = dx*dx + dy*dy + dz*dz;
-        const double _r = sqrt(r2);
-        const double dvx = p.vx - source.vx;
-        const double dvy = p.vy - source.vy;
-        const double dvz = p.vz - source.vz;
-        // Benitez and Gallardo 2008
-        const double alpha = G*source.m/(_r*_r*_r*C*C);
-        const double v2 = dvx*dvx + dvy*dvy + dvz*dvz;
-        const double beta = 4.*G*source.m/_r - v2;
-        const double gamma = 4.*(dvx*dx + dvy*dy + dvz*dz);
-
-        const double dax = alpha*(beta*dx + gamma*dvx);
-        const double day = alpha*(beta*dy + gamma*dvy);
-        const double daz = alpha*(beta*dz + gamma*dvz);
-        //const double massratio = particles[i].m/source.m;
-
-        particles[i].ax += dax;
-        particles[i].ay += day;
-        particles[i].az += daz;
-        //particles[source_index].ax -= massratio*dax;
-        //particles[source_index].ay -= massratio*day;
-        //particles[source_index].az -= massratio*daz;
+        const double prefac = prefac1/(r2*r2);
+        
+        particles[source_index].ax -= prefac*dx;
+        particles[source_index].ay -= prefac*dy;
+        particles[source_index].az -= prefac*dz;
     }
 }
 

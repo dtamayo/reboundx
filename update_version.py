@@ -29,13 +29,13 @@ with open("README.rst","w") as f:
             readme[i] = ".. image:: http://img.shields.io/badge/REBOUNDx-v"+reboundxversion+"-green.svg?style=flat\n"
         f.write(readme[i])
 
-with open("src/reboundx.c") as f:
+with open("src/core.c") as f:
     reboundxlines = f.readlines()
     for i,l in enumerate(reboundxlines):
         if "**VERSIONLINE**" in l:
             reboundxlines[i] = "const char* rebx_version_str = \""+reboundxversion+"\";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.\n"
 
-    with open("src/reboundx.c", "w") as f:
+    with open("src/core.c", "w") as f:
         f.writelines(reboundxlines)
 
 with open("setup.py") as f:
