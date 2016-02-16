@@ -29,10 +29,12 @@ int main(int argc, char* argv[]){
     reb_add(sim,p1);
     reb_move_to_com(sim);
     
-    struct rebx_extras* rebx = rebx_init(sim); // initialize reboundx
-    double c = C_DEFAULT; // Have to set the speed of light in appropriate units (set by G and your initial conditions).  Here we use the value in default units of AU/(yr/2pi) 
-    rebx_add_gr(rebx, &sim->particles[0], c); // add postnewtonian correction, treating only particles[0] as massive for GR corrections
+    struct rebx_extras* rebx = rebx_init(sim);
+    double c = C_DEFAULT;   // Have to set the speed of light in appropriate units (set by G and your initial conditions).  Here we use the value in default units of AU/(yr/2pi) 
+    int source_index = 0;   // Index of the massive particle that is the source of the post-newtonian corrections
+    rebx_add_gr(rebx, source_index, c); 
     /*See reboundx.readthedocs.org for more options.*/
+
     double tmax = 5.e-2;
     reb_integrate(sim, tmax); 
     rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 

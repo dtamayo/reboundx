@@ -33,10 +33,10 @@ int main(int argc, char* argv[]){
     sun.m  = 1.99e30;                   /* mass of Sun in kg */
     reb_add(sim, sun);
     
-    /* To add radiation forces, we have to pass a pointer to the radiation source, as well as the speed of light.*/
     struct rebx_extras* rebx = rebx_init(sim); 
     double c = 3.e8;                    /* speed of light in SI units */
-    struct rebx_params_radiation_forces* params = rebx_add_radiation_forces(rebx, &sim->particles[0], c); /* add radiation forces with particles[0] as the source of radiation*/
+    int source_index = 0;               /* Index of the particle that is the source of radiation. */
+    struct rebx_params_radiation_forces* params = rebx_add_radiation_forces(rebx, source_index, c); 
     
     /* Saturn (simulation set up in Saturn's orbital plane, i.e., inc=0, so only need 4 orbital elements */
     double mass_sat = 5.68e26;          /* Mass of Saturn */
