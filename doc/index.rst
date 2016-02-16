@@ -59,6 +59,7 @@ Table of Contents
     python_api
     c_api
     c_examples
+    add_effect
     faq
 
 Indices and tables

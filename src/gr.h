@@ -22,8 +22,12 @@
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#ifndef REBX_GR_H
+#define REBX_GR_H
 
 struct reb_simulation;
 struct rebx_effect;
 
 void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr);
+
+#endif

@@ -22,9 +22,9 @@
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#ifndef REBX_REBOUNDX_H
+#define REBX_REBOUNDX_H
 
-#ifndef LIBREBX_H
-#define LIBREBX_H
 #ifndef M_PI 
 #define M_PI 3.1415926535879323846
 #endif
@@ -200,21 +200,6 @@ void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct
  * @{
  */
 
-
-/******************************************
-  Convenience functions for various effects
-*******************************************/
-
-/**
- * \name Convenience Functions for Various Effects
- * @{
- */
-/**
- * @defgroup ConvFunc
- * @brief Convenience functions for different REBOUNDx effects.
- * @{
- */
-
 /**
  * @brief Sets a parameter of type double for a particular particle.
  * @param p Pointer to the particle in the simulation to which we want to add the parameter.
@@ -232,6 +217,20 @@ double rebx_get_param_double(struct reb_particle* p, const char* param_name);
 
 /** @} */
 /** @} */
+
+/******************************************
+  Convenience functions for various effects
+*******************************************/
+
+/**
+ * \name Convenience Functions for Various Effects
+ * @{
+ */
+/**
+ * @defgroup ConvFunc
+ * @brief Convenience functions for different REBOUNDx effects.
+ * @{
+ */
 
 /**
  * @brief Calculates beta, the ratio between the radiation pressure force and the gravitational force from the star.
