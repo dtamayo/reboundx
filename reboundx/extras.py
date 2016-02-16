@@ -1,7 +1,8 @@
 from . import clibreboundx
 from ctypes import Structure, c_double, POINTER, c_int, c_uint, c_long, c_ulong, c_void_p, c_char_p, CFUNCTYPE, byref, c_uint32
-from .tools import check_c
 import rebound
+
+C_DEFAULT = 10064.915 # speed of light in default units (G = 1) of AU / (yr/2pi)
 
 class Extras(Structure):
     """
@@ -37,57 +38,55 @@ class Extras(Structure):
         clibreboundx.rebx_add_modify_orbits_forces.restype = POINTER(rebx_params_modify_orbits_forces)
         return clibreboundx.rebx_add_modify_orbits_forces(byref(self)).contents
 
-    def add_gr(self, source=None, c=None):
+    def add_gr(self, source_index=0, c=C_DEFAULT): 
         """
-        :param source: Source of GR effect. **Defaults to sim.particles[0]**.
-        :param c: Speed of light in appropriate units. **Defaults to AU/(yr/2pi)**.
+        You must pass c (the speed of light) in whatever units you choose if you don't use default units of AU, (yr/2pi) and Msun.
+
+        :param source: Source of GR effect. 
+        :param c: Speed of light in appropriate units.
         :type source: rebound.Particle
         :type c: double
         :rtype: rebx_params_gr
         """
-        c = check_c(self, c)
-        if source is not None:
-            source = byref(source)
         clibreboundx.rebx_add_gr.restype = POINTER(rebx_params_gr)
-        return clibreboundx.rebx_add_gr(byref(self), source, c_double(c)).contents # Sets source to particles[0] in C code when passed NULL (=None)
+        return clibreboundx.rebx_add_gr(byref(self), c_int(source_index), c_double(c)).contents # Sets source to particles[0] in C code when passed NULL (=None)
     
-    def add_gr_full(self, c=None):
+    def add_gr_full(self, c=C_DEFAULT):
         """
-        :param c: Speed of light in appropriate units. **Defaults to AU/(yr/2pi)**.
+        You must pass c (the speed of light) in whatever units you choose if you don't use default units of AU, (yr/2pi) and Msun.
+        
+        :param c: Speed of light in appropriate units.
         :type c: double
         :rtype: rebx_params_gr_full
         """
-        c = check_c(self, c)
         clibreboundx.rebx_add_gr_full.restype = POINTER(rebx_params_gr_full)
         return clibreboundx.rebx_add_gr_full(byref(self), c_double(c)).contents
 
-    def add_gr_potential(self, source=None, c=None):
+    def add_gr_potential(self, source_index=0, c=C_DEFAULT):
         """
-        :param source: Source of GR effect. **Defaults to sim.particles[0]**.
-        :param c: Speed of light in appropriate units. **Defaults to AU/(yr/2pi)**.
+        You must pass c (the speed of light) in whatever units you choose if you don't use default units of AU, (yr/2pi) and Msun.
+        
+        :param source: Source of GR effect.
+        :param c: Speed of light in appropriate units.
         :type source: rebound.Particle
         :type c: double
         :rtype: rebx_params_gr_potential
         """
-        c = check_c(self, c)
-        if source is not None:
-            source = byref(source)
         clibreboundx.rebx_add_gr_potential.restype = POINTER(rebx_params_gr_potential)
-        return clibreboundx.rebx_add_gr_potential(byref(self), source, c_double(c)).contents
+        return clibreboundx.rebx_add_gr_potential(byref(self), c_int(source_index), c_double(c)).contents
     
-    def add_radiation_forces(self, source=None, c=None):
+    def add_radiation_forces(self, source_index=0, c=C_DEFAULT):
         """
-        :param source: Source of radiation. **Defaults to sim.particles[0]**.
-        :param c: Speed of light in appropriate units. **Defaults to AU/(yr/2pi)**.
+        You must pass c (the speed of light) in whatever units you choose if you don't use default units of AU, (yr/2pi) and Msun.
+        
+        :param source: Source of radiation. 
+        :param c: Speed of light in appropriate units.
         :type source: rebound.Particle
         :type c: double
         :rtype: rebx_params_radiation_forces
         """
-        c = check_c(self, c)
-        if source is not None:
-            source = byref(source)
         clibreboundx.rebx_add_radiation_forces.restype = POINTER(rebx_params_radiation_forces)
-        return clibreboundx.rebx_add_radiation_forces(byref(self), source, c_double(c)).contents
+        return clibreboundx.rebx_add_radiation_forces(byref(self), c_int(source_index), c_double(c)).contents
     
     #######################################
     # Convenience Functions

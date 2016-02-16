@@ -143,17 +143,17 @@ struct rebx_params_modify_orbits_forces* rebx_add_modify_orbits_forces(struct re
 /**
  * @brief Adds post-Newtonian corrections arising only from a single particle.  
  * @param rebx pointer to the rebx_extras instance
- * @param source particle that is the source of the post-newtonian corrections.
+ * @param source_index Index in the particles array of the body that causes the GR corrections.
  * @param c Speed of light.
  */
-struct rebx_params_gr* rebx_add_gr(struct rebx_extras* rebx, struct reb_particle* source, double c);
+struct rebx_params_gr* rebx_add_gr(struct rebx_extras* rebx, int source_index, double c);
 /**
  * @brief Adds simple potential for post-Newtonian corrections arising only from a single particle.
  * @param rebx pointer to the rebx_extras instance
- * @param source particle that is the source of the post-newtonian corrections.
+ * @param source_index Index in the particles array of the body that causes the GR corrections.
  * @param c Speed of light.
  */
-struct rebx_params_gr_potential* rebx_add_gr_potential(struct rebx_extras* rebx, struct reb_particle* source, double c);
+struct rebx_params_gr_potential* rebx_add_gr_potential(struct rebx_extras* rebx, int source_index, double c);
 /**
  * @brief Adds post-Newtonian corrections arising from all bodies in the simulation.
  * @param rebx pointer to the rebx_extras instance
@@ -163,10 +163,10 @@ struct rebx_params_gr_full* rebx_add_gr_full(struct rebx_extras* rebx, double c)
 /**
  * @brief Adds radiation forces to the simulation (i.e., radiation pressure and Poynting-Robertson drag).
  * @param rebx pointer to the rebx_extras instance
- * @param source particle that is the source of the radiation.
+ * @param source_index Index in the particles array of the body that is the radiation source.
  * @param c Speed of light.
  */
-struct rebx_params_radiation_forces* rebx_add_radiation_forces(struct rebx_extras* rebx, struct reb_particle* source, double c);
+struct rebx_params_radiation_forces* rebx_add_radiation_forces(struct rebx_extras* rebx, int source_index, double c);
 /**
  * @brief Allows user to specify their own post timestep modifications. Behavior is identical to setting up post timestep modifications in REBOUND itself.
  * @param rebx pointer to the rebx_extras instance

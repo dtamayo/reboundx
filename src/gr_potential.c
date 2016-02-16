@@ -30,19 +30,14 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-struct rebx_params_gr_potential* rebx_add_gr_potential(struct rebx_extras* rebx, struct reb_particle* source, double c){
+struct rebx_params_gr_potential* rebx_add_gr_potential(struct rebx_extras* rebx, int source_index, double c){
 	struct reb_simulation* sim = rebx->sim;
 	sim->additional_forces = rebx_forces;
 	
 	struct rebx_params_gr_potential* params = malloc(sizeof(*params));
 	params->c = c;
-    if(source == NULL){
-        params->source_index = 0;
-    }
-    else{
-        params->source_index = reb_get_particle_index(source);
-    }
-	
+    params->source_index = source_index;
+
     rebx_add_force(rebx, params, "gr_potential", rebx_gr_potential);
     return params;
 }
