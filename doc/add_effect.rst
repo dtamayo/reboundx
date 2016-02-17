@@ -103,9 +103,20 @@ effect.c and effect.h
 
 Now we add two new files for your effect in ``reboundx/src``, ``effect.c`` and ``effect.h``.
 You should copy existing ones from other effects, so that you have the license and right code structure to work from.
+At this point you should ask yourself whether your effect is an additional force or a post timestep modification (i.e., something to do between REBOUND timesteps)?
+If you're adding a force, you might copy ``radiation_forces``.
+If you're adding a post timestep modification, you might copy ``modify_orbits_direct``.
+
+In our case (``radiation_forces``), we have an additional force, but for example mass loss would be a post timestep modification. 
+
+effect.h
+^^^^^^^^
 
 In ``effect.h``, you only have to modify the file, brief, and author fields at the top, the include guards (ifndef, define lines) and substitute the name of your effect in the function name.  
 Everything else should be kept exactly the same.
+
+effect.c
+^^^^^^^^
 
 In ``effect.c``, we first write the effect adder function.
 In our case
@@ -116,12 +127,48 @@ In our case
         struct rebx_params_radiation_forces* params = malloc(sizeof(*params));
         params->c = c;
         params->source_index = source_index;
-
-        sim->force_is_velocity_dependent = 1;
-        rebx_add_force(rebx, params, "radiation_forces", rebx_radiation_forces);
+        int force_is_velocity_dependent = 1;
+        rebx_add_force(rebx, params, "radiation_forces", rebx_radiation_forces, force_is_velocity_dependent);
         return params;
     }
 
-Is your effect an additional force, or a post timestep modification (i.e., omething to do between REBOUND timesteps)?
+First we allocate memory for our parameters structure (just replace ``radiation_forces`` with your own effect name).
+Then we initialize the params fields we created for our effect structure with what was passed by the user.
+Alternatively, if you think the parameters would rarely be changed, you could set them to a default value, and have the user change the values afterward manually (see e.g., modify_orbits_direct.c).
+Then if your force is velocity dependent, set ``force_is_velocity_dependent`` to 1, otherwise to 0.
+Finally, leave the ``rebx_add_force`` call the same, just replace ``radiation_forces`` in the two function parameters with your own effect name.
 
-In our case (``radiation_forces``), we have an additional force, but for example mass loss would be a post timestep modification. 
+If you're adding a post timestep modification, you don't have to specify ``force_is_velocity_dependent`` (cf. modify_orbits_direct.c).
+
+Now you have to write the main routine for your effect.
+A force would update particles' accelerations, while a post timestep modification would update particles' masses, positions and/or velocities.
+You might look at different effect implementations for examples of how to access parameters.
+In our case, the top of our function looks like
+
+.. code-block:: c
+
+    void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const effect){
+        const struct rebx_params_radiation_forces* const params = effect->paramsPtr;
+        const double c = params->c;
+        const int source_index = params->source_index;
+        struct reb_particle* const particles = sim->particles;
+        const struct reb_particle source = particles[source_index];
+        const double mu = sim->G*source.m;
+
+        const int _N_real = sim->N - sim->N_var;
+    #pragma omp parallel for
+        for (int i=0;i<_N_real;i++){
+            if(i == source_index) continue;
+            ... 
+
+This gives a recipe for accessing the effect parameters.
+It's also important to use ``_N_real`` for the number of particles in the simulation, since ``sim->N`` includes any variational particles that have been added (which, if implemented, should feel the *derivatives* of your additional force).
+
+To access particles' individual parameters, we use
+
+.. code-block:: c
+    
+    const double beta = rebx_get_param_double(&particles[i], "beta");
+    if(isnan(beta)) continue; // only particles with Q_pr set feel radiation forces
+
+For particle-specific parameters, you don't have to write any extra code to use them.
