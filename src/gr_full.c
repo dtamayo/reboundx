@@ -33,9 +33,8 @@
 struct rebx_params_gr_full* rebx_add_gr_full(struct rebx_extras* rebx, double c){
 	struct rebx_params_gr_full* params = malloc(sizeof(*params));
 	params->c = c;
-	
-    sim->force_is_velocity_dependent = 1;
-    rebx_add_force(rebx, params, "gr_full", rebx_gr_full);
+    int force_is_velocity_dependent = 1;
+    rebx_add_force(rebx, params, "gr_full", rebx_gr_full, force_is_velocity_dependent);
     return params;
 }
 

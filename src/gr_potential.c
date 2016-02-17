@@ -34,8 +34,8 @@ struct rebx_params_gr_potential* rebx_add_gr_potential(struct rebx_extras* rebx,
 	struct rebx_params_gr_potential* params = malloc(sizeof(*params));
 	params->c = c;
     params->source_index = source_index;
-
-    rebx_add_force(rebx, params, "gr_potential", rebx_gr_potential);
+    int force_is_velocity_dependent = 0;
+    rebx_add_force(rebx, params, "gr_potential", rebx_gr_potential, force_is_velocity_dependent);
     return params;
 }
 

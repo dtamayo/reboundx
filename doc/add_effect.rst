@@ -113,9 +113,6 @@ In our case
 .. code-block:: c
 
     struct rebx_params_radiation_forces* rebx_add_radiation_forces(struct rebx_extras* rebx, int source_index, double c){
-        struct reb_simulation* sim = rebx->sim;
-        sim->additional_forces = rebx_forces;
-        
         struct rebx_params_radiation_forces* params = malloc(sizeof(*params));
         params->c = c;
         params->source_index = source_index;

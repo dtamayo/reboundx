@@ -36,9 +36,8 @@
 struct rebx_params_modify_orbits_forces* rebx_add_modify_orbits_forces(struct rebx_extras* rebx){
 	struct rebx_params_modify_orbits_forces* params = malloc(sizeof(*params));
     params->coordinates = JACOBI;
-	
-    sim->force_is_velocity_dependent = 1;
-    rebx_add_force(rebx, params, "modify_orbits_forces", rebx_modify_orbits_forces);
+    int force_is_velocity_dependent = 1;
+    rebx_add_force(rebx, params, "modify_orbits_forces", rebx_modify_orbits_forces, force_is_velocity_dependent);
     return params;
 }
 

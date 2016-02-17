@@ -34,9 +34,8 @@ struct rebx_params_gr* rebx_add_gr(struct rebx_extras* rebx, int source_index, d
 	struct rebx_params_gr* params = malloc(sizeof(*params));
 	params->c = c;
     params->source_index = source_index;
-	
-    sim->force_is_velocity_dependent = 1;
-    rebx_add_force(rebx, params, "gr", rebx_gr);
+    int force_is_velocity_dependent = 1;
+    rebx_add_force(rebx, params, "gr", rebx_gr, force_is_velocity_dependent);
     return params;
 }
 

@@ -33,9 +33,8 @@ struct rebx_params_radiation_forces* rebx_add_radiation_forces(struct rebx_extra
 	struct rebx_params_radiation_forces* params = malloc(sizeof(*params));
 	params->c = c;
     params->source_index = source_index;
-
-    sim->force_is_velocity_dependent = 1;
-    rebx_add_force(rebx, params, "radiation_forces", rebx_radiation_forces);
+    int force_is_velocity_dependent = 1;
+    rebx_add_force(rebx, params, "radiation_forces", rebx_radiation_forces, force_is_velocity_dependent);
     return params;
 }
 

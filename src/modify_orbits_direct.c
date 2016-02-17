@@ -36,7 +36,6 @@ struct rebx_params_modify_orbits_direct* rebx_add_modify_orbits_direct(struct re
 	struct rebx_params_modify_orbits_direct* params = malloc(sizeof(*params));
 	params->p = 0;
     params->coordinates = JACOBI;
-	
     rebx_add_post_timestep_modification(rebx, params, "modify_orbits_direct", rebx_modify_orbits_direct);
     return params;
 }
