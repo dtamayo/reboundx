@@ -34,9 +34,6 @@
 #define TWOPI 6.2831853071795862
 
 struct rebx_params_modify_orbits_forces* rebx_add_modify_orbits_forces(struct rebx_extras* rebx){
-	struct reb_simulation* sim = rebx->sim;
-	sim->additional_forces = rebx_forces;
-	
 	struct rebx_params_modify_orbits_forces* params = malloc(sizeof(*params));
     params->coordinates = JACOBI;
 	

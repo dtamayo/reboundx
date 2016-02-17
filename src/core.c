@@ -118,6 +118,9 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
  *********************************************/
 
 void rebx_add_force(struct rebx_extras* rebx, void* paramsPtr, const char* name, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect)){
+    struct reb_simulation* sim = rebx->sim;
+    sim->additional_forces = rebx_forces;
+    
     struct rebx_effect* effect = malloc(sizeof(*effect));
     effect->paramsPtr = paramsPtr;
     effect->functionPtr = functionPtr;
@@ -128,6 +131,9 @@ void rebx_add_force(struct rebx_extras* rebx, void* paramsPtr, const char* name,
 }
 
 void rebx_add_post_timestep_modification(struct rebx_extras* rebx, void* paramsPtr, const char* name, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect)){
+    struct reb_simulation* sim = rebx->sim;
+    sim->post_timestep_modifications = rebx_post_timestep_modifications;
+
     struct rebx_effect* effect = malloc(sizeof(*effect));
     effect->paramsPtr = paramsPtr;
     effect->functionPtr = functionPtr;
@@ -270,15 +276,10 @@ Custom Effect Adders
 *****************************************/
 
 void rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, void (*custom_post_timestep_modification)(struct reb_simulation* const sim, struct rebx_effect* custom_effect), void* custom_params){
-    struct reb_simulation* sim = rebx->sim;
-    sim->post_timestep_modifications = rebx_post_timestep_modifications;
-
     rebx_add_post_timestep_modification(rebx, custom_params, "custom_post_timestep_modification", custom_post_timestep_modification);
 }
 
 void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* custom_effect), int force_is_velocity_dependent, void* custom_params){
-    struct reb_simulation* sim = rebx->sim;
-    sim->additional_forces = rebx_forces;
     if (force_is_velocity_dependent){
         sim->force_is_velocity_dependent = 1;
     }
