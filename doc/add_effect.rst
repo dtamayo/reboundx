@@ -107,6 +107,24 @@ You should copy existing ones from other effects, so that you have the license a
 In ``effect.h``, you only have to modify the file, brief, and author fields at the top, the include guards (ifndef, define lines) and substitute the name of your effect in the function name.  
 Everything else should be kept exactly the same.
 
+In ``effect.c``, we first write the effect adder function.
+In our case
+
+.. code-block:: c
+
+    struct rebx_params_radiation_forces* rebx_add_radiation_forces(struct rebx_extras* rebx, int source_index, double c){
+        struct reb_simulation* sim = rebx->sim;
+        sim->additional_forces = rebx_forces;
+        
+        struct rebx_params_radiation_forces* params = malloc(sizeof(*params));
+        params->c = c;
+        params->source_index = source_index;
+
+        sim->force_is_velocity_dependent = 1;
+        rebx_add_force(rebx, params, "radiation_forces", rebx_radiation_forces);
+        return params;
+    }
+
 Is your effect an additional force, or a post timestep modification (i.e., omething to do between REBOUND timesteps)?
 
 In our case (``radiation_forces``), we have an additional force, but for example mass loss would be a post timestep modification. 

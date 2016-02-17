@@ -31,9 +31,6 @@
 #include "reboundx.h"
 
 struct rebx_params_gr_full* rebx_add_gr_full(struct rebx_extras* rebx, double c){
-	struct reb_simulation* sim = rebx->sim;
-	sim->additional_forces = rebx_forces;
-	
 	struct rebx_params_gr_full* params = malloc(sizeof(*params));
 	params->c = c;
 	
