@@ -92,7 +92,7 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim);  // Calls all
  *********************************************/
 
 // Add a force to the effects linked list in the extras structure
-void rebx_add_force(struct rebx_extras* rebx, void* paramsPtr, const char* name, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect));
+void rebx_add_force(struct rebx_extras* rebx, void* paramsPtr, const char* name, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect), int force_is_velocity_dependent);
 // Add a post_timestep_modification to the effects linked list in the extras structure
 void rebx_add_post_timestep_modification(struct rebx_extras* rebx, void* paramsPtr, const char* name, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect));
 // Add a parameter to the params_to_be_freed linked list for later freeing.

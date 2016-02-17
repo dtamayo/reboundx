@@ -117,9 +117,12 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
  Adders for linked lists in extras structure
  *********************************************/
 
-void rebx_add_force(struct rebx_extras* rebx, void* paramsPtr, const char* name, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect)){
+void rebx_add_force(struct rebx_extras* rebx, void* paramsPtr, const char* name, void (*functionPtr) (struct reb_simulation* sim, struct rebx_effect* effect), int force_is_velocity_dependent){
     struct reb_simulation* sim = rebx->sim;
     sim->additional_forces = rebx_forces;
+    if (force_is_velocity_dependent){
+        sim->force_is_velocity_dependent = 1;
+    }
     
     struct rebx_effect* effect = malloc(sizeof(*effect));
     effect->paramsPtr = paramsPtr;
@@ -280,10 +283,7 @@ void rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, void (
 }
 
 void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* custom_effect), int force_is_velocity_dependent, void* custom_params){
-    if (force_is_velocity_dependent){
-        sim->force_is_velocity_dependent = 1;
-    }
-    rebx_add_force(rebx, custom_params, "custom_force", custom_force);
+    rebx_add_force(rebx, custom_params, "custom_force", custom_force, force_is_velocity_dependent);
 }
 
 /***********************************************************************************
