@@ -133,6 +133,7 @@ void rebx_free(struct rebx_extras* rebx);
  * @param rebx pointer to the rebx_extras instance
  */
 struct rebx_params_modify_orbits_direct* rebx_add_modify_orbits_direct(struct rebx_extras* rebx);
+
 /**
  * @brief Adds orbit modifications, implemented as forces.
  * @details Silently sets the effect struct's coordinates member to JACOBI.
@@ -140,6 +141,7 @@ struct rebx_params_modify_orbits_direct* rebx_add_modify_orbits_direct(struct re
  * @param rebx pointer to the rebx_extras instance
  */
 struct rebx_params_modify_orbits_forces* rebx_add_modify_orbits_forces(struct rebx_extras* rebx);
+
 /**
  * @brief Adds post-Newtonian corrections arising only from a single particle.  
  * @param rebx pointer to the rebx_extras instance
@@ -147,6 +149,7 @@ struct rebx_params_modify_orbits_forces* rebx_add_modify_orbits_forces(struct re
  * @param c Speed of light.
  */
 struct rebx_params_gr* rebx_add_gr(struct rebx_extras* rebx, int source_index, double c);
+
 /**
  * @brief Adds simple potential for post-Newtonian corrections arising only from a single particle.
  * @param rebx pointer to the rebx_extras instance
@@ -154,12 +157,14 @@ struct rebx_params_gr* rebx_add_gr(struct rebx_extras* rebx, int source_index, d
  * @param c Speed of light.
  */
 struct rebx_params_gr_potential* rebx_add_gr_potential(struct rebx_extras* rebx, int source_index, double c);
+
 /**
  * @brief Adds post-Newtonian corrections arising from all bodies in the simulation.
  * @param rebx pointer to the rebx_extras instance
  * @param c Speed of light.
  */
 struct rebx_params_gr_full* rebx_add_gr_full(struct rebx_extras* rebx, double c);
+
 /**
  * @brief Adds radiation forces to the simulation (i.e., radiation pressure and Poynting-Robertson drag).
  * @param rebx pointer to the rebx_extras instance
@@ -167,6 +172,13 @@ struct rebx_params_gr_full* rebx_add_gr_full(struct rebx_extras* rebx, double c)
  * @param c Speed of light.
  */
 struct rebx_params_radiation_forces* rebx_add_radiation_forces(struct rebx_extras* rebx, int source_index, double c);
+
+/**
+ * @brief Adds mass loss/growth to the simulation.
+ * @param rebx pointer to the rebx_extras instance
+ */
+void rebx_add_modify_mass(struct rebx_extras* rebx);
+
 /**
  * @brief Allows user to specify their own post timestep modifications. Behavior is identical to setting up post timestep modifications in REBOUND itself.
  * @param rebx pointer to the rebx_extras instance

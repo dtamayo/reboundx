@@ -1,7 +1,7 @@
 /**
  * @file    radiation_forces.h
  * @brief   Add radiation forces
- * @author  Dan Tamayo <tamayo.daniel@gmail.com>
+ * @author  Hanno Rein, Dan Tamayo <tamayo.daniel@gmail.com>
  * 
  * @section     LICENSE
  * Copyright (c) 2015 Dan Tamayo, Hanno Rein

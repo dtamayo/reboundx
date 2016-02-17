@@ -238,6 +238,40 @@ beta (double)               Ratio of the radiation force to the gravitational fo
                             from the radiation source.
 =========================== ======================================================
 
+Mass modifications
+^^^^^^^^^^^^^^^^^^
+
+.. _modify_mass:
+
+modify_mass
+***********
+
+Set particles' ``tau_mass`` parameter to a negative value for mass loss, positive for mass growth.
+
+======================= ===============================================
+Authors                 D. Tamayo
+Implementation Paper    *In progress*
+Based on                None
+C Example               :ref:`c_example_modify_mass`
+Python Example          `ModifyMass.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ModifyMass.ipynb>`_.
+======================= ===============================================
+
+This adds exponential mass growth/loss to individual particles every timestep.
+
+**Effect Structure**:
+
+*None*
+
+**Particle Parameters**
+
+Only particles with their ``tau_mass`` parameter set will have their masses affected.
+
+=========================== ======================================================
+Name (C type)               Description
+=========================== ======================================================
+tau_mass (double)           e-folding mass loss (<0) or growth (>0) timescale    
+=========================== ======================================================
+
 .. _custom:
 
 custom_force, custom_post_timestep_modification

@@ -18,7 +18,8 @@ class Extras(Structure):
 
     def __del__(self):
         if self._b_needsfree_ == 1:
-            clibreboundx.rebx_free_pointers(byref(self))
+            clibreboundx.rebx_free_effects(byref(self))
+            clibreboundx.rebx_free_params(byref(self))
     
     #######################################
     # Functions for adding REBOUNDx effects
@@ -88,6 +89,12 @@ class Extras(Structure):
         """
         clibreboundx.rebx_add_radiation_forces.restype = POINTER(rebx_params_radiation_forces)
         return clibreboundx.rebx_add_radiation_forces(byref(self), c_int(source_index), c_double(c)).contents
+    
+    def add_modify_mass(self):
+        """
+        :rtype: None
+        """
+        clibreboundx.rebx_add_modify_mass(byref(self))
     
     #######################################
     # Convenience Functions
