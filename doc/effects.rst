@@ -50,15 +50,18 @@ coordinates (enum)          Type of elements to use for modification (Jacobi, ba
 
 **Particle Parameters**
 
-=========================== =========== ======================================================
-Name (C type)               Required    Description
-=========================== =========== ======================================================
-tau_a (double)              No          Semimajor axis exponential growth/damping timescale
-tau_e (double)              No          Eccentricity exponential growth/damping timescale
-tau_inc (double)            No          Inclination axis exponential growth/damping timescale
-tau_Omega (double)          No          Period of linear nodal precession/regression
-tau_omega (double)          No          Period of linear apsidal precession/regression
-=========================== =========== ======================================================
+One can pick and choose which particles have which parameters set.  
+For each particle, any unset parameter is ignored.
+
+=========================== ======================================================
+Name (C type)               Description
+=========================== ======================================================
+tau_a (double)              Semimajor axis exponential growth/damping timescale
+tau_e (double)              Eccentricity exponential growth/damping timescale
+tau_inc (double)            Inclination axis exponential growth/damping timescale
+tau_Omega (double)          Period of linear nodal precession/regression
+tau_omega (double)          Period of linear apsidal precession/regression
+=========================== ======================================================
 
 .. _modify_orbits_forces:
 
@@ -90,19 +93,21 @@ coordinates (enum)          Type of elements to use for modification (Jacobi, ba
 
 **Particle Parameters**
 
-=========================== =========== ======================================================
-Name (C type)               Required    Description
-=========================== =========== ======================================================
-tau_a (double)              No          Semimajor axis exponential growth/damping timescale
-tau_e (double)              No          Eccentricity exponential growth/damping timescale
-tau_inc (double)            No          Inclination axis exponential growth/damping timescale
-tau_Omega (double)          No          Period of linear nodal precession/regression
-tau_omega (double)          No          Period of linear apsidal precession/regression
-=========================== =========== ======================================================
+One can pick and choose which particles have which parameters set.  
+For each particle, any unset parameter is ignored.
+
+=========================== ======================================================
+Name (C type)               Description
+=========================== ======================================================
+tau_a (double)              Semimajor axis exponential growth/damping timescale
+tau_e (double)              Eccentricity exponential growth/damping timescale
+tau_inc (double)            Inclination axis exponential growth/damping timescale
+tau_Omega (double)          Period of linear nodal precession/regression
+tau_omega (double)          Period of linear apsidal precession/regression
+=========================== ======================================================
 
 General Relativity
 ^^^^^^^^^^^^^^^^^^
-
 .. _gr:
 
 gr
@@ -224,12 +229,14 @@ source_index (int)          Index in the `particles` array for the radiation sou
 
 **Particle Parameters**
 
-=========================== =========== ======================================================
-Name (C type)               Required    Description
-=========================== =========== ======================================================
-beta (double)               No          Ratio of the radiation force to the gravitational force
-                                        from the radiation source.
-=========================== =========== ======================================================
+Only particles with their ``beta`` parameter set will feel radiation forces.
+
+=========================== ======================================================
+Name (C type)               Description
+=========================== ======================================================
+beta (double)               Ratio of the radiation force to the gravitational force
+                            from the radiation source.
+=========================== ======================================================
 
 .. _custom:
 

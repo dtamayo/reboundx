@@ -104,8 +104,5 @@ void heartbeat(struct reb_simulation* sim){
             const struct reb_orbit orbit = reb_tools_particle_to_orbit(sim->G, sim->particles[i], saturn); /* calculate orbit of particles[i] around Saturn */
             printf("%e\t%e\t%e\n",t,orbit.a, orbit.e);
         }
-        
-        //reb_output_timing(sim, tmax);
     }
-    
 }
