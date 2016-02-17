@@ -49,7 +49,7 @@ After some discussion, we decided that the best way to specify a particle in REB
 Putting together a Pull Request
 -------------------------------
 
-If you'd rather e-mail me your code, I'm happy to incorporate it, but if you'd like for github to show your account as a contributor to the project, send me a pull request!
+If you'd rather e-mail me your code, I'm happy to incorporate it, but if you'd like for github to show your account as a contributor to the project, send me a pull request! (you'll of course be prominently credited in the documentation no matter how you contribute, see below!).
 
 If you have never used git, it's very useful for backups, rewinding errors, and collaboration.
 You can make an account at `http://github.com <http://github.com>`_.
@@ -71,7 +71,9 @@ reboundx.h
 
 The place to start is ``reboundx/src/reboundx.h``, which defines the REBOUNDx API (all the functions/data structures the user will use).
 
-First, under ``Parameter structures for each effect``, you should define your effect structure, following the naming convention ``rebx_params_effect``.  In our case
+First, under ``Parameter structures for each effect``, you should define your effect structure, following the naming convention ``rebx_params_effect``.
+If you don't want an effect parameter structure, skip this step.  
+In our case
 
 .. code-block:: c
 
@@ -81,7 +83,7 @@ First, under ``Parameter structures for each effect``, you should define your ef
     }
 
 Make sure to use the comment code as above, and it will automatically get built into the documentation!
-Then under ``Functions for adding effects``, add the prototype for your effect adder function, which should follow the naming convention ``rebx_add_effect``, should take any effect parameters you want to take from the user, and return a pointer to the structure you defined above.  
+Then under ``Functions for adding effects``, add the prototype for your effect adder function, which should follow the naming convention ``rebx_add_effect``, should take any effect parameters you want to take from the user, and return a pointer to the structure you defined above (or void with no parameter structure).
 In our case
 
 .. code-block:: c
@@ -134,7 +136,8 @@ Everything else should be kept exactly the same.
 effect.c
 ^^^^^^^^
 
-In ``effect.c``, we first write the effect adder function.
+In ``effect.c``, we first copy paste the file, brief and author lines from ``effect.h``, and change ``#include effect.h`` from the effect you copied to your new one.
+Now we write the effect adder function.
 In our case
 
 .. code-block:: c
@@ -149,12 +152,14 @@ In our case
     }
 
 First we allocate memory for our parameters structure (just replace ``radiation_forces`` with your own effect name).
-Then we initialize the params fields we created for our effect structure with what was passed by the user.
+Then we initialize the params fields we created for our effect structure (if we made one) with what was passed by the user.
 Alternatively, if you think the parameters would rarely be changed, you could set them to a default value, and have the user change the values afterward manually (see e.g., modify_orbits_direct.c).
 Then if your force is velocity dependent, set ``force_is_velocity_dependent`` to 1, otherwise to 0.
 Finally, leave the ``rebx_add_force`` call the same, just replace ``radiation_forces`` in the two function parameters with your own effect name.
 
 If you're adding a post timestep modification, you don't have to specify ``force_is_velocity_dependent`` (cf. modify_orbits_direct.c).
+
+Finally, if you don't have an effect structure (cf. the ``modify_mass`` effect), you should replace ``params`` with ``NULL`` in the call to ``rebx_add_force`` or ``rebx_add_post_timestep_modification`` (cf. the ``modify_mass`` effect).
 
 Now you have to write the main routine for your effect.
 A force would update particles' accelerations, while a post timestep modification would update particles' masses, positions and/or velocities.
@@ -211,7 +216,7 @@ Go back to ``reboundx/examples/youreffect/`` and modify ``problem.c`` file as yo
 You can then run your program by navigating to your example folder, typing ``make`` (you may have to do ``make clean`` and then ``make``), and then ``./rebound``.
 All examples use a standard Makefile that compiles and links all the required libraries, so you shouldn't have to edit it.  
 
-If you get an error about OpenGL or GLUT, just google ``install openGL glut libraries <your OS here>`` for instructions, or open your ``Makefile`` and set OPENGL=0 (it's easier to debug if you can see what's going on though!)
+If you get an error about OpenGL or GLUT, just google `install openGL glut libraries <your OS here>` for instructions, or open your ``Makefile`` and set OPENGL=0 (it's easier to debug if you can see what's going on though!)
 See Sec. 2.4 of `OpenGL Keyboard Commands <http://rebound.readthedocs.org/en/latest/c_quickstart.html>`_ for a list of the visualization keyboard commands.
 
 Writing the Python Code
@@ -259,10 +264,12 @@ You have to cast all passed parameters to a ``ctypes`` type.
 The documentation is `here <https://docs.python.org/2/library/ctypes.html>`_, but you can probably get away with copying what's in other methods (you can also look at the bottom of ``extras.py`` for some more complicated ctypes types).
 Contact me for help if needed.
 
+If your effect doesn't have a parameters structure, it's even simpler (see the ``add_modify_mass`` method).
+
 Structure Definition
 ^^^^^^^^^^^^^^^^^^^^
 
-Still in ``extras.py``, under `Effect parameter class definitions` you have to define your parameters structure.  
+Still in ``extras.py``, (skip this step if you don't have an effect parameters structure) under `Effect parameter class definitions` you have to define your parameters structure.  
 Copy paste an existing definition, and again it's probably enough to figure out the ctypes types from other places in the code.
 Make sure that the ``_fields_`` match up exactly with what's in your C structure, and that fields appear in the same order.  
 In our case
@@ -368,13 +375,11 @@ This creates a pretty table in the online documentation.
 ``C Example`` is a link to the C Example you wrote.
 All C examples in the ``reboundx/examples`` directory are automatically built into the documentation, and have cross-reference targets of the form ``c_example_foldername``, where foldername is the name of your example folder in ``reboundx/examples``. 
 
-Don't worry about the ``Python Example`` line.  
-I will update it when I merge your new effect into the REBOUNDx master branch on github.
-Github renders iPython notebooks very nicely within the browser, so we provide links to those github pages.
+For the ``Python Example`` line, edit the link from another documentation entry with the name of your ipython notebook filename (in both the title and bracketed URL).
 
 Underneath your table, provide a description that will inform users when it's appropriate to apply your effect (and when it's not!).
 
-Finally, we add two more tables:
+Finally, if your effect uses a parameters structure and/or particle parameters, we add tables:
 
 .. code-block:: rst
 

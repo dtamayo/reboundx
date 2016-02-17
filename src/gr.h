@@ -4,7 +4,7 @@
  * @author  Pengshuai (Sam) Shi, Hanno Rein, Dan Tamayo <tamayo.daniel@gmail.com>
  * 
  * @section     LICENSE
- * Copyright (c) 2015 Pengshuai (Sam) Shi, Hanno Rein, Dan Tamayo
+ * Copyright (c) 2015 Dan Tamayo, Hanno Rein
  *
  * This file is part of reboundx.
  *
@@ -28,6 +28,6 @@
 struct reb_simulation;
 struct rebx_effect;
 
-void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr);
+void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* effect);
 
 #endif

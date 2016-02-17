@@ -121,8 +121,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'REBOUNDx'
-copyright = '2015, Dan Tamayo, Hanno Rein, Pengshuai (Sam) Shi'
-author = 'Dan Tamayo, Hanno Rein, Pengshuai (Sam) Shi'
+copyright = '2015, Dan Tamayo, Hanno Rein'
+author = 'Dan Tamayo, Hanno Rein'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

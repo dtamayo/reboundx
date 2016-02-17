@@ -16,6 +16,7 @@ tau_inc                     :ref:`modify_orbits_direct`, :ref:`modify_orbits_for
 tau_Omega                   :ref:`modify_orbits_direct`, :ref:`modify_orbits_forces`
 tau_omega                   :ref:`modify_orbits_direct`, :ref:`modify_orbits_forces`
 beta                        :ref:`radiation_forces`
+tau_mass                    :ref:`modify_mass`
 =========================== ========================================= 
 
 

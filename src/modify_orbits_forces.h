@@ -28,6 +28,6 @@
 struct reb_simulation;
 struct rebx_effect;
 
-void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const mod);
+void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect);
 
 #endif
