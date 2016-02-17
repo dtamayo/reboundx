@@ -53,7 +53,7 @@ void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect*
         if(i == source_index) continue;
         
         const double beta = rebx_get_param_double(&particles[i], "beta");
-        if(isnan(beta)) continue; // only particles with Q_pr set feel radiation forces
+        if(isnan(beta)) continue; // only particles with beta set feel radiation forces
         
         const struct reb_particle p = particles[i];
         

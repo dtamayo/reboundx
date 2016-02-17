@@ -14,11 +14,14 @@
 #include "rebound.h"
 #include "reboundx.h"
 
+void heartbeat(struct reb_simulation* sim);
+
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
     // Setup constants
     sim->dt             = 0.012;        // initial timestep.
     sim->integrator = REB_INTEGRATOR_IAS15;
+    sim->heartbeat = heartbeat;
 
     struct reb_particle p = {0}; 
     p.m     = 1.;   
@@ -46,10 +49,11 @@ int main(int argc, char* argv[]){
     //struct rebx_params_modify_orbits_forces* params = rebx_add_modify_orbits_forces(rebx);  // add forces that orbit-average to give exponential a and e damping
 
     // Set the timescales for each particle.  Parameter getter and setter functions always take the address of the particle (&)
+    double tmax = 5.e4;
     
-    rebx_set_param_double(&sim->particles[1], "tau_a", -1.e5); // add semimajor axis damping on inner planet (e-folding timescale)
-    rebx_set_param_double(&sim->particles[1], "tau_omega", -1.e4); // add linear precession on inner planet (precession period). This won't do anything for modify_orbits_forces
-    rebx_set_param_double(&sim->particles[2], "tau_e", -1.e4); // add eccentricity damping on particles[2] (e-folding timescale)
+    rebx_set_param_double(&sim->particles[1], "tau_a", -tmax); // add semimajor axis damping on inner planet (e-folding timescale)
+    rebx_set_param_double(&sim->particles[1], "tau_omega", -tmax/10.); // add linear precession on inner planet (precession period). This won't do anything for modify_orbits_forces
+    rebx_set_param_double(&sim->particles[2], "tau_e", -tmax/10.); // add eccentricity damping on particles[2] (e-folding timescale)
 
     printf("Semimajor axis damping timescale for inner planet is %f.\n", -1.*rebx_get_param_double(&sim->particles[1], "tau_a"));
     printf("Precession timescale for inner planet is %f.\n", -1.*rebx_get_param_double(&sim->particles[1], "tau_omega"));
@@ -65,7 +69,15 @@ int main(int argc, char* argv[]){
 
     params->coordinates = HELIOCENTRIC;
 
-    double tmax = 5.e4;
     reb_integrate(sim, tmax);
     rebx_free(rebx);    // Free all the memory allocated by rebx
+}
+
+void heartbeat(struct reb_simulation* sim){
+    // output a e and pomega (Omega + omega) of inner body
+    if(reb_output_check(sim, 5.e1)){
+        const struct reb_particle sun = sim->particles[0];
+        const struct reb_orbit orbit = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sun); // calculate orbit of particles[1]
+        printf("%f\t%f\t%f\t%f\n",sim->t,orbit.a, orbit.e, orbit.pomega);
+    }
 }

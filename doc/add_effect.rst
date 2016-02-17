@@ -3,7 +3,7 @@
 Adding A New Effect
 ============================
 
-REBOUNDx aims to be modular, so that when adding your own new effect, you don't have to get into all the low-level code details.
+REBOUNDx aims to be modular, so that when adding your own new effect, you don't have to get into all the low-level code details (in ``core.c``).
 You just have to write your effect following the REBOUNDx layout, and rely on REBOUNDx to appropriately store, access and call it at the right time.
 Here we will code the ``radiation_forces`` effect as an example.
 
@@ -43,6 +43,22 @@ Additionally, we choose to allow the user to specify which particle in the simul
 This adds flexibility for non-standard cases, and makes it possible for the user to add the effect more than once if they for example want to turn on radiation pressure from multiple stars.
 
 After some discussion, we decided that the best way to specify a particle in REBOUND/REBOUNDx is through its index in the ``particles`` array, putting the responsibility on the user to update this effect parameter as needed when particles are added or removed from the simulation.New effects should follow this convention (e-mail me if you don't think this would work for your effect).
+
+.. _pullrequest:
+
+Putting together a Pull Request
+-------------------------------
+
+If you'd rather e-mail me your code, I'm happy to incorporate it, but if you'd like for github to show your account as a contributor to the project, send me a pull request!
+
+If you have never used git, it's very useful for backups, rewinding errors, and collaboration.
+You can make an account at `http://github.com <http://github.com>`_.
+Follow the instructions under `Time to Submit Your First PR` `here <http://www.thinkful.com/learn/github-pull-request-tutorial/Expect-a-Thorough-Review#Time-to-Submit-Your-First-PR>`_ up until "Tadaa!" to fork the REBOUNDx repository and make your own local branch.
+
+Now you can modify the code as described below, and can incrementally commit changes.
+As a starting point, you can check out `this guide <https://www.atlassian.com/git/tutorials/saving-changes>`_.
+
+After working through this document and making all the changes, you can then send me a pull request by following the rest of the instructions in the pull request tutorial above.
 
 Writing the C Code
 ------------------ 
@@ -161,14 +177,241 @@ In our case, the top of our function looks like
             if(i == source_index) continue;
             ... 
 
-This gives a recipe for accessing the effect parameters.
-It's also important to use ``_N_real`` for the number of particles in the simulation, since ``sim->N`` includes any variational particles that have been added (which, if implemented, should feel the *derivatives* of your additional force).
+This gives a recipe for accessing the effect parameters (effect->paramsPtr is a void pointer so you just have to change the const struct line to rebx_params_effect*).
+It's also important to use ``_N_real`` for the number of particles in the simulation, since ``sim->N`` includes any variational particles that have been added.
 
 To access particles' individual parameters, we use
 
 .. code-block:: c
     
     const double beta = rebx_get_param_double(&particles[i], "beta");
-    if(isnan(beta)) continue; // only particles with Q_pr set feel radiation forces
+    if(isnan(beta)) continue; // only particles with beta set feel radiation forces
 
-For particle-specific parameters, you don't have to write any extra code to use them.
+One nice feature is that for particle-specific parameters, you (probably) don't have to write any extra code to use them.
+REBOUNDx uses a hash function to change the name of your particle parameter (here ``"beta"``) to an integer code, which it uses to set and retrieve particle parameters (stored as a linked list starting from the `ap` void pointer (ap = additional parameters) in rebound.Particle).
+For all getting and setting, we always  address (&) to a particle in the simulation.
+There also needs to be a separate ``rebx_get_param`` and ``rebx_set_param`` for every different variable type (in this case ``"beta"`` is a double).
+You can see which getters and setters are currently implemented here: :ref:`getters`.
+
+The getter for each variable type will return a different default value for cases where the parameter is not set for a particular particle (see :ref:`getters`).
+For doubles, it's ``nan``, so when looping over the particles, we check for ``nan`` and skip them if beta is not set.
+
+Example/Test Case
+^^^^^^^^^^^^^^^^^
+
+At this point, you're done with the C code, though you might consider testing it!
+You can kill two birds with one stone by using your test case as an example that others can work from.
+
+Navigate to the ``reboundx/examples`` folder, and copy the ``modify_orbits`` folder to another folder named after your effect.
+
+We now also want to update all the ``Makefiles`` and setup scripts to include your new effect.
+If you navigate to ``reboundx/script`` and type ``python add_new_effect.py``, the script will automatically make all the required changes.
+
+Go back to ``reboundx/examples/youreffect/`` and modify ``problem.c`` file as you like.
+You can then run your program by navigating to your example folder, typing ``make`` (you may have to do ``make clean`` and then ``make``), and then ``./rebound``.
+All examples use a standard Makefile that compiles and links all the required libraries, so you shouldn't have to edit it.  
+
+If you get an error about OpenGL or GLUT, just google ``install openGL glut libraries <your OS here>`` for instructions, or open your ``Makefile`` and set OPENGL=0 (it's easier to debug if you can see what's going on though!)
+See Sec. 2.4 of `OpenGL Keyboard Commands <http://rebound.readthedocs.org/en/latest/c_quickstart.html>`_ for a list of the visualization keyboard commands.
+
+Writing the Python Code
+-----------------------
+
+It's now trivial to make your code callable from Python (even if you don't know Python!).
+First navigate to ``reboundx/`` and type ``pip install -e .``.
+This will install the updated libreboundx extension so you can call it from Python.
+You'll have to run the same command any time you edit the C code (you don't need to after changing the Python code--if using an ipython notebook, just restart the kernel after making changes to the Python code).
+
+Now open ``reboundx/reboundx/extras.py``.
+
+Adder Method
+^^^^^^^^^^^^
+
+Under `Functions for adding REBOUNDx effects` you have to add your own effect adder.
+Copy paste the ``add_gr_potential`` method and change the name to your effect.
+In our case
+
+.. code-block:: python
+
+    def add_radiation_forces(self, source_index=0, c=C_DEFAULT):
+        """
+        You must pass c (the speed of light) in whatever units you choose if you don't use default units of AU, (yr/2pi) and Msun.
+        
+        :param source_index: Index in the particles array of the body that is the source of the radiation.
+        :param c: Speed of light in appropriate units.
+        :type source_index: int
+        :type c: float
+        :rtype: rebx_params_radiation_forces
+        """
+        clibreboundx.rebx_add_radiation_forces.restype = POINTER(rebx_params_radiation_forces)
+        return clibreboundx.rebx_add_radiation_forces(byref(self), c_int(source_index), c_double(c)).contents
+
+One nice feature of Python is that you can make it optional for the user to pass parameters to the adder method by setting default values (here 0 for source_index and C_DEFAULT for c).
+
+Again, we add comments here in a format that allows them to be automatically incorporated into the online documentation.
+The block above ``:param ...`` shows up as a description.
+``rtype`` (the return type) should always be your parameters structure, and then you document each parameter with a description (``:param param_name:``) and Python type (``:type param_name:``).
+
+The last two lines call the C library.
+In the first, you just have to change the effect name to your own.
+In the second, again change the effect name, and then pass the parameters your C adder function needs.
+You have to cast all passed parameters to a ``ctypes`` type.
+The documentation is `here <https://docs.python.org/2/library/ctypes.html>`_, but you can probably get away with copying what's in other methods (you can also look at the bottom of ``extras.py`` for some more complicated ctypes types).
+Contact me for help if needed.
+
+Structure Definition
+^^^^^^^^^^^^^^^^^^^^
+
+Still in ``extras.py``, under `Effect parameter class definitions` you have to define your parameters structure.  
+Copy paste an existing definition, and again it's probably enough to figure out the ctypes types from other places in the code.
+Make sure that the ``_fields_`` match up exactly with what's in your C structure, and that fields appear in the same order.  
+In our case
+
+.. code-block:: python
+
+    class rebx_params_radiation_forces(Structure):
+        _fields_ = [("source_index", c_int),
+                    ("c", c_double)]
+
+Convenience Functions
+^^^^^^^^^^^^^^^^^^^^^
+
+If you created any convenience functions in C, add them under `Convenience Functions` (again in ``extras.py``).
+One example:
+
+.. code-block:: python
+
+    def rad_calc_beta(self, params, particle_radius, density, Q_pr, L):
+        """
+        Calculates a particle's beta parameter (the ratio of the radiation force to the gravitational force).
+        All values must be passed in the same units as used for the simulation as a whole (e.g., AU, Msun, yr/2pi).
+
+        :param params: parameters instance returned by add_radiation_forces.
+        :param particle_radius: grain's physical radius
+        :param density: particle bulk density
+        :param Q_pr: radiation pressure coefficient
+        :param L: Radiation source's luminosity
+        :type params: rebx_params_radiation_forces
+        :type particle_radius: float
+        :type density: float
+        :type Q_pr: float
+        :type L: float
+        :rtype: float
+        """
+        clibreboundx.rebx_rad_calc_beta.restype = c_double
+        return clibreboundx.rebx_rad_calc_beta(byref(self), byref(params), c_double(particle_radius), c_double(density), c_double(Q_pr), c_double(L))
+
+The documentation works as above.
+In the code, the first line tells ``ctypes`` what to expect the C function to return (here a ``double``).
+In the last line, we again cast everying to ``ctypes`` types, and for any parameters the C function expects as a pointer, we use ``byref()``.
+
+iPython Example
+^^^^^^^^^^^^^^^
+
+If you don't use iPython notebooks, you should try them!
+I use them for all my (research) dynamics simulations.
+All the Python examples in REBOUND and REBOUNDx also use them.
+iPython is now part of the Jupyter project, and you can find installation instructions `here <http://jupyter.readthedocs.org/en/latest/install.html>`_.
+
+I think most people using REBOUND/REBOUNDx use the Python implementation, so if you're up for it, add an iPython notebook in ``reboundx/ipython_examples/``.
+You might copy ``EccAndIncDamping.ipynb`` and edit that as a starter.
+
+Add Your Effect to the Main Documentation Page!
+-----------------------------------------------
+
+You're done with all the code!
+Now you want people to use your effect and cite your breakthrough paper!
+The main documentation page that summarizes all the effects in REBOUNDx and provides useful links is ``reboundx/doc/effects.rst``.
+
+The document is divided first into groups.  
+For example, ``gr``, ``gr_full`` and ``gr_potential`` are all different implementations for general relativity corrections, and are thus lumped under the `General Relativity` heading.  
+If your effect fell into an existing category, you would put it there.
+In our case, there are no other radiation forces implementations, so we start a new heading.
+If you are adding a new heading, please add it at the bottom, but above ``.. _custom:``.
+
+.. code-block:: rst
+
+    Radiation Forces
+    ^^^^^^^^^^^^^^^^
+
+    .. _radiation_forces:
+
+    radiation_forces
+    ****************
+
+The line of ``^`` characters creates a new subsection, so we're making a subsection named `Radiation Forces` to hold all available radiation force implementations.
+
+Underneath we add the name of our new effect, with a line of ``*`` underneath to create a sub-sub-section.
+This should be written lowercase such that we can substitute that effect_name into ``rebx_add_effect_name`` etc. and call the right function! (here rebx_add_radiation_forces).
+
+The ``.. _radiation_forces:`` creates a target that can be used to crossreference to your implementation from other parts of the documentation.
+
+You should now copy paste another documentation entry (e.g., radiation_forces) to make sure you keep the same format.
+In our case
+
+.. code-block:: rst
+
+    ======================= ===============================================
+    Authors                 H. Rein, D. Tamayo
+    Implementation Paper    *In progress*
+    Based on                `Burns et al. 1979 <http://labs.adsabs.harvard.edu/adsabs/abs/1979Icar...40....1B/>`_.
+    C Example               :ref:`c_example_rad_forces_debris_disk`, :ref:`c_example_rad_forces_circumplanetary`.
+    Python Example          `Radiation_Forces_Debris_Disk.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Radiation_Forces_Debris_Disk.ipynb>`_,
+                            `Radiation_Forces_Circumplanetary_Dust.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Radiation_Forces_Circumplanetary_Dust.ipynb>`_.
+    ======================= ===============================================
+
+This creates a pretty table in the online documentation.
+``Authors`` says who wrote the code.
+``Implementation paper`` is the paper that you'd like to be cited by people using your implementation.
+``Based on`` is the paper that the equations you used come from.
+
+``C Example`` is a link to the C Example you wrote.
+All C examples in the ``reboundx/examples`` directory are automatically built into the documentation, and have cross-reference targets of the form ``c_example_foldername``, where foldername is the name of your example folder in ``reboundx/examples``. 
+
+Don't worry about the ``Python Example`` line.  
+I will update it when I merge your new effect into the REBOUNDx master branch on github.
+Github renders iPython notebooks very nicely within the browser, so we provide links to those github pages.
+
+Underneath your table, provide a description that will inform users when it's appropriate to apply your effect (and when it's not!).
+
+Finally, we add two more tables:
+
+.. code-block:: rst
+
+    This applies radiation forces to particles in the simulation.  
+    It incorporates both radiation pressure and Poynting-Robertson drag.
+    Only particles whose `beta` parameter is set will feel the radiation.  
+
+    **Effect Structure**: *rebx_params_radiation_forces*
+
+    =========================== ==================================================================
+    Field (C type)              Description
+    =========================== ==================================================================
+    c (double)                  Speed of light in the units used for the simulation.
+    source_index (int)          Index in the `particles` array for the radiation source.
+    =========================== ==================================================================
+
+    **Particle Parameters**
+
+    Only particles with their ``beta`` parameter set will feel radiation forces.
+
+    =========================== ======================================================
+    Name (C type)               Description
+    =========================== ======================================================
+    beta (double)               Ratio of the radiation force to the gravitational force
+                                from the radiation source.
+    =========================== ======================================================
+
+These are provided as a quick reference for the user.
+Replace the tables with ``*None*`` if your effect has no effect structure or no associated particle parameters.
+
+You can check how everything looks by navigating to ``reboundx/doc`` and typing ``make clean``, then ``make html``.
+Then navigate to ``reboundx/doc/_build/html`` and open ``index.html`` in your browser.
+The main effects page (with the tables) is on the left: REBx Effects & Parameters.
+The automatically included documentation will be under API Documentation (Python) and API Documentation (C).
+
+You're Done!
+------------
+
+Send me a pull request (:ref:`pullrequest`), or e-mail me your code, and I'd be happy to incorporate it!
+

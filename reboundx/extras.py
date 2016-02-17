@@ -41,11 +41,11 @@ class Extras(Structure):
     def add_gr(self, source_index=0, c=C_DEFAULT): 
         """
         You must pass c (the speed of light) in whatever units you choose if you don't use default units of AU, (yr/2pi) and Msun.
-
-        :param source: Source of GR effect. 
+        
+        :param source_index: Index in the particles array of the massive body that is the source of the GR corrections.
         :param c: Speed of light in appropriate units.
-        :type source: rebound.Particle
-        :type c: double
+        :type source_index: int
+        :type c: float
         :rtype: rebx_params_gr
         """
         clibreboundx.rebx_add_gr.restype = POINTER(rebx_params_gr)
@@ -56,7 +56,7 @@ class Extras(Structure):
         You must pass c (the speed of light) in whatever units you choose if you don't use default units of AU, (yr/2pi) and Msun.
         
         :param c: Speed of light in appropriate units.
-        :type c: double
+        :type c: float
         :rtype: rebx_params_gr_full
         """
         clibreboundx.rebx_add_gr_full.restype = POINTER(rebx_params_gr_full)
@@ -66,10 +66,11 @@ class Extras(Structure):
         """
         You must pass c (the speed of light) in whatever units you choose if you don't use default units of AU, (yr/2pi) and Msun.
         
-        :param source: Source of GR effect.
+        
+        :param source_index: Index in the particles array of the massive body that is the source of the GR corrections.
         :param c: Speed of light in appropriate units.
-        :type source: rebound.Particle
-        :type c: double
+        :type source_index: int
+        :type c: float
         :rtype: rebx_params_gr_potential
         """
         clibreboundx.rebx_add_gr_potential.restype = POINTER(rebx_params_gr_potential)
@@ -79,10 +80,10 @@ class Extras(Structure):
         """
         You must pass c (the speed of light) in whatever units you choose if you don't use default units of AU, (yr/2pi) and Msun.
         
-        :param source: Source of radiation. 
+        :param source_index: Index in the particles array of the body that is the source of the radiation.
         :param c: Speed of light in appropriate units.
-        :type source: rebound.Particle
-        :type c: double
+        :type source_index: int
+        :type c: float
         :rtype: rebx_params_radiation_forces
         """
         clibreboundx.rebx_add_radiation_forces.restype = POINTER(rebx_params_radiation_forces)
@@ -93,7 +94,6 @@ class Extras(Structure):
     #######################################
 
     def rad_calc_beta(self, params, particle_radius, density, Q_pr, L):
-
         """
         Calculates a particle's beta parameter (the ratio of the radiation force to the gravitational force).
         All values must be passed in the same units as used for the simulation as a whole (e.g., AU, Msun, yr/2pi).
@@ -112,7 +112,8 @@ class Extras(Structure):
         """
         clibreboundx.rebx_rad_calc_beta.restype = c_double
         return clibreboundx.rebx_rad_calc_beta(byref(self), byref(params), c_double(particle_radius), c_double(density), c_double(Q_pr), c_double(L))
-    def rad_calc_particle_radius(self, params, beta, density, Q_pr, L):
+
+def rad_calc_particle_radius(self, params, beta, density, Q_pr, L):
         """
         Calculates a particle's physical radius given its beta parameter.
         All values must be passed in the same units as used for the simulation as a whole (e.g., AU, Msun, yr/2pi).
@@ -148,7 +149,7 @@ class rebx_params_gr(Structure):
                 ("c", c_double)]
 
 class rebx_params_gr_potential(Structure):
-    _fields_ = [("source_index", c_int), # testing
+    _fields_ = [("source_index", c_int),
                 ("c", c_double)]
 
 class rebx_params_gr_full(Structure):
