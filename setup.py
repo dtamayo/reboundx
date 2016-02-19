@@ -26,8 +26,9 @@ class build_ext(_build_ext):
         rebdir = os.path.dirname(inspect.getfile(rebound))
         self.include_dirs.append(rebdir)
         self.library_dirs.append(rebdir+'/../')
-        #self.runtime_library_dirs.append(rebdir+'/../')
-        #self.extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
+        for ext in self.extensions:
+            ext.runtime_library_dirs.append(rebdir+'/../')
+            ext.extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
 
 
 from distutils.version import LooseVersion
