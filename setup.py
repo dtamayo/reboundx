@@ -7,23 +7,31 @@ import os
 import inspect
 import sys 
 
+from setuptools.command.build_ext import build_ext as _build_ext
+
 import sysconfig
 suffix = sysconfig.get_config_var('EXT_SUFFIX')
 if suffix is None:
     suffix = ".so"
 
-try:
-    import rebound
-except ImportError:
-    print("You must first install REBOUND.  See http://rebound.readthedocs.org/en/latest/python_quickstart.html")
-    sys.exit(1)
+
+
+class build_ext(_build_ext):
+    def finalize_options(self):
+        _build_ext.finalize_options(self)
+        import rebound
+        if LooseVersion(rebound.__version__) < LooseVersion("2.12.1"): # Only after 2.12.1 can you link to librebound.so 
+            print("REBOUNDx requires REBOUND version > 2.12.1.  Please upgrade.  See 5.3 in http://rebound.readthedocs.org/en/latest/python_quickstart.html")
+            sys.exit(1)
+        rebdir = os.path.dirname(inspect.getfile(rebound))
+        self.include_dirs.append(rebdir)
+        self.library_dirs.append(rebdir+'/../')
+        #self.runtime_library_dirs.append(rebdir+'/../')
+        #self.extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
+
 
 from distutils.version import LooseVersion
-if LooseVersion(rebound.__version__) < LooseVersion("2.12.1"): # Only after 2.12.1 can you link to librebound.so 
-    print("REBOUNDx requires REBOUND version > 2.12.1.  Please upgrade.  See 5.3 in http://rebound.readthedocs.org/en/latest/python_quickstart.html")
-    sys.exit(1)
 
-rebdir = os.path.dirname(inspect.getfile(rebound))
 
 extra_link_args=[]
 if sys.platform == 'darwin':
@@ -31,13 +39,12 @@ if sys.platform == 'darwin':
     vars = sysconfig.get_config_vars()
     vars['LDSHARED'] = vars['LDSHARED'].replace('-bundle', '-shared')
     extra_link_args=['-Wl,-install_name,@rpath/libreboundx'+suffix]
-    extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
 
 libreboundxmodule = Extension('libreboundx',
                     sources = [ 'src/core.c', 'src/gr.c', 'src/gr_full.c', 'src/gr_potential.c', 'src/modify_mass.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/radiation_forces.c', 'src/rebxtools.c'],
-                    include_dirs = ['src', rebdir],
-                    library_dirs = [rebdir+'/../'],
-                    runtime_library_dirs = [rebdir+'/../'],
+                    include_dirs = ['src'],
+                    library_dirs = [],
+                    runtime_library_dirs = ["."],
                     libraries=['rebound'+suffix[:-3]], #take off .so from the suffix
                     define_macros=[ ('LIBREBOUNDX', None) ],
                     extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-fPIC', '-Wpointer-arith'],
@@ -79,7 +86,9 @@ setup(name='reboundx',
     ],
     keywords='astronomy astrophysics nbody integrator',
     packages=['reboundx'],
-    #install_requires=['rebound>=2.12.0'],
+    cmdclass={'build_ext':build_ext},
+    setup_requires=['rebound>=2.12.0'],
+    install_requires=['rebound>=2.12.0'],
     tests_require=["numpy","matplotlib"],
     test_suite="reboundx.test",
     ext_modules = [libreboundxmodule],
