@@ -17,7 +17,7 @@ cd install_test_temp
 git clone https://github.com/hannorein/rebound.git
 git clone https://github.com/dtamayo/reboundx.git
 cd reboundx
-git checkout pypi
+git checkout installtest
 cd ~/install_test_temp
 
 pip uninstall -y reboundx
