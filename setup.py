@@ -2,11 +2,11 @@ from codecs import open
 import os
 import inspect
 import sys 
-from setuptools.command.build_ext import build_ext as _build_ext
 import sysconfig
 
 try:
     from setuptools import setup, Extension
+    from setuptools.command.build_ext import build_ext as _build_ext
 except ImportError:
     print("Installing REBOUNDx requires setuptools.  Do 'pip install setuptools'.")
     sys.exit(1)
