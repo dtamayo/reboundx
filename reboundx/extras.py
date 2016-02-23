@@ -120,7 +120,7 @@ class Extras(Structure):
         clibreboundx.rebx_rad_calc_beta.restype = c_double
         return clibreboundx.rebx_rad_calc_beta(byref(self), byref(params), c_double(particle_radius), c_double(density), c_double(Q_pr), c_double(L))
 
-def rad_calc_particle_radius(self, params, beta, density, Q_pr, L):
+    def rad_calc_particle_radius(self, params, beta, density, Q_pr, L):
         """
         Calculates a particle's physical radius given its beta parameter.
         All values must be passed in the same units as used for the simulation as a whole (e.g., AU, Msun, yr/2pi).
