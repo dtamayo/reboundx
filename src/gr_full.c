@@ -162,7 +162,6 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
     }
     //fprintf(stderr,"%.16e\t%.16e\n",particles[1].ax, a_newton[1][0]);
 
-
     // Now running the substitution again and again through the loop below
     for (int k=0; k<10; k++){ // you can set k as how many substitution you want to make
         double a_old[_N_real][3]; // initialize an arry that stores the information of previousu calculated accleration
