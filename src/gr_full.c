@@ -217,7 +217,7 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
     }
     // update acceleration in particles
     for (int i = 0; i <_N_real;i++){
-        particles[i].ax += a_new[i][0] - a_newton[i][0]; // substract newtonian term off since WHFAST would add it on later
+        particles[i].ax += a_new[i][0] - a_newton[i][0]; // substract newtonian term off since gravity routine already put it in
         particles[i].ay += a_new[i][1] - a_newton[i][1];
         particles[i].az += a_new[i][2] - a_newton[i][2];
     }
