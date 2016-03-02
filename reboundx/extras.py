@@ -140,6 +140,14 @@ class Extras(Structure):
         clibreboundx.rebx_rad_calc_particle_radius.restype = c_double
         return clibreboundx.rebx_rad_calc_particle_radius(byref(self), byref(params), c_double(beta), c_double(density), c_double(Q_pr), c_double(L))
     
+    def gr_hamiltonian(self, sim, params):
+        clibreboundx.rebx_gr_hamiltonian.restype = c_double
+        return clibreboundx.rebx_gr_hamiltonian(byref(sim), byref(params))
+    
+    def gr_full_hamiltonian(self, sim, params):
+        clibreboundx.rebx_gr_full_hamiltonian.restype = c_double
+        return clibreboundx.rebx_gr_full_hamiltonian(byref(sim), byref(params))
+    
 #######################################
 # Effect parameter class definitions
 #######################################
