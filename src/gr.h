@@ -30,6 +30,5 @@ struct rebx_effect;
 struct rebx_params_gr;
 
 void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* effect);
-double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_params_gr* const params);
 
 #endif

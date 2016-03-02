@@ -39,7 +39,7 @@ struct rebx_params_gr_full* rebx_add_gr_full(struct rebx_extras* rebx, double c)
 }
 
 void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr){
-    const struct rebx_params_gr* const params = gr->paramsPtr;
+    const struct rebx_params_gr_full* const params = gr->paramsPtr;
     const double C = params->c;
     const int _N_real = sim->N - sim->N_var;
     const double G = sim->G;
