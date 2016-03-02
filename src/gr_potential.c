@@ -61,9 +61,9 @@ void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* gr)
         const double r2 = dx*dx + dy*dy + dz*dz;
         const double prefac = prefac1/(r2*r2);
         
-        particles[source_index].ax -= prefac*dx;
-        particles[source_index].ay -= prefac*dy;
-        particles[source_index].az -= prefac*dz;
+        particles[i].ax -= prefac*dx;
+        particles[i].ay -= prefac*dy;
+        particles[i].az -= prefac*dz;
     }
 }
 
