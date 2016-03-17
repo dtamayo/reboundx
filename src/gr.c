@@ -47,32 +47,50 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
 	const double mu = G*particles[source_index].m;
+    const unsigned int _gravity_ignore_10 = sim->gravity_ignore_10;
+    
     for (int i=0; i<_N_real; i++){
         if(i == source_index){
             continue;
         }
-		struct reb_particle pi = particles[i];
+		const struct reb_particle pi = particles[i];
 		
-		double dx = pi.x;
-		double dy = pi.y;
-		double dz = pi.z;
-		double r2 = dx*dx + dy*dy + dz*dz;
-		double r = sqrt(r2);
-		double vx = pi.vx;
-		double vy = pi.vy;
-		double vz = pi.vz;
-		double v2 = vx*vx + vy*vy + vz*vz;
+		const double dx = pi.x;
+		const double dy = pi.y;
+		const double dz = pi.z;
+		const double r2 = dx*dx + dy*dy + dz*dz;
+		const double r = sqrt(r2);
+		const double vx = pi.vx;
+		const double vy = pi.vy;
+		const double vz = pi.vz;
+		const double v2 = vx*vx + vy*vy + vz*vz;
+        double ax = pi.ax;
+        double ay = pi.ay;
+        double az = pi.az;
+        
+        /*if (_gravity_ignore_10 && i==1){
+            const double dx10 = particles[0].x - pi.x;
+            const double dy10 = particles[0].y - pi.y;
+            const double dz10 = particles[0].z - pi.z;
+            const double r210 = dx10*dx10 + dy10*dy10 + dz10*dz10;
+            const double r10 = sqrt(r210);
+            const double prefac = G*particles[0].m/(r210*r10);
+            
+            ax += prefac*dx10;
+            ay += prefac*dy10;
+            az += prefac*dz10;
+        }*/
 
-		double a1_x = (mu*mu*dx/(r2*r2) - 3.*mu*v2*dx/(2.*r2*r))/(C*C);
-		double a1_y = (mu*mu*dy/(r2*r2) - 3.*mu*v2*dy/(2.*r2*r))/(C*C);
-		double a1_z = (mu*mu*dz/(r2*r2) - 3.*mu*v2*dz/(2.*r2*r))/(C*C);
+		const double a1_x = (mu*mu*dx/(r2*r2) - 3.*mu*v2*dx/(2.*r2*r))/(C*C);
+		const double a1_y = (mu*mu*dy/(r2*r2) - 3.*mu*v2*dy/(2.*r2*r))/(C*C);
+		const double a1_z = (mu*mu*dz/(r2*r2) - 3.*mu*v2*dz/(2.*r2*r))/(C*C);
 
-		double va = vx*pi.ax + vy*pi.ay + vz*pi.az;
-		double rv = dx*vx + dy*vy + dz*vz;
+		const double va = vx*ax + vy*ay + vz*az;
+		const double rv = dx*vx + dy*vy + dz*vz;
 		
-		particles[i].ax += a1_x-(va*vx + v2*pi.ax/2. + 3.*mu*(pi.ax*r-vx*rv/r)/r2)/(C*C);
-		particles[i].ay += a1_y-(va*vy + v2*pi.ay/2. + 3.*mu*(pi.ay*r-vy*rv/r)/r2)/(C*C);
-		particles[i].az += a1_z-(va*vz + v2*pi.az/2. + 3.*mu*(pi.az*r-vz*rv/r)/r2)/(C*C);
+		particles[i].ax += a1_x-(va*vx + v2*ax/2. + 3.*mu*(ax*r-vx*rv/r)/r2)/(C*C);
+		particles[i].ay += a1_y-(va*vy + v2*ay/2. + 3.*mu*(ay*r-vy*rv/r)/r2)/(C*C);
+		particles[i].az += a1_z-(va*vz + v2*az/2. + 3.*mu*(az*r-vz*rv/r)/r2)/(C*C);
     }	
 }
 /*void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
