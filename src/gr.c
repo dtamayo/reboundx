@@ -49,6 +49,22 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
 	const double mu = G*particles[source_index].m;
     const unsigned int _gravity_ignore_10 = sim->gravity_ignore_10;
     
+    double aoverm10x, aoverm10y, aoverm10z;
+
+    if (_gravity_ignore_10){
+        const double dx = particles[0].x - particles[1].x;
+        const double dy = particles[0].y - particles[1].y;
+        const double dz = particles[0].z - particles[1].z;
+        const double softening2 = sim->softening*sim->softening;
+        const double r2 = dx*dx + dy*dy + dz*dz + softening2;
+        const double r = sqrt(r2);
+        const double prefac = G/(r2*r);
+        
+        aoverm10x = prefac*dx;
+        aoverm10y = prefac*dy;
+        aoverm10z = prefac*dz;
+    }
+    
     for (int i=0; i<_N_real; i++){
         if(i == source_index){
             continue;
@@ -67,20 +83,17 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
         double ax = pi.ax;
         double ay = pi.ay;
         double az = pi.az;
+        if(_gravity_ignore_10 && i==1){
+            ax += particles[0].m*aoverm10x;
+            ay += particles[0].m*aoverm10y;
+            az += particles[0].m*aoverm10z;
+        }
+        if(_gravity_ignore_10 && i==0){
+            ax -= particles[1].m*aoverm10x;
+            ay -= particles[1].m*aoverm10y;
+            az -= particles[1].m*aoverm10z;
+        }
         
-        /*if (_gravity_ignore_10 && i==1){
-            const double dx10 = particles[0].x - pi.x;
-            const double dy10 = particles[0].y - pi.y;
-            const double dz10 = particles[0].z - pi.z;
-            const double r210 = dx10*dx10 + dy10*dy10 + dz10*dz10;
-            const double r10 = sqrt(r210);
-            const double prefac = G*particles[0].m/(r210*r10);
-            
-            ax += prefac*dx10;
-            ay += prefac*dy10;
-            az += prefac*dz10;
-        }*/
-
 		const double a1_x = (mu*mu*dx/(r2*r2) - 3.*mu*v2*dx/(2.*r2*r))/(C*C);
 		const double a1_y = (mu*mu*dy/(r2*r2) - 3.*mu*v2*dy/(2.*r2*r))/(C*C);
 		const double a1_z = (mu*mu*dz/(r2*r2) - 3.*mu*v2*dz/(2.*r2*r))/(C*C);
@@ -93,47 +106,6 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
 		particles[i].az += a1_z-(va*vz + v2*az/2. + 3.*mu*(az*r-vz*rv/r)/r2)/(C*C);
     }	
 }
-/*void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
-    const struct rebx_params_gr* const params = gr->paramsPtr;
-    const double C = params->c;
-    const int source_index = params->source_index;
-    const int _N_real = sim->N - sim->N_var;
-    const double G = sim->G;
-    struct reb_particle* const particles = sim->particles;
-    const struct reb_particle source = sim->particles[source_index];
-    for (int i=0; i<_N_real; i++){
-        if(i == source_index){
-            continue;
-        }
-        const struct reb_particle p = sim->particles[i];
-        const double dx = p.x - source.x;
-        const double dy = p.y - source.y;
-        const double dz = p.z - source.z;
-        const double r2 = dx*dx + dy*dy + dz*dz;
-        const double _r = sqrt(r2);
-        const double dvx = p.vx - source.vx;
-        const double dvy = p.vy - source.vy;
-        const double dvz = p.vz - source.vz;
-        // Benitez and Gallardo 2008
-        const double alpha = G*source.m/(_r*_r*_r*C*C);
-        const double v2 = dvx*dvx + dvy*dvy + dvz*dvz;
-        const double beta = 4.*G*source.m/_r - v2;
-        const double gamma = 4.*(dvx*dx + dvy*dy + dvz*dz);
-
-        const double dax = alpha*(beta*dx + gamma*dvx);
-        const double day = alpha*(beta*dy + gamma*dvy);
-        const double daz = alpha*(beta*dz + gamma*dvz);
-        //const double massratio = particles[i].m/source.m;
-
-        particles[i].ax += dax;
-        particles[i].ay += day;
-        particles[i].az += daz;
-        //particles[source_index].ax -= massratio*dax;
-        //particles[source_index].ay -= massratio*day;
-        //particles[source_index].az -= massratio*daz;
-    }
-}
-*/
 
 double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_params_gr* const params){ 
     const double C = params->c;
