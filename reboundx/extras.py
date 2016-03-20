@@ -154,6 +154,20 @@ class Extras(Structure):
         clibreboundx.rebx_gr_hamiltonian.restype = c_double
         return clibreboundx.rebx_gr_hamiltonian(byref(sim), byref(params))
     
+    def gr_potential_hamiltonian(self, sim, params):
+        """
+        Calculates the value of the Hamiltonian from the particle states, when rebx_add_gr has been called.
+        This also includes the classical Newtonian Hamiltonian.
+
+        :param sim: REBOUND simulation.
+        :param params: parameters instance returned by add_gr_potential.
+        :type sim: rebound.Simulation
+        :type params: rebx_params_gr_potential
+        :rtype: float
+        """
+        clibreboundx.rebx_gr_potential_hamiltonian.restype = c_double
+        return clibreboundx.rebx_gr_potential_hamiltonian(byref(sim), byref(params))
+    
     def gr_full_hamiltonian(self, sim, params):
         """
         Calculates the value of the Hamiltonian from the particle states, when rebx_add_gr_full has been called.
