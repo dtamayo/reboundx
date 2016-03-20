@@ -79,7 +79,7 @@ double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, con
     const struct reb_particle source = particles[source_index];
 	const double mu = G*source.m;
     const double prefac = 3.*mu*mu/(C*C);
-    double H = 0.;
+    double H = reb_tools_energy(sim);
 
 	for (int i=0;i<_N_real;i++){
 		if(i == source_index){
