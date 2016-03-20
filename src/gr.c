@@ -118,7 +118,7 @@ double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct 
 	double e_kin = 0.;
 	double e_pot = 0.;
 	double e_pn  = 0.;
-	struct reb_particle source = particles[source_index];
+	const struct reb_particle source = particles[source_index];
 	for (int i=0;i<_N_real;i++){
 		struct reb_particle pi = particles[i];
 		if (i != source_index){

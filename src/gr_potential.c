@@ -41,7 +41,7 @@ struct rebx_params_gr_potential* rebx_add_gr_potential(struct rebx_extras* rebx,
 
 void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* gr){
     // Nobili & Roxburgh 1986
-    const struct rebx_params_gr* const params = gr->paramsPtr;
+    const struct rebx_params_gr_potential* const params = gr->paramsPtr;
     const double C = params->c;
     const int source_index = params->source_index;
     const int _N_real = sim->N - sim->N_var;
@@ -54,7 +54,7 @@ void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* gr)
         if(i == source_index){
             continue;
         }
-        const struct reb_particle p = sim->particles[i];
+        const struct reb_particle p = particles[i];
         const double dx = p.x - source.x;
         const double dy = p.y - source.y;
         const double dz = p.z - source.z;
@@ -64,6 +64,35 @@ void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* gr)
         particles[i].ax -= prefac*dx;
         particles[i].ay -= prefac*dy;
         particles[i].az -= prefac*dz;
+        //particles[source_index].ax += p.m/source.m*prefac*dx;
+        //particles[source_index].ay += p.m/source.m*prefac*dy;
+        //particles[source_index].az += p.m/source.m*prefac*dz;
     }
+}
+
+double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, const struct rebx_params_gr_potential* const params){ 
+    const double C = params->c;
+    const int source_index = params->source_index;
+	const struct reb_particle* const particles = sim->particles;
+	const int _N_real = sim->N - sim->N_var;
+	const double G = sim->G;
+    const struct reb_particle source = particles[source_index];
+	const double mu = G*source.m;
+    const double prefac = 3.*mu*mu/(C*C);
+    double H = 0.;
+
+	for (int i=0;i<_N_real;i++){
+		if(i == source_index){
+            continue;
+        }
+        struct reb_particle pi = particles[i];
+        double dx = pi.x - source.x;
+        double dy = pi.y - source.y;
+        double dz = pi.z - source.z;
+        double r2 = dx*dx + dy*dy + dz*dz;
+        H -= prefac*pi.m/r2;
+    }		
+	
+    return H;
 }
 
