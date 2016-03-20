@@ -265,6 +265,8 @@ double rebx_rad_calc_beta(struct rebx_extras* rebx, struct rebx_params_radiation
  */
 double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, struct rebx_params_radiation_forces* params, double beta, double density, double Q_pr, double L);
 
+double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, const struct rebx_params_gr_potential* const params);
+
 double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_params_gr* const params);
 
 double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, const struct rebx_params_gr_full* const params);
