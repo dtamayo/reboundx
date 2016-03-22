@@ -15,6 +15,7 @@ class Extras(Structure):
     def __init__(self, sim):
         clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
         sim._extras_ref = self # add a reference to this instance in sim to make sure it's not garbage collected
+        self.custom_effects = {} # dictionary to keep references to custom effects so they don't get garbage collected
 
     def __del__(self):
         if self._b_needsfree_ == 1:
@@ -50,7 +51,7 @@ class Extras(Structure):
         :rtype: rebx_params_gr
         """
         clibreboundx.rebx_add_gr.restype = POINTER(rebx_params_gr)
-        return clibreboundx.rebx_add_gr(byref(self), c_int(source_index), c_double(c)).contents # Sets source to particles[0] in C code when passed NULL (=None)
+        return clibreboundx.rebx_add_gr(byref(self), c_int(source_index), c_double(c)).contents
     
     def add_gr_full(self, c=C_DEFAULT):
         """
@@ -95,7 +96,37 @@ class Extras(Structure):
         :rtype: None
         """
         clibreboundx.rebx_add_modify_mass(byref(self))
+
+    def add_custom_force(self, function, force_is_velocity_dependent):
+        """
+        This function allows you to add your own custom python function to REBOUNDx that updates particle accelerations.  
+        You need to use this if you want to both use your own custom functions and the built-in REBOUNDx effects.  
+        See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for details and a tutorial on how to use it.
+
+        :param function: Custom Python function for updating particle accelerations.
+        :param force_is_velocity_dependent: Whether your custom force depends on the particle velocities.
+        :type function: Function
+        :type c: bool
+        :rtype: None
+        """
+        REBX_FUNCTION = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))
+        self.custom_effects[function.__name__] = REBX_FUNCTION(function) # store a ref so it doesn't get garbage collected
+        clibreboundx.rebx_add_custom_force(byref(self), self.custom_effects[function.__name__], force_is_velocity_dependent, None) # set custom_params ptr to NULL (not supported in python version)
     
+    def add_custom_post_timestep_modification(self, function):
+        """
+        This function allows you to add your own custom python function to REBOUNDx that is executed between integrator timesteps.
+        You need to use this if you want to both use your own custom functions and the built-in REBOUNDx effects.  
+        See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for details and a tutorial on how to use it.
+
+        :param function: Custom Python function to be executed between timesteps.
+        :type function: Function
+        :rtype: None
+        """
+        REBX_FUNCTION = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))
+        self.custom_effects[function.__name__] = REBX_FUNCTION(function) # store a ref so it doesn't get garbage collected
+        clibreboundx.rebx_add_custom_post_timestep_modification(byref(self), self.custom_effects[function.__name__], None) # set custom_params ptr to NULL (not supported in python version)
+
     #######################################
     # Convenience Functions
     #######################################
