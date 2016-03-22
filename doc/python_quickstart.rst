@@ -96,3 +96,8 @@ When you're done setting up the modifications you want, you just run your REBOUN
 
 Probably the quickest way to get up and running is to modify an existing example for your effect.
 You can find links to the appropriate examples here: :ref:`effects`.
+
+**Note that REBOUNDx is an all-or-nothing proposition.  Either you use it for all additional effects, or none.  
+If you use REBOUNDx and then try to set sim.additional_forces with your own custom Python routine, you will overwrite the function pointer that REBOUNDx is using under the hood.
+We therefore provide functions for adding your own custom effects within REBOUNDx itself.
+Follow the `Custom_effects.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb>`_ tutorial for how to do this.**  
