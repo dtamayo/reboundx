@@ -63,3 +63,8 @@ You can find links to the appropriate examples here: :ref:`effects`.
 You can find the example files in the ``reboundx/examples`` folder.
 
 Even if you are using the C version, you might also take a look at the python example links at :ref:`effects`, as the iPython notebooks nicely incorporate text and they therefore have a bit longer discussions about the physical details for each effect.
+
+**Note that REBOUNDx is an all-or-nothing proposition.  Either you use it for all additional effects, or none.  
+If you use REBOUNDx and then try to set sim.additional_forces with your own custom Python routine, you will overwrite the function pointer that REBOUNDx is using under the hood.
+We therefore provide functions for adding your own custom effects within REBOUNDx itself.
+Follow the :ref:`c_example_custom_ptm` tutorial for how to do this.**  
