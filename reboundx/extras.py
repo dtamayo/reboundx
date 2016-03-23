@@ -1,4 +1,4 @@
-from . import clibreboundx, CustomEffectError
+from . import clibreboundx
 from ctypes import Structure, c_double, POINTER, c_int, c_uint, c_long, c_ulong, c_void_p, c_char_p, CFUNCTYPE, byref, c_uint32, cast
 import rebound
 import reboundx
@@ -16,7 +16,6 @@ class Extras(Structure):
     def __init__(self, sim):
         #first check whether additional_forces or post_timestep_modifications is set on sim.  If so, raise error
         if cast(sim._additional_forces, c_void_p).value is not None or cast(sim._post_timestep_modifications, c_void_p).value is not None:
-            pass
             raise AttributeError("sim.additional_forces or sim.post_timestep_modifications was already set.  If you want to use REBOUNDx, you need to add custom effects through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.")
         
         clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
