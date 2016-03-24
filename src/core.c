@@ -26,6 +26,7 @@
 /* Main routines called each timestep. */
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include <string.h>
 #include "core.h"
@@ -42,6 +43,7 @@ const char* rebx_version_str = "2.8.1";         // **VERSIONLINE** This line get
 struct rebx_extras* rebx_init(struct reb_simulation* sim){  // reboundx.h
     if(sim->additional_forces || sim->post_timestep_modifications){
         fprintf(stderr,"ERROR: sim->additional_forces or sim->post_timestep_modifications was already set.  If you want to use REBOUNDx, you need to add custom effects through REBOUNDx.  See http://reboundx.readthedocs.org/en/latest/c_examples.html#adding-custom-post-timestep-modifications-and-forces for a tutorial.");
+        exit(1);
     }
 
     struct rebx_extras* rebx = malloc(sizeof(*rebx));
