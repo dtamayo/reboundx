@@ -64,16 +64,17 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
         aoverm10y = prefac*dy;
         aoverm10z = prefac*dz;
     }
-    
+	
+    const struct reb_particle source = particles[source_index];
     for (int i=0; i<_N_real; i++){
         if(i == source_index){
             continue;
         }
 		const struct reb_particle pi = particles[i];
 		
-		const double dx = pi.x;
-		const double dy = pi.y;
-		const double dz = pi.z;
+		const double dx = pi.x - source.x;
+		const double dy = pi.y - source.y;
+		const double dz = pi.z - source.z;
 		const double r2 = dx*dx + dy*dy + dz*dz;
 		const double r = sqrt(r2);
 		const double vx = pi.vx;
@@ -100,10 +101,18 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
 
 		const double va = vx*ax + vy*ay + vz*az;
 		const double rv = dx*vx + dy*vy + dz*vz;
-		
-		particles[i].ax += a1_x-(va*vx + v2*ax/2. + 3.*mu*(ax*r-vx*rv/r)/r2)/(C*C);
-		particles[i].ay += a1_y-(va*vy + v2*ay/2. + 3.*mu*(ay*r-vy*rv/r)/r2)/(C*C);
-		particles[i].az += a1_z-(va*vz + v2*az/2. + 3.*mu*(az*r-vz*rv/r)/r2)/(C*C);
+	
+        ax = a1_x-(va*vx + v2*ax/2. + 3.*mu*(ax*r-vx*rv/r)/r2)/(C*C);
+        ay = a1_y-(va*vy + v2*ay/2. + 3.*mu*(ay*r-vy*rv/r)/r2)/(C*C);
+        az = a1_z-(va*vz + v2*az/2. + 3.*mu*(az*r-vz*rv/r)/r2)/(C*C);
+
+		particles[i].ax += ax;
+		particles[i].ay += ay; 
+		particles[i].az += az;
+		particles[source_index].ax -= pi.m/source.m*ax; 
+		particles[source_index].ay -= pi.m/source.m*ay; 
+		particles[source_index].az -= pi.m/source.m*az; 
+
     }	
 }
 
@@ -122,9 +131,9 @@ double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct 
 	for (int i=0;i<_N_real;i++){
 		struct reb_particle pi = particles[i];
 		if (i != source_index){
-			double dx = pi.x;
-			double dy = pi.y;
-			double dz = pi.z;
+			double dx = pi.x - source.x;
+			double dy = pi.y - source.y;
+			double dz = pi.z - source.z;
 			double r2 = dx*dx + dy*dy + dz*dz;
 			double r = sqrt(r2);
 
