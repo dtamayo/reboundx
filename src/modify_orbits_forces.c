@@ -48,10 +48,10 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_eff
     struct reb_particle com;
     switch(params->coordinates){
     case JACOBI:
-        com = reb_get_jacobi_com(&sim->particles[N_real-1]);    // We start with outermost particle, so get its jacobi COM
+        com = reb_get_com(sim);                     // We start with outermost particle, so start with COM and peel off particles
         break;
     case BARYCENTRIC:
-        com = reb_get_com(sim);                           // COM of whole system
+        com = reb_get_com(sim);                     // COM of whole system
         break;
     case HELIOCENTRIC:
         com = sim->particles[0];                    // Use the central body as the reference
@@ -62,9 +62,11 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_eff
     }
 
     struct reb_particle* p0 = &sim->particles[0];
-
     for(int i=N_real-1;i>0;--i){
         struct reb_particle* p = &sim->particles[i];
+        if(params->coordinates == JACOBI){
+            rebxtools_update_com_without_particle(&com, p);
+        }
         double tau_a = rebx_get_param_double(p, "tau_a");
         double tau_e = rebx_get_param_double(p, "tau_e");
         double tau_inc = rebx_get_param_double(p, "tau_inc");
@@ -108,13 +110,7 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_eff
         p->ax += ax;
         p->ay += ay;
         p->az += az;
-        p0->ax -= p->m/p0->m*ax;    // add back reactions onto central body 
-        p0->ay -= p->m/p0->m*ay;
-        p0->az -= p->m/p0->m*az;
-
-        if(params->coordinates == JACOBI){
-            rebxtools_update_com_without_particle(&com, p);
-        }
     }
+    reb_move_to_com(sim);
 }
 
