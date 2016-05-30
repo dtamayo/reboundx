@@ -1,3 +1,10 @@
+libreboundx: 
+	$(MAKE) -C src 
+	@ln -f -s src/libreboundx.so .
+	@if [ "$(MAKELEVEL)" -eq "0" ]; then echo "To compile the example problems, go to a subdirectory of examples/ and execute make there."; fi
+	
+all: libreboundx
+
 clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C doc clean
