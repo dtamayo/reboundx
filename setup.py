@@ -1,28 +1,35 @@
-try:
-    from setuptools import setup, Extension
-except ImportError:
-    from distutils.core import setup, Extension
 from codecs import open
 import os
 import inspect
 import sys 
-
-from setuptools.command.build_ext import build_ext as _build_ext
-
 import sysconfig
+
+try:
+    from setuptools import setup, Extension
+    from setuptools.command.build_ext import build_ext as _build_ext
+except ImportError:
+    print("Installing REBOUNDx requires setuptools.  Do 'pip install setuptools'.")
+    sys.exit(1)
+
 suffix = sysconfig.get_config_var('EXT_SUFFIX')
 if suffix is None:
     suffix = ".so"
 
-
-
 class build_ext(_build_ext):
     def finalize_options(self):
         _build_ext.finalize_options(self)
-        import rebound
-        if LooseVersion(rebound.__version__) < LooseVersion("2.12.1"): # Only after 2.12.1 can you link to librebound.so 
-            print("REBOUNDx requires REBOUND version > 2.12.1.  Please upgrade.  See 5.3 in http://rebound.readthedocs.org/en/latest/python_quickstart.html")
+
+        try:
+            import rebound
+        except ImportError:
+            print("REBOUNDx did not automatically install REBOUND.  Please let me know if this happens (tamayo.daniel@gmail.com), and try first installing REBOUND (http://rebound.readthedocs.org/en/latest/python_quickstart.html")
             sys.exit(1)
+        try:
+            version = rebound.__version__ # Added in 2.12.1
+        except AttributeError:
+            print("REBOUNDx did not automatically install a recent enough version of REBOUND.  Please let me know if this happens (tamayo.daniel@gmail.com), and try upgrading REBOUND.  See 5.3 in http://rebound.readthedocs.org/en/latest/python_quickstart.html")
+            sys.exit(1)
+
         rebdir = os.path.dirname(inspect.getfile(rebound))
         self.include_dirs.append(rebdir)
         self.library_dirs.append(rebdir+'/../')
@@ -30,16 +37,14 @@ class build_ext(_build_ext):
             ext.runtime_library_dirs.append(rebdir+'/../')
             ext.extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
 
-
 from distutils.version import LooseVersion
-
 
 extra_link_args=[]
 if sys.platform == 'darwin':
     from distutils import sysconfig
     vars = sysconfig.get_config_vars()
     vars['LDSHARED'] = vars['LDSHARED'].replace('-bundle', '-shared')
-    extra_link_args=['-Wl,-install_name,@rpath/libreboundx'+suffix]
+    extra_link_args.append('-Wl,-install_name,@rpath/libreboundx'+suffix)
 
 libreboundxmodule = Extension('libreboundx',
                     sources = [ 'src/core.c', 'src/gr.c', 'src/gr_full.c', 'src/gr_potential.c', 'src/modify_mass.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/radiation_forces.c', 'src/rebxtools.c'],
@@ -57,7 +62,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='reboundx',
-    version='2.7.0',
+    version='2.8.4',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
     url='http://github.com/dtamayo/reboundx',
@@ -88,8 +93,8 @@ setup(name='reboundx',
     keywords='astronomy astrophysics nbody integrator',
     packages=['reboundx'],
     cmdclass={'build_ext':build_ext},
-    setup_requires=['rebound>=2.12.0'],
-    install_requires=['rebound>=2.12.0'],
+    setup_requires=['rebound>=2.13.6'],
+    install_requires=['rebound>=2.13.6'],
     tests_require=["numpy","matplotlib"],
     test_suite="reboundx.test",
     ext_modules = [libreboundxmodule],

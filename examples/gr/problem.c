@@ -15,6 +15,9 @@
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
 
+    //sim->integrator = REB_INTEGRATOR_WHFAST;
+    sim->dt = 1.e-8;
+
     struct reb_particle p = {0}; 
     p.m     = 1.;   
     reb_add(sim, p); 

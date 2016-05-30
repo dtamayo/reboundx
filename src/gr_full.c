@@ -39,7 +39,7 @@ struct rebx_params_gr_full* rebx_add_gr_full(struct rebx_extras* rebx, double c)
 }
 
 void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr){
-    const struct rebx_params_gr* const params = gr->paramsPtr;
+    const struct rebx_params_gr_full* const params = gr->paramsPtr;
     const double C = params->c;
     const int _N_real = sim->N - sim->N_var;
     const double G = sim->G;
@@ -162,7 +162,6 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
     }
     //fprintf(stderr,"%.16e\t%.16e\n",particles[1].ax, a_newton[1][0]);
 
-
     // Now running the substitution again and again through the loop below
     for (int k=0; k<10; k++){ // you can set k as how many substitution you want to make
         double a_old[_N_real][3]; // initialize an arry that stores the information of previousu calculated accleration
@@ -217,11 +216,90 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
     }
     // update acceleration in particles
     for (int i = 0; i <_N_real;i++){
-        particles[i].ax += a_new[i][0] - a_newton[i][0]; // substract newtonian term off since WHFAST would add it on later
+        particles[i].ax += a_new[i][0] - a_newton[i][0]; // substract newtonian term off since gravity routine already put it in
         particles[i].ay += a_new[i][1] - a_newton[i][1];
         particles[i].az += a_new[i][2] - a_newton[i][2];
     }
                     
+}
+
+double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, const struct rebx_params_gr_full* const params){
+    const double C = params->c;
+    const int _N_real = sim->N - sim->N_var;
+    const double G = sim->G;
+    struct reb_particle* const particles = sim->particles;
+
+	double e_kin = 0.;
+	double e_pot = 0.;
+	double e_pn  = 0.;
+	for (int i=0;i<_N_real;i++){
+		struct reb_particle pi = particles[i];
+		// Calculate p starts
+        double pix=0.;
+        double piy=0.;
+        double piz=0.;
+
+        double sumk = 0.;
+        for (int k=0;k<_N_real;k++){
+            if (k!=i){
+                struct reb_particle pk = particles[k];
+                double xik = pk.x - pi.x;
+                double yik = pk.y - pi.y;
+                double zik = pk.z - pi.z;
+                double rik = sqrt(xik*xik + yik*yik + zik*zik);
+                sumk -= 2.*G*pk.m/rik;
+            }
+        }
+        
+        double vi2 = pi.vx*pi.vx + pi.vy*pi.vy + pi.vz*pi.vz;
+        double fac = pi.m*(1. + 0.5*vi2/C/C);
+
+		for (int j=0;j<_N_real;j++){
+			if (j != i){
+				struct reb_particle pj = particles[j];
+                double xij = pj.x - pi.x;
+                double yij = pj.y - pi.y;
+                double zij = pj.z - pi.z;
+                double rij2 = xij*xij + yij*yij + zij*zij;
+                double rij = sqrt(rij2);
+                double rijdotvj = pj.vx*xij + pj.vy*yij + pj.vz*zij;
+                double pfac = pi.m*pj.m/rij;
+
+                pix += pfac*(6.*pi.vx - 7.*pj.vx - rijdotvj*xij/rij2);
+                piy += pfac*(6.*pi.vy - 7.*pj.vy - rijdotvj*yij/rij2);
+                piz += pfac*(6.*pi.vz - 7.*pj.vz - rijdotvj*zij/rij2);
+
+                double rijdotvi = pi.vx*xij + pi.vy*yij + pi.vz*zij;
+                double vidotvj = pi.vx*pj.vx + pi.vy*pj.vy + pi.vz*pj.vz;
+                
+                e_pn -= G/(4.*C*C)*pi.m*pj.m/rij*(6.*vi2 - 7*vidotvj - rijdotvi*rijdotvj/rij2 + sumk);
+            }
+        }
+
+        pix *= G/(2.*C*C);
+        piy *= G/(2.*C*C);
+        piz *= G/(2.*C*C);
+        
+        pix += pi.vx*fac;
+        piy += pi.vy*fac;
+        piz += pi.vz*fac;
+        // Calculate p ends
+     
+        double pi2 = pix*pix + piy*piy + piz*piz;
+        e_kin += pi2/(2.*pi.m);
+        e_pn -= pi.m/(8.*C*C)*vi2*vi2;
+
+        for (int j=i+1; j<_N_real; j++){ // classic potential
+			struct reb_particle pj = particles[j];
+			double dx = pi.x - pj.x;
+			double dy = pi.y - pj.y;
+			double dz = pi.z - pj.z;	
+			double r = sqrt(dx*dx + dy*dy + dz*dz);
+
+			e_pot -= G*pi.m*pj.m/r;
+		}
+	}
+	return e_kin + e_pot + e_pn;
 }
 
 

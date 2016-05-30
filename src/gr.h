@@ -27,6 +27,7 @@
 
 struct reb_simulation;
 struct rebx_effect;
+struct rebx_params_gr;
 
 void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* effect);
 
