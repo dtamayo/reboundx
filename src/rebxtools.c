@@ -140,37 +140,35 @@ void rebxtools_orbit2p(double G, struct reb_particle* p, struct reb_particle* pr
     }
 }
 
-static const struct reb_particle reb_particle_nan = {.x = NAN, .y = NAN, .z = NAN, .vx = NAN, .vy = NAN, .vz = NAN, .ax = NAN, .ay = NAN, .az = NAN, .m = NAN, .r = NAN, .lastcollision = NAN, .c = NULL, .id = -1, .ap = NULL, .sim = NULL};
-
 void rebxtools_orbit_to_particle(double G, struct reb_particle* p, struct reb_particle* primary, double a, double e, double inc, double Omega, double omega, double f, int* err){
     *err = 0;
     if(e == 1.){
         *err = 1;       // Can't initialize a radial orbit with orbital elements.
-        *p = reb_particle_nan;
+        *p = reb_particle_nan();
         return;
     }
     if(e < 0.){
         *err = 2;       // Eccentricity must be greater than or equal to zero.
-        *p = reb_particle_nan;
+        *p = reb_particle_nan();
         return;
     }
     if(e > 1.){
         if(a > 0.){
             *err = 3;   // Bound orbit (a > 0) must have e < 1. 
-            *p = reb_particle_nan;
+            *p = reb_particle_nan();
             return;
         }
     }
     else{
         if(a < 0.){
             *err =4;    // Unbound orbit (a < 0) must have e > 1.
-            *p = reb_particle_nan;
+            *p = reb_particle_nan();
             return;
         }
     }
     if(e*cos(f) < -1.){
         *err = 5;       // Unbound orbit can't have f set beyond the range allowed by the asymptotes set by the parabola.
-        *p = reb_particle_nan;
+        *p = reb_particle_nan();
         return;
     }
 
