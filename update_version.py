@@ -4,7 +4,7 @@ import glob
 
 with open("version.txt") as f:
     reboundxversion = f.readlines()[0].strip()
-    print "Updating version to "+reboundxversion
+    print("Updating version to "+reboundxversion)
 
 with open("doc/index.rst") as f:
     index = f.readlines()
