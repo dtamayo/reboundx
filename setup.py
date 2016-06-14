@@ -2,7 +2,7 @@ from codecs import open
 import os
 import inspect
 import sys 
-import sysconfig
+from distutils import sysconfig
 
 try:
     from setuptools import setup, Extension
