@@ -47,6 +47,8 @@ def monkeyset(self, name, value):
         
 def monkeyget(self, name):
     if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
+        if self._sim.contents.extras is None:
+            raise AttributeError("Can only access additional properties of particles that are in a rebound.Simulation, and you need to attach a reboundx Extras instance to the simulation before doing so.")
         # check param in c
         clibreboundx.rebx_get_param_double.restype = c_double
         return clibreboundx.rebx_get_param_double(byref(self), c_char_p(name.encode('utf-8')))
