@@ -39,7 +39,7 @@ import rebound
 def monkeyset(self, name, value):
     if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
         if self._sim.contents.extras is None:
-            raise AttributeError("Need to attach a reboundx Extras instance to the simulation before adding properties to particles")
+            raise AttributeError("Only particles in a rebound.Simulation can have properties attached to them, and you need to attach a reboundx Extras instance to the simulation before doing so.")
         # create new param in c
         clibreboundx.rebx_set_param_double(byref(self), c_char_p(name.encode('utf-8')), c_double(value))
     else:
