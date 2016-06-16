@@ -22,8 +22,8 @@ class Extras(Structure):
         sim._extras_ref = self # add a reference to this instance in sim to make sure it's not garbage collected
         self.custom_effects = {} # dictionary to keep references to custom effects so they don't get garbage collected
 
-        for p in sim.particles:
-            p.ap = None
+        for i in range(sim.N):
+            sim.particles[i].ap = None
 
     def __del__(self):
         if self._b_needsfree_ == 1:
