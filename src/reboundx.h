@@ -105,6 +105,13 @@ struct rebx_params_radiation_forces {
  * @return Returns a pointer to a rebx_extras structure, which holds all the information REBOUNDx needs.
  */
 struct rebx_extras* rebx_init(struct reb_simulation* sim);
+
+/**
+ * @brief Disattaches REBOUNDx instance from simulation and resets simulation's function pointers.
+ * @param sim Pointer to the simulation from which to remove REBOUNDx
+ */
+void rebx_remove_from_simulation(struct reb_simulation* sim);
+
 /**
  * @brief Frees all memory allocated by REBOUNDx instance.
  * @details Should be called after simulation is done if memory is a concern.
