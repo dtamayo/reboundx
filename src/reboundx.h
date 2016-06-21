@@ -213,19 +213,19 @@ void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct
  */
 
 /**
- * @brief Sets a parameter of type double for a particular particle.
- * @param p Pointer to the particle in the simulation to which we want to add the parameter.
- * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org)
+ * @brief Sets a parameter of type double for a parameter in a linked list of rebx_params.
+ * @param p Pointer to the head of the rebx_param linked list where we want to add or edit a parameter.
+ * @param ap_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org)
  * @param value Value to which we want to set the parameter.
  */
-void rebx_set_param_double(struct reb_particle* p, const char* param_name, double value);
+void rebx_set_ap_double(struct rebx_extras* rebx, struct rebx_param* ap, const char* ap_name, double value);
 
 /**
- * @brief Gets the parameter value of a particular particle.
- * @param p Pointer to the particle we want the parameter value for.
- * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
+ * @brief Gets a parameter value from a rebx_param linked list.
+ * @param p Pointer to the head of the rebx_param linked list to search.
+ * @param ap_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  */
-double rebx_get_param_double(struct reb_particle* p, const char* param_name);
+double rebx_get_ap_double(struct rebx_param* ap, const char* ap_name);
 
 /** @} */
 /** @} */
