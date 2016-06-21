@@ -33,7 +33,11 @@ int main(int argc, char* argv[]){
     reb_move_to_com(sim);
     
     struct rebx_extras* rebx = rebx_init(sim);
-    double c = C_DEFAULT;   // Have to set the speed of light in appropriate units (set by G and your initial conditions).  Here we use the value in default units of AU/(yr/2pi) 
+    rebx_effect gr = rebx_add_effect(rebx, "gr");
+    rebx_set_ap_double(rebx, gr->ap, "c", C_DEFAULT);   // Have to set the speed of light in appropriate units (set by G and your initial conditions).  Here we use the value in default units of AU/(yr/2pi) 
+    rebx_set_ap_int(rebx, sim.particles[0].ap, "gr_source", 1);
+    
+    double c = C_DEFAULT;   
     int source_index = 0;   // Index of the massive particle that is the source of the post-newtonian corrections
     rebx_add_gr(rebx, source_index, c); 
     /*See reboundx.readthedocs.org for more options.*/
