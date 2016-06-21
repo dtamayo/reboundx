@@ -63,6 +63,11 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
  Garbage Collection Routines
  ****************************/
 
+void rebx_remove_from_simulation(struct reb_simulation* sim){
+    sim->additional_forces = NULL;
+    sim->post_timestep_modifications = NULL;
+}
+
 void rebx_free(struct rebx_extras* rebx){                   // reboundx.h
     rebx_free_params(rebx);
     rebx_free_effects(rebx);
