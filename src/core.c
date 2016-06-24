@@ -29,8 +29,13 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <limits.h>
 #include "core.h"
 #include "rebound.h"
+#include "gr.h"
+#include "gr_potential.h"
+
+#define REBX_EFFECT 42
 
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
 const char* rebx_version_str = "2.8.7";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
@@ -125,21 +130,34 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
  Adders for linked lists in extras structure
  *********************************************/
 
-void rebx_add_effect(struct rebx_extras* rebx, const char* name){
+struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name){
     struct rebx_effect* effect = malloc(sizeof(*effect));
+    
+    effect->object_type = reb_tools_hash("rebx_effect");
+    effect->ap = NULL;
+    effect->force = NULL;
+    effect->ptm = NULL;
+    effect->rebx = rebx;
+    
+    struct reb_simulation* sim = rebx->sim;
+    uint32_t hash = reb_tools_hash(name);
+
+    if(hash == reb_tools_hash("gr")){
+        sim->force_is_velocity_dependent = 1;
+        effect->force = rebx_gr;
+    }
+    /*else if (hash == reb_tools_hash("gr_potential")){
+        effect->force = rebx_gr_potential;
+    }*/
+    else{
+        fprintf(stderr, "Effect not found.\n");
+        exit(1);
+    }
+    
     effect->next = rebx->effects;
     rebx->effects = effect;
     
-    struct reb_simulation* sim = rebx->sim;
-    switch(reb_tools_hash(name)){
-        case reb_tools_hash("gr"):
-            sim->force_is_velocity_dependent = 1;
-            effect.force = rebx_gr;
-            break;
-        default:
-            fprintf(stderr, "Effect not found.\n");
-            exit(1);
-    }
+    return effect;
 }
     
 void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param){
@@ -153,8 +171,28 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
 /*********************************************************************************
  General particle parameter getter
  ********************************************************************************/
+// Internal function that casts void* to rebx_effect* if indeed a rebx_effect.
+static struct rebx_effect* rebx_get_effect(const void* const object){
+    struct rebx_effect* effect = (struct rebx_effect*)object;
+    if (effect->object_type == reb_tools_hash("rebx_effect")){
+        return effect;
+    }
+    else{
+        return NULL;
+    }
+}
 
-void* rebx_get_ap_hash(struct rebx_param current, uint32_t hash){
+void* rebx_get_param_hash(const void* const object, uint32_t hash){
+    struct rebx_param* current;
+    struct rebx_effect* effect = rebx_get_effect(object);
+    if(effect != NULL){
+        current = effect->ap;
+    }
+    else{
+        struct reb_particle* p = (struct reb_particle*)object;
+        current = p->ap;
+    }
+    
     while(current != NULL){
         if(current->hash == hash){
             return current->paramPtr;
@@ -164,45 +202,108 @@ void* rebx_get_ap_hash(struct rebx_param current, uint32_t hash){
     return NULL;
 }
 
+
+
 /*********************************************************************************
  Getters and Setters for particle parameters (need new set for each variable type)
  ********************************************************************************/
 
-void rebx_set_ap_double(struct rebx_extras* rebx, struct rebx_param* ap, const char* ap_name, double value){
-    uint32_t hash = reb_tools_hash(ap_name);
-    rebx_set_ap_double_hash(rebx, ap, hash, value);
+/*double rebx_get_param_double(const void* const object, const char* param_name){
+    uint32_t hash = reb_tools_hash(param_name);
+    double* ptr = rebx_get_param_hash(object, hash);
+    if(ptr == NULL){
+        return nan("");
+    }else{
+        return *ptr;
+    }
+}*/
+
+int rebx_get_param_double(const void* const object, const char* const param_name, double* ptr){
+    uint32_t hash = reb_tools_hash(param_name);
+    void* voidptr = rebx_get_param_hash(object, hash);
+    if (voidptr == NULL){
+        return 0;
+    }
+    else{
+        *ptr = *(double *)voidptr;
+        return 1;
+    }
 }
 
-void rebx_set_ap_double_hash(struct rebx_extras* rebx, struct rebx_param* ap, uint32_t hash, double value){
-    double* ptr = rebx_get_param_hash(ap, hash);
+void rebx_set_param_double(void* object, const char* param_name, double value){
+    uint32_t hash = reb_tools_hash(param_name);
+    double* ptr = rebx_get_param_hash(object, hash);
     if(ptr == NULL){
-        ptr = rebx_add_ap_double(rebx, ap, hash);   // add a new parameter if it doesn't exist
+        ptr = rebx_add_param_double(object, hash);  // add a new parameter if it doesn't exist
+    }
     *ptr = value;                                   // update existing value
 }
 
-double* rebx_add_ap_double(struct rebx_extras* rebx, struct rebx_param* ap, uint32_t hash){
+double* rebx_add_param_double(void* object, uint32_t hash){
     struct rebx_param* newparam = malloc(sizeof(*newparam));
     newparam->paramPtr = malloc(sizeof(double));
     newparam->hash = hash;
 
-    newparam->next = ap;
-    ap = newparam;
+    struct rebx_extras* rebx;
+    struct rebx_effect* effect = rebx_get_effect(object);
+    if(effect != NULL){
+        newparam->next = effect->ap;
+        effect->ap = newparam;
+        rebx = effect->rebx;
+    }
+    else{
+        struct reb_particle* p = (struct reb_particle*)object;
+        newparam->next = p->ap;
+        p->ap = newparam;
+        rebx = p->sim->extras;
+    }
+    
     rebx_add_param_to_be_freed(rebx, newparam);
-    return newparam;
-}   
-
-double rebx_get_ap_double(struct rebx_param* ap, const char* ap_name){
-    uint32_t hash = reb_tools_hash(ap_name);
-    return rebx_get_ap_double_hash(p, hash);
+    return newparam->paramPtr;
 }
 
-double rebx_get_ap_double_hash(struct rebx_param* ap, uint32_t hash){
-    double* ptr = rebx_get_param_hash(p, hash);
-    if(ptr == NULL){
-        return NAN;
-    }else{
-        return *ptr;
+int rebx_get_param_int(const void* const object, const char* const param_name, int* ptr){
+    uint32_t hash = reb_tools_hash(param_name);
+    void* voidptr = rebx_get_param_hash(object, hash);
+    if (voidptr == NULL){
+        return 0;
     }
+    else{
+        *ptr = *(int *)voidptr;
+        return 1;
+    }
+}
+
+void rebx_set_param_int(void* object, const char* param_name, int value){
+    uint32_t hash = reb_tools_hash(param_name);
+    int* ptr = rebx_get_param_hash(object, hash);
+    if(ptr == NULL){
+        ptr = rebx_add_param_int(object, hash);  // add a new parameter if it doesn't exist
+    }
+    *ptr = value;                                   // update existing value
+}
+
+int* rebx_add_param_int(void* object, uint32_t hash){
+    struct rebx_param* newparam = malloc(sizeof(*newparam));
+    newparam->paramPtr = malloc(sizeof(int));
+    newparam->hash = hash;
+    
+    struct rebx_extras* rebx;
+    struct rebx_effect* effect = rebx_get_effect(object);
+    if(effect != NULL){
+        newparam->next = effect->ap;
+        effect->ap = newparam;
+        rebx = effect->rebx;
+    }
+    else{
+        struct reb_particle* p = (struct reb_particle*)object;
+        newparam->next = p->ap;
+        p->ap = newparam;
+        rebx = p->sim->extras;
+    }
+    
+    rebx_add_param_to_be_freed(rebx, newparam);
+    return newparam->paramPtr;
 }
 
 /***********************************************************************************

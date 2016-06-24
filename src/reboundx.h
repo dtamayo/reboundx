@@ -214,19 +214,22 @@ void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct
 
 /**
  * @brief Sets a parameter of type double for a parameter in a linked list of rebx_params.
- * @param p Pointer to the head of the rebx_param linked list where we want to add or edit a parameter.
- * @param ap_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org)
+ * @param ap Pointer to the head of the rebx_param linked list where we want to add or edit a parameter.
+ * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org)
  * @param value Value to which we want to set the parameter.
  */
-void rebx_set_ap_double(struct rebx_extras* rebx, struct rebx_param* ap, const char* ap_name, double value);
+void rebx_set_param_double(void* object, const char* param_name, double value);
 
 /**
  * @brief Gets a parameter value from a rebx_param linked list.
- * @param p Pointer to the head of the rebx_param linked list to search.
- * @param ap_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
+ * @param ap Pointer to the head of the rebx_param linked list to search.
+ * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  */
-double rebx_get_ap_double(struct rebx_param* ap, const char* ap_name);
-
+//double rebx_get_param_double(const void* const object, const char* param_name);
+int rebx_get_param_double(const void* const object, const char* const param_name, double* ptr);
+int rebx_get_param_int(const void* const object, const char* const param_name, int* ptr);
+//int rebx_get_param_int(const void* const object, const char* param_name);
+void rebx_set_param_int(void* object, const char* param_name, int value);
 /** @} */
 /** @} */
 
@@ -274,10 +277,11 @@ double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, con
 
 /**
  * @brief Calculates the hamiltonian for gr, including the classical Hamiltonian.
+ * @details Assumes there is only one source particle (with gr_source set to 1)
  * @param sim pointer to the REBOUND simulation
- * @param params parameters structure returned by add_gr.
+ * @param effect structure returned by rebx_add_effect.
  */
-double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_params_gr* const params);
+double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr);
 
 /**
  * @brief Calculates the hamiltonian for gr_full, including the classical Hamiltonian.

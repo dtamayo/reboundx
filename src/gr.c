@@ -26,29 +26,35 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <limits.h>
 #include "gr.h"
 #include "rebound.h"
 #include "reboundx.h"
 
-struct rebx_params_gr* rebx_add_gr(struct rebx_extras* rebx, int source_index, double c){
-	struct rebx_params_gr* params = malloc(sizeof(*params));
-	params->c = c;
-    params->source_index = source_index;
-    int force_is_velocity_dependent = 1;
-    rebx_add_force(rebx, params, "gr", rebx_gr, force_is_velocity_dependent);
-    return params;
+void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){ // First find gr sources
+    const int N_real = sim->N - sim->N_var;
+    struct reb_particle* const particles = sim->particles;
+    int gr_source;
+    for (int i=0; i<N_real; i++){
+        if (rebx_get_param_int(&particles[i], "gr_source", &gr_source)){
+            rebx_calculate_gr(sim, gr, i);
+        }
+    }
 }
 
-void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
-    const struct rebx_params_gr* const params = gr->paramsPtr;
-    const double C = params->c;
-    const int source_index = params->source_index;
-    const int _N_real = sim->N - sim->N_var;
+void rebx_calculate_gr(struct reb_simulation* const sim, const struct rebx_effect* const gr, const int source_index){
+    double c;
+    if (!rebx_get_param_double(gr, "c", &c)){
+        fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
+        exit(1);
+    }
+    const double C2 = c*c;
+    const int N_real = sim->N - sim->N_var;
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
-	const double mu = G*particles[source_index].m;
     const unsigned int _gravity_ignore_10 = sim->gravity_ignore_10;
     
+	const double mu = G*particles[source_index].m;
     double aoverm10x, aoverm10y, aoverm10z;
 
     if (_gravity_ignore_10){
@@ -66,7 +72,7 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
     }
 	
     const struct reb_particle source = particles[source_index];
-    for (int i=0; i<_N_real; i++){
+    for (int i=0; i<N_real; i++){
         if(i == source_index){
             continue;
         }
@@ -95,16 +101,16 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
             az -= particles[1].m*aoverm10z;
         }
         
-		const double a1_x = (mu*mu*dx/(r2*r2) - 3.*mu*v2*dx/(2.*r2*r))/(C*C);
-		const double a1_y = (mu*mu*dy/(r2*r2) - 3.*mu*v2*dy/(2.*r2*r))/(C*C);
-		const double a1_z = (mu*mu*dz/(r2*r2) - 3.*mu*v2*dz/(2.*r2*r))/(C*C);
+        const double a1_x = (mu*mu*dx/(r2*r2) - 3.*mu*v2*dx/(2.*r2*r))/C2;
+		const double a1_y = (mu*mu*dy/(r2*r2) - 3.*mu*v2*dy/(2.*r2*r))/C2;
+		const double a1_z = (mu*mu*dz/(r2*r2) - 3.*mu*v2*dz/(2.*r2*r))/C2;
 
 		const double va = vx*ax + vy*ay + vz*az;
 		const double rv = dx*vx + dy*vy + dz*vz;
 	
-        ax = a1_x-(va*vx + v2*ax/2. + 3.*mu*(ax*r-vx*rv/r)/r2)/(C*C);
-        ay = a1_y-(va*vy + v2*ay/2. + 3.*mu*(ay*r-vy*rv/r)/r2)/(C*C);
-        az = a1_z-(va*vz + v2*az/2. + 3.*mu*(az*r-vz*rv/r)/r2)/(C*C);
+        ax = a1_x-(va*vx + v2*ax/2. + 3.*mu*(ax*r-vx*rv/r)/r2)/C2;
+        ay = a1_y-(va*vy + v2*ay/2. + 3.*mu*(ay*r-vy*rv/r)/r2)/C2;
+        az = a1_z-(va*vz + v2*az/2. + 3.*mu*(az*r-vz*rv/r)/r2)/C2;
 
 		particles[i].ax += ax;
 		particles[i].ay += ay; 
@@ -112,23 +118,38 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){
 		particles[source_index].ax -= pi.m/source.m*ax; 
 		particles[source_index].ay -= pi.m/source.m*ay; 
 		particles[source_index].az -= pi.m/source.m*az; 
-
     }	
 }
 
-double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_params_gr* const params){ 
-    const double C = params->c;
-    const int source_index = params->source_index;
-	const struct reb_particle* const particles = sim->particles;
-	const int _N_real = sim->N - sim->N_var;
-	const double G = sim->G;
+double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr){ 
+    const int N_real = sim->N - sim->N_var;
+    struct reb_particle* const particles = sim->particles;
+    int gr_source;
+    for (int i=0; i<N_real; i++){
+        if (rebx_get_param_int(&particles[i], "gr_source", &gr_source)){
+            return rebx_calculate_gr_hamiltonian(sim, gr, i);
+        }
+    }
+    return reb_tools_energy(sim); // no gr source found, so calculate classical
+}
+
+double rebx_calculate_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr, const int source_index){
+    double c;
+    if (!rebx_get_param_double(gr, "c", &c)){
+        fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
+        exit(1);
+    }
+    const double C2 = c*c;
+    const int N_real = sim->N - sim->N_var;
+    const double G = sim->G;
+    struct reb_particle* const particles = sim->particles;
 	const double mu = G*particles[source_index].m;
 
 	double e_kin = 0.;
 	double e_pot = 0.;
 	double e_pn  = 0.;
 	const struct reb_particle source = particles[source_index];
-	for (int i=0;i<_N_real;i++){
+	for (int i=0;i<N_real;i++){
 		struct reb_particle pi = particles[i];
 		if (i != source_index){
 			double dx = pi.x - source.x;
@@ -142,18 +163,17 @@ double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct 
 			double vz = pi.vz;
 			double v2 = vx*vx + vy*vy + vz*vz;
 			
-			double A = 1. - (v2/2. + 3.*mu/r)/(C*C);
-			double B = sqrt(v2)/A;
-			double v_tilde2 = B*B;
+            double A = 1. - (v2/2. + 3.*mu/r)/C2;
+			double v_tilde2 = v2/(A*A);
 
 			e_kin += 0.5*pi.m*v_tilde2;
-			e_pn += (mu*mu*pi.m/(2.*r2) - v_tilde2*v_tilde2*pi.m/8. - 3.*mu*v_tilde2*pi.m/(2.*r))/(C*C);
+            e_pn += (mu*mu*pi.m/(2.*r2) - v_tilde2*v_tilde2*pi.m/8. - 3.*mu*v_tilde2*pi.m/(2.*r))/C2;
 		}		
 		else{
 			double source_v2 = source.vx*source.vx + source.vy*source.vy + source.vz*source.vz;
 			e_kin += 0.5 * source.m * source_v2;
 		}
-		for (int j=i+1; j<_N_real; j++){
+		for (int j=i+1; j<N_real; j++){
 			struct reb_particle pj = particles[j];
 			double dx = pi.x - pj.x;
 			double dy = pi.y - pj.y;

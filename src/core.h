@@ -44,9 +44,11 @@ struct rebx_param{
 /*  Structure for all REBOUNDx effects.
  *  These get added as nodes to the effects linked list in the rebx_extras structure.*/
 struct rebx_effect{
-	rebx_param* ap;					    // Linked list of parameters for the effect.
+    uint32_t object_type;               // Hack to allow effects to use particle get/set param functions.
+    struct rebx_param* ap;              // Linked list of parameters for the effect.
     void (*force) (struct reb_simulation* sim, struct rebx_effect* effect); // Pointer to function to call during forces evaluation.
     void (*ptm) (struct reb_simulation* sim, struct rebx_effect* effect);   // Pointer to function to call after each timestep.
+    struct rebx_extras* rebx;           // Pointer to the rebx_extras instance effect is in.
 	struct rebx_effect* next;			// Pointer to the next effect in the linked list.
 };
 
@@ -90,7 +92,7 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim);  // Calls all
  Adders for linked lists in extras structure
  *********************************************/
 
-void rebx_add_effect(struct rebx_extras* rebx, const char* name);
+struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name);
 
 // Add a parameter to the params_to_be_freed linked list for later freeing.
 void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
@@ -99,14 +101,13 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
  General particle parameter getter
  ********************************************************************************/
 
-void* rebx_get_ap_hash(struct rebx_param current, uint32_t hash);   // Returns rebx_param corresponding to hash.  If it doesn't exist, returns NULL.
+void* rebx_get_param_hash(const void* const object, uint32_t hash);   // Returns rebx_param corresponding to hash.  If it doesn't exist, returns NULL.
 
 /*********************************************************************************
  Getters and Setters for particle parameters (need new set for each variable type)
  ********************************************************************************/
-void rebx_set_ap_double_hash(struct rebx_extras* rebx, struct rebx_param* ap, uint32_t hash, double value);
-double* rebx_add_ap_double(struct rebx_extras* rebx, struct rebx_param* ap, uint32_t hash);               
-double rebx_get_ap_double_hash(struct rebx_param* ap, uint32_t hash);                                    
+double* rebx_add_param_double(void* object, uint32_t hash);
+int* rebx_add_param_int(void* object, uint32_t hash);
 
 /***********************************************************************************
  * Miscellaneous Functions
