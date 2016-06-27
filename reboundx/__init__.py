@@ -33,32 +33,16 @@ try:
 except:
     pass    # this check fails in python 3. Problem with setuptools
 
-# When reboundx is imported, first monkey patch rebound.Particle so that we can add new parameters to the particles:
-
 import rebound
-def monkeyset(self, name, value):
-    if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
-        if self._sim.contents.extras is None:
-            raise AttributeError("Only particles in a rebound.Simulation can have properties attached to them, and you need to attach a reboundx Extras instance to the simulation before doing so.")
-        # create new param in c
-        clibreboundx.rebx_set_param_double(byref(self), c_char_p(name.encode('utf-8')), c_double(value))
-    else:
-        rebound.Particle.default_set(self, name, value)
-        
-def monkeyget(self, name):
-    if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
-        if self._sim.contents.extras is None:
-            raise AttributeError("Can only access additional properties of particles that are in a rebound.Simulation, and you need to attach a reboundx Extras instance to the simulation before doing so.")
-        # check param in c
-        clibreboundx.rebx_get_param_double.restype = c_double
-        return clibreboundx.rebx_get_param_double(byref(self), c_char_p(name.encode('utf-8')))
-    else:
-        return super(rebound.Particle, self).__getattr__(name)
 
-rebound.Particle.default_set = rebound.Particle.__setattr__
-rebound.Particle.__setattr__ = monkeyset
-rebound.Particle.__getattr__ = monkeyget
+@property
+def params(self):
+    params = Params(self)
+    return params
 
-from .extras import Extras
+rebound.Particle.params = params
+
+from .extras import Extras, rebx_param, rebx_effect
 from .tools import coordinates, install_test
-__all__ = ["Extras", "coordinates", "install_test"]
+from .params import Params
+__all__ = ["Extras", "rebx_param", "rebx_effect", "Params", "coordinates", "install_test"]

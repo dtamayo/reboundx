@@ -33,11 +33,18 @@
 Basic types in REBOUNDx
 *****************************************/
 
+enum rebx_object_type{
+    REBX_EFFECT,
+    REBX_REB_PARTICLE,
+};
+
 /* 	Main structure used for all parameters added to particles.
  	These get added as nodes to a linked list for each particle, stored at particles[i].ap.*/
 struct rebx_param{
     void* paramPtr;                     // Pointer to the parameter (void* so it can point to different types).
+    char* name;
     uint32_t hash;                      // Hash for the parameter name.
+    uint32_t type_hash;                 // Hash for the parameter data type.
     struct rebx_param* next;            // Pointer to the next parameter in the linked list.
 };
 
@@ -106,8 +113,8 @@ void* rebx_get_param_hash(const void* const object, uint32_t hash);   // Returns
 /*********************************************************************************
  Getters and Setters for particle parameters (need new set for each variable type)
  ********************************************************************************/
-double* rebx_add_param_double(void* object, uint32_t hash);
-int* rebx_add_param_int(void* object, uint32_t hash);
+double* rebx_add_param_double(void* object, const char* const param_name, uint32_t hash);
+int* rebx_add_param_int(void* object, const char* const param_name, uint32_t hash);
 
 /***********************************************************************************
  * Miscellaneous Functions
