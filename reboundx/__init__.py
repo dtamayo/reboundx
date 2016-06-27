@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-#Make changes for python 2 and 3 compatibility
-try:
-    import builtins     # if this success it's python 3.x
-    builtins.xrange = range
-    builtins.basestring = (str,bytes)
-except ImportError:
-    pass                # python 2.x
 
 #Find suffix
 import sysconfig
@@ -33,6 +26,7 @@ try:
 except:
     pass    # this check fails in python 3. Problem with setuptools
 
+# Monkeypatch rebound.Particle to have a params property
 import rebound
 
 @property
