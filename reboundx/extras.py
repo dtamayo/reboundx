@@ -36,7 +36,8 @@ class Extras(Structure):
 
     def add_effect(self, name):
         clibreboundx.rebx_add_effect.restype = POINTER(rebx_effect)
-        return clibreboundx.rebx_add_effect(byref(self), c_char_p(name.encode('utf-8')))
+        ptr = clibreboundx.rebx_add_effect(byref(self), c_char_p(name.encode('ascii')))
+        return ptr.contents
     
     #######################################
     # Convenience Functions
@@ -124,57 +125,41 @@ class Extras(Structure):
         clibreboundx.rebx_gr_full_hamiltonian.restype = c_double
         return clibreboundx.rebx_gr_full_hamiltonian(byref(sim), byref(params))
     
-#######################################
-# Effect parameter class definitions
-#######################################
-
-class rebx_params_modify_orbits_direct(Structure):
-    _fields_ = [("p", c_double),
-                ("coordinates", c_int)]
-
-class rebx_params_modify_orbits_forces(Structure):
-    _fields_ = [("coordinates", c_int)]
-
-class rebx_params_gr(Structure):
-    _fields_ = [("source_index", c_int),
-                ("c", c_double)]
-
-class rebx_params_gr_potential(Structure):
-    _fields_ = [("source_index", c_int),
-                ("c", c_double)]
-
-class rebx_params_gr_full(Structure):
-    _fields_ = [("c", c_double)]
-
-class rebx_params_radiation_forces(Structure):
-    _fields_ = [("source_index", c_int),
-                ("c", c_double)]
-
 #################################################
 # Generic REBOUNDx definitions
 #################################################
 
 class rebx_param(Structure): # need to define fields afterward because of circular ref in linked list
     pass    
-rebx_param._fields_ = [("paramPtr", c_void_p),
-            ("param_type", c_int),
-            ("next", POINTER(rebx_param))]
+rebx_param._fields_ =  [("paramPtr", c_void_p),
+                        ("name", c_char_p),
+                        ("hash", c_uint32),
+                        ("type_hash", c_uint32),
+                        ("next", POINTER(rebx_param))]
 
 class rebx_effect(Structure):
-    pass
-rebx_effect._fields_ = [("paramsPtr", c_void_p),
-                        ("functionPtr", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))),
-                        ("effect_type", c_uint32),
-                        ("is_force", c_int),
+    @property 
+    def params(self):
+        params = Params(self)
+        return params
+
+rebx_effect._fields_ = [("object_type", c_uint32),
+                        ("ap", POINTER(rebx_param)),
+                        ("force", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))),
+                        ("ptm", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))),
+                        ("rebx", POINTER(Extras)),
                         ("next", POINTER(rebx_effect))]
 
 class rebx_param_to_be_freed(Structure):
     pass
-rebx_param_to_be_freed._fields_ = [("param", POINTER(rebx_param)),
-            ("next", POINTER(rebx_param_to_be_freed))]
+rebx_param_to_be_freed._fields_ =  [("param", POINTER(rebx_param)),
+                                    ("next", POINTER(rebx_param_to_be_freed))]
 
 
 # Need to put fields after class definition because of self-referencing
-Extras._fields_ = [("sim", POINTER(rebound.Simulation)),
-                ("effects", POINTER(rebx_effect)),
-                ("params_to_be_freed", POINTER(rebx_param_to_be_freed))]
+Extras._fields_ =  [("sim", POINTER(rebound.Simulation)),
+                    ("effects", POINTER(rebx_effect)),
+                    ("params_to_be_freed", POINTER(rebx_param_to_be_freed))]
+
+from .params import Params
+

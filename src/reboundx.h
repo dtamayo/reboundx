@@ -218,7 +218,7 @@ void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct
  * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org)
  * @param value Value to which we want to set the parameter.
  */
-void rebx_set_param_double(void* object, const char* param_name, double value);
+void rebx_set_param_double(void* object, const char* const param_name, double value);
 
 /**
  * @brief Gets a parameter value from a rebx_param linked list.
@@ -229,7 +229,8 @@ void rebx_set_param_double(void* object, const char* param_name, double value);
 int rebx_get_param_double(const void* const object, const char* const param_name, double* ptr);
 int rebx_get_param_int(const void* const object, const char* const param_name, int* ptr);
 //int rebx_get_param_int(const void* const object, const char* param_name);
-void rebx_set_param_int(void* object, const char* param_name, int value);
+void rebx_set_param_int(void* object, const char* const param_name, int value);
+int rebx_remove_param(const void* const object, const char* const param_name);
 /** @} */
 /** @} */
 
