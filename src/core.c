@@ -32,7 +32,6 @@
 #include <limits.h>
 #include "core.h"
 #include "rebound.h"
-#include "gr_potential.h"
 
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
 const char* rebx_version_str = "2.8.7";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
@@ -146,11 +145,11 @@ struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name){
     else if (hash == reb_tools_hash("gr_full")){
         effect->force = rebx_gr_full;
     }
-    /*else if (hash == reb_tools_hash("gr_potential")){
+    else if (hash == reb_tools_hash("gr_potential")){
         effect->force = rebx_gr_potential;
-    }*/
+    }
     else{
-        fprintf(stderr, "Effect not found.\n");
+        fprintf(stderr, "Effect passed to rebx_add_effect not found.\n");
         exit(1);
     }
     

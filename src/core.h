@@ -122,6 +122,7 @@ double install_test(void);  // Function for testing whether REBOUNDx can load li
 Effect function prototypes
 *****************************************/
 void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr);
-void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* effect);
+void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* gr_full);
+void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* gr_potential);
 
 #endif

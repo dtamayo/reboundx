@@ -276,7 +276,7 @@ double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, struct rebx_param
  * @param sim pointer to the REBOUND simulation
  * @param params parameters structure returned by add_gr_potential.
  */
-double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr_potential);
+double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, struct rebx_effect* gr_potential);
 
 /**
  * @brief Calculates the hamiltonian for gr, including the classical Hamiltonian.
