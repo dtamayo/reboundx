@@ -117,6 +117,8 @@ void rebx_free(struct rebx_extras* rebx);
 /****************************************
   Functions for adding effects
 *****************************************/
+struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name);
+
 
 /**
  * \name Adder Functions for Each REBOUNDx Effect
@@ -274,7 +276,7 @@ double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, struct rebx_param
  * @param sim pointer to the REBOUND simulation
  * @param params parameters structure returned by add_gr_potential.
  */
-double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, const struct rebx_params_gr_potential* const params);
+double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr_potential);
 
 /**
  * @brief Calculates the hamiltonian for gr, including the classical Hamiltonian.
@@ -282,14 +284,14 @@ double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, con
  * @param sim pointer to the REBOUND simulation
  * @param effect structure returned by rebx_add_effect.
  */
-double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr);
+double rebx_gr_hamiltonian(const struct reb_simulation* const sim, struct rebx_effect* gr);
 
 /**
  * @brief Calculates the hamiltonian for gr_full, including the classical Hamiltonian.
  * @param sim pointer to the REBOUND simulation
  * @param params parameters structure returned by add_gr_full.
  */
-double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, const struct rebx_params_gr_full* const params);
+double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, struct rebx_effect* gr_full);
 
 /** @} */
 /** @} */

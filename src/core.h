@@ -97,8 +97,6 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim);  // Calls all
  Adders for linked lists in extras structure
  *********************************************/
 
-struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name);
-
 // Add a parameter to the params_to_be_freed linked list for later freeing.
 void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
 
@@ -124,5 +122,6 @@ double install_test(void);  // Function for testing whether REBOUNDx can load li
 Effect function prototypes
 *****************************************/
 void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr);
+void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* effect);
 
 #endif
