@@ -67,7 +67,7 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-static void rebx_calculate_gr(struct reb_simulation* const sim, const struct rebx_effect* const gr, const int source_index){
+static void rebx_calculate_gr(struct reb_simulation* const sim, struct rebx_effect* gr, const int source_index){
     double c;
     if (!rebx_get_param_double(gr, "c", &c)){
         fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
@@ -157,7 +157,7 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){ // First
     }
 }
 
-static double rebx_calculate_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr, const int source_index){
+static double rebx_calculate_gr_hamiltonian(const struct reb_simulation* const sim, struct rebx_effect* gr, const int source_index){
     double c;
     if (!rebx_get_param_double(gr, "c", &c)){
         fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
@@ -210,7 +210,7 @@ static double rebx_calculate_gr_hamiltonian(const struct reb_simulation* const s
 	return e_kin + e_pot + e_pn;
 }
 
-double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr){ 
+double rebx_gr_hamiltonian(const struct reb_simulation* const sim, struct rebx_effect* gr){ 
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
     int gr_source;

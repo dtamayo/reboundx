@@ -53,21 +53,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "gr_full.h"
 #include "rebound.h"
 #include "reboundx.h"
 
-struct rebx_params_gr_full* rebx_add_gr_full(struct rebx_extras* rebx, double c){
-	struct rebx_params_gr_full* params = malloc(sizeof(*params));
-	params->c = c;
-    int force_is_velocity_dependent = 1;
-    rebx_add_force(rebx, params, "gr_full", rebx_gr_full, force_is_velocity_dependent);
-    return params;
-}
-
-void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr){
-    const struct rebx_params_gr_full* const params = gr->paramsPtr;
-    const double C = params->c;
+void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* gr_full){
+    double c;
+    if (!rebx_get_param_double(gr_full, "c", &c)){
+        fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
+        exit(1);
+    }
+    const double C2 = c*c;
     const int _N_real = sim->N - sim->N_var;
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
@@ -126,7 +121,7 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
                         const double dzik = particles[i].z - particles[k].z;
                         const double r2ik = dxik*dxik + dyik*dyik + dzik*dzik;
                         const double rik = sqrt(r2ik);
-                        a1 += (4./(C*C)) * G*particles[k].m/rik;
+                        a1 += (4./(C2)) * G*particles[k].m/rik;
                     }
                 }
 
@@ -138,24 +133,24 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
                         const double dzlj = particles[l].z - particles[j].z;
                         const double r2lj = dxlj*dxlj + dylj*dylj + dzlj*dzlj;
                         const double rlj = sqrt(r2lj);
-                        a2 += (1./(C*C)) * G*particles[l].m/rlj;
+                        a2 += (1./(C2)) * G*particles[l].m/rlj;
                     }
                 }
 
                 double a3;
                 double vi2 = particles[i].vx*particles[i].vx + particles[i].vy*particles[i].vy + particles[i].vz*particles[i].vz;
-                a3 = -vi2/(C*C);
+                a3 = -vi2/(C2);
 
                 double a4;
                 double vj2 = particles[j].vx*particles[j].vx + particles[j].vy*particles[j].vy + particles[j].vz*particles[j].vz;
-                a4 = -2.*vj2/(C*C);
+                a4 = -2.*vj2/(C2);
 
                 double a5;
-                a5 = (4./(C*C)) * (particles[i].vx*particles[j].vx + particles[i].vy*particles[j].vy + particles[i].vz*particles[j].vz); 
+                a5 = (4./(C2)) * (particles[i].vx*particles[j].vx + particles[i].vy*particles[j].vy + particles[i].vz*particles[j].vz); 
                 
                 double a6;
                 double a6_0 = dxij*particles[j].vx + dyij*particles[j].vy + dzij*particles[j].vz;
-                a6 = (3./(2.*C*C)) * a6_0*a6_0/r2ij;
+                a6 = (3./(2.*C2)) * a6_0*a6_0/r2ij;
                 
                 double factor1 = -1. + a1 + a2 + a3 + a4 + a5 + a6;
                  
@@ -178,9 +173,9 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
                     
                 double factor2 = dxij*(4.*particles[i].vx-3.*particles[j].vx)+dyij*(4.*particles[i].vy-3.*particles[j].vy)+dzij*(4.*particles[i].vz-3.*particles[j].vz);
 
-                a_constx += G*particles[j].m*factor2*dvxij/(r2ij*rij)/(C*C);
-                a_consty += G*particles[j].m*factor2*dvyij/(r2ij*rij)/(C*C);
-                a_constz += G*particles[j].m*factor2*dvzij/(r2ij*rij)/(C*C);
+                a_constx += G*particles[j].m*factor2*dvxij/(r2ij*rij)/(C2);
+                a_consty += G*particles[j].m*factor2*dvyij/(r2ij*rij)/(C2);
+                a_constz += G*particles[j].m*factor2*dvzij/(r2ij*rij)/(C2);
             }
         }
         a_const[i][0] = a_constx;
@@ -209,12 +204,12 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
                     const double dzij = particles[i].z - particles[j].z;
                     const double r2ij = dxij*dxij + dyij*dyij + dzij*dzij;
                     const double rij = sqrt(r2ij);
-                    non_constx += (G*particles[j].m*dxij/(r2ij*rij))*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C*C)+\
-                                        (7./(2.*C*C))*G*particles[j].m*a_old[j][0]/rij;
-                    non_consty += (G*particles[j].m*dyij/(r2ij*rij))*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C*C)+\
-                                        (7./(2.*C*C))*G*particles[j].m*a_old[j][1]/rij;
-                    non_constz += (G*particles[j].m*dzij/(r2ij*rij))*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C*C)+\
-                                        (7./(2.*C*C))*G*particles[j].m*a_old[j][2]/rij;
+                    non_constx += (G*particles[j].m*dxij/(r2ij*rij))*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C2)+\
+                                        (7./(2.*C2))*G*particles[j].m*a_old[j][0]/rij;
+                    non_consty += (G*particles[j].m*dyij/(r2ij*rij))*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C2)+\
+                                        (7./(2.*C2))*G*particles[j].m*a_old[j][1]/rij;
+                    non_constz += (G*particles[j].m*dzij/(r2ij*rij))*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C2)+\
+                                        (7./(2.*C2))*G*particles[j].m*a_old[j][2]/rij;
                 }
             }
             a_new[i][0] = (a_const[i][0] + non_constx);
@@ -250,8 +245,13 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
                     
 }
 
-double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, const struct rebx_params_gr_full* const params){
-    const double C = params->c;
+double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, struct rebx_effect* gr_full){
+    double c;
+    if (!rebx_get_param_double(gr_full, "c", &c)){
+        fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
+        exit(1);
+    }
+    const double C2 = c*c;
     const int _N_real = sim->N - sim->N_var;
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
@@ -279,7 +279,7 @@ double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, const st
         }
         
         double vi2 = pi.vx*pi.vx + pi.vy*pi.vy + pi.vz*pi.vz;
-        double fac = pi.m*(1. + 0.5*vi2/C/C);
+        double fac = pi.m*(1. + 0.5*vi2/C2);
 
 		for (int j=0;j<_N_real;j++){
 			if (j != i){
@@ -299,13 +299,13 @@ double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, const st
                 double rijdotvi = pi.vx*xij + pi.vy*yij + pi.vz*zij;
                 double vidotvj = pi.vx*pj.vx + pi.vy*pj.vy + pi.vz*pj.vz;
                 
-                e_pn -= G/(4.*C*C)*pi.m*pj.m/rij*(6.*vi2 - 7*vidotvj - rijdotvi*rijdotvj/rij2 + sumk);
+                e_pn -= G/(4.*C2)*pi.m*pj.m/rij*(6.*vi2 - 7*vidotvj - rijdotvi*rijdotvj/rij2 + sumk);
             }
         }
 
-        pix *= G/(2.*C*C);
-        piy *= G/(2.*C*C);
-        piz *= G/(2.*C*C);
+        pix *= G/(2.*C2);
+        piy *= G/(2.*C2);
+        piz *= G/(2.*C2);
         
         pix += pi.vx*fac;
         piy += pi.vy*fac;
@@ -314,7 +314,7 @@ double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, const st
      
         double pi2 = pix*pix + piy*piy + piz*piz;
         e_kin += pi2/(2.*pi.m);
-        e_pn -= pi.m/(8.*C*C)*vi2*vi2;
+        e_pn -= pi.m/(8.*C2)*vi2*vi2;
 
         for (int j=i+1; j<_N_real; j++){ // classic potential
 			struct reb_particle pj = particles[j];

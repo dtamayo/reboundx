@@ -143,6 +143,9 @@ struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name){
         sim->force_is_velocity_dependent = 1;
         effect->force = rebx_gr;
     }
+    else if (hash == reb_tools_hash("gr_full")){
+        effect->force = rebx_gr_full;
+    }
     /*else if (hash == reb_tools_hash("gr_potential")){
         effect->force = rebx_gr_potential;
     }*/
