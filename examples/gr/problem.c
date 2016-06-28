@@ -35,7 +35,7 @@ int main(int argc, char* argv[]){
     sim->particles[0].hash = 1;
     sim->particles[1].hash = 2;
     struct rebx_extras* rebx = rebx_init(sim);
-    struct rebx_effect* gr = rebx_add_effect(rebx, "gr");
+    struct rebx_effect* gr = rebx_add_effect(rebx, "gr_potential");
     rebx_set_param_double(gr, "c", C_DEFAULT);   // Have to set the speed of light in appropriate units (set by G and your initial conditions).  Here we use the value in default units of AU/(yr/2pi)
     rebx_set_param_int(&sim->particles[0], "gr_source", 1);
     
