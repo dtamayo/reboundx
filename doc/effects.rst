@@ -10,7 +10,6 @@ Probably the quickest way to get up and running is to edit one of the linked exa
 
 Orbit Modifications
 ^^^^^^^^^^^^^^^^^^^
-
 REBOUNDx offers two ways of modifying orbital elements (semimajor axis/eccentricity/inclination damping, precession, etc.)
 In both cases, each particle is assigned evolution timescales for each orbital element.  
 Positive timescales correspond to growth / progression, negative timescales correspond to damping / regression.  
@@ -36,7 +35,7 @@ This nicely isolates changes to particular osculating elements, making it easier
 One can also adjust the coupling parameter `p` between eccentricity and semimajor axis evolution, as well as whether the damping is done on Jacobi, barycentric or heliocentric elements.
 Since this method changes osculating (i.e., two-body) elements, it can give unphysical results in highly perturbed systems.
 
-**Effect Structure**: *rebx_params_modify_orbits_direct*
+**Effect Parameters**
 
 =========================== ==================================================================
 Field (C type)              Description
@@ -63,6 +62,7 @@ tau_Omega (double)          Period of linear nodal precession/regression
 tau_omega (double)          Period of linear apsidal precession/regression
 =========================== ======================================================
 
+
 .. _modify_orbits_forces:
 
 modify_orbits_forces
@@ -82,7 +82,7 @@ The eccentricity damping keeps the angular momentum constant (corresponding to `
 Additionally, eccentricity/inclination damping will induce pericenter/nodal precession.
 Both these effects are physical, and the method is more robust for strongly perturbed systems.
 
-**Effect Structure**: *rebx_params_modify_orbits_forces*
+**Effect Parameters**
 
 =========================== ==================================================================
 Field (C type)              Description
@@ -106,8 +106,10 @@ tau_Omega (double)          Period of linear nodal precession/regression
 tau_omega (double)          Period of linear apsidal precession/regression
 =========================== ======================================================
 
+
 General Relativity
 ^^^^^^^^^^^^^^^^^^
+
 .. _gr:
 
 gr
@@ -124,15 +126,49 @@ Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reb
 This assumes that the masses are dominated by a single central body, and should be good enough for most applications with planets orbiting single stars.
 It ignores terms that are smaller by of order the mass ratio with the central body.
 It gets both the mean motion and precession correct, and will be significantly faster than :ref:`gr_full`, particularly with several bodies.
+Adding this effect to several bodies is NOT equivalent to using gr_full.
 
-**Effect Structure**: *rebx_params_gr*
+**Effect Parameters**
 
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-c (double)                  Speed of light in the units used for the simulation.
-source_index (int)          Index in the `particles` array for the massive central body.
-=========================== ==================================================================
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+c (double)                   Yes         Speed of light in the units used for the simulation.
+============================ =========== ==================================================================
+
+**Particle Parameters**
+
+If no particles have gr_source set, effect won't do anything.
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+gr_source (int)              Yes         Index in the `particles` array for the massive central body.
+============================ =========== ==================================================================
+
+
+.. _gr_full:
+
+gr_full
+*******
+
+======================= ===============================================
+Authors                 P. Shi, H. Rein, D. Tamayo
+Implementation Paper    *In progress*
+Based on                `Newhall et al. 1983 <http://labs.adsabs.harvard.edu/adsabs/abs/1983A%26A...125..150N/>`_.
+C Example               :ref:`c_example_gr`
+Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+======================= ===============================================
+
+This algorithm incorporates GR effects from all bodies in the system, and is necessary for multiple massive bodies like stellar binaries.
+
+**Effect Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+c (double)                   Yes         Speed of light in the units used for the simulation.
+============================ =========== ==================================================================
 
 **Particle Parameters**
 
@@ -157,45 +193,24 @@ It gets the precession right, but gets the mean motion wrong by :math:`\mathcal{
 It's the fastest option, and because it's not velocity-dependent, it automatically keeps WHFast symplectic.  
 Nice if you have a single-star system, don't need to get GR exactly right, and want speed.
 
-**Effect Structure**: *rebx_params_gr_potential*
+**Effect Parameters**
 
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-c (double)                  Speed of light in the units used for the simulation.
-source_index (int)          Index in the `particles` array for the massive central body.
-=========================== ==================================================================
-
-**Particle Parameters**
-
-*None*
-
-.. _gr_full:
-
-gr_full
-*******
-
-======================= ===============================================
-Authors                 P. Shi, H. Rein, D. Tamayo
-Implementation Paper    *In progress*
-Based on                `Newhall et al. 1983 <http://labs.adsabs.harvard.edu/adsabs/abs/1983A%26A...125..150N/>`_.
-C Example               :ref:`c_example_gr`
-Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
-======================= ===============================================
-
-This algorithm incorporates GR effects from all bodies in the system, and is necessary for multiple massive bodies like stellar binaries.
-
-**Effect Structure**: *rebx_params_gr_full*
-
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-c (double)                  Speed of light in the units used for the simulation.
-=========================== ==================================================================
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+c (double)                   Yes         Speed of light in the units used for the simulation.
+============================ =========== ==================================================================
 
 **Particle Parameters**
 
-*None*
+If no particles have gr_source set, effect won't do anything.
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+gr_source (int)              Yes         Index in the `particles` array for the massive central body.
+============================ =========== ==================================================================
+
 
 Radiation Forces
 ^^^^^^^^^^^^^^^^
@@ -218,13 +233,12 @@ This applies radiation forces to particles in the simulation.
 It incorporates both radiation pressure and Poynting-Robertson drag.
 Only particles whose `beta` parameter is set will feel the radiation.  
 
-**Effect Structure**: *rebx_params_radiation_forces*
+**Effect Parameters**
 
 =========================== ==================================================================
 Field (C type)              Description
 =========================== ==================================================================
 c (double)                  Speed of light in the units used for the simulation.
-source_index (int)          Index in the `particles` array for the radiation source.
 =========================== ==================================================================
 
 **Particle Parameters**
@@ -236,17 +250,16 @@ Name (C type)               Description
 =========================== ======================================================
 beta (double)               Ratio of the radiation force to the gravitational force
                             from the radiation source.
+source_index (int)          Index in the `particles` array for the radiation source.
 =========================== ======================================================
 
-Mass modifications
-^^^^^^^^^^^^^^^^^^
 
+Mass Modifications
+^^^^^^^^^^^^^^^^^^
 .. _modify_mass:
 
 modify_mass
 ***********
-
-Set particles' ``tau_mass`` parameter to a negative value for mass loss, positive for mass growth.
 
 ======================= ===============================================
 Authors                 D. Tamayo
@@ -257,8 +270,9 @@ Python Example          `ModifyMass.ipynb <https://github.com/dtamayo/reboundx/b
 ======================= ===============================================
 
 This adds exponential mass growth/loss to individual particles every timestep.
+Set particles' ``tau_mass`` parameter to a negative value for mass loss, positive for mass growth.
 
-**Effect Structure**:
+**Effect Parameters**
 
 *None*
 
@@ -266,26 +280,10 @@ This adds exponential mass growth/loss to individual particles every timestep.
 
 Only particles with their ``tau_mass`` parameter set will have their masses affected.
 
-=========================== ======================================================
-Name (C type)               Description
-=========================== ======================================================
-tau_mass (double)           e-folding mass loss (<0) or growth (>0) timescale    
-=========================== ======================================================
+============================ =========== =======================================================
+Name (C type)                Required    Description
+============================ =========== =======================================================
+tau_mass (double)            Yes         e-folding mass loss (<0) or growth (>0) timescale    
+============================ =========== =======================================================
 
-.. _custom:
 
-custom_force, custom_post_timestep_modification
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-======================= ===============================================
-Authors                 H. Rein, D. Tamayo
-Implementation Paper    N/A
-Based on                N/A
-C Example               :ref:`c_example_custom_ptm`.
-Python Example          N/A
-======================= ===============================================
-
-This is in case you want to use your own quick-and-dirty force or post-timestep modification function in your ``problem.c`` file (i.e. with the C version).
-If you want to use it in Python, you might as well set up a new effect in the REBOUNDx framework (see the add an effect section).
-You can also write your own quick-and-dirty Python function, but this will switch between C and Python every timestep and will be slower than implementing the effect in C by a factor of a few.
-See `Forces.ipynb <https://github.com/hannorein/rebound/blob/master/ipython_examples/Forces.ipynb>`_ for how to do this.

@@ -21,6 +21,45 @@
  * You should have received a copy of the GNU General Public License
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * The section after the dollar signs gets built into the documentation by a script.  All lines must start with space * space like below.
+ * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
+ * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ *
+ * $Radiation Forces$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ *
+ * ======================= ===============================================
+ * Authors                 H. Rein, D. Tamayo
+ * Implementation Paper    *In progress*
+ * Based on                `Burns et al. 1979 <http://labs.adsabs.harvard.edu/adsabs/abs/1979Icar...40....1B/>`_.
+ * C Example               :ref:`c_example_rad_forces_debris_disk`, :ref:`c_example_rad_forces_circumplanetary`.
+ * Python Example          `Radiation_Forces_Debris_Disk.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Radiation_Forces_Debris_Disk.ipynb>`_,
+ *                         `Radiation_Forces_Circumplanetary_Dust.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Radiation_Forces_Circumplanetary_Dust.ipynb>`_.
+ * ======================= ===============================================
+ * 
+ * This applies radiation forces to particles in the simulation.  
+ * It incorporates both radiation pressure and Poynting-Robertson drag.
+ * Only particles whose `beta` parameter is set will feel the radiation.  
+ * 
+ * **Effect Parameters**
+ * 
+ * =========================== ==================================================================
+ * Field (C type)              Description
+ * =========================== ==================================================================
+ * c (double)                  Speed of light in the units used for the simulation.
+ * =========================== ==================================================================
+ * 
+ * **Particle Parameters**
+ * 
+ * Only particles with their ``beta`` parameter set will feel radiation forces.
+ * 
+ * =========================== ======================================================
+ * Name (C type)               Description
+ * =========================== ======================================================
+ * beta (double)               Ratio of the radiation force to the gravitational force
+ *                             from the radiation source.
+ * source_index (int)          Index in the `particles` array for the radiation source.
+ * =========================== ======================================================
+ * 
  */
 
 #include <stdio.h>

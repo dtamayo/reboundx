@@ -260,16 +260,14 @@ void rebx_set_param_double(void* object, const char* const param_name, double va
     uint32_t hash = reb_tools_hash(param_name);
     double* ptr = rebx_get_param_hash(object, hash);
     if(ptr == NULL){
-        ptr = rebx_add_param_double(object, param_name, hash);  // add a new parameter if it doesn't exist
+        ptr = rebx_add_param_double(object, hash);  // add a new parameter if it doesn't exist
     }
     *ptr = value;                                   // update existing value
 }
 
-double* rebx_add_param_double(void* object, const char* const param_name, uint32_t hash){
+double* rebx_add_param_double(void* object, uint32_t hash){
     struct rebx_param* newparam = malloc(sizeof(*newparam));
     newparam->paramPtr = malloc(sizeof(double));
-    newparam->name = malloc(strlen(param_name)+1);
-    strcpy(newparam->name, param_name);
     newparam->hash = hash;
     newparam->type_hash = reb_tools_hash("double");
 
@@ -314,16 +312,14 @@ void rebx_set_param_int(void* object, const char* const param_name, int value){
     uint32_t hash = reb_tools_hash(param_name);
     int* ptr = rebx_get_param_hash(object, hash);
     if(ptr == NULL){
-        ptr = rebx_add_param_int(object, param_name, hash);  // add a new parameter if it doesn't exist
+        ptr = rebx_add_param_int(object, hash);  // add a new parameter if it doesn't exist
     }
     *ptr = value;                                   // update existing value
 }
 
-int* rebx_add_param_int(void* object, const char* const param_name, uint32_t hash){
+int* rebx_add_param_int(void* object, uint32_t hash){
     struct rebx_param* newparam = malloc(sizeof(*newparam));
     newparam->paramPtr = malloc(sizeof(int));
-    newparam->name = malloc(strlen(param_name)+1);
-    strcpy(newparam->name, param_name);
     newparam->hash = hash;
     newparam->type_hash = reb_tools_hash("int");
 

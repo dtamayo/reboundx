@@ -22,14 +22,10 @@ class TestEffectParams(unittest.TestCase):
         self.assertAlmostEqual(self.gr.params["b"], 1.7, delta=1.e-15)
         self.assertEqual(self.gr.params["N"], 14)
 
-    def test_print(self):
-        string = self.gr.params
-
     def test_iter(self):
-        vals = []
-        for p in self.gr.params:
-            vals.append(p)
-        self.assertEqual(vals, ['N', 'b', 'a'])
+        with self.assertRaises(AttributeError):
+            for p in self.gr.params:
+                pass
 
     def test_length(self):
         self.assertEqual(len(self.gr.params), 3)
@@ -67,14 +63,10 @@ class TestParticleParams(unittest.TestCase):
         self.assertAlmostEqual(self.sim.particles[0].params["b"], 1.7, delta=1.e-15)
         self.assertEqual(self.sim.particles[0].params["N"], 14)
 
-    def test_print(self):
-        string = self.sim.particles[0].params
-
     def test_iter(self):
-        vals = []
-        for p in self.sim.particles[0].params:
-            vals.append(p)
-        self.assertEqual(vals, ['N', 'b', 'a'])
+        with self.assertRaises(AttributeError):
+            for p in self.sim.particles[0].params:
+                pass
 
     def test_length(self):
         self.assertEqual(len(self.sim.particles[0].params), 3)
