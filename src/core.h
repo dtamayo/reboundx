@@ -33,11 +33,6 @@
 Basic types in REBOUNDx
 *****************************************/
 
-enum rebx_object_type{
-    REBX_EFFECT,
-    REBX_REB_PARTICLE,
-};
-
 /* 	Main structure used for all parameters added to particles.
  	These get added as nodes to a linked list for each particle, stored at particles[i].ap.*/
 struct rebx_param{
@@ -64,14 +59,18 @@ struct rebx_param_to_be_freed{
     struct rebx_param_to_be_freed* next;// Pointer to the next node in the linked list rebx_extras.params_to_be_freed.
 };
 
-/****************************************
-Main REBOUNDx structure
-*****************************************/
+/*  Main REBOUNDx structure*/
 struct rebx_extras {	
 	struct reb_simulation* sim;								// Pointer to the simulation REBOUNDx is linked to.
 	struct rebx_effect* effects;		                    // Linked list with pointers to all the effects added to the simulation.
 	struct rebx_param_to_be_freed* params_to_be_freed; 		// Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
 
+};
+
+/*  Only needed internally for getters and setters.*/
+enum rebx_object_type{ 
+    REBX_EFFECT,
+    REBX_REB_PARTICLE,
 };
 
 /*****************************
@@ -120,5 +119,10 @@ int* rebx_add_param_int(void* object, uint32_t hash);
 ***********************************************************************************/
 
 double install_test(void);  // Function for testing whether REBOUNDx can load librebound.so and call REBOUND functions. */
+
+/****************************************
+Effect function prototypes
+*****************************************/
+void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr);
 
 #endif

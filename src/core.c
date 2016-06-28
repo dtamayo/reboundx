@@ -32,7 +32,6 @@
 #include <limits.h>
 #include "core.h"
 #include "rebound.h"
-#include "gr.h"
 #include "gr_potential.h"
 
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
@@ -169,6 +168,8 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
 /*********************************************************************************
  General particle parameter getter
  ********************************************************************************/
+
+
 // Internal function that detects object type by casting void* to different pointer types.
 static enum rebx_object_type rebx_get_object_type(const void* const object){
     struct rebx_effect* effect = (struct rebx_effect*)object;
@@ -210,31 +211,35 @@ void* rebx_get_param_hash(const void* const object, uint32_t hash){
 int rebx_remove_param(const void* const object, const char* const param_name){
     uint32_t hash = reb_tools_hash(param_name);
     struct rebx_param* current;
-    struct rebx_param** prev;
     enum rebx_object_type object_type = rebx_get_object_type(object);
     switch(object_type){
         case REBX_EFFECT:
         {
             struct rebx_effect* effect = (struct rebx_effect*)object;
             current = effect->ap;
-            prev = &effect->ap;
+            if(current->hash == hash){
+                effect->ap = current->next;
+                return 1;
+            }
             break;
         }
         case REBX_REB_PARTICLE:
         {
             struct reb_particle* p = (struct reb_particle*)object;
             current = p->ap;
-            prev = &p->ap;
+            if(current->hash == hash){
+                p->ap = current->next;
+                return 1;
+            }
             break;
         }
     }    
-   
-    while(current != NULL){
-        if(current->hash == hash){
-            *prev = current->next;
+  
+    while(current->next != NULL){
+        if(current->next->hash == hash){
+            current->next = current->next->next;
             return 1;
         }
-        prev = &current->next;
         current = current->next;
     }
     return 0;
