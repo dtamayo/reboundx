@@ -21,6 +21,53 @@
  * You should have received a copy of the GNU General Public License
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * The section after the dollar signs gets built into the documentation by a script.  All lines must start with space * space like below.
+ * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
+ * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ *
+ * $Orbit Modifications$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ *
+ * ======================= ===============================================
+ * Authors                 D. Tamayo
+ * Implementation Paper    *In progress*
+ * Based on                `Lee & Peale 2002 <http://labs.adsabs.harvard.edu/adsabs/abs/2002ApJ...567..596L/>`_. 
+ * C Example               :ref:`c_example_modify_orbits`
+ * Python Example          `Migration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Migration.ipynb>`_,
+ *                         `EccAndIncDamping.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/EccAndIncDamping.ipynb>`_.
+ * ======================= ===============================================
+ * 
+ * This updates particles' positions and velocities between timesteps to achieve the desired changes to the osculating orbital elements (exponential growth/decay for a, e, inc, linear progression/regression for Omega/omega.
+ * This nicely isolates changes to particular osculating elements, making it easier to interpret the resulting dynamics.  
+ * One can also adjust the coupling parameter `p` between eccentricity and semimajor axis evolution, as well as whether the damping is done on Jacobi, barycentric or heliocentric elements.
+ * Since this method changes osculating (i.e., two-body) elements, it can give unphysical results in highly perturbed systems.
+ * 
+ * **Effect Parameters**
+ * 
+ * =========================== ==================================================================
+ * Field (C type)              Description
+ * =========================== ==================================================================
+ * p (double)                  Coupling parameter between eccentricity and semimajor axis evolution
+ *                             (see Deck & Batygin 2015). `p=0` corresponds to no coupling, `p=1` to
+ *                             eccentricity evolution at constant angular momentum.
+ * coordinates (enum)          Type of elements to use for modification (Jacobi, barycentric or heliocentric).
+ *                             See the examples for usage.
+ * =========================== ==================================================================
+ * 
+ * **Particle Parameters**
+ * 
+ * One can pick and choose which particles have which parameters set.  
+ * For each particle, any unset parameter is ignored.
+ * 
+ * =========================== ======================================================
+ * Name (C type)               Description
+ * =========================== ======================================================
+ * tau_a (double)              Semimajor axis exponential growth/damping timescale
+ * tau_e (double)              Eccentricity exponential growth/damping timescale
+ * tau_inc (double)            Inclination axis exponential growth/damping timescale
+ * tau_Omega (double)          Period of linear nodal precession/regression
+ * tau_omega (double)          Period of linear apsidal precession/regression
+ * =========================== ======================================================
+ *
  */
 
 #include <stdio.h>

@@ -21,6 +21,44 @@
  * You should have received a copy of the GNU General Public License
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * The section after the dollar signs gets built into the documentation by a script.  All lines must start with space * space like below.
+ * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
+ * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ *
+ * $General Relativity$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ *
+ * ======================= ===============================================
+ * Authors                 H. Rein, D. Tamayo
+ * Implementation Paper    *In progress*
+ * Based on                `Nobili and Roxburgh 1986 <http://labs.adsabs.harvard.edu/adsabs/abs/1986IAUS..114..105N/>`_.
+ * C Example               :ref:`c_example_gr`
+ * Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+ * ======================= ===============================================
+ * 
+ * This is the simplest potential you can use for general relativity.
+ * It assumes that the masses are dominated by a single central body.
+ * It gets the precession right, but gets the mean motion wrong by :math:`\mathcal{O}(GM/ac^2)`.  
+ * It's the fastest option, and because it's not velocity-dependent, it automatically keeps WHFast symplectic.  
+ * Nice if you have a single-star system, don't need to get GR exactly right, and want speed.
+ * 
+ * **Effect Parameters**
+ * 
+ * ============================ =========== ==================================================================
+ * Field (C type)               Required    Description
+ * ============================ =========== ==================================================================
+ * c (double)                   Yes         Speed of light in the units used for the simulation.
+ * ============================ =========== ==================================================================
+ *
+ * **Particle Parameters**
+ *
+ * If no particles have gr_source set, effect won't do anything.
+ *
+ * ============================ =========== ==================================================================
+ * Field (C type)               Required    Description
+ * ============================ =========== ==================================================================
+ * gr_source (int)              Yes         Index in the `particles` array for the massive central body.
+ * ============================ =========== ==================================================================
+ * 
  */
 
 #include <stdlib.h>

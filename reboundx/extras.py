@@ -132,7 +132,6 @@ class Extras(Structure):
 class rebx_param(Structure): # need to define fields afterward because of circular ref in linked list
     pass    
 rebx_param._fields_ =  [("paramPtr", c_void_p),
-                        ("name", c_char_p),
                         ("hash", c_uint32),
                         ("type_hash", c_uint32),
                         ("next", POINTER(rebx_param))]

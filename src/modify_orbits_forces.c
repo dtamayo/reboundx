@@ -21,6 +21,50 @@
  * You should have received a copy of the GNU General Public License
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * The section after the dollar signs gets built into the documentation by a script.  All lines must start with space * space like below.
+ * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
+ * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ *
+ * $Orbit Modifications$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ *
+ * ======================= ===============================================
+ * Authors                 D. Tamayo, H. Rein
+ * Implementation Paper    *In progress*
+ * Based on                `Papaloizou & Larwood 2000 <http://labs.adsabs.harvard.edu/adsabs/abs/2000MNRAS.315..823P/>`_.
+ * C Example               :ref:`c_example_modify_orbits`
+ * Python Example          `Migration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Migration.ipynb>`_
+ *                         `EccAndIncDamping.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/EccAndIncDamping.ipynb>`_.
+ * ======================= ===============================================
+ * 
+ * This applies physical forces that orbit-average to give exponential growth/decay of the semimajor axis, eccentricity and inclination.
+ * The eccentricity damping keeps the angular momentum constant (corresponding to `p=1` in modify_orbits_direct), which means that eccentricity damping will induce some semimajor axis evolution.
+ * Additionally, eccentricity/inclination damping will induce pericenter/nodal precession.
+ * Both these effects are physical, and the method is more robust for strongly perturbed systems.
+ * 
+ * **Effect Parameters**
+ * 
+ * =========================== ==================================================================
+ * Field (C type)              Description
+ * =========================== ==================================================================
+ * coordinates (enum)          Type of elements to use for modification (Jacobi, barycentric or heliocentric).
+ *                             See the examples for usage.
+ * =========================== ==================================================================
+ * 
+ * **Particle Parameters**
+ * 
+ * One can pick and choose which particles have which parameters set.  
+ * For each particle, any unset parameter is ignored.
+ * 
+ * =========================== ======================================================
+ * Name (C type)               Description
+ * =========================== ======================================================
+ * tau_a (double)              Semimajor axis exponential growth/damping timescale
+ * tau_e (double)              Eccentricity exponential growth/damping timescale
+ * tau_inc (double)            Inclination axis exponential growth/damping timescale
+ * tau_Omega (double)          Period of linear nodal precession/regression
+ * tau_omega (double)          Period of linear apsidal precession/regression
+ * =========================== ======================================================
+ * 
  */
 
 #include <stdio.h>

@@ -1,10 +1,10 @@
 /**
  * @file    gr.c
  * @brief   Post-newtonian general relativity corrections arising from a single massive body
- * @author  Pengshuai (Sam) Shi, Hanno Rein, Dan Tamayo <tamayo.daniel@gmail.com>
- * 
+ * @author  Pengshuai (Sam) Shi, Dan Tamayo, Hanno Rein <tamayo.daniel@gmail.com>
+ *
  * @section     LICENSE
- * Copyright (c) 2015 Pengshuai (Sam) Shi, Hanno Rein, Dan Tamayo
+ * Copyright (c) 2015 Pengshuai (Sam) Shi, Dan Tamayo, Hanno Rein
  *
  * This file is part of reboundx.
  *
@@ -20,7 +20,44 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * The section after the dollar signs gets built into the documentation by a script.  All lines must start with space * space like below.
+ * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
+ * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
+ * $General Relativity$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ *
+ * ======================= ===============================================
+ * Authors                 P. Shi, D. Tamayo, H. Rein
+ * Implementation Paper    *In progress*
+ * Based on                `Anderson et al. 1975 <http://labs.adsabs.harvard.edu/adsabs/abs/1975ApJ...200..221A/>`_.
+ * C Example               :ref:`c_example_gr`
+ * Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+ * ======================= ===============================================
+ * 
+ * This assumes that the masses are dominated by a single central body, and should be good enough for most applications with planets orbiting single stars.
+ * It ignores terms that are smaller by of order the mass ratio with the central body.
+ * It gets both the mean motion and precession correct, and will be significantly faster than :ref:`gr_full`, particularly with several bodies.
+ * Adding this effect to several bodies is NOT equivalent to using gr_full.
+ * 
+ * **Effect Parameters**
+ * 
+ * ============================ =========== ==================================================================
+ * Field (C type)               Required    Description
+ * ============================ =========== ==================================================================
+ * c (double)                   Yes         Speed of light in the units used for the simulation.
+ * ============================ =========== ==================================================================
+ *
+ * **Particle Parameters**
+ *
+ * If no particles have gr_source set, effect won't do anything.
+ *
+ * ============================ =========== ==================================================================
+ * Field (C type)               Required    Description
+ * ============================ =========== ==================================================================
+ * gr_source (int)              Yes         Index in the `particles` array for the massive central body.
+ * ============================ =========== ==================================================================
+ * 
  */
 
 #include <stdlib.h>
