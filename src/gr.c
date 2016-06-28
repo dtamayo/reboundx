@@ -64,22 +64,10 @@
 #include <stdio.h>
 #include <math.h>
 #include <limits.h>
-#include "gr.h"
 #include "rebound.h"
 #include "reboundx.h"
 
-void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){ // First find gr sources
-    const int N_real = sim->N - sim->N_var;
-    struct reb_particle* const particles = sim->particles;
-    int gr_source;
-    for (int i=0; i<N_real; i++){
-        if (rebx_get_param_int(&particles[i], "gr_source", &gr_source)){
-            rebx_calculate_gr(sim, gr, i);
-        }
-    }
-}
-
-void rebx_calculate_gr(struct reb_simulation* const sim, const struct rebx_effect* const gr, const int source_index){
+static void rebx_calculate_gr(struct reb_simulation* const sim, const struct rebx_effect* const gr, const int source_index){
     double c;
     if (!rebx_get_param_double(gr, "c", &c)){
         fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
@@ -158,19 +146,18 @@ void rebx_calculate_gr(struct reb_simulation* const sim, const struct rebx_effec
     }	
 }
 
-double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr){ 
+void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){ // First find gr sources
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
     int gr_source;
     for (int i=0; i<N_real; i++){
         if (rebx_get_param_int(&particles[i], "gr_source", &gr_source)){
-            return rebx_calculate_gr_hamiltonian(sim, gr, i);
+            rebx_calculate_gr(sim, gr, i);
         }
     }
-    return reb_tools_energy(sim); // no gr source found, so calculate classical
 }
 
-double rebx_calculate_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr, const int source_index){
+static double rebx_calculate_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr, const int source_index){
     double c;
     if (!rebx_get_param_double(gr, "c", &c)){
         fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
@@ -222,3 +209,16 @@ double rebx_calculate_gr_hamiltonian(const struct reb_simulation* const sim, con
 	}
 	return e_kin + e_pot + e_pn;
 }
+
+double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr){ 
+    const int N_real = sim->N - sim->N_var;
+    struct reb_particle* const particles = sim->particles;
+    int gr_source;
+    for (int i=0; i<N_real; i++){
+        if (rebx_get_param_int(&particles[i], "gr_source", &gr_source)){
+            return rebx_calculate_gr_hamiltonian(sim, gr, i);
+        }
+    }
+    return reb_tools_energy(sim); // no gr source found, so calculate classical
+}
+
