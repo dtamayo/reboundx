@@ -3,7 +3,6 @@ from ctypes import Structure, c_double, POINTER, c_int, c_uint, c_long, c_ulong,
 import rebound
 import reboundx
 
-C_DEFAULT = 10064.915 # speed of light in default units (G = 1) of AU / (yr/2pi)
 
 class Extras(Structure):
     """
@@ -161,4 +160,3 @@ Extras._fields_ =  [("sim", POINTER(rebound.Simulation)),
                     ("params_to_be_freed", POINTER(rebx_param_to_be_freed))]
 
 from .params import Params
-
