@@ -20,7 +20,7 @@ int main(int argc, char* argv[]){
     struct reb_particle star = {0};
     star.m     = 1.;   
     star.hash  = reb_hash("star");
-    reb_add(r, star);
+    reb_add(sim, star);
 
     double m = 0.;
     double a = 1.e-4; // put planet close to enhance precession so it's visible in visualization (this would put planet inside the Sun!)
@@ -28,19 +28,19 @@ int main(int argc, char* argv[]){
     double omega = 0.;
     double f = 0.;
     
-    struct reb_particle planet = reb_tools_orbit_to_particle2d(star, m, a, e, omega, f);
+    struct reb_particle planet = reb_tools_orbit2d_to_particle(sim->G, star, m, a, e, omega, f);
     planet.hash = reb_hash("planet");
-    reb_add(r, planet);
+    reb_add(sim, planet);
     reb_move_to_com(sim);
     
     // Could also add "gr" or "gr_full" here.  See documentation for details.
-    struct rebx_effect* gr = rebx_add_effect(rebx, "gr_full");
+    struct rebx_effect* gr = rebx_add_effect(rebx, "gr_potential");
    
     // Have to set speed of light in right units (set by G & initial conditions).  Here we use default units of AU/(yr/2pi)
     rebx_set_param_double(gr, "c", REBX_C);  
     // Need to set gr_source param to 1 on the massive particle for any effect (except for "gr_full" where all particles act as sources).
-    rebx_set_param_int(planet, "gr_source", 1);
-    
+    rebx_set_param_int(&sim->particles[0], "gr_source", 1);
+
     double tmax = 5.e-2;
     reb_integrate(sim, tmax); 
     rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 

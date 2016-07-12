@@ -140,11 +140,11 @@ struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name){
 
     if(hash == reb_hash("gr")){
         sim->force_is_velocity_dependent = 1;
-        effect->force = rebx_gr;
+        //effect->force = rebx_gr;
     }
-    /*else if (hash == reb_hash("gr_full")){
+    else if (hash == reb_hash("gr_full")){
         sim->force_is_velocity_dependent = 1;
-        effect->force = rebx_gr_full;
+        //effect->force = rebx_gr_full;
     }
     else if (hash == reb_hash("gr_potential")){
         effect->force = rebx_gr_potential;
@@ -152,7 +152,7 @@ struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name){
     else{
         fprintf(stderr, "Effect passed to rebx_add_effect not found.\n");
         exit(1);
-    }*/
+    }
     
     effect->next = rebx->effects;
     rebx->effects = effect;
@@ -252,15 +252,14 @@ int rebx_remove_param(const void* const object, const char* const param_name){
  Getters and Setters for particle parameters (need new set for each variable type)
  ********************************************************************************/
 
-int rebx_get_param_double(const void* const object, const char* const param_name, double* ptr){
+double* rebx_get_param_double(const void* const object, const char* const param_name){
     uint32_t hash = reb_hash(param_name);
     void* voidptr = rebx_get_param_hash(object, hash);
     if (voidptr == NULL){
-        return 0;
+        return NULL;
     }
     else{
-        *ptr = *(double *)voidptr;
-        return 1;
+        return (double *)voidptr;
     }
 }
 
@@ -304,15 +303,14 @@ double* rebx_add_param_double(void* object, uint32_t hash){
     return newparam->paramPtr;
 }
 
-int rebx_get_param_int(const void* const object, const char* const param_name, int* ptr){
+int* rebx_get_param_int(const void* const object, const char* const param_name){
     uint32_t hash = reb_hash(param_name);
     void* voidptr = rebx_get_param_hash(object, hash);
     if (voidptr == NULL){
-        return 0;
+        return NULL;
     }
     else{
-        *ptr = *(int *)voidptr;
-        return 1;
+        return (int *)voidptr;
     }
 }
 
