@@ -34,10 +34,10 @@ int main(int argc, char* argv[]){
     reb_move_to_com(sim);
     
     // Could also add "gr" or "gr_full" here.  See documentation for details.
-    struct rebx_effect* gr = rebx_add_effect(rebx, "gr_potential");
+    struct rebx_effect* gr = rebx_add_effect(rebx, "gr_full");
    
     // Have to set speed of light in right units (set by G & initial conditions).  Here we use default units of AU/(yr/2pi)
-    rebx_set_param_double(gr, "c", C_DEFAULT);  
+    rebx_set_param_double(gr, "c", REBX_C);  
     // Need to set gr_source param to 1 on the massive particle for any effect (except for "gr_full" where all particles act as sources).
     rebx_set_param_int(planet, "gr_source", 1);
     

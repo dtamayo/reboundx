@@ -28,7 +28,7 @@
 #ifndef M_PI 
 #define M_PI 3.1415926535879323846
 #endif
-#define C_DEFAULT 10064.9150404 // speed of light in default units of AU/(yr/2pi)
+#define REBX_C 10064.9150404 // speed of light in default units of AU/(yr/2pi)
 
 #include <stdint.h>
 #include "rebound.h"
