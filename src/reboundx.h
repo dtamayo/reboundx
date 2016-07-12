@@ -228,9 +228,8 @@ void rebx_set_param_double(void* object, const char* const param_name, double va
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  */
 //double rebx_get_param_double(const void* const object, const char* param_name);
-int rebx_get_param_double(const void* const object, const char* const param_name, double* ptr);
-int rebx_get_param_int(const void* const object, const char* const param_name, int* ptr);
-//int rebx_get_param_int(const void* const object, const char* param_name);
+double* rebx_get_param_double(const void* const object, const char* const param_name);
+int* rebx_get_param_int(const void* const object, const char* const param_name);
 void rebx_set_param_int(void* object, const char* const param_name, int value);
 int rebx_remove_param(const void* const object, const char* const param_name);
 /** @} */
