@@ -129,29 +129,30 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
 struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name){
     struct rebx_effect* effect = malloc(sizeof(*effect));
     
-    effect->object_type = reb_tools_hash("rebx_effect");
+    effect->object_type = reb_hash("rebx_effect");
     effect->ap = NULL;
     effect->force = NULL;
     effect->ptm = NULL;
     effect->rebx = rebx;
     
     struct reb_simulation* sim = rebx->sim;
-    uint32_t hash = reb_tools_hash(name);
+    uint32_t hash = reb_hash(name);
 
-    if(hash == reb_tools_hash("gr")){
+    if(hash == reb_hash("gr")){
         sim->force_is_velocity_dependent = 1;
         effect->force = rebx_gr;
     }
-    else if (hash == reb_tools_hash("gr_full")){
+    /*else if (hash == reb_hash("gr_full")){
+        sim->force_is_velocity_dependent = 1;
         effect->force = rebx_gr_full;
     }
-    else if (hash == reb_tools_hash("gr_potential")){
+    else if (hash == reb_hash("gr_potential")){
         effect->force = rebx_gr_potential;
     }
     else{
         fprintf(stderr, "Effect passed to rebx_add_effect not found.\n");
         exit(1);
-    }
+    }*/
     
     effect->next = rebx->effects;
     rebx->effects = effect;
@@ -175,7 +176,7 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
 // Internal function that detects object type by casting void* to different pointer types.
 static enum rebx_object_type rebx_get_object_type(const void* const object){
     struct rebx_effect* effect = (struct rebx_effect*)object;
-    if (effect->object_type == reb_tools_hash("rebx_effect")){
+    if (effect->object_type == reb_hash("rebx_effect")){
         return REBX_EFFECT;
     }
     else{
@@ -211,7 +212,7 @@ void* rebx_get_param_hash(const void* const object, uint32_t hash){
 }
 
 int rebx_remove_param(const void* const object, const char* const param_name){
-    uint32_t hash = reb_tools_hash(param_name);
+    uint32_t hash = reb_hash(param_name);
     struct rebx_param* current;
     enum rebx_object_type object_type = rebx_get_object_type(object);
     switch(object_type){
@@ -252,7 +253,7 @@ int rebx_remove_param(const void* const object, const char* const param_name){
  ********************************************************************************/
 
 int rebx_get_param_double(const void* const object, const char* const param_name, double* ptr){
-    uint32_t hash = reb_tools_hash(param_name);
+    uint32_t hash = reb_hash(param_name);
     void* voidptr = rebx_get_param_hash(object, hash);
     if (voidptr == NULL){
         return 0;
@@ -264,7 +265,7 @@ int rebx_get_param_double(const void* const object, const char* const param_name
 }
 
 void rebx_set_param_double(void* object, const char* const param_name, double value){
-    uint32_t hash = reb_tools_hash(param_name);
+    uint32_t hash = reb_hash(param_name);
     double* ptr = rebx_get_param_hash(object, hash);
     if(ptr == NULL){
         ptr = rebx_add_param_double(object, hash);  // add a new parameter if it doesn't exist
@@ -276,7 +277,7 @@ double* rebx_add_param_double(void* object, uint32_t hash){
     struct rebx_param* newparam = malloc(sizeof(*newparam));
     newparam->paramPtr = malloc(sizeof(double));
     newparam->hash = hash;
-    newparam->type_hash = reb_tools_hash("double");
+    newparam->type_hash = reb_hash("double");
 
     struct rebx_extras* rebx;
     enum rebx_object_type object_type = rebx_get_object_type(object);
@@ -304,7 +305,7 @@ double* rebx_add_param_double(void* object, uint32_t hash){
 }
 
 int rebx_get_param_int(const void* const object, const char* const param_name, int* ptr){
-    uint32_t hash = reb_tools_hash(param_name);
+    uint32_t hash = reb_hash(param_name);
     void* voidptr = rebx_get_param_hash(object, hash);
     if (voidptr == NULL){
         return 0;
@@ -316,7 +317,7 @@ int rebx_get_param_int(const void* const object, const char* const param_name, i
 }
 
 void rebx_set_param_int(void* object, const char* const param_name, int value){
-    uint32_t hash = reb_tools_hash(param_name);
+    uint32_t hash = reb_hash(param_name);
     int* ptr = rebx_get_param_hash(object, hash);
     if(ptr == NULL){
         ptr = rebx_add_param_int(object, hash);  // add a new parameter if it doesn't exist
@@ -328,7 +329,7 @@ int* rebx_add_param_int(void* object, uint32_t hash){
     struct rebx_param* newparam = malloc(sizeof(*newparam));
     newparam->paramPtr = malloc(sizeof(int));
     newparam->hash = hash;
-    newparam->type_hash = reb_tools_hash("int");
+    newparam->type_hash = reb_hash("int");
 
     struct rebx_extras* rebx;
     enum rebx_object_type object_type = rebx_get_object_type(object);

@@ -219,6 +219,7 @@ double rebx_gr_hamiltonian(const struct reb_simulation* const sim, struct rebx_e
             return rebx_calculate_gr_hamiltonian(sim, gr, i);
         }
     }
-    return reb_tools_energy(sim); // no gr source found, so calculate classical
+    fprintf(stderr, "Need to set speed of light in gr effect before calling hamiltonian.  See examples in documentation.\n");
+    exit(1);
 }
 

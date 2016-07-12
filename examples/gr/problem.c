@@ -17,9 +17,10 @@ int main(int argc, char* argv[]){
     struct rebx_extras* rebx = rebx_init(sim);
     sim->dt = 1.e-8;
 
-    struct reb_particle* star = reb_add_particle(sim);
-    star->m     = 1.;   
-    star->hash  = reb_tools_hash("star");
+    struct reb_particle star = {0};
+    star.m     = 1.;   
+    star.hash  = reb_hash("star");
+    reb_add(r, star);
 
     double m = 0.;
     double a = 1.e-4; // put planet close to enhance precession so it's visible in visualization (this would put planet inside the Sun!)
@@ -27,9 +28,9 @@ int main(int argc, char* argv[]){
     double omega = 0.;
     double f = 0.;
     
-    struct reb_particle* planet = reb_add_particle(sim);
-    reb_init_particle_from_orbit2d(planet, star, m, a, e, omega, f);
-    planet->hash = reb_tools_hash("planet");
+    struct reb_particle planet = reb_tools_orbit_to_particle2d(star, m, a, e, omega, f);
+    planet.hash = reb_hash("planet");
+    reb_add(r, planet);
     reb_move_to_com(sim);
     
     // Could also add "gr" or "gr_full" here.  See documentation for details.
@@ -43,5 +44,5 @@ int main(int argc, char* argv[]){
     double tmax = 5.e-2;
     reb_integrate(sim, tmax); 
     rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 
-    reb_free(sim);
+    reb_free_simulation(sim);
 }
