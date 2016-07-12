@@ -19,7 +19,7 @@ OPT+= -fPIC -DLIBREBOUNDX
 
 SOURCES=core.c gr.c gr_full.c gr_potential.c
 OBJECTS=$(SOURCES:.c=.o)
-HEADERS=rebxtools.h reboundx.h modify_orbits_forces.h modify_orbits_direct.h core.h
+HEADERS=rebxtools.h reboundx.h
 
 all: $(SOURCES) librebound.so libreboundx.so
 	
@@ -37,7 +37,7 @@ librebound.so:
 libreboundx.so: $(OBJECTS)
 	@echo ""        
 	@echo "Linking shared library $@ ..."
-	$(CC) $(OPT) -shared $(OBJECTS) $(LIB) -lrebound -L$(REB_DIR) -L$(REB_DIR)/src -o $@ 
+	$(CC) $(OPT) -shared $(OBJECTS) $(LIB) -lrebound -L$(REB_DIR)/src -o $@ 
 	@echo ""        
 	@echo "The shared library $@ has been created successfully."
 	
