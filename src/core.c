@@ -169,9 +169,8 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
 }
 
 /*********************************************************************************
- General particle parameter getter
+ Internal getter/setter functions
  ********************************************************************************/
-
 
 // Internal function that detects object type by casting void* to different pointer types.
 static enum rebx_object_type rebx_get_object_type(const void* const object){
@@ -183,6 +182,69 @@ static enum rebx_object_type rebx_get_object_type(const void* const object){
         return REBX_REB_PARTICLE;
     }
 }
+
+// Internal function that sets a new param in particle or effect linked list
+static void* rebx_set_newparam(void* const object, struct rebx_param** const newparamptr){ 
+    struct rebx_param* newparam = *newparamptr;
+    enum rebx_object_type object_type = rebx_get_object_type(object);
+    struct rebx_extras* rebx;
+    switch(object_type){
+        case REBX_EFFECT:
+        {
+            struct rebx_effect* effect = (struct rebx_effect*)object;
+            newparam->next = effect->ap;
+            effect->ap = newparam;
+            rebx = effect->rebx;
+            break;
+        }
+        case REBX_REB_PARTICLE:
+        {
+            struct reb_particle* p = (struct reb_particle*)object;
+            newparam->next = p->ap;
+            p->ap = newparam;
+            rebx = p->sim->extras;
+            break;
+        }
+        default:
+            fprintf(stderr, "Unsupported case in rebx_set_newparam.\n");
+            exit(1);
+    }
+    
+    rebx_add_param_to_be_freed(rebx, newparam);
+    return newparam->paramPtr;
+}
+
+/*static struct reb_simulation* rebx_get_sim(const void* const object){
+    enum rebx_object_type object_type = rebx_get_object_type(object);
+    switch(object_type){
+        case REBX_EFFECT:
+        {
+            struct rebx_effect* effect = (struct rebx_effect*)object;
+            return effect->rebx->sim;
+        }
+        case REBX_REB_PARTICLE:
+        {
+            struct reb_particle* p = (struct reb_particle*)object;
+            return p->sim;
+        }
+        default:
+            fprintf(stderr, "Unsupported case in rebx_get_sim.\n");
+            exit(1);
+    }
+} 
+
+static void rebx_get_param_warning(const void* const object, const char* const param_name)
+{
+    struct reb_simulation* sim = rebx_get_sim(object);
+    char str[200]; // TODO add check for whether using C
+    sprintf(str, "Param %s was not found. Accessing pointer returned from rebx_get_param will cause segmentation fault (check for NULL).\n", param_name);
+    reb_warning(sim,str); 
+}
+*/
+
+/*********************************************************************************
+ Type-independent functions for dealing with parameters
+ ********************************************************************************/
 
 void* rebx_get_param_hash(const void* const object, uint32_t hash){
     struct rebx_param* current;
@@ -200,6 +262,9 @@ void* rebx_get_param_hash(const void* const object, uint32_t hash){
             current = p->ap;
             break;
         }
+        default:
+            fprintf(stderr, "Unsupported case in rebx_get_param_hash.\n");
+            exit(1);
     }    
     
     while(current != NULL){
@@ -236,6 +301,9 @@ int rebx_remove_param(const void* const object, const char* const param_name){
             }
             break;
         }
+        default:
+            fprintf(stderr, "Unsupported case in rebx_remove_param.\n");
+            exit(1);
     }    
   
     while(current->next != NULL){
@@ -259,7 +327,7 @@ double* rebx_get_param_double(const void* const object, const char* const param_
         return NULL;
     }
     else{
-        return (double *)voidptr;
+        return (double*)voidptr;
     }
 }
 
@@ -278,29 +346,7 @@ double* rebx_add_param_double(void* object, uint32_t hash){
     newparam->hash = hash;
     newparam->type_hash = reb_hash("double");
 
-    struct rebx_extras* rebx;
-    enum rebx_object_type object_type = rebx_get_object_type(object);
-    switch(object_type){
-        case REBX_EFFECT:
-        {
-            struct rebx_effect* effect = (struct rebx_effect*)object;
-            newparam->next = effect->ap;
-            effect->ap = newparam;
-            rebx = effect->rebx;
-            break;
-        }
-        case REBX_REB_PARTICLE:
-        {
-            struct reb_particle* p = (struct reb_particle*)object;
-            newparam->next = p->ap;
-            p->ap = newparam;
-            rebx = p->sim->extras;
-            break;
-        }
-    }
-    
-    rebx_add_param_to_be_freed(rebx, newparam);
-    return newparam->paramPtr;
+    return (double*)rebx_set_newparam(object, &newparam);
 }
 
 int* rebx_get_param_int(const void* const object, const char* const param_name){
@@ -310,7 +356,7 @@ int* rebx_get_param_int(const void* const object, const char* const param_name){
         return NULL;
     }
     else{
-        return (int *)voidptr;
+        return (int*)voidptr;
     }
 }
 
@@ -329,29 +375,7 @@ int* rebx_add_param_int(void* object, uint32_t hash){
     newparam->hash = hash;
     newparam->type_hash = reb_hash("int");
 
-    struct rebx_extras* rebx;
-    enum rebx_object_type object_type = rebx_get_object_type(object);
-    switch(object_type){
-        case REBX_EFFECT:
-        {
-            struct rebx_effect* effect = (struct rebx_effect*)object;
-            newparam->next = effect->ap;
-            effect->ap = newparam;
-            rebx = effect->rebx;
-            break;
-        }
-        case REBX_REB_PARTICLE:
-        {
-            struct reb_particle* p = (struct reb_particle*)object;
-            newparam->next = p->ap;
-            p->ap = newparam;
-            rebx = p->sim->extras;
-            break;
-        }
-    }
-    
-    rebx_add_param_to_be_freed(rebx, newparam);
-    return newparam->paramPtr;
+    return (int*)rebx_set_newparam(object, &newparam);
 }
 
 /***********************************************************************************
