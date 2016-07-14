@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
 	reb_move_to_com(sim);
 	
 	struct rebx_extras* rebx = rebx_init(sim); // initialize reboundx
-	rebx_add_modify_mass(rebx); 
+	rebx_add_effect(rebx, "modify_mass"); 
 
 	// To set an exponential mass loss rate, we set the e-folding timescale (positive for growth, negative for loss)
     rebx_set_param_double(&sim->particles[0], "tau_mass", -tmax); // star loses mass with e-damping timescale tmax
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]){
 void heartbeat(struct reb_simulation* const sim){ 
 	// Output masses and semimajor of the inner planet 100 times over the time of the simulation
     if(reb_output_check(sim, tmax/100.)){
-		struct reb_orbit o = rebxtools_particle_to_orbit(sim->G, &sim->particles[1], &sim->particles[0]);
+		struct reb_orbit o = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
 		printf("t=%e, Sun mass = %f, planet mass = %e, planet semimajor axis = %f\n", sim->t, sim->particles[0].m, sim->particles[1].m, o.a);
 	}   
  }

@@ -64,7 +64,6 @@ struct rebx_extras {
 	struct reb_simulation* sim;								// Pointer to the simulation REBOUNDx is linked to.
 	struct rebx_effect* effects;		                    // Linked list with pointers to all the effects added to the simulation.
 	struct rebx_param_to_be_freed* params_to_be_freed; 		// Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
-
 };
 
 /*  Only needed internally for getters and setters.*/
@@ -124,5 +123,6 @@ Effect function prototypes
 void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr);
 void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* gr_full);
 void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* gr_potential);
+void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* const effect);
 
 #endif
