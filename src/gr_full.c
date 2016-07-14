@@ -57,12 +57,12 @@
 #include "reboundx.h"
 
 void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* gr_full){
-    double c;
-    if (!rebx_get_param_double(gr_full, "c", &c)){
+    double* c = rebx_get_param_double(gr_full, "c");
+    if (c == NULL){
         fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
         exit(1);
     }
-    const double C2 = c*c;
+    const double C2 = (*c)*(*c);
     const int _N_real = sim->N - sim->N_var;
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
@@ -229,7 +229,7 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* gr_full)
             break;
         }
         if (k==9){
-            reb_warning(sim, "10 loops in rebx_gr_full did not converge.  This is typically an indication that v^2/c^2 is too large for a 1st order post-newtonian approximation.\n");
+            reb_warning(sim, "10 loops in rebx_gr_full did not converge.\n");
         }
     }
     // update acceleration in particles
@@ -241,12 +241,12 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* gr_full)
 }
 
 double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, struct rebx_effect* gr_full){
-    double c;
-    if (!rebx_get_param_double(gr_full, "c", &c)){
+    double* c = rebx_get_param_double(gr_full, "c");
+    if (c == NULL){
         fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
         exit(1);
     }
-    const double C2 = c*c;
+    const double C2 = (*c)*(*c);
     const int _N_real = sim->N - sim->N_var;
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
@@ -311,7 +311,7 @@ double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, struct r
         e_kin += pi2/(2.*pi.m);
         e_pn -= pi.m/(8.*C2)*vi2*vi2;
 
-        for (int j=i+1; j<_N_real; j++){ // classic potential
+        for (int j=i+1; j<_N_real; j++){ // classic full
 			struct reb_particle pj = particles[j];
 			double dx = pi.x - pj.x;
 			double dy = pi.y - pj.y;

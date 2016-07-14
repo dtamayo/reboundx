@@ -57,25 +57,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "modify_mass.h"
 #include "rebound.h"
 #include "reboundx.h"
-
-#define TWOPI 6.2831853071795862
-
-void rebx_add_modify_mass(struct rebx_extras* rebx){
-    rebx_add_post_timestep_modification(rebx, NULL, "modify_mass", rebx_modify_mass);
-}
 
 void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* const effect){
     const int _N_real = sim->N - sim->N_var;	
 	const double dt = sim->dt_last_done;
 	for(int i=0; i<_N_real; i++){
 		struct reb_particle* const p = &sim->particles[i];
-        const double tau_mass = rebx_get_param_double(p, "tau_mass");
-	    if(isnan(tau_mass)) continue; // only particles with tau_mass set experience mass loss/growth
-
-		p->m += p->m*dt/tau_mass;
+        const double* const tau_mass = rebx_get_param_double(p, "tau_mass");
+        if (tau_mass != NULL){
+		    p->m += p->m*dt/(*tau_mass);
+        }
 	}
     reb_move_to_com(sim);
 }

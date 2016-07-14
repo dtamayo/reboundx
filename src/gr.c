@@ -68,12 +68,12 @@
 #include "reboundx.h"
 
 static void rebx_calculate_gr(struct reb_simulation* const sim, struct rebx_effect* gr, const int source_index){
-    double c;
-    if (!rebx_get_param_double(gr, "c", &c)){
+    double* c = rebx_get_param_double(gr, "c");
+    if (c == NULL){
         fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
         exit(1);
     }
-    const double C2 = c*c;
+    const double C2 = (*c)*(*c);
     const int N_real = sim->N - sim->N_var;
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
@@ -149,21 +149,20 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct rebx_effe
 void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* gr){ // First find gr sources
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
-    int gr_source;
     for (int i=0; i<N_real; i++){
-        if (rebx_get_param_int(&particles[i], "gr_source", &gr_source)){
+        if (rebx_get_param_int(&particles[i], "gr_source") != NULL){
             rebx_calculate_gr(sim, gr, i);
         }
     }
 }
 
 static double rebx_calculate_gr_hamiltonian(const struct reb_simulation* const sim, struct rebx_effect* gr, const int source_index){
-    double c;
-    if (!rebx_get_param_double(gr, "c", &c)){
+    double* c = rebx_get_param_double(gr, "c");
+    if (c == NULL){
         fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
         exit(1);
     }
-    const double C2 = c*c;
+    const double C2 = (*c)*(*c);
     const int N_real = sim->N - sim->N_var;
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
@@ -213,9 +212,8 @@ static double rebx_calculate_gr_hamiltonian(const struct reb_simulation* const s
 double rebx_gr_hamiltonian(const struct reb_simulation* const sim, struct rebx_effect* gr){ 
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
-    int gr_source;
     for (int i=0; i<N_real; i++){
-        if (rebx_get_param_int(&particles[i], "gr_source", &gr_source)){
+        if (rebx_get_param_int(&particles[i], "gr_source") != NULL){
             return rebx_calculate_gr_hamiltonian(sim, gr, i);
         }
     }
