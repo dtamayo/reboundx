@@ -68,19 +68,7 @@
 #include "radiation_forces.h"
 #include "reboundx.h"
 
-struct rebx_params_radiation_forces* rebx_add_radiation_forces(struct rebx_extras* rebx, int source_index, double c){
-	struct rebx_params_radiation_forces* params = malloc(sizeof(*params));
-	params->c = c;
-    params->source_index = source_index;
-    int force_is_velocity_dependent = 1;
-    rebx_add_force(rebx, params, "radiation_forces", rebx_radiation_forces, force_is_velocity_dependent);
-    return params;
-}
-
-void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const effect){
-    const struct rebx_params_radiation_forces* const params = effect->paramsPtr;
-    const double c = params->c;
-    const int source_index = params->source_index;
+static void rebx_calculate_radiation_forces(struct reb_simulation* const sim, const double c, const int source_index){
     struct reb_particle* const particles = sim->particles;
     const struct reb_particle source = particles[source_index];
     const double mu = sim->G*source.m;
@@ -91,8 +79,8 @@ void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect*
         
         if(i == source_index) continue;
         
-        const double beta = rebx_get_param_double(&particles[i], "beta");
-        if(isnan(beta)) continue; // only particles with beta set feel radiation forces
+        const double* beta = rebx_get_param_double(&particles[i], "beta");
+        if(beta == NULL) continue; // only particles with beta set feel radiation forces
         
         const struct reb_particle p = particles[i];
         
@@ -105,7 +93,7 @@ void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect*
         const double dvy = p.vy - source.vy;
         const double dvz = p.vz - source.vz;
         const double rdot = (dx*dvx + dy*dvy + dz*dvz)/dr; // radial velocity
-        const double a_rad = beta*mu/(dr*dr);
+        const double a_rad = *beta*mu/(dr*dr);
 
         // Equation (5) of Burns, Lamy & Soter (1979)
 
@@ -115,14 +103,25 @@ void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect*
 	}
 }
 
-double rebx_rad_calc_beta(struct rebx_extras* rebx, struct rebx_params_radiation_forces* params, double particle_radius, double density, double Q_pr, double L){
-    double mu = rebx->sim->G*rebx->sim->particles[params->source_index].m;
-    const double c = params->c;
-    return 3.*L*Q_pr/(16.*M_PI*mu*c*density*particle_radius);   
+void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const radiation_forces){ 
+    double* c = rebx_get_param_double(radiation_forces, "c");
+    if (c == NULL){
+        fprintf(stderr, "Need to set speed of light in radiation_forces effect.  See examples in documentation.\n");
+        exit(1);
+    }
+    const int N_real = sim->N - sim->N_var;
+    struct reb_particle* const particles = sim->particles;
+    for (int i=0; i<N_real; i++){
+        if (rebx_get_param_int(&particles[i], "radiation_source") != NULL){
+            rebx_calculate_radiation_forces(sim, *c, i);
+        }
+    }
 }
-double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, struct rebx_params_radiation_forces* params, double beta, double density, double Q_pr, double L){
-    double mu = rebx->sim->G*rebx->sim->particles[params->source_index].m;
-    const double c = params->c;
-    return 3.*L*Q_pr/(16.*M_PI*mu*c*density*beta);
+
+double rebx_rad_calc_beta(const double G, const double c, const double source_mass, const double source_luminosity, const double radius, const double density, const double Q_pr){
+    return 3.*source_luminosity*Q_pr/(16.*M_PI*G*source_mass*c*density*radius);   
+}
+double rebx_rad_calc_particle_radius(const double G, const double c, const double source_mass, const double source_luminosity, const double beta, const double density, const double Q_pr){
+    return 3.*source_luminosity*Q_pr/(16.*M_PI*G*source_mass*c*density*beta);
 }
 

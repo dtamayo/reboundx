@@ -152,6 +152,17 @@ struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name){
     else if (hash == reb_hash("modify_mass")){
         effect->ptm = rebx_modify_mass;
     }
+    else if (hash == reb_hash("modify_orbits_direct")){
+        //effect->ptm = rebx_modify_orbits_direct;
+    }
+    else if (hash == reb_hash("modify_orbits_forces")){
+        sim->force_is_velocity_dependent = 1;
+        //effect->force = rebx_modify_orbits_forces;
+    }
+    else if (hash == reb_hash("radiation_forces")){
+        sim->force_is_velocity_dependent = 1;
+        effect->force = rebx_radiation_forces;
+    }
     else{
         fprintf(stderr, "Effect passed to rebx_add_effect not found.\n");
         exit(1);
