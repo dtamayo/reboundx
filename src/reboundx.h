@@ -251,31 +251,33 @@ int rebx_remove_param(const void* const object, const char* const param_name);
 
 /**
  * @brief Calculates beta, the ratio between the radiation pressure force and the gravitational force from the star.
- * @param rebx pointer to the rebx_extras instance.
- * @param params parameters structure returned when adding effect.
- * @param particle_radius radius of grain.
+ * @param G Gravitational constant.
+ * @param c Speed of light.
+ * @param source_mass Mass of the source body.
+ * @param source_luminosity Luminosity of radiation source.
+ * @param radius Particle physical radius.
  * @param density density of particle.
  * @param Q_pr Radiation pressure coefficient (Burns et al. 1979).
- * @param L Luminosity of radiation source.
  */
-double rebx_rad_calc_beta(struct rebx_extras* rebx, struct rebx_params_radiation_forces* params, double particle_radius, double density, double Q_pr, double L);
+double rebx_rad_calc_beta(const double G, const double c, const double source_mass, const double source_luminosity, const double radius, const double density, const double Q_pr);
 /**
  * @brief Calculates the particle radius from physical parameters and beta, the ratio of radiation to gravitational forces from the star.
- * @param rebx pointer to the rebx_extras instance.
- * @param params parameters structure returned when adding effect.
+ * @param G Gravitational constant.
+ * @param c Speed of light.
+ * @param source_mass Mass of the source body.
+ * @param source_luminosity Luminosity of radiation source.
  * @param beta ratio of radiation force to gravitational force from the radiation source body.
  * @param density density of particle.
  * @param Q_pr Radiation pressure coefficient (Burns et al. 1979).
- * @param L Luminosity of radiation source.
  */
-double rebx_rad_calc_particle_radius(struct rebx_extras* rebx, struct rebx_params_radiation_forces* params, double beta, double density, double Q_pr, double L);
+double rebx_rad_calc_particle_radius(const double G, const double c, const double source_mass, const double source_luminosity, const double beta, const double density, const double Q_pr);
 
 /**
  * @brief Calculates the hamiltonian for gr_potential, including the classical Hamiltonian.
  * @param sim pointer to the REBOUND simulation
  * @param params parameters structure returned by add_gr_potential.
  */
-double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, struct rebx_effect* gr_potential);
+double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr_potential);
 
 /**
  * @brief Calculates the hamiltonian for gr, including the classical Hamiltonian.
@@ -283,14 +285,14 @@ double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, str
  * @param sim pointer to the REBOUND simulation
  * @param effect structure returned by rebx_add_effect.
  */
-double rebx_gr_hamiltonian(const struct reb_simulation* const sim, struct rebx_effect* gr);
+double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr);
 
 /**
  * @brief Calculates the hamiltonian for gr_full, including the classical Hamiltonian.
  * @param sim pointer to the REBOUND simulation
  * @param params parameters structure returned by add_gr_full.
  */
-double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, struct rebx_effect* gr_full);
+double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr_full);
 
 /** @} */
 /** @} */
