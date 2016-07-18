@@ -17,7 +17,7 @@ endif
 include $(REB_DIR)/src/Makefile.defs
 OPT+= -fPIC -DLIBREBOUNDX
 
-SOURCES=core.c gr_potential.c gr.c gr_full.c modify_mass.c radiation_forces.c
+SOURCES=core.c rebxtools.c gr_potential.c gr.c gr_full.c modify_mass.c radiation_forces.c modify_orbits_forces.c modify_orbits_direct.c
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=rebxtools.h reboundx.h
 

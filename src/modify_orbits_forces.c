@@ -75,22 +75,80 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
-#define TWOPI 6.2831853071795862
+static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source){
+    double tau_a = INFINITY;
+    double tau_e = INFINITY;
+    double tau_inc = INFINITY;
 
-struct rebx_params_modify_orbits_forces* rebx_add_modify_orbits_forces(struct rebx_extras* rebx){
-	struct rebx_params_modify_orbits_forces* params = malloc(sizeof(*params));
-    params->coordinates = JACOBI;
-    int force_is_velocity_dependent = 1;
-    rebx_add_force(rebx, params, "modify_orbits_forces", rebx_modify_orbits_forces, force_is_velocity_dependent);
-    return params;
+    double* tau_a_ptr = rebx_get_param_double(p, "tau_a");
+    double* tau_e_ptr = rebx_get_param_double(p, "tau_e");
+    double* tau_inc_ptr = rebx_get_param_double(p, "tau_inc");
+
+    if(tau_a_ptr != NULL){
+        tau_a = *tau_a_ptr;
+    }
+    if(tau_e_ptr != NULL){
+        tau_e = *tau_e_ptr;
+    }
+    if(tau_inc_ptr != NULL){
+        tau_inc = *tau_inc_ptr;
+    }
+
+    const double dvx = p->vx - source->vx;
+    const double dvy = p->vy - source->vy;
+    const double dvz = p->vz - source->vz;
+
+    struct reb_vec3d a = {0};
+
+    a.x =  dvx/(2.*tau_a);
+    a.y =  dvy/(2.*tau_a);
+    a.z =  dvz/(2.*tau_a);
+
+    if (tau_e < INFINITY || tau_inc < INFINITY){   // need h and e vectors for both types
+        const double dx = p->x-source->x;
+        const double dy = p->y-source->y;
+        const double dz = p->z-source->z;
+        const double r = sqrt ( dx*dx + dy*dy + dz*dz );
+        const double vr = (dx*dvx + dy*dvy + dz*dvz)/r;
+        const double prefac = 2*vr/r;
+        a.x += prefac*dx/tau_e;
+        a.y += prefac*dy/tau_e;
+        a.z += prefac*dz/tau_e + 2.*dvz/tau_inc;
+    }
+    return a;
 }
 
 void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect){
-    const struct rebx_params_modify_orbits_forces* const params = effect->paramsPtr;
+    int* ptr = rebx_get_param_int(effect, "coordinates");
+    enum REBX_COORDINATES coordinates;
+    if (ptr == NULL){
+        coordinates = REBX_JACOBI;                  // Default
+    }
+    else{
+        coordinates = *ptr;
+    }
+    
+    const int back_reactions_inclusive = 1;
+    const char* reference_name = "central body";
+    rebx_ghost_effect(sim, effect, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_forces);
+}
+/*
+void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect){
     const int N_real = sim->N - sim->N_var;
 
     struct reb_particle com;
-    switch(params->coordinates){
+    
+    const enum REBX_COORDINATES coordinates;
+    const enum REBX_COORDINATES* const ptr = rebx_get_param_int(effect, "coordinates");
+
+    if (ptr == NULL){
+        coordinates = JACOBI;                       // Default
+    }
+    else{
+        coordinates = *ptr;
+    }
+
+    switch(coordinates){
     case JACOBI:
         com = reb_get_com(sim);                     // We start with outermost particle, so start with COM and peel off particles
         break;
@@ -108,7 +166,7 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_eff
     struct reb_particle* p0 = &sim->particles[0];
     for(int i=N_real-1;i>0;--i){
         struct reb_particle* p = &sim->particles[i];
-        if(params->coordinates == JACOBI){
+        if(coordinates == JACOBI){
             rebxtools_update_com_without_particle(&com, p);
         }
         double tau_a = rebx_get_param_double(p, "tau_a");
@@ -157,4 +215,4 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_eff
     }
     reb_move_to_com(sim);
 }
-
+*/

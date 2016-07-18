@@ -47,9 +47,9 @@ extern const char* rebx_version_str;    ///<Version string.
  * @brief Enumeration for different coordinate systems.
  */
 enum REBX_COORDINATES{
-    JACOBI,                             ///< Jacobi coordinates.  Default for REBOUND/REBOUNDx.
-    BARYCENTRIC,                        ///< Coordinates referenced to the center of mass of the whole system.
-    HELIOCENTRIC                        ///< Coordinates referenced to particles[0] in the simulation.
+    REBX_JACOBI,                        ///< Jacobi coordinates.  Default for REBOUND/REBOUNDx.
+    REBX_BARYCENTRIC,                   ///< Coordinates referenced to the center of mass of the whole system.
+    REBX_PARTICLE,                      ///< Coordinates referenced to a particular particle.
 };
 
 /*****************************************
