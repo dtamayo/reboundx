@@ -20,7 +20,6 @@ int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
     // Setup constants
     sim->dt             = 0.012;        // initial timestep.
-    sim->integrator = REB_INTEGRATOR_IAS15;
     sim->heartbeat = heartbeat;
 
     struct reb_particle p = {0}; 
@@ -45,7 +44,7 @@ int main(int argc, char* argv[]){
     // There are two options for how to modify orbits.  You would only choose one (comment the other out).  
     // modify_orbits_forces doesn't have precession separately settable.
 
-    struct rebx_params_modify_orbits_direct* params = rebx_add_modify_orbits_direct(rebx);    // directly update particles' orbital elements each timestep
+    struct rebx_effect* params = rebx_add_effect(rebx, "modify_orbits_direct");    // directly update particles' orbital elements each timestep
     //struct rebx_params_modify_orbits_forces* params = rebx_add_modify_orbits_forces(rebx);  // add forces that orbit-average to give exponential a and e damping
 
     // Set the timescales for each particle.  Parameter getter and setter functions always take the address of the particle (&)
@@ -55,9 +54,9 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(&sim->particles[1], "tau_omega", -tmax/10.); // add linear precession on inner planet (precession period). This won't do anything for modify_orbits_forces
     rebx_set_param_double(&sim->particles[2], "tau_e", -tmax/10.); // add eccentricity damping on particles[2] (e-folding timescale)
 
-    printf("Semimajor axis damping timescale for inner planet is %f.\n", -1.*rebx_get_param_double(&sim->particles[1], "tau_a"));
-    printf("Precession timescale for inner planet is %f.\n", -1.*rebx_get_param_double(&sim->particles[1], "tau_omega"));
-    printf("Eccentricity damping timescale for outer planet is %f.\n", -1.*rebx_get_param_double(&sim->particles[2], "tau_e"));
+    printf("Semimajor axis damping timescale for inner planet is %f.\n", fabs(*rebx_get_param_double(&sim->particles[1], "tau_a")));
+    printf("Precession timescale for inner planet is %f.\n", fabs(*rebx_get_param_double(&sim->particles[1], "tau_omega")));
+    printf("Eccentricity damping timescale for outer planet is %f.\n", fabs(*rebx_get_param_double(&sim->particles[2], "tau_e")));
    
     /* One can also adjust a coupling parameter between eccentricity and semimajor axis damping.  We use the parameter p
      * as defined by Deck & Batygin (2015).  The default p=0 corresponds to no coupling, while p=1 corresponds to e-damping
@@ -67,7 +66,7 @@ int main(int argc, char* argv[]){
      * coordinates, set rebx->modify_orbits_forces.coordinates to BARYCENTRIC or HELIOCENTRIC, respectively. (also works for
      * modify_orbits_direct)*/
 
-    params->coordinates = HELIOCENTRIC;
+    //params->coordinates = HELIOCENTRIC;
 
     reb_integrate(sim, tmax);
     rebx_free(rebx);    // Free all the memory allocated by rebx
