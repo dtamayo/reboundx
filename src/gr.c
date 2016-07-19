@@ -149,10 +149,15 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const gr){ //
     const double C2 = (*c)*(*c);
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
+    int source_found = 0;
     for (int i=0; i<N_real; i++){
         if (rebx_get_param_int(&particles[i], "gr_source") != NULL){
             rebx_calculate_gr(sim, C2, i);
+            source_found = 1;
         }
+    }
+    if (!source_found){
+        rebx_calculate_gr(sim, C2, 0);
     }
 }
 

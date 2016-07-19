@@ -9,7 +9,7 @@
  * (could happen e.g. with barycentric coordinates with test particles and single massive body)
  */
 
-void rebx_ghost_effect(struct reb_simulation* const sim, struct rebx_effect* const effect, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_vec3d (*calculate_effect) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source)){
+void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const effect, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_vec3d (*calculate_effect) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source)){
     const int N_real = sim->N - sim->N_var;
     struct reb_particle com = reb_get_com(sim); // Start with full com for jacobi and barycentric coordinates.
   
@@ -100,7 +100,7 @@ static inline void rebx_subtract_posvel(struct reb_particle* p, struct reb_parti
     p->vz -= massratio*diff->vz;
 }
 
-void rebxtools_ptm(struct reb_simulation* const sim, struct rebx_effect* const effect, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_particle (*calculate_effect) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source)){
+void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_effect* const effect, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_particle (*calculate_effect) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source)){
     const int N_real = sim->N - sim->N_var;
     struct reb_particle com = reb_get_com(sim); // Start with full com for jacobi and barycentric coordinates.
   
