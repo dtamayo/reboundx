@@ -96,16 +96,19 @@ static void rebx_calculate_gr_potential(struct reb_simulation* const sim, const 
 void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* const gr_potential){ 
     double* c = rebx_get_param_double(gr_potential, "c");
     if (c == NULL){
-        fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
-        exit(1);
+        reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
     }
     const double C2 = (*c)*(*c);
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
+    int source_found = 0;
     for (int i=0; i<N_real; i++){
         if (rebx_get_param_int(&particles[i], "gr_source") != NULL){
             rebx_calculate_gr_potential(sim, C2, i);
         }
+    }
+    if (!source_found){
+        rebx_calculate_gr_potential(sim, C2, 0);
     }
 }
 
@@ -136,16 +139,18 @@ static double rebx_calculate_gr_potential_hamiltonian(const struct reb_simulatio
 double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr_potential){
     double* c = rebx_get_param_double(gr_potential, "c");
     if (c == NULL){
-        fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
-        exit(1);
+        reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
     }
     const double C2 = (*c)*(*c);
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
+    int source_found = 0;
     for (int i=0; i<N_real; i++){
         if (rebx_get_param_int(&particles[i], "gr_source") != NULL){
             return rebx_calculate_gr_potential_hamiltonian(sim, C2, i);
         }
     }
-    return reb_tools_energy(sim); // no gr source found, so calculate classical
+    if (!source_found){
+        return rebx_calculate_gr_potential_hamiltonian(sim, C2, 0);
+    }
 }
