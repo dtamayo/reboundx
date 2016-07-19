@@ -78,7 +78,7 @@
 #include "reboundx.h"
 
 static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* primary){
-    int err;
+    int err=0;
     struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, *p, *primary, &err);
     if(err){        // mass of primary was 0 or p = primary.  Return same particle without doing anything.
         return *p;
@@ -119,7 +119,16 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 }
 
 void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect){
+    int* ptr = rebx_get_param_int(effect, "coordinates");
+    enum REBX_COORDINATES coordinates;
+    if (ptr == NULL){
+        coordinates = REBX_JACOBI;                  // Default
+    }
+    else{
+        coordinates = *ptr;
+    }
+    
     const int back_reactions_inclusive = 1;
-    const char* reference_name = "central body";
-    rebxtools_ptm(sim, effect, REBX_JACOBI, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_direct);
+    const char* reference_name = "primary";
+    rebxtools_com_ptm(sim, effect, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_direct);
 }

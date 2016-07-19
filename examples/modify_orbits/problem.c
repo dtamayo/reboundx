@@ -42,10 +42,10 @@ int main(int argc, char* argv[]){
     struct rebx_extras* rebx = rebx_init(sim);
 
     // There are two options for how to modify orbits.  You would only choose one (comment the other out).  
-    // modify_orbits_forces doesn't have precession separately settable.
+    // You can't set precession separately with modify_orbits_forces (eccentricity and inclination damping induce pericenter and nodal precession).
 
     struct rebx_effect* params = rebx_add_effect(rebx, "modify_orbits_direct");    // directly update particles' orbital elements each timestep
-    //struct rebx_params_modify_orbits_forces* params = rebx_add_modify_orbits_forces(rebx);  // add forces that orbit-average to give exponential a and e damping
+    //struct rebx_effect* params = rebx_add_effect(rebx, "modify_orbits_forces");    // add forces that orbit-average to give exponential a and e damping
 
     // Set the timescales for each particle.  Parameter getter and setter functions always take the address of the particle (&)
     double tmax = 5.e4;
@@ -62,14 +62,18 @@ int main(int argc, char* argv[]){
      * as defined by Deck & Batygin (2015).  The default p=0 corresponds to no coupling, while p=1 corresponds to e-damping
      * at constant angular momentum.  This is currently only implemented for modify_orbits_direct (not modify_orbits_forces).
      *
-     * Additionally, the damping by default is done in Jacobi coordinates.  If you'd prefer to use barycentric or heliocentric
-     * coordinates, set rebx->modify_orbits_forces.coordinates to BARYCENTRIC or HELIOCENTRIC, respectively. (also works for
-     * modify_orbits_direct)*/
+     * Additionally, the damping by default is done in Jacobi coordinates.  If you'd prefer to use barycentric 
+     * coordinates, or coordinates referenced to a particular particle, set a coordinates parameter in the effect
+     * parameters returned by rebx_add_effect to REBX_BARYCENTRIC or REBX_PARTICLE.  If the latter, add a 'primary' flag
+     * to the reference particle (not neccesary for barycentric):
+     */
 
-    //params->coordinates = HELIOCENTRIC;
+    rebx_set_param_int(params, "coordinates", REBX_PARTICLE);
+    rebx_set_param_int(&sim->particles[0], "primary", 1);
 
     reb_integrate(sim, tmax);
     rebx_free(rebx);    // Free all the memory allocated by rebx
+    reb_free_simulation(sim);
 }
 
 void heartbeat(struct reb_simulation* sim){

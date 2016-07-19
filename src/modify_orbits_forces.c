@@ -129,8 +129,8 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_eff
     }
     
     const int back_reactions_inclusive = 1;
-    const char* reference_name = "central body";
-    rebx_ghost_effect(sim, effect, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_forces);
+    const char* reference_name = "primary";
+    rebx_com_force(sim, effect, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_forces);
 }
 /*
 void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect){
