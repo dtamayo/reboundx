@@ -65,7 +65,6 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-#include "radiation_forces.h"
 #include "reboundx.h"
 
 static void rebx_calculate_radiation_forces(struct reb_simulation* const sim, const double c, const int source_index){
@@ -110,10 +109,15 @@ void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect*
     }
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
+    int source_found=0;
     for (int i=0; i<N_real; i++){
         if (rebx_get_param_int(&particles[i], "radiation_source") != NULL){
+            source_found = 1;
             rebx_calculate_radiation_forces(sim, *c, i);
         }
+    }
+    if (!source_found){
+        rebx_calculate_radiation_forces(sim, *c, 0);    // default source to index 0 if "radiation_source" not found on any particle
     }
 }
 

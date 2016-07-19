@@ -42,10 +42,6 @@ const char* rebx_version_str = "2.8.7";         // **VERSIONLINE** This line get
  ****************************/
 
 struct rebx_extras* rebx_init(struct reb_simulation* sim){  // reboundx.h
-    if(sim->additional_forces || sim->post_timestep_modifications){
-        reb_error(sim, "ERROR: sim->additional_forces or sim->post_timestep_modifications was already set.  If you want to use REBOUNDx, you need to add custom effects through REBOUNDx.  See http://reboundx.readthedocs.org/en/latest/c_examples.html#adding-custom-post-timestep-modifications-and-forces for a tutorial.");
-    }
-
     struct rebx_extras* rebx = malloc(sizeof(*rebx));
     rebx_initialize(sim, rebx);
     return rebx;
@@ -54,6 +50,10 @@ struct rebx_extras* rebx_init(struct reb_simulation* sim){  // reboundx.h
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     sim->extras = rebx;
     rebx->sim = sim;
+
+    if(sim->additional_forces || sim->post_timestep_modifications){
+        reb_warning(sim, "sim->additional_forces or sim->post_timestep_modifications was already set.  If you want to use REBOUNDx, you should add custom effects through REBOUNDx also.  See http://reboundx.readthedocs.org/en/latest/c_examples.html#adding-custom-post-timestep-modifications-and-forces for a tutorial.");
+    }
 
     sim->additional_forces = rebx_forces;
     sim->post_timestep_modifications = rebx_post_timestep_modifications;
