@@ -34,7 +34,6 @@
 #include "rebound.h"
 #include "core.h"
 #include "rebxtools.h"
-#include "modify_orbits_direct.h"
 
 extern const char* rebx_build_str;      ///< Date and time build string.
 extern const char* rebx_version_str;    ///<Version string.
@@ -277,7 +276,7 @@ double rebx_rad_calc_particle_radius(const double G, const double c, const doubl
  * @param sim pointer to the REBOUND simulation
  * @param params parameters structure returned by add_gr_potential.
  */
-double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr_potential);
+double rebx_gr_potential_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr_potential);
 
 /**
  * @brief Calculates the hamiltonian for gr, including the classical Hamiltonian.
@@ -285,14 +284,14 @@ double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, con
  * @param sim pointer to the REBOUND simulation
  * @param effect structure returned by rebx_add_effect.
  */
-double rebx_gr_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr);
+double rebx_gr_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr);
 
 /**
  * @brief Calculates the hamiltonian for gr_full, including the classical Hamiltonian.
  * @param sim pointer to the REBOUND simulation
  * @param params parameters structure returned by add_gr_full.
  */
-double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr_full);
+double rebx_gr_full_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr_full);
 
 /** @} */
 /** @} */

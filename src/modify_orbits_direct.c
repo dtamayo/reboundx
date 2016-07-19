@@ -73,7 +73,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "modify_orbits_direct.h"
 #include "rebound.h"
 #include "reboundx.h"
 

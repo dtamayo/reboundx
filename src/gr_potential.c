@@ -101,18 +101,16 @@ void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* con
     const double C2 = (*c)*(*c);
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
-    int source_found = 0;
     for (int i=0; i<N_real; i++){
         if (rebx_get_param_int(&particles[i], "gr_source") != NULL){
             rebx_calculate_gr_potential(sim, C2, i);
+            return;                             // only apply effect to first gr_source found.  For multiple sources, need gr_full
         }
     }
-    if (!source_found){
-        rebx_calculate_gr_potential(sim, C2, 0);
-    }
+    rebx_calculate_gr_potential(sim, C2, 0);    // gr_source not found, default to index=0
 }
 
-static double rebx_calculate_gr_potential_hamiltonian(const struct reb_simulation* const sim, const double C2, const int source_index){
+static double rebx_calculate_gr_potential_hamiltonian(struct reb_simulation* const sim, const double C2, const int source_index){
     const struct reb_particle* const particles = sim->particles;
 	const int _N_real = sim->N - sim->N_var;
 	const double G = sim->G;
@@ -136,7 +134,7 @@ static double rebx_calculate_gr_potential_hamiltonian(const struct reb_simulatio
     return H;
 }
 
-double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr_potential){
+double rebx_gr_potential_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr_potential){
     double* c = rebx_get_param_double(gr_potential, "c");
     if (c == NULL){
         reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
@@ -144,13 +142,10 @@ double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, con
     const double C2 = (*c)*(*c);
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
-    int source_found = 0;
     for (int i=0; i<N_real; i++){
         if (rebx_get_param_int(&particles[i], "gr_source") != NULL){
             return rebx_calculate_gr_potential_hamiltonian(sim, C2, i);
         }
     }
-    if (!source_found){
-        return rebx_calculate_gr_potential_hamiltonian(sim, C2, 0);
-    }
+    return rebx_calculate_gr_potential_hamiltonian(sim, C2, 0);
 }
