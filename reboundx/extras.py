@@ -33,10 +33,49 @@ class Extras(Structure):
     #######################################
 
     def add(self, name):
+        """
+        This is the main function for adding effects to simulations.
+        :param name: Name of the effect you wish to add.  See http://reboundx.readthedocs.io/en/latest/effects.html for a list of effects.
+        :type name: string
+        :rtype: rebx_effect structure
+        """
         clibreboundx.rebx_add.restype = POINTER(rebx_effect)
         ptr = clibreboundx.rebx_add(byref(self), c_char_p(name.encode('ascii')))
         return ptr.contents
-    
+
+    def add_custom_force(self, function, force_is_velocity_dependent):
+        """
+        This function allows you to add your own custom python function to REBOUNDx that updates particle accelerations.  
+        You need to use this if you want to both use your own custom functions and the built-in REBOUNDx effects.  
+        See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for details and a tutorial on how to use it.
+        :param function: Custom Python function for updating particle accelerations.
+        :param force_is_velocity_dependent: Whether your custom force depends on the particle velocities.
+        :type function: Function
+        :type c: bool
+        :rtype: rebx_effect structure
+        """
+        REBX_FUNCTION = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))
+        self.custom_effects[function.__name__] = REBX_FUNCTION(function) # store a ref so it doesn't get garbage collected
+        clibreboundx.rebx_add_custom_force.restype = POINTER(rebx_effect)
+        ptr = clibreboundx.rebx_add_custom_force(byref(self), c_char_p(function.__name__.encode('ascii')), self.custom_effects[function.__name__], force_is_velocity_dependent)
+        return ptr.contents
+
+    def add_custom_post_timestep_modification(self, function):
+        """
+        This function allows you to add your own custom python function to REBOUNDx that is executed between integrator timesteps.
+        You need to use this if you want to both use your own custom functions and the built-in REBOUNDx effects.  
+        See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for details and a tutorial on how to use it.
+        :param function: Custom Python function to be executed between timesteps.
+        :type function: Function
+        :type c: bool
+        :rtype: rebx_effect structure 
+        """
+        REBX_FUNCTION = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))
+        self.custom_effects[function.__name__] = REBX_FUNCTION(function) # store a ref so it doesn't get garbage collected
+        clibreboundx.rebx_add_custom_post_timestep_modification.restype = POINTER(rebx_effect)
+        ptr = clibreboundx.rebx_add_custom_post_timestep_modification(byref(self), c_char_p(function.__name__.encode('ascii')), self.custom_effects[function.__name__])
+        return ptr.contents
+
     #######################################
     # Convenience Functions
     #######################################
