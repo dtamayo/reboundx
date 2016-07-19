@@ -51,38 +51,6 @@ enum REBX_COORDINATES{
     REBX_PARTICLE,                      ///< Coordinates referenced to a particular particle.
 };
 
-/*****************************************
-  Parameter structures for each effect
-******************************************/
-
-struct rebx_params_modify_orbits_direct{
-    double p;                           ///< Coupling parameter between eccentricity and semimajor axis evolution.
-    enum REBX_COORDINATES coordinates;  ///< Coordinate system that should be used for the calculations.
-};
-
-struct rebx_params_modify_orbits_forces{
-    enum REBX_COORDINATES coordinates;  ///< Coordinate system that should be used for the calculations.
-};
-
-struct rebx_params_gr {
-    int source_index;                   ///< Index of particle in particles array causing GR corrections.
-    double c;                           ///< Speed of light in units appropriate for sim->G and initial conditions.
-};
-
-struct rebx_params_gr_potential {
-    int source_index;                   ///< Index of particle in particles array causing GR corrections.
-    double c;                           ///< Speed of light in units appropriate for sim->G and initial conditions.
-};
-
-struct rebx_params_gr_full {
-    double c;                           ///< Speed of light in units appropriate for sim->G and initial conditions.
-};
-
-struct rebx_params_radiation_forces {
-    int source_index;                   ///< Index of particle in particles array that is the source of the radiation.
-    double c;                           ///< Speed of light in units appropriate for sim->G and initial conditions.
-};
-
 /****************************************
   General REBOUNDx Functions
 *****************************************/
@@ -116,86 +84,41 @@ void rebx_free(struct rebx_extras* rebx);
 /****************************************
   Functions for adding effects
 *****************************************/
-struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name);
-
-
 /**
- * \name Adder Functions for Each REBOUNDx Effect
+ * \name Functions for adding effects in REBOUNDx
  * @{
  */
 /**
- * @defgroup AddEffect
+ * @defgroup EffectAdders
+ * @details These are the functions for adding effects in REBOUNDx.
  * @{
  */
-/**
- * @brief Adds orbit modifications, altering the orbital elements directly.
- * @details Silently sets the effect struct's p member to 0, and coordinates to JACOBI.
- * User can modify if needed.
- * @param rebx pointer to the rebx_extras instance
- */
-struct rebx_params_modify_orbits_direct* rebx_add_modify_orbits_direct(struct rebx_extras* rebx);
 
 /**
- * @brief Adds orbit modifications, implemented as forces.
- * @details Silently sets the effect struct's coordinates member to JACOBI.
- * User can modify if needed.
- * @param rebx pointer to the rebx_extras instance
+ * @brief Main function for adding effects in REBOUNDx.
+ * @param rebx Pointer to the rebx_extras instance returned by rebx_init.
+ * @return Returns a pointer to a rebx_effect structure for the effect.
  */
-struct rebx_params_modify_orbits_forces* rebx_add_modify_orbits_forces(struct rebx_extras* rebx);
+struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name);
 
 /**
- * @brief Adds post-Newtonian corrections arising only from a single particle.  
- * @param rebx pointer to the rebx_extras instance
- * @param source_index Index in the particles array of the body that causes the GR corrections.
- * @param c Speed of light.
+ * @brief Function for adding a custom force in REBOUNDx.
+ * @param rebx Pointer to the rebx_extras instance returned by rebx_init.
+ * @param name String with the name of the custom effect.
+ * @param custom_force User-implemented function that updates the accelerations of particles.
+ * @param force_is_velocity_dependent Should be set to 1 if the custom force uses particle velocities, 0 otherwise.
+ * @return Returns a pointer to a rebx_effect structure for the effect.
  */
-struct rebx_params_gr* rebx_add_gr(struct rebx_extras* rebx, int source_index, double c);
+struct rebx_effect* rebx_add_custom_force(struct rebx_extras* rebx, const char* name, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* const effect), const int force_is_velocity_dependent);
 
 /**
- * @brief Adds simple potential for post-Newtonian corrections arising only from a single particle.
- * @param rebx pointer to the rebx_extras instance
- * @param source_index Index in the particles array of the body that causes the GR corrections.
- * @param c Speed of light.
+ * @brief Function for adding a custom post_timestep_modification in REBOUNDx.
+ * @param rebx Pointer to the rebx_extras instance returned by rebx_init.
+ * @param name String with the name of the custom effect.
+ * @param custom_ptm User-implemented function that updates particles.
+ * @return Returns a pointer to a rebx_effect structure for the effect.
  */
-struct rebx_params_gr_potential* rebx_add_gr_potential(struct rebx_extras* rebx, int source_index, double c);
-
-/**
- * @brief Adds post-Newtonian corrections arising from all bodies in the simulation.
- * @param rebx pointer to the rebx_extras instance
- * @param c Speed of light.
- */
-struct rebx_params_gr_full* rebx_add_gr_full(struct rebx_extras* rebx, double c);
-
-/**
- * @brief Adds radiation forces to the simulation (i.e., radiation pressure and Poynting-Robertson drag).
- * @param rebx pointer to the rebx_extras instance
- * @param source_index Index in the particles array of the body that is the radiation source.
- * @param c Speed of light.
- */
-struct rebx_params_radiation_forces* rebx_add_radiation_forces(struct rebx_extras* rebx, int source_index, double c);
-
-/**
- * @brief Adds mass loss/growth to the simulation.
- * @param rebx pointer to the rebx_extras instance
- */
-void rebx_add_modify_mass(struct rebx_extras* rebx);
-
-/**
- * @brief Allows user to specify their own post timestep modifications. Behavior is identical to setting up post timestep modifications in REBOUND itself.
- * @param rebx pointer to the rebx_extras instance
- * @param custom_post_timestep_modifications Custom post-timestep modification function.
- * @param custom_params Custom parameters container.  Pass NULL if you don't want to use it.
- */
-void rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, void (*custom_post_timestep_modification)(struct reb_simulation* const sim, struct rebx_effect* const custom_effect), void* custom_params);
-
-/**
- * @brief Allows user to specify their own extra forces. Behaviour is identical to setting up extra forces  in REBOUND itself.
- * @param rebx pointer to the rebx_extras instance
- * @param custom_forces Custom forces function.
- * @param force_is_velocity_dependent Set to 1 if force is velocity dependent.
- * @param custom_params Custom parameters container.  Pass NULL if you don't want to use it.
- */
-void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* const custom_effect), int force_is_velocity_dependent, void* custom_params);
+struct rebx_effect* rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, const char* name, void (*custom_ptm)(struct reb_simulation* const sim, struct rebx_effect* const effect));
 /** @} */
 /** @} */
 
@@ -209,7 +132,7 @@ void rebx_add_custom_force(struct rebx_extras* rebx, void (*custom_force)(struct
  */
 /**
  * @defgroup GetterSetter
- * @brief Getters and setters for particle parameters (one for each variable type).
+ * @brief Getters and setters for particle and effect parameters (one for each variable type).
  * @{
  */
 
@@ -274,7 +197,7 @@ double rebx_rad_calc_particle_radius(const double G, const double c, const doubl
 /**
  * @brief Calculates the hamiltonian for gr_potential, including the classical Hamiltonian.
  * @param sim pointer to the REBOUND simulation
- * @param params parameters structure returned by add_gr_potential.
+ * @param gr_potential Effect structure returned by rebx_add("gr_potential").
  */
 double rebx_gr_potential_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr_potential);
 
@@ -282,14 +205,14 @@ double rebx_gr_potential_hamiltonian(struct reb_simulation* const sim, const str
  * @brief Calculates the hamiltonian for gr, including the classical Hamiltonian.
  * @details Assumes there is only one source particle (with gr_source set to 1)
  * @param sim pointer to the REBOUND simulation
- * @param effect structure returned by rebx_add_effect.
+ * @param gr Effect structure returned by rebx_add("gr").
  */
 double rebx_gr_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr);
 
 /**
  * @brief Calculates the hamiltonian for gr_full, including the classical Hamiltonian.
  * @param sim pointer to the REBOUND simulation
- * @param params parameters structure returned by add_gr_full.
+ * @param gr_full Effect structure returned by rebx_add("gr_full")
  */
 double rebx_gr_full_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr_full);
 

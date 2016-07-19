@@ -35,7 +35,7 @@ int main(int argc, char* argv[]){
     
     struct rebx_extras* rebx = rebx_init(sim); 
     double c = 3.e8;                    /* speed of light in SI units */
-    struct rebx_effect* rad_params = rebx_add_effect(rebx, "radiation_forces");
+    struct rebx_effect* rad_params = rebx_add(rebx, "radiation_forces");
     rebx_set_param_double(rad_params, "c", c);
     rebx_set_param_int(&sim->particles[0], "radiation_source", 1);
 

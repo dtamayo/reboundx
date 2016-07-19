@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
 	reb_move_to_com(sim);
 	
 	struct rebx_extras* rebx = rebx_init(sim); // initialize reboundx
-	rebx_add_effect(rebx, "modify_mass"); 
+	rebx_add(rebx, "modify_mass"); 
 
 	// To set an exponential mass loss rate, we set the e-folding timescale (positive for growth, negative for loss)
     rebx_set_param_double(&sim->particles[0], "tau_mass", -tmax); // star loses mass with e-damping timescale tmax

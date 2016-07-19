@@ -34,7 +34,7 @@ int main(int argc, char* argv[]){
     reb_move_to_com(sim);
     
     // Could also add "gr" or "gr_full" here.  See documentation for details.
-    struct rebx_effect* gr_params = rebx_add_effect(rebx, "gr");
+    struct rebx_effect* gr_params = rebx_add(rebx, "gr");
    
     // Have to set speed of light in right units (set by G & initial conditions).  Here we use default units of AU/(yr/2pi)
     rebx_set_param_double(gr_params, "c", REBX_C);  
