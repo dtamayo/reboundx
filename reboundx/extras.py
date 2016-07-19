@@ -32,9 +32,9 @@ class Extras(Structure):
     # Functions for adding REBOUNDx effects
     #######################################
 
-    def add_effect(self, name):
-        clibreboundx.rebx_add_effect.restype = POINTER(rebx_effect)
-        ptr = clibreboundx.rebx_add_effect(byref(self), c_char_p(name.encode('ascii')))
+    def add(self, name):
+        clibreboundx.rebx_add.restype = POINTER(rebx_effect)
+        ptr = clibreboundx.rebx_add(byref(self), c_char_p(name.encode('ascii')))
         return ptr.contents
     
     #######################################

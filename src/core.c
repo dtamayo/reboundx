@@ -125,50 +125,72 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
  Adders for linked lists in extras structure
  *********************************************/
 
-struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name){
+static struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name){
     struct rebx_effect* effect = malloc(sizeof(*effect));
     
     effect->object_type = reb_hash("rebx_effect");
+    effect->hash = reb_hash(name);
     effect->ap = NULL;
     effect->force = NULL;
     effect->ptm = NULL;
     effect->rebx = rebx;
     
-    struct reb_simulation* sim = rebx->sim;
-    uint32_t hash = reb_hash(name);
-
-    if(hash == reb_hash("gr")){
-        sim->force_is_velocity_dependent = 1;
-        effect->force = rebx_gr;
-    }
-    else if (hash == reb_hash("gr_full")){
-        sim->force_is_velocity_dependent = 1;
-        effect->force = rebx_gr_full;
-    }
-    else if (hash == reb_hash("gr_potential")){
-        effect->force = rebx_gr_potential;
-    }
-    else if (hash == reb_hash("modify_mass")){
-        effect->ptm = rebx_modify_mass;
-    }
-    else if (hash == reb_hash("modify_orbits_direct")){
-        effect->ptm = rebx_modify_orbits_direct;
-    }
-    else if (hash == reb_hash("modify_orbits_forces")){
-        sim->force_is_velocity_dependent = 1;
-        effect->force = rebx_modify_orbits_forces;
-    }
-    else if (hash == reb_hash("radiation_forces")){
-        sim->force_is_velocity_dependent = 1;
-        effect->force = rebx_radiation_forces;
-    }
-    else{
-        reb_error(sim, "Effect passed to rebx_add_effect not found.\n");
-    }
     
     effect->next = rebx->effects;
     rebx->effects = effect;
     
+    return effect;
+}
+
+struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
+    struct rebx_effect* effect = rebx_add_effect(rebx, name);
+    struct reb_simulation* sim = rebx->sim;
+
+    if(effect->hash == reb_hash("gr")){
+        sim->force_is_velocity_dependent = 1;
+        effect->force = rebx_gr;
+    }
+    else if (effect->hash == reb_hash("gr_full")){
+        sim->force_is_velocity_dependent = 1;
+        effect->force = rebx_gr_full;
+    }
+    else if (effect->hash == reb_hash("gr_potential")){
+        effect->force = rebx_gr_potential;
+    }
+    else if (effect->hash == reb_hash("modify_mass")){
+        effect->ptm = rebx_modify_mass;
+    }
+    else if (effect->hash == reb_hash("modify_orbits_direct")){
+        effect->ptm = rebx_modify_orbits_direct;
+    }
+    else if (effect->hash == reb_hash("modify_orbits_forces")){
+        sim->force_is_velocity_dependent = 1;
+        effect->force = rebx_modify_orbits_forces;
+    }
+    else if (effect->hash == reb_hash("radiation_forces")){
+        sim->force_is_velocity_dependent = 1;
+        effect->force = rebx_radiation_forces;
+    }
+    else{
+        reb_error(sim, "Effect passed to rebx_add not found.\n");
+    }
+    
+    return effect;
+}
+
+struct rebx_effect* rebx_add_custom_force(struct rebx_extras* rebx, const char* name, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* const effect), const int force_is_velocity_dependent){
+    struct rebx_effect* effect = rebx_add_effect(rebx, name);
+    effect->force = custom_force;
+    struct reb_simulation* sim = rebx->sim;
+    if(force_is_velocity_dependent){
+        sim->force_is_velocity_dependent = 1;
+    }
+    return effect;
+}
+
+struct rebx_effect* rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, const char* name, void (*custom_ptm)(struct reb_simulation* const sim, struct rebx_effect* const effect)){
+    struct rebx_effect* effect = rebx_add_effect(rebx, name);
+    effect->ptm = custom_ptm;
     return effect;
 }
     
