@@ -97,6 +97,7 @@ void rebx_free(struct rebx_extras* rebx);
 /**
  * @brief Main function for adding effects in REBOUNDx.
  * @param rebx Pointer to the rebx_extras instance returned by rebx_init.
+ * @param name Name of the effect we want to add.
  * @return Returns a pointer to a rebx_effect structure for the effect.
  */
 struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name);
@@ -123,37 +124,45 @@ struct rebx_effect* rebx_add_custom_post_timestep_modification(struct rebx_extra
 /** @} */
 
 /********************************
- * Parameter getters and setters
+ * Parameter manipulation functions
  *******************************/
 
 /**
- * \name Getters and Setters for particle parameters
+ * \name Functions for accessing and modifying particle and effect parameters.
  * @{
  */
 /**
- * @defgroup GetterSetter
- * @brief Getters and setters for particle and effect parameters (one for each variable type).
+ * @defgroup ParameterManipulators
+ * @brief Functions for accessing and modifying particle and effect parameters.
  * @{
  */
 
 /**
+ * @brief Removes a parameter from either a reb_particle or rebx_effect structure.
+ * @param object Pointer to either a reb_particle or rebx_effect to which to add the parameter.
+ * @param param_name Name of the parameter we want to remove.
+ * @return 1 if parameter found and successfully removed, 0 otherwise.
+ */
+int rebx_remove_param(const void* const object, const char* const param_name);
+
+/**
  * @brief Sets a parameter of type double for a parameter in a linked list of rebx_params.
- * @param ap Pointer to the head of the rebx_param linked list where we want to add or edit a parameter.
- * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org)
+ * @param object Pointer to either a reb_particle or rebx_effect to which to add the parameter.
+ * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org for what parameters are needed for each effect)
  * @param value Value to which we want to set the parameter.
  */
 void rebx_set_param_double(void* object, const char* const param_name, double value);
 
 /**
- * @brief Gets a parameter value from a rebx_param linked list.
- * @param ap Pointer to the head of the rebx_param linked list to search.
+ * @brief Gets a parameter value of type double from a rebx_param linked list.
+ * @param object Pointer to either a reb_particle or rebx_effect to which to add the parameter.
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
+ * @return Pointer to the parameter. NULL if parameter is not found in object (user must check for NULL to avoid segmentation fault).
  */
-//double rebx_get_param_double(const void* const object, const char* param_name);
 double* rebx_get_param_double(const void* const object, const char* const param_name);
+
 int* rebx_get_param_int(const void* const object, const char* const param_name);
 void rebx_set_param_int(void* object, const char* const param_name, int value);
-int rebx_remove_param(const void* const object, const char* const param_name);
 /** @} */
 /** @} */
 
