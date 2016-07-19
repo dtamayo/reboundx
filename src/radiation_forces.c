@@ -106,8 +106,7 @@ static void rebx_calculate_radiation_forces(struct reb_simulation* const sim, co
 void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const radiation_forces){ 
     double* c = rebx_get_param_double(radiation_forces, "c");
     if (c == NULL){
-        fprintf(stderr, "Need to set speed of light in radiation_forces effect.  See examples in documentation.\n");
-        exit(1);
+        reb_error(sim, "Need to set speed of light in radiation_forces effect.  See examples in documentation.\n");
     }
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;

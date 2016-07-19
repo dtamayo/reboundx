@@ -43,8 +43,7 @@ const char* rebx_version_str = "2.8.7";         // **VERSIONLINE** This line get
 
 struct rebx_extras* rebx_init(struct reb_simulation* sim){  // reboundx.h
     if(sim->additional_forces || sim->post_timestep_modifications){
-        fprintf(stderr,"ERROR: sim->additional_forces or sim->post_timestep_modifications was already set.  If you want to use REBOUNDx, you need to add custom effects through REBOUNDx.  See http://reboundx.readthedocs.org/en/latest/c_examples.html#adding-custom-post-timestep-modifications-and-forces for a tutorial.");
-        exit(1);
+        reb_error(sim, "ERROR: sim->additional_forces or sim->post_timestep_modifications was already set.  If you want to use REBOUNDx, you need to add custom effects through REBOUNDx.  See http://reboundx.readthedocs.org/en/latest/c_examples.html#adding-custom-post-timestep-modifications-and-forces for a tutorial.");
     }
 
     struct rebx_extras* rebx = malloc(sizeof(*rebx));
@@ -164,8 +163,7 @@ struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name){
         effect->force = rebx_radiation_forces;
     }
     else{
-        fprintf(stderr, "Effect passed to rebx_add_effect not found.\n");
-        exit(1);
+        reb_error(sim, "Effect passed to rebx_add_effect not found.\n");
     }
     
     effect->next = rebx->effects;

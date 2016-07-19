@@ -56,11 +56,10 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr_full){
-    double* c = rebx_get_param_double(gr_full, "c");
+void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const effect){
+    double* c = rebx_get_param_double(effect, "c");
     if (c == NULL){
-        fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
-        exit(1);
+        reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
     }
     const double C2 = (*c)*(*c);
     const int _N_real = sim->N - sim->N_var;
@@ -240,11 +239,10 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
     }
 }
 
-double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const gr_full){
-    double* c = rebx_get_param_double(gr_full, "c");
+double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, const struct rebx_effect* const effect){
+    double* c = rebx_get_param_double(effect, "c");
     if (c == NULL){
-        fprintf(stderr, "Need to set speed of light in gr effect.  See examples in documentation.\n");
-        exit(1);
+        reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
     }
     const double C2 = (*c)*(*c);
     const int _N_real = sim->N - sim->N_var;
