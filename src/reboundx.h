@@ -189,6 +189,7 @@ void rebx_set_param_int(void* object, const char* const param_name, int value);
  * @param radius Particle physical radius.
  * @param density density of particle.
  * @param Q_pr Radiation pressure coefficient (Burns et al. 1979).
+ * @return Beta parameter (double). 
  */
 double rebx_rad_calc_beta(const double G, const double c, const double source_mass, const double source_luminosity, const double radius, const double density, const double Q_pr);
 /**
@@ -200,6 +201,7 @@ double rebx_rad_calc_beta(const double G, const double c, const double source_ma
  * @param beta ratio of radiation force to gravitational force from the radiation source body.
  * @param density density of particle.
  * @param Q_pr Radiation pressure coefficient (Burns et al. 1979).
+ * @return Particle radius (double).
  */
 double rebx_rad_calc_particle_radius(const double G, const double c, const double source_mass, const double source_luminosity, const double beta, const double density, const double Q_pr);
 
@@ -207,6 +209,7 @@ double rebx_rad_calc_particle_radius(const double G, const double c, const doubl
  * @brief Calculates the hamiltonian for gr_potential, including the classical Hamiltonian.
  * @param sim pointer to the REBOUND simulation
  * @param gr_potential Effect structure returned by rebx_add("gr_potential").
+ * @return Total Hamiltonian, including classical Hamiltonian (double).
  */
 double rebx_gr_potential_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr_potential);
 
@@ -215,6 +218,7 @@ double rebx_gr_potential_hamiltonian(struct reb_simulation* const sim, const str
  * @details Assumes there is only one source particle (with gr_source set to 1)
  * @param sim pointer to the REBOUND simulation
  * @param gr Effect structure returned by rebx_add("gr").
+ * @return Total Hamiltonian, including classical Hamiltonian (double).
  */
 double rebx_gr_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr);
 
@@ -222,6 +226,7 @@ double rebx_gr_hamiltonian(struct reb_simulation* const sim, const struct rebx_e
  * @brief Calculates the hamiltonian for gr_full, including the classical Hamiltonian.
  * @param sim pointer to the REBOUND simulation
  * @param gr_full Effect structure returned by rebx_add("gr_full")
+ * @return Total Hamiltonian, including classical Hamiltonian (double).
  */
 double rebx_gr_full_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr_full);
 

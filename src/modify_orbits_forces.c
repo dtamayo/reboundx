@@ -42,28 +42,28 @@
  * Both these effects are physical, and the method is more robust for strongly perturbed systems.
  * 
  * **Effect Parameters**
- * 
- * =========================== ==================================================================
- * Field (C type)              Description
- * =========================== ==================================================================
- * coordinates (enum)          Type of elements to use for modification (Jacobi, barycentric or heliocentric).
- *                             See the examples for usage.
- * =========================== ==================================================================
- * 
+ *
+ * If coordinates not, defaults to using Jacobi coordinates.
+ *
+ * ============================ =========== ==================================================================
+ * Field (C type)               Required    Description
+ * ============================ =========== ==================================================================
+ * coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
+ *                                          See the examples for usage.
+ * ============================ =========== ==================================================================
+ *
  * **Particle Parameters**
- * 
+ *
  * One can pick and choose which particles have which parameters set.  
  * For each particle, any unset parameter is ignored.
- * 
- * =========================== ======================================================
- * Name (C type)               Description
- * =========================== ======================================================
- * tau_a (double)              Semimajor axis exponential growth/damping timescale
- * tau_e (double)              Eccentricity exponential growth/damping timescale
- * tau_inc (double)            Inclination axis exponential growth/damping timescale
- * tau_Omega (double)          Period of linear nodal precession/regression
- * tau_omega (double)          Period of linear apsidal precession/regression
- * =========================== ======================================================
+ *
+ * ============================ =========== ==================================================================
+ * Field (C type)               Required    Description
+ * ============================ =========== ==================================================================
+ * tau_a (double)               No          Semimajor axis exponential growth/damping timescale
+ * tau_e (double)               No          Eccentricity exponential growth/damping timescale
+ * tau_inc (double)             No          Inclination axis exponential growth/damping timescale
+ * ============================ =========== ==================================================================
  * 
  */
 

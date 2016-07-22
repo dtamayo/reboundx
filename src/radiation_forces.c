@@ -42,23 +42,21 @@
  * 
  * **Effect Parameters**
  * 
- * =========================== ==================================================================
- * Field (C type)              Description
- * =========================== ==================================================================
- * c (double)                  Speed of light in the units used for the simulation.
- * =========================== ==================================================================
- * 
+ * ============================ =========== ==================================================================
+ * Field (C type)               Required    Description
+ * ============================ =========== ==================================================================
+ * c (double)                   Yes         Speed of light in the units used for the simulation.
+ * ============================ =========== ==================================================================
+ *
  * **Particle Parameters**
- * 
- * Only particles with their ``beta`` parameter set will feel radiation forces.
- * 
- * =========================== ======================================================
- * Name (C type)               Description
- * =========================== ======================================================
- * beta (double)               Ratio of the radiation force to the gravitational force
- *                             from the radiation source.
- * source_index (int)          Index in the `particles` array for the radiation source.
- * =========================== ======================================================
+ *
+ * If no particles have radiation_source set, effect will assume the particle at index 0 in the particles array is the source.
+ *
+ * ============================ =========== ==================================================================
+ * Field (C type)               Required    Description
+ * ============================ =========== ==================================================================
+ * radiation_source (int)       No          Flag identifying the particle as the source of radiation.
+ * ============================ =========== ==================================================================
  * 
  */
 

@@ -1,3 +1,5 @@
+#Need to add at least 3 dollar signs above each effect group as below. Lines starting with a hash will be skipped.
+
 .. _effects:
 
 REBx Effects & Parameters
@@ -37,30 +39,32 @@ Since this method changes osculating (i.e., two-body) elements, it can give unph
 
 **Effect Parameters**
 
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-p (double)                  Coupling parameter between eccentricity and semimajor axis evolution
-                            (see Deck & Batygin 2015). `p=0` corresponds to no coupling, `p=1` to
-                            eccentricity evolution at constant angular momentum.
-coordinates (enum)          Type of elements to use for modification (Jacobi, barycentric or heliocentric).
-                            See the examples for usage.
-=========================== ==================================================================
+If p is not set, it defaults to 1.  If coordinates not set, defaults to using Jacobi coordinates.
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+p (double)                   No          Coupling parameter between eccentricity and semimajor axis evolution
+                                         (see Deck & Batygin 2015). `p=0` corresponds to no coupling, `p=1` to
+                                         eccentricity evolution at constant angular momentum.
+coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
+                                         See the examples for usage.
+============================ =========== ==================================================================
 
 **Particle Parameters**
 
 One can pick and choose which particles have which parameters set.  
 For each particle, any unset parameter is ignored.
 
-=========================== ======================================================
-Name (C type)               Description
-=========================== ======================================================
-tau_a (double)              Semimajor axis exponential growth/damping timescale
-tau_e (double)              Eccentricity exponential growth/damping timescale
-tau_inc (double)            Inclination axis exponential growth/damping timescale
-tau_Omega (double)          Period of linear nodal precession/regression
-tau_omega (double)          Period of linear apsidal precession/regression
-=========================== ======================================================
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+tau_a (double)               No          Semimajor axis exponential growth/damping timescale
+tau_e (double)               No          Eccentricity exponential growth/damping timescale
+tau_inc (double)             No          Inclination axis exponential growth/damping timescale
+tau_Omega (double)           No          Period of linear nodal precession/regression
+tau_omega (double)           No          Period of linear apsidal precession/regression
+============================ =========== ==================================================================
 
 
 .. _modify_orbits_forces:
@@ -84,27 +88,27 @@ Both these effects are physical, and the method is more robust for strongly pert
 
 **Effect Parameters**
 
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-coordinates (enum)          Type of elements to use for modification (Jacobi, barycentric or heliocentric).
-                            See the examples for usage.
-=========================== ==================================================================
+If coordinates not, defaults to using Jacobi coordinates.
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
+                                         See the examples for usage.
+============================ =========== ==================================================================
 
 **Particle Parameters**
 
 One can pick and choose which particles have which parameters set.  
 For each particle, any unset parameter is ignored.
 
-=========================== ======================================================
-Name (C type)               Description
-=========================== ======================================================
-tau_a (double)              Semimajor axis exponential growth/damping timescale
-tau_e (double)              Eccentricity exponential growth/damping timescale
-tau_inc (double)            Inclination axis exponential growth/damping timescale
-tau_Omega (double)          Period of linear nodal precession/regression
-tau_omega (double)          Period of linear apsidal precession/regression
-=========================== ======================================================
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+tau_a (double)               No          Semimajor axis exponential growth/damping timescale
+tau_e (double)               No          Eccentricity exponential growth/damping timescale
+tau_inc (double)             No          Inclination axis exponential growth/damping timescale
+============================ =========== ==================================================================
 
 
 General Relativity
@@ -138,12 +142,12 @@ c (double)                   Yes         Speed of light in the units used for th
 
 **Particle Parameters**
 
-If no particles have gr_source set, effect won't do anything.
+If no particles have gr_source set, effect will assume the particle at index 0 in the particles array is the source.
 
 ============================ =========== ==================================================================
 Field (C type)               Required    Description
 ============================ =========== ==================================================================
-gr_source (int)              Yes         Index in the `particles` array for the massive central body.
+gr_source (int)              No          Flag identifying the particle as the source of perturbations.
 ============================ =========== ==================================================================
 
 
@@ -160,7 +164,7 @@ C Example               :ref:`c_example_gr`
 Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
 ======================= ===============================================
 
-This algorithm incorporates GR effects from all bodies in the system, and is necessary for multiple massive bodies like stellar binaries.
+This algorithm incorporates the first-order post-newtonian effects from all bodies in the system, and is necessary for multiple massive bodies like stellar binaries.
 
 **Effect Parameters**
 
@@ -203,12 +207,12 @@ c (double)                   Yes         Speed of light in the units used for th
 
 **Particle Parameters**
 
-If no particles have gr_source set, effect won't do anything.
+If no particles have gr_source set, effect will assume the particle at index 0 in the particles array is the source.
 
 ============================ =========== ==================================================================
 Field (C type)               Required    Description
 ============================ =========== ==================================================================
-gr_source (int)              Yes         Index in the `particles` array for the massive central body.
+gr_source (int)              No          Flag identifying the particle as the source of perturbations.
 ============================ =========== ==================================================================
 
 
@@ -235,27 +239,56 @@ Only particles whose `beta` parameter is set will feel the radiation.
 
 **Effect Parameters**
 
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-c (double)                  Speed of light in the units used for the simulation.
-=========================== ==================================================================
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+c (double)                   Yes         Speed of light in the units used for the simulation.
+============================ =========== ==================================================================
 
 **Particle Parameters**
 
-Only particles with their ``beta`` parameter set will feel radiation forces.
+If no particles have radiation_source set, effect will assume the particle at index 0 in the particles array is the source.
 
-=========================== ======================================================
-Name (C type)               Description
-=========================== ======================================================
-beta (double)               Ratio of the radiation force to the gravitational force
-                            from the radiation source.
-source_index (int)          Index in the `particles` array for the radiation source.
-=========================== ======================================================
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+radiation_source (int)       No          Flag identifying the particle as the source of radiation.
+============================ =========== ==================================================================
 
 
 Mass Modifications
 ^^^^^^^^^^^^^^^^^^
+.. _frame_shift:
+
+frame_shift
+***********
+
+======================= ===============================================
+Authors                 D. Tamayo
+Implementation Paper    *In progress*
+Based on                None
+C Example               :ref:`c_example_modify_mass`
+Python Example          `ModifyMass.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ModifyMass.ipynb>`_.
+======================= ===============================================
+
+This adds exponential mass growth/loss to individual particles every timestep.
+Set particles' ``tau_mass`` parameter to a negative value for mass loss, positive for mass growth.
+
+**Effect Parameters**
+
+*None*
+
+**Particle Parameters**
+
+Only particles with their ``tau_mass`` parameter set will have their masses affected.
+
+============================ =========== =======================================================
+Name (C type)                Required    Description
+============================ =========== =======================================================
+tau_mass (double)            Yes         e-folding mass loss (<0) or growth (>0) timescale    
+============================ =========== =======================================================
+
+
 .. _modify_mass:
 
 modify_mass

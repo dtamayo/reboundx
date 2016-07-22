@@ -50,12 +50,12 @@
  *
  * **Particle Parameters**
  *
- * If no particles have gr_source set, effect won't do anything.
+ * If no particles have gr_source set, effect will assume the particle at index 0 in the particles array is the source.
  *
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * gr_source (int)              Yes         Index in the `particles` array for the massive central body.
+ * gr_source (int)              No          Flag identifying the particle as the source of perturbations.
  * ============================ =========== ==================================================================
  * 
  */

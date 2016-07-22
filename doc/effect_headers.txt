@@ -1,4 +1,5 @@
-# Lines starting with a hash will be ignored by script.  Need to add at least 3 dollar signs above each effect group as below.
+#Need to add at least 3 dollar signs above each effect group as below. Lines starting with a hash will be skipped.
+
 .. _effects:
 
 REBx Effects & Parameters
