@@ -76,7 +76,7 @@ with open("effects.rst", "w") as f:
         lines = fh.readlines()
         i=0
         while i < len(lines):
-            if lines[i].startswith("#"):
+            if lines[i].startswith(".. #"):
                 i += 1    # skip comment line
             else:
                 if "$$$" in lines[i]: # New category

@@ -37,8 +37,8 @@ would, e.g.
 
     import rebound
     sim = rebound.Simulation()
-    sim.add(m=1.)
-    sim.add(a=1.)
+    sim.add(m=1., hash="sun")
+    sim.add(a=1., hash="earth")
 
 To use reboundx, we first import it, and then create a
 ``reboundx.Extras`` instance, passing it the simulation we want to modify:
@@ -48,46 +48,40 @@ To use reboundx, we first import it, and then create a
     import reboundx
     rebx = reboundx.Extras(sim)
 
-We then add the modification we are interested in. 
-We do this with member functions that all follow the same naming recipe: 
-``add_`` + the name of the modification (see :ref:`effects`).
-Each of these functions returns an instance of the parameters class appropriate for the added effect.
+We then add the modification we are interested in (for a listing see :ref"`effects`).
+Each of these functions returns an instance of the rebx_effect class.
 For example:
 
 .. code:: python
 
-    params = rebx.add_modify_orbits_forces()
+    effect = rebx.add("modify_orbits_direct")
 
-We can then set parameters for the effect as a whole directly, e.g.,
+Effects and particles have a params attribute that works like a dictionary.
+We set parameters for the effect with
 
 .. code:: python
 
-    params.p = 0.5
+    effect.params["p"] = 0.5
 
-This set the coupling parameter between eccentricity and semimajor axis evolution for all particles.
+This sets the coupling parameter between eccentricity and semimajor axis evolution for all particles.
 In general, for each effect there are also particle-specific parameters. 
-These are set directly through the particle:
+These are set similarly:
 
 .. code:: python
+    sim.particles["earth"].params["tau_a"] = -1000.
 
-    sim.particles[1].tau_a = -1000.
-    print(sim.particles[1].tau_a)
-
-Here we set the timescale for semimajor axis decay for ``particles[1]``.
+Here we set the timescale for semimajor axis decay for ``earth``.
 In general, each effect has its own particular set of parameters, both for the effect as a whole, and for individual particles.
 
-**The main reference point in the documentation is** :ref:`effects` **,which has descriptions for each effect and its parameters, citations, and links to examples.**
-
-You can find descriptions of each effect's adder function and any convenience functions at :ref:`python_api`.
+**The user is responsible for checking what parameters need to be set for a particular effect, which can be found at** :ref:`effects`.
 
 You can add as many modifications as you'd like in the same simulation.
 Simply add them:
 
 .. code:: python
 
-    rebx.add_gr()
+    rebx.add("gr")
 
-You can even add the same effect more than once if you want.
 When you're done setting up the modifications you want, you just run your REBOUND simulation like you normally would:
 
 .. code:: python
@@ -95,4 +89,4 @@ When you're done setting up the modifications you want, you just run your REBOUN
     sim.integrate(100.)
 
 Probably the quickest way to get up and running is to modify an existing example for your effect.
-You can find links to the appropriate examples here: :ref:`effects`.
+You can find links to the appropriate examples here: :ref:`effects`, as well as details of each implementation and citations.

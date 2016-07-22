@@ -42,32 +42,34 @@
  * Since this method changes osculating (i.e., two-body) elements, it can give unphysical results in highly perturbed systems.
  * 
  * **Effect Parameters**
- * 
- * =========================== ==================================================================
- * Field (C type)              Description
- * =========================== ==================================================================
- * p (double)                  Coupling parameter between eccentricity and semimajor axis evolution
- *                             (see Deck & Batygin 2015). `p=0` corresponds to no coupling, `p=1` to
- *                             eccentricity evolution at constant angular momentum.
- * coordinates (enum)          Type of elements to use for modification (Jacobi, barycentric or heliocentric).
- *                             See the examples for usage.
- * =========================== ==================================================================
- * 
+ *
+ * If p is not set, it defaults to 1.  If coordinates not set, defaults to using Jacobi coordinates.
+ *
+ * ============================ =========== ==================================================================
+ * Field (C type)               Required    Description
+ * ============================ =========== ==================================================================
+ * p (double)                   No          Coupling parameter between eccentricity and semimajor axis evolution
+ *                                          (see Deck & Batygin 2015). `p=0` corresponds to no coupling, `p=1` to
+ *                                          eccentricity evolution at constant angular momentum.
+ * coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
+ *                                          See the examples for usage.
+ * ============================ =========== ==================================================================
+ *
  * **Particle Parameters**
- * 
+ *
  * One can pick and choose which particles have which parameters set.  
  * For each particle, any unset parameter is ignored.
- * 
- * =========================== ======================================================
- * Name (C type)               Description
- * =========================== ======================================================
- * tau_a (double)              Semimajor axis exponential growth/damping timescale
- * tau_e (double)              Eccentricity exponential growth/damping timescale
- * tau_inc (double)            Inclination axis exponential growth/damping timescale
- * tau_Omega (double)          Period of linear nodal precession/regression
- * tau_omega (double)          Period of linear apsidal precession/regression
- * =========================== ======================================================
  *
+ * ============================ =========== ==================================================================
+ * Field (C type)               Required    Description
+ * ============================ =========== ==================================================================
+ * tau_a (double)               No          Semimajor axis exponential growth/damping timescale
+ * tau_e (double)               No          Eccentricity exponential growth/damping timescale
+ * tau_inc (double)             No          Inclination axis exponential growth/damping timescale
+ * tau_Omega (double)           No          Period of linear nodal precession/regression
+ * tau_omega (double)           No          Period of linear apsidal precession/regression
+ * ============================ =========== ==================================================================
+ * 
  */
 
 #include <stdio.h>

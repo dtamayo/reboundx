@@ -35,7 +35,7 @@
  * Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
  * ======================= ===============================================
  * 
- * This algorithm incorporates GR effects from all bodies in the system, and is necessary for multiple massive bodies like stellar binaries.
+ * This algorithm incorporates the first-order post-newtonian effects from all bodies in the system, and is necessary for multiple massive bodies like stellar binaries.
  *
  * **Effect Parameters**
  * 
