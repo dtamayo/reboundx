@@ -1,5 +1,3 @@
-#Need to add at least 3 dollar signs above each effect group as below. Lines starting with a hash will be skipped.
-
 .. _effects:
 
 REBx Effects & Parameters
@@ -253,42 +251,12 @@ If no particles have radiation_source set, effect will assume the particle at in
 Field (C type)               Required    Description
 ============================ =========== ==================================================================
 radiation_source (int)       No          Flag identifying the particle as the source of radiation.
+beta (float)                 Yes         Ratio of radiation pressure force to gravitational force. Particles without beta set feel no radiation forces.
 ============================ =========== ==================================================================
 
 
 Mass Modifications
 ^^^^^^^^^^^^^^^^^^
-.. _frame_shift:
-
-frame_shift
-***********
-
-======================= ===============================================
-Authors                 D. Tamayo
-Implementation Paper    *In progress*
-Based on                None
-C Example               :ref:`c_example_modify_mass`
-Python Example          `ModifyMass.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ModifyMass.ipynb>`_.
-======================= ===============================================
-
-This adds exponential mass growth/loss to individual particles every timestep.
-Set particles' ``tau_mass`` parameter to a negative value for mass loss, positive for mass growth.
-
-**Effect Parameters**
-
-*None*
-
-**Particle Parameters**
-
-Only particles with their ``tau_mass`` parameter set will have their masses affected.
-
-============================ =========== =======================================================
-Name (C type)                Required    Description
-============================ =========== =======================================================
-tau_mass (double)            Yes         e-folding mass loss (<0) or growth (>0) timescale    
-============================ =========== =======================================================
-
-
 .. _modify_mass:
 
 modify_mass

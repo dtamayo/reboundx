@@ -43,7 +43,7 @@ This is likely because you assigned one particle to another, e.g., ::
     rebx = reboundx.Extras(sim)
 
     sim.add(m=1.)
-    sim.particles[0].tau_a = 3.
+    sim.particles[0].params["tau_a"] = 3.
 
     sim.add(sim.particles[0])
 
