@@ -123,7 +123,7 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_eff
     int* ptr = rebx_get_param_int(effect, "coordinates");
     enum REBX_COORDINATES coordinates;
     if (ptr == NULL){
-        coordinates = REBX_JACOBI;                  // Default
+        coordinates = REBX_COORDINATES_JACOBI;                  // Default
     }
     else{
         coordinates = *ptr;

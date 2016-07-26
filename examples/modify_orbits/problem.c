@@ -64,11 +64,11 @@ int main(int argc, char* argv[]){
      *
      * Additionally, the damping by default is done in Jacobi coordinates.  If you'd prefer to use barycentric 
      * coordinates, or coordinates referenced to a particular particle, set a coordinates parameter in the effect
-     * parameters returned by rebx_add to REBX_BARYCENTRIC or REBX_PARTICLE.  If the latter, add a 'primary' flag
+     * parameters returned by rebx_add to REBX_COORDINATES_BARYCENTRIC or REBX_COORDINATES_PARTICLE.  If the latter, add a 'primary' flag
      * to the reference particle (not neccesary for barycentric):
      */
 
-    rebx_set_param_int(params, "coordinates", REBX_PARTICLE);
+    rebx_set_param_int(params, "coordinates", REBX_COORDINATES_PARTICLE);
     rebx_set_param_int(&sim->particles[0], "primary", 1);
 
     reb_integrate(sim, tmax);
