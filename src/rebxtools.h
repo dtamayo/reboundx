@@ -26,12 +26,18 @@
 #ifndef _REBXTOOLS_H
 #define _REBXTOOLS_H
 
-#include "rebound.h"
+struct reb_simulation;
+struct reb_particle;
+struct reb_orbit;
+struct reb_vec3d;
+struct rebx_effect;
+enum REBX_COORDINATES;
 
-#ifndef M_PI
-#define M_PI 3.1415926535879323846 
-#endif
+void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const effect, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_vec3d (*calculate_effect) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source));
 
+void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_effect* const effect, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_particle (*calculate_effect) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source));
+
+/*
 struct reb_orbit rebxtools_particle_to_orbit_err(double G, struct reb_particle* p, struct reb_particle* primary, int* err);
 
 struct reb_orbit rebxtools_particle_to_orbit(double G, struct reb_particle* p, struct reb_particle* primary);
@@ -47,5 +53,5 @@ void rebxtools_update_com_with_particle(struct reb_particle* const com, const st
 void rebxtools_update_com_without_particle(struct reb_particle* const com, const struct reb_particle* p);
 
 void rebxtools_get_com(const struct reb_simulation* const sim, const int first_N, struct reb_particle* com);
-
+*/
 #endif
