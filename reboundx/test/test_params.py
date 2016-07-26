@@ -9,7 +9,7 @@ class TestEffectParams(unittest.TestCase):
         self.sim = rebound.Simulation()
         data.add_earths(self.sim, ei=1.e-3) 
         self.rebx = reboundx.Extras(self.sim)
-        self.gr = self.rebx.add_effect("gr")
+        self.gr = self.rebx.add("gr")
         self.gr.params["a"] = 1.2
         self.gr.params["b"] = 1.7
         self.gr.params["N"] = 14
@@ -21,6 +21,12 @@ class TestEffectParams(unittest.TestCase):
         self.assertAlmostEqual(self.gr.params["a"], 1.2, delta=1.e-15)
         self.assertAlmostEqual(self.gr.params["b"], 1.7, delta=1.e-15)
         self.assertEqual(self.gr.params["N"], 14)
+
+    def test_types(self):
+        for t in self.gr.params.types.keys():
+            var = t() # make instance of type
+            self.gr.params[t.__name__] = var
+            self.assertAlmostEqual(self.gr.params[t.__name__], var)
 
     def test_iter(self):
         with self.assertRaises(AttributeError):

@@ -41,6 +41,7 @@ class Extras(Structure):
         """
         clibreboundx.rebx_add.restype = POINTER(rebx_effect)
         ptr = clibreboundx.rebx_add(byref(self), c_char_p(name.encode('ascii')))
+        self.sim.contents.process_messages()
         return ptr.contents
 
     def add_custom_force(self, function, force_is_velocity_dependent):
