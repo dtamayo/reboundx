@@ -56,6 +56,7 @@
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
  * radiation_source (int)       No          Flag identifying the particle as the source of radiation.
+ * beta (float)                 Yes         Ratio of radiation pressure force to gravitational force. Particles without beta set feel no radiation forces.
  * ============================ =========== ==================================================================
  * 
  */
