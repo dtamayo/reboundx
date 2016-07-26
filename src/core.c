@@ -172,7 +172,9 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
         effect->force = rebx_radiation_forces;
     }
     else{
-        reb_error(sim, "Effect passed to rebx_add not found.\n");
+        char str[100]; 
+        sprintf(str, "Effect '%s' passed to rebx_add not found.\n", name);
+        reb_error(sim, str);
     }
     
     return effect;

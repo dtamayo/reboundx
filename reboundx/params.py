@@ -12,7 +12,7 @@ class Params(MutableMapping):
                 raise AttributeError("Need to attach reboundx.Extras instance to simulation before setting particle params.")
 
         self.parent = parent
-        self.type_names = {"float":"double", "int":"int"}
+        self.types = {float:"double", int:"int"}
         self.c_types = {"double":c_double, "int":c_int}
 
     def __getitem__(self, key):
@@ -34,7 +34,7 @@ class Params(MutableMapping):
         raise AttributeError("{0} parameter not found.".format(key))
                 
     def __setitem__(self, key, value):
-        type_name = self.type_names[type(value).__name__]
+        type_name = self.types[type(value)]
         c_type = self.c_types[type_name]
         function = getattr(clibreboundx, "rebx_set_param_"+type_name)
         function(byref(self.parent), c_char_p(key.encode('ascii')), c_type(value))
