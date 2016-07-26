@@ -19,26 +19,33 @@ OPT+= -fPIC -DLIBREBOUNDX
 
 SOURCES=core.c gr.c gr_full.c gr_potential.c modify_mass.c modify_orbits_direct.c modify_orbits_forces.c radiation_forces.c rebxtools.c 
 OBJECTS=$(SOURCES:.c=.o)
-HEADERS=rebxtools.h reboundx.h modify_orbits_forces.h modify_orbits_direct.h core.h
+HEADERS=rebxtools.h reboundx.h
 
-all: $(SOURCES) libreboundx.so
+all: $(SOURCES) librebound.so libreboundx.so
 	
 %.o: %.c $(HEADERS)
 	@echo "Compiling source file $< ..."
 	$(CC) -c $(OPT) $(PREDEF) -I$(REB_DIR)/src -o $@ $<
 
+librebound.so:
+	@echo "Compiling shared library librebound.so ..."
+	$(MAKE) -C $(REB_DIR)/src/
+	@echo "Creating link for shared library librebound.so ..."
+	@-rm -f librebound.so
+	@ln -s $(REB_DIR)/src/librebound.so .
+
 libreboundx.so: $(OBJECTS)
 	@echo ""        
 	@echo "Linking shared library $@ ..."
-	$(CC) $(OPT) -shared $(OBJECTS) $(LIB) -lrebound -L$(REB_DIR) -L$(REB_DIR)/src -o $@ 
-	
+	$(CC) $(OPT) -shared $(OBJECTS) $(LIB) -lrebound -L$(REB_DIR)/src -o $@ 
 	@echo ""        
 	@echo "The shared library $@ has been created successfully."
 	
-	
 clean:
+	@echo "Cleaning up shared library librebound.so ..."
+	@-rm -f librebound.so
+	$(MAKE) -C $(REB_DIR)/src/ clean
 	@echo "Cleaning up shared library libreboundx.so ..."
 	@-rm -f libreboundx.so
-	@-rm -f librebound.so
 	@-rm -f *.o
 	

@@ -1,4 +1,4 @@
-.. image:: http://img.shields.io/badge/REBOUNDx-v2.8.8-green.svg?style=flat
+.. image:: http://img.shields.io/badge/REBOUNDx-v2.10.0-green.svg?style=flat
     :target: http://reboundx.readthedocs.org
 .. image:: https://badge.fury.io/py/reboundx.svg
     :target: https://badge.fury.io/py/reboundx
@@ -13,22 +13,17 @@
 .. image:: https://img.shields.io/badge/launch-binder-ff69b4.svg?style=flat
     :target: http://mybinder.org/repo/dtamayo/reboundx
 
-Update: New Version!
-====================
+Update: REBOUNDx 2.10.0
+=======================
 
-Update: New version!
+After getting feedback from users and some experimentation with different types of effects one might wish to add to simulations, we have implemented a more streamlined scheme for adding new effects.  
+In this new version, code that you add in C will be automatically callable from the Python version without any of the coding overhead that was required before.
+For details, see http://reboundx.readthedocs.io/en/latest/add_effect.html
 
-After incoporating a few different types of effects, we have come up with a more general infrastructure for REBOUNDx.  
-The new version allows for:
-
-* Adding effects more than once (e.g. if you wanted to turn tides on or off on different bodies individually)
-* Calling REBOUND functions within REBOUNDx 
-* Passing messages from REBOUNDx to REBOUND in ipython, so you can see what when wrong rather than the kernel simply dying
-* Simpler syntax when adding and changing particle and effect parameters
-* More robust automatic installation with pip
-
-This should allow for a stable API moving forward as people add new effects.
-You should therefore update both REBOUND and REBOUNDx to the latest versions (see Sec. 5.3 of http://rebound.readthedocs.org/en/latest/python_quickstart.html)
+On the Python side We have also developed a custom dictionary for accessing/setting effect/particle parameters (before we were using a quick and dirty solution of hijacking default getters and setters).
+This has changed some of the syntax, and previous code using REBOUNDx will need (small) modifications to work with version 2.10.0.
+The changes should be clear from inspection of the various examples in the documentation (see links in http://reboundx.readthedocs.io/en/latest/effects.html).
+Some of these changes led to feature additions in REBOUND, so you should also update REBOUND to at least version 2.19.2 (see Sec. 5.3 of http://rebound.readthedocs.org/en/latest/python_quickstart.html).
 Let me know if you have any feedback / issues.
 
 Welcome to REBOUNDx (eXtras)

@@ -35,9 +35,10 @@ int main(int argc, char* argv[]){
     
     struct rebx_extras* rebx = rebx_init(sim); 
     double c = 3.e8;                    /* speed of light in SI units */
-    int source_index = 0;               /* Index of the particle that is the source of radiation. */
-    struct rebx_params_radiation_forces* params = rebx_add_radiation_forces(rebx, source_index, c); 
-    
+    struct rebx_effect* rad_params = rebx_add(rebx, "radiation_forces");
+    rebx_set_param_double(rad_params, "c", c);
+    rebx_set_param_int(&sim->particles[0], "radiation_source", 1);
+
     /* Saturn (simulation set up in Saturn's orbital plane, i.e., inc=0, so only need 4 orbital elements */
     double mass_sat = 5.68e26;          /* Mass of Saturn */
     double a_sat = 1.43e12;             /* Semimajor axis of Saturn in m */
@@ -68,41 +69,45 @@ int main(int argc, char* argv[]){
     struct reb_particle p = reb_tools_orbit_to_particle(sim->G, sim->particles[1], m_dust, a_dust, e_dust, inc_dust, Omega_dust, omega_dust, f_dust); 
     reb_add(sim, p); 
 
-    /* We can only call REBOUNDx parameter setters on particles in the sim->particles array, so we do this after adding the particle to sim. For the first particle we simply specify beta directly.*/
+    // For the first particle we simply specify beta directly.
     double beta = 0.1;
     rebx_set_param_double(&sim->particles[2], "beta", beta);    
 
-    /* We now add a 2nd particle on the same orbit, but set its beta using physical parameters.  Note that callingreb_add(sim, p) a second time will add a second particle on the same orbit, but their beta paramters will be linked (see read_me_first example) */ 
+    // We now add a 2nd particle on the same orbit, but set its beta using physical parameters.  
     struct reb_particle p2 = reb_tools_orbit_to_particle(sim->G, sim->particles[1], 0., a_dust, e_dust, inc_dust, Omega_dust, omega_dust, f_dust); 
     reb_add(sim, p2);
 
-    /* REBOUNDx has a convenience function to calculate beta given the star's luminosity and the grain's physical radius, density and radiation pressure coefficient Q_pr (Burns et al. 1979). */
-    
-    double particle_radius = 1.e-5; /* in meters */
-    double density = 1.e3;          /* kg/m3 = 1g/cc */
-    double Q_pr = 1.;               /* Equals 1 in limit where particle radius >> wavelength of radiation */
-    double L = 3.85e26;             /* Luminosity of the sun in Watts */
+    /* REBOUNDx has a convenience function to calculate beta given the gravitational constant G, the star's luminosity and mass, and the grain's physical radius, density and radiation pressure coefficient Q_pr (Burns et al. 1979). */
+   
+    // Particle parameters
+    double radius = 1.e-5;          // in meters
+    double density = 1.e3;          // kg/m3 = 1g/cc 
+    double Q_pr = 1.;               // Equals 1 in limit where particle radius >> wavelength of radiation
+    double L = 3.85e26;             // Luminosity of the sun in Watts
 
-    beta = rebx_rad_calc_beta(rebx, params, particle_radius, density, Q_pr, L);
+    beta = rebx_rad_calc_beta(sim->G, c, sim->particles[0].m, L, radius, density, Q_pr);
     rebx_set_param_double(&sim->particles[3], "beta", beta);    
 
-    printf("Particle has beta = %f\n", rebx_get_param_double(&sim->particles[3], "beta"));
+    printf("Particle has beta = %f\n", *rebx_get_param_double(&sim->particles[3], "beta"));
+    printf("Particle has beta = %f\n", *rebx_get_param_double(&sim->particles[2], "beta"));
 
     reb_move_to_com(sim);
 
+    printf("Time\t\tEcc (p)\t\tEcc (p2)\n");
     reb_integrate(sim, tmax);
     rebx_free(rebx);                /* free memory allocated by REBOUNDx */
 }
 
 void heartbeat(struct reb_simulation* sim){
-    if(reb_output_check(sim, 1.e7)){
+    if(reb_output_check(sim, 1.e8)){
         const struct reb_particle* particles = sim->particles;
         const struct reb_particle saturn = particles[1];
         const double t = sim->t;
-        const int N = sim->N;
-        for (int i=2;i<N;i++){
-            const struct reb_orbit orbit = reb_tools_particle_to_orbit(sim->G, sim->particles[i], saturn); /* calculate orbit of particles[i] around Saturn */
-            printf("%e\t%e\t%e\n",t,orbit.a, orbit.e);
-        }
+        struct reb_orbit orbit = reb_tools_particle_to_orbit(sim->G, sim->particles[2], saturn); /* calculate orbit of particles[2] around Saturn */
+        double e2 = orbit.e;
+        orbit = reb_tools_particle_to_orbit(sim->G, sim->particles[3], saturn); 
+        double e3 = orbit.e;
+        printf("%e\t%f\t%f\n", t, e2, e3);
+
     }
 }
