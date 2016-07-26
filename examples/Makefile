@@ -7,4 +7,4 @@ $(SUBDIRS):
 	$(MAKE) -s -C $@ 
 	@echo "\033[1A\033[55CSuccess."
 
-.PHONY: allexamples $(SUBDIRS)
+.PHONY: all $(SUBDIRS)
