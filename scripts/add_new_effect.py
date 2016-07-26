@@ -6,7 +6,7 @@ import os
 import sys
 
 sources = [each for each in os.listdir('../src/') if each.endswith('.c')] 
-print(sources)
+print("Adding {0}".format(sources))
 sourcestring = "SOURCES="
 sourcesExamples = "SOURCES="
 sourcesSetup = "                    sources = ["
