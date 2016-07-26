@@ -47,7 +47,7 @@ if sys.platform == 'darwin':
     extra_link_args.append('-Wl,-install_name,@rpath/libreboundx'+suffix)
 
 libreboundxmodule = Extension('libreboundx',
-                    sources = [ 'src/core.c', 'src/rebxtools.c', 'src/gr.c', 'src/gr_full.c', 'src/gr_potential.c', 'src/radiation_forces.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/modify_mass.c'],
+                    sources = [ 'src/core.c', 'src/gr.c', 'src/gr_full.c', 'src/gr_potential.c', 'src/modify_mass.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/radiation_forces.c', 'src/rebxtools.c'],
                     include_dirs = ['src'],
                     library_dirs = [],
                     runtime_library_dirs = ["."],
@@ -62,7 +62,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='reboundx',
-    version='2.8.7',
+    version='2.10.0',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
     url='http://github.com/dtamayo/reboundx',
