@@ -49,8 +49,6 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
     double a_const[_N_real][3]; // array that stores the value of the constant term
     double a_newton[_N_real][3]; // stores the Newtonian term
     double a_new[_N_real][3]; // stores the newly calculated term
-    double rs[_N_real][_N_real];
-    double drs[_N_real][_N_real][3];
 
     for (int i=0; i<_N_real; i++){
         // compute the Newtonian term 
@@ -60,31 +58,23 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
         a_new[i][0] = a_newton[i][0]; // we want to use Newtonian term as our first substitution, hence the assignment here
         a_new[i][1] = a_newton[i][1];
         a_new[i][2] = a_newton[i][1];
-
-        for(int j=i+1; j<_N_real; j++){
-            if (j!=i){
-                drs[i][j][0] = particles[i].x - particles[j].x;
-                drs[i][j][1] = particles[i].y - particles[j].y;
-                drs[i][j][2] = particles[i].z - particles[j].z;
-                drs[j][i][0] = -drs[i][j][0];
-                drs[j][i][1] = -drs[i][j][1];
-                drs[j][i][2] = -drs[i][j][2];
-                rs[i][j] = sqrt(drs[i][j][0]*drs[i][j][0] + drs[i][j][1]*drs[i][j][1] + drs[i][j][2]*drs[i][j][2]);
-                rs[j][i] = rs[i][j];
-            }
-        }
     }
-
     if (_gravity_ignore_10){
-        const double prefact = -G/(rs[0][1]*rs[0][1]*rs[0][1]);
+        const double dx = particles[0].x - particles[1].x;
+        const double dy = particles[0].y - particles[1].y;
+        const double dz = particles[0].z - particles[1].z;
+        const double r2 = dx*dx + dy*dy + dz*dz;
+        const double r = sqrt(r2);
+        const double prefact = -G/(r2*r);
         const double prefact0 = prefact*particles[0].m;
         const double prefact1 = prefact*particles[1].m;
-        a_newton[0][0] += prefact1*drs[0][1][0];
-        a_newton[0][1] += prefact1*drs[0][1][1];
-        a_newton[0][2] += prefact1*drs[0][1][2];
-        a_newton[1][0] -= prefact0*drs[0][1][0];
-        a_newton[1][1] -= prefact0*drs[0][1][1];
-        a_newton[1][2] -= prefact0*drs[0][1][2];
+        a_newton[0][0] += prefact1*dx;
+        a_newton[0][1] += prefact1*dy;
+        a_newton[0][2] += prefact1*dz;
+        a_newton[1][0] -= prefact0*dx;
+        a_newton[1][1] -= prefact0*dy;
+        a_newton[1][2] -= prefact0*dz;
+
     }
 
     for (int i=0; i<_N_real; i++){
@@ -95,23 +85,33 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
         // 1st constant part
         for (int j = 0; j< _N_real; j++){
             if (j != i){
-                const double dxij = drs[i][j][0];
-                const double dyij = drs[i][j][1];
-                const double dzij = drs[i][j][2];
-                const double rij2 = rs[i][j]*rs[i][j];
-                const double rij3 = rij2*rs[i][j];
+                const double dxij = particles[i].x - particles[j].x;
+                const double dyij = particles[i].y - particles[j].y;
+                const double dzij = particles[i].z - particles[j].z;
+                const double r2ij = dxij*dxij + dyij*dyij + dzij*dzij;
+                const double rij = sqrt(r2ij);
                 
                 double a1 = 0.;
                 for (int k = 0; k< _N_real; k++){
                     if (k != i){
-                        a1 += (4./(C*C)) * G*particles[k].m/rs[i][k];
+                        const double dxik = particles[i].x - particles[k].x;
+                        const double dyik = particles[i].y - particles[k].y;
+                        const double dzik = particles[i].z - particles[k].z;
+                        const double r2ik = dxik*dxik + dyik*dyik + dzik*dzik;
+                        const double rik = sqrt(r2ik);
+                        a1 += (4./(C*C)) * G*particles[k].m/rik;
                     }
                 }
 
                 double a2 = 0.;
                 for (int l = 0; l< _N_real; l++){
                     if (l != j){
-                        a2 += (1./(C*C)) * G*particles[l].m/rs[l][j];
+                        const double dxlj = particles[l].x - particles[j].x;
+                        const double dylj = particles[l].y - particles[j].y;
+                        const double dzlj = particles[l].z - particles[j].z;
+                        const double r2lj = dxlj*dxlj + dylj*dylj + dzlj*dzlj;
+                        const double rlj = sqrt(r2lj);
+                        a2 += (1./(C*C)) * G*particles[l].m/rlj;
                     }
                 }
 
@@ -128,32 +128,39 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
                 
                 double a6;
                 double a6_0 = dxij*particles[j].vx + dyij*particles[j].vy + dzij*particles[j].vz;
-                a6 = (3./(2.*C*C)) * a6_0*a6_0/rij2;
+                a6 = (3./(2.*C*C)) * a6_0*a6_0/r2ij;
                 
                 double factor1 = -1. + a1 + a2 + a3 + a4 + a5 + a6;
                  
-                a_constx += G*particles[j].m*dxij*factor1/rij3;
-                a_consty += G*particles[j].m*dyij*factor1/rij3;
-                a_constz += G*particles[j].m*dzij*factor1/rij3;
-        
-                // 2nd constant part
-                
+                a_constx += G*particles[j].m*dxij*factor1/(r2ij*rij);
+                a_consty += G*particles[j].m*dyij*factor1/(r2ij*rij);
+                a_constz += G*particles[j].m*dzij*factor1/(r2ij*rij);
+            }
+        }   
+        // 2nd consant part
+        for (int j = 0; j< _N_real; j++){
+            if (j != i){
+                const double dxij = particles[i].x - particles[j].x;
+                const double dyij = particles[i].y - particles[j].y;
+                const double dzij = particles[i].z - particles[j].z;
+                const double r2ij = dxij*dxij + dyij*dyij + dzij*dzij;
+                const double rij = sqrt(r2ij);
                 const double dvxij = particles[i].vx - particles[j].vx;
                 const double dvyij = particles[i].vy - particles[j].vy;
                 const double dvzij = particles[i].vz - particles[j].vz;
                     
                 double factor2 = dxij*(4.*particles[i].vx-3.*particles[j].vx)+dyij*(4.*particles[i].vy-3.*particles[j].vy)+dzij*(4.*particles[i].vz-3.*particles[j].vz);
 
-                a_constx += G*particles[j].m*factor2*dvxij/rij3/(C*C);
-                a_consty += G*particles[j].m*factor2*dvyij/rij3/(C*C);
-                a_constz += G*particles[j].m*factor2*dvzij/rij3/(C*C);
+                a_constx += G*particles[j].m*factor2*dvxij/(r2ij*rij)/(C*C);
+                a_consty += G*particles[j].m*factor2*dvyij/(r2ij*rij)/(C*C);
+                a_constz += G*particles[j].m*factor2*dvzij/(r2ij*rij)/(C*C);
             }
-        }  
-
+        }
         a_const[i][0] = a_constx;
         a_const[i][1] = a_consty;
         a_const[i][2] = a_constz;
     }
+    //fprintf(stderr,"%.16e\t%.16e\n",particles[1].ax, a_newton[1][0]);
 
     // Now running the substitution again and again through the loop below
     for (int k=0; k<10; k++){ // you can set k as how many substitution you want to make
@@ -170,16 +177,16 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
             double non_constz = 0.;
             for (int j = 0; j < _N_real; j++){
                 if (j != i){
-                    const double dxij = drs[i][j][0];
-                    const double dyij = drs[i][j][1];
-                    const double dzij = drs[i][j][2];
-                    const double rij = rs[i][j];
-                    const double rij3 = rij*rij*rij;
-                    non_constx += (G*particles[j].m*dxij/rij3)*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C*C)+\
+                    const double dxij = particles[i].x - particles[j].x;
+                    const double dyij = particles[i].y - particles[j].y;
+                    const double dzij = particles[i].z - particles[j].z;
+                    const double r2ij = dxij*dxij + dyij*dyij + dzij*dzij;
+                    const double rij = sqrt(r2ij);
+                    non_constx += (G*particles[j].m*dxij/(r2ij*rij))*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C*C)+\
                                         (7./(2.*C*C))*G*particles[j].m*a_old[j][0]/rij;
-                    non_consty += (G*particles[j].m*dyij/rij3)*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C*C)+\
+                    non_consty += (G*particles[j].m*dyij/(r2ij*rij))*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C*C)+\
                                         (7./(2.*C*C))*G*particles[j].m*a_old[j][1]/rij;
-                    non_constz += (G*particles[j].m*dzij/rij3)*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C*C)+\
+                    non_constz += (G*particles[j].m*dzij/(r2ij*rij))*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C*C)+\
                                         (7./(2.*C*C))*G*particles[j].m*a_old[j][2]/rij;
                 }
             }
@@ -189,25 +196,22 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
         }
 
         // break out loop if a_new is converging
-        double maxdev = 0.;
+        int breakout = 0;
         for (int i = 0; i < _N_real; i++){
             double dx = fabs(a_new[i][0] - a_old[i][0])/a_old[i][0];
             double dy = fabs(a_new[i][1] - a_old[i][1])/a_old[i][1];
             double dz = fabs(a_new[i][2] - a_old[i][2])/a_old[i][2];
             /*if (i ==1){FILE* d = fopen("difference.txt","a"); // this is used to check if the loop is giving resonable output
-            fprintf(d, "number %d: %.30e \n", k, dx);
+            fprintf(d, "number %d: %d: %.30e \n", k, i, dx);
             fclose(d);
             }*/
-            if (dx > maxdev) { maxdev = dx; }
-            if (dy > maxdev) { maxdev = dy; }
-            if (dz > maxdev) { maxdev = dz; }
+            if ((dx<1.e-30) && (dy <1.e-30) && (dz<1.e-30)){
+                breakout += 1;
+            }
         }
-
-        if (maxdev < 1.e-30){
+        if (breakout == 2){
+            //printf(">>>>Precision reached in round %d<<<< \n", k);
             break;
-        }
-        if (k==9){
-            reb_warning(sim, "10 loops in rebx_gr_full did not converge.  This is typically an indication that v^2/c^2 is too large for a 1st order post-newtonian approximation.\n");
         }
     }
     // update acceleration in particles
@@ -216,6 +220,7 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const gr
         particles[i].ay += a_new[i][1] - a_newton[i][1];
         particles[i].az += a_new[i][2] - a_newton[i][2];
     }
+                    
 }
 
 double rebx_gr_full_hamiltonian(const struct reb_simulation* const sim, const struct rebx_params_gr_full* const params){
