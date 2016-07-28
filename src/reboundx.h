@@ -170,6 +170,9 @@ double* rebx_get_param_double(const void* const object, const char* const param_
 
 int* rebx_get_param_int(const void* const object, const char* const param_name);
 void rebx_set_param_int(void* object, const char* const param_name, int value);
+void rebx_set_param_spring(void* object, const char* const param_name, struct rebx_spring value);
+struct rebx_spring* rebx_get_param_spring(const void* const object, const char* const param_name);
+
 /** @} */
 /** @} */
 

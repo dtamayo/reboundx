@@ -105,12 +105,14 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
  ********************************************************************************/
 
 void* rebx_get_param_hash(const void* const object, uint32_t hash);   // Returns rebx_param corresponding to hash.  If it doesn't exist, returns NULL.
+struct rebx_param* rebx_get_paramptr_hash(const void* const object, uint32_t hash);
 
 /*********************************************************************************
  Getters and Setters for particle parameters (need new set for each variable type)
  ********************************************************************************/
 double* rebx_add_param_double(void* object, uint32_t hash);
 int* rebx_add_param_int(void* object, uint32_t hash);
+struct rebx_spring* rebx_add_param_spring(void* object, uint32_t hash);
 
 /***********************************************************************************
  * Miscellaneous Functions
@@ -129,4 +131,5 @@ void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect*
 void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect);
 void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect);
 void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* const effect);
+void rebx_spring_forces(struct reb_simulation* const r, struct rebx_effect* const effect);
 #endif

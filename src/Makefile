@@ -17,7 +17,7 @@ endif
 include $(REB_DIR)/src/Makefile.defs
 OPT+= -fPIC -DLIBREBOUNDX
 
-SOURCES=core.c gr.c gr_full.c gr_potential.c modify_mass.c modify_orbits_direct.c modify_orbits_forces.c radiation_forces.c rebxtools.c 
+SOURCES=core.c gr.c gr_full.c gr_potential.c modify_mass.c modify_orbits_direct.c modify_orbits_forces.c radiation_forces.c rebxtools.c spring.c
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=rebxtools.h reboundx.h
 
@@ -25,7 +25,7 @@ all: $(SOURCES) librebound.so libreboundx.so
 	
 %.o: %.c $(HEADERS)
 	@echo "Compiling source file $< ..."
-	$(CC) -c $(OPT) $(PREDEF) -I$(REB_DIR)/src -o $@ $<
+	$(CC) -c $(OPT) $(PREDEF) -I$(REB_DIR)/src -I$(REBX_DIR)/src -o $@ $<
 
 librebound.so:
 	@echo "Compiling shared library librebound.so ..."
@@ -37,7 +37,7 @@ librebound.so:
 libreboundx.so: $(OBJECTS)
 	@echo ""        
 	@echo "Linking shared library $@ ..."
-	$(CC) $(OPT) -shared $(OBJECTS) $(LIB) -lrebound -L$(REB_DIR)/src -o $@ 
+	$(CC) $(OPT) -shared $(OBJECTS) $(LIB) -I$(REBX_DIR)/src -lrebound -L$(REB_DIR)/src -o $@ 
 	@echo ""        
 	@echo "The shared library $@ has been created successfully."
 	
