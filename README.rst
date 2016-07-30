@@ -13,6 +13,12 @@
 .. image:: https://img.shields.io/badge/launch-binder-ff69b4.svg?style=flat
     :target: http://mybinder.org/repo/dtamayo/reboundx
 
+Changelog
+=========
+
+2.11.0 Added tidal precession
+2.10.0 Streamlined code for adding new effects (see below)
+
 Update: REBOUNDx 2.10.0
 =======================
 
