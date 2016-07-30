@@ -178,6 +178,11 @@ class Extras(Structure):
         clibreboundx.rebx_gr_full_hamiltonian.restype = c_double
         return clibreboundx.rebx_gr_full_hamiltonian(byref(sim), byref(params))
     
+    def tides_precession_hamiltonian(self, sim, params):
+        clibreboundx.rebx_tides_precession_hamiltonian.restype = c_double
+        return clibreboundx.rebx_tides_precession_hamiltonian(byref(sim), byref(params))
+
+    
 #################################################
 # Generic REBOUNDx definitions
 #################################################

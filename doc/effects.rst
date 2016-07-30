@@ -257,6 +257,7 @@ beta (float)                 Yes         Ratio of radiation pressure force to gr
 
 Mass Modifications
 ^^^^^^^^^^^^^^^^^^
+
 .. _modify_mass:
 
 modify_mass
@@ -286,5 +287,41 @@ Name (C type)                Required    Description
 ============================ =========== =======================================================
 tau_mass (double)            Yes         e-folding mass loss (<0) or growth (>0) timescale    
 ============================ =========== =======================================================
+
+
+Tides
+^^^^^^^^^^^^^^^^^^
+
+.. _tides_precession:
+
+tides_precession
+****************
+
+======================= ===============================================
+Authors                 D. Tamayo
+Implementation Paper    *In progress*
+Based on                `Hut 1981 <https://ui.adsabs.harvard.edu/#abs/1981A&A....99..126H/abstract>`_.
+C Example               :ref:`c_example_tides_precession`.
+Python Example          `TidesPrecession.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesPrecession.ipynb>`_.
+======================= ===============================================
+
+This adds precession from the tidal interactions between the particles in the simulation and the central body, both from tides raised on the primary and on the other bodies.
+In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' physical radii and k2 tidal parameter.
+The radii should be set directly (particle.r) and not as a parameter (see examples).
+You can specify the primary with a "primary" flag.
+If not set, the primary will default to the particle at the 0 index in the particles array.
+
+**Effect Parameters**
+
+None
+
+**Particle Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+k2 (float)                   Yes         k2 Love number (required for contribution from tides raised on the body).
+primary (int)                No          Set to 1 to specify the primary.  Defaults to treating particles[0] as primary if not set.
+============================ =========== ==================================================================
 
 
