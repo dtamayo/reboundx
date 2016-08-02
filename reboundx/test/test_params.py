@@ -3,6 +3,7 @@ import reboundx
 from reboundx import data
 import unittest
 import math
+import numpy as np
 
 class TestEffectParams(unittest.TestCase):
     def setUp(self):
@@ -23,8 +24,8 @@ class TestEffectParams(unittest.TestCase):
         self.assertEqual(self.gr.params["N"], 14)
 
     def test_types(self):
-        for t in self.gr.params.types.keys():
-            var = t() # make instance of type
+        for t in [int, float, np.int32, np.float64]:
+            var = t(3) # make instance of type
             self.gr.params[t.__name__] = var
             self.assertAlmostEqual(self.gr.params[t.__name__], var)
 

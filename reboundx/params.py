@@ -3,6 +3,7 @@ from collections import MutableMapping
 from .extras import rebx_param
 from . import clibreboundx
 from ctypes import byref, c_double, c_int, c_char_p, POINTER, cast
+from numpy.ctypeslib import as_ctypes
 
 class Params(MutableMapping):
     def __init__(self, parent):
@@ -12,8 +13,6 @@ class Params(MutableMapping):
                 raise AttributeError("Need to attach reboundx.Extras instance to simulation before setting particle params.")
 
         self.parent = parent
-        self.types = {float:"double", int:"int"}
-        self.c_types = {"double":c_double, "int":c_int}
 
     def __getitem__(self, key):
         name = rebound.hash(key).value
@@ -22,11 +21,13 @@ class Params(MutableMapping):
             param = current.contents
             if param.hash == name:
                 res = None
-                for data_type in self.c_types.keys():
-                    if param.type_hash == rebound.hash(data_type).value:
-                        res = cast(param.paramPtr, POINTER(self.c_types[data_type]))
+                if param.type_hash == rebound.hash('int').value:
+                    res = cast(param.paramPtr, POINTER(c_int))
+                elif param.type_hash == rebound.hash('double').value:
+                    res = cast(param.paramPtr, POINTER(c_double))
+                
                 if res is None:
-                    raise AttributeError("Data type for {0} param not supported.  Need to update reboundx/params.py".format(key)) 
+                    raise AttributeError("Data type for {0} param not supported.".format(key)) 
                 else:
                     return res.contents.value
             current = param.next
@@ -34,11 +35,25 @@ class Params(MutableMapping):
         raise AttributeError("{0} parameter not found.".format(key))
                 
     def __setitem__(self, key, value):
-        type_name = self.types[type(value)]
-        c_type = self.c_types[type_name]
-        function = getattr(clibreboundx, "rebx_set_param_"+type_name)
-        function(byref(self.parent), c_char_p(key.encode('ascii')), c_type(value))
-   
+        typ = type(value)
+        if(typ.__module__ == 'numpy'):
+            ctypevar = as_ctypes(value)
+            ctype = type(ctypevar)
+            if ctype == c_int:
+                clibreboundx.rebx_set_param_int(byref(self.parent), c_char_p(key.encode('ascii')), ctypevar)
+                return
+            elif ctype == c_double:
+                clibreboundx.rebx_set_param_double(byref(self.parent), c_char_p(key.encode('ascii')), ctypevar)
+                return
+        else:
+            if typ == int:
+                clibreboundx.rebx_set_param_int(byref(self.parent), c_char_p(key.encode('ascii')), c_int(value))
+                return
+            elif typ == float:
+                clibreboundx.rebx_set_param_double(byref(self.parent), c_char_p(key.encode('ascii')), c_double(value))
+                return
+        raise AttributeError("Data type for {0} param not supported.".format(key))
+
     def __delitem__(self, key):
         success = clibreboundx.rebx_remove_param(byref(self.parent), c_char_p(key.encode('ascii')))
         if not success:
