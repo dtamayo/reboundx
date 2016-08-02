@@ -228,8 +228,8 @@ static enum rebx_object_type rebx_get_object_type(const void* const object){
 }
 
 // Internal function that sets a new param in particle or effect linked list
-static void* rebx_set_newparam(void* const object, struct rebx_param** const newparamptr){
-    struct rebx_param* newparam = *newparamptr;
+void* rebx_add_param(void* const object, struct rebx_param** const param){
+    struct rebx_param* newparam = *param;
     enum rebx_object_type object_type = rebx_get_object_type(object);
     struct rebx_extras* rebx;
     switch(object_type){
@@ -250,7 +250,7 @@ static void* rebx_set_newparam(void* const object, struct rebx_param** const new
             break;
         }
         default:
-            fprintf(stderr, "Unsupported case in rebx_set_newparam.\n");
+            fprintf(stderr, "Unsupported case in rebx_add_param.\n");
             exit(1);
     }
     
@@ -290,7 +290,7 @@ static void rebx_get_param_warning(const void* const object, const char* const p
  Type-independent functions for dealing with parameters
  ********************************************************************************/
 
-void* rebx_get_param_hash(const void* const object, uint32_t hash){
+struct rebx_param* rebx_get_param(const void* const object, uint32_t hash){
     struct rebx_param* current;
     enum rebx_object_type object_type = rebx_get_object_type(object);
     switch(object_type){
@@ -307,37 +307,7 @@ void* rebx_get_param_hash(const void* const object, uint32_t hash){
             break;
         }
         default:
-            fprintf(stderr, "Unsupported case in rebx_get_param_hash.\n");
-            exit(1);
-    }    
-    
-    while(current != NULL){
-        if(current->hash == hash){
-            return current->paramPtr;
-        }
-        current = current->next;
-    }
-    return NULL;
-}
-
-struct rebx_param* rebx_get_paramptr_hash(const void* const object, uint32_t hash){
-    struct rebx_param* current;
-    enum rebx_object_type object_type = rebx_get_object_type(object);
-    switch(object_type){
-        case REBX_EFFECT:
-        {
-            struct rebx_effect* effect = (struct rebx_effect*)object;
-            current = effect->ap;
-            break;
-        }
-        case REBX_REB_PARTICLE:
-        {
-            struct reb_particle* p = (struct reb_particle*)object;
-            current = p->ap;
-            break;
-        }
-        default:
-            fprintf(stderr, "Unsupported case in rebx_get_param_hash.\n");
+            fprintf(stderr, "Unsupported case in rebx_get_param.\n");
             exit(1);
     }
     
@@ -396,22 +366,26 @@ int rebx_remove_param(const void* const object, const char* const param_name){
 
 double* rebx_get_param_double(const void* const object, const char* const param_name){
     uint32_t hash = reb_hash(param_name);
-    void* voidptr = rebx_get_param_hash(object, hash);
-    if (voidptr == NULL){
+    struct rebx_param* ptr = rebx_get_param(object, hash);
+    if (ptr == NULL){
         return NULL;
     }
     else{
-        return (double*)voidptr;
+        return (double*)ptr->paramPtr;
     }
 }
 
 void rebx_set_param_double(void* object, const char* const param_name, double value){
     uint32_t hash = reb_hash(param_name);
-    double* ptr = rebx_get_param_hash(object, hash);
+    struct rebx_param* ptr = rebx_get_param(object, hash);
+    double* param;
     if(ptr == NULL){
-        ptr = rebx_add_param_double(object, hash);  // add a new parameter if it doesn't exist
+        param = rebx_add_param_double(object, hash);  // add a new parameter if it doesn't exist
     }
-    *ptr = value;                                   // update existing value
+    else{
+        param = ptr->paramPtr;
+    }
+    *param = value;                                   // update existing value
 }
 
 double* rebx_add_param_double(void* object, uint32_t hash){
@@ -420,27 +394,31 @@ double* rebx_add_param_double(void* object, uint32_t hash){
     newparam->hash = hash;
     newparam->type_hash = reb_hash("double");
 
-    return (double*)rebx_set_newparam(object, &newparam);
+    return (double*)rebx_add_param(object, &newparam);
 }
 
 int* rebx_get_param_int(const void* const object, const char* const param_name){
     uint32_t hash = reb_hash(param_name);
-    void* voidptr = rebx_get_param_hash(object, hash);
-    if (voidptr == NULL){
+    struct rebx_param* ptr = rebx_get_param(object, hash);
+    if (ptr == NULL){
         return NULL;
     }
     else{
-        return (int*)voidptr;
+        return (int*)ptr->paramPtr;
     }
 }
 
 void rebx_set_param_int(void* object, const char* const param_name, int value){
     uint32_t hash = reb_hash(param_name);
-    int* ptr = rebx_get_param_hash(object, hash);
+    struct rebx_param* ptr = rebx_get_param(object, hash);
+    int* param;
     if(ptr == NULL){
-        ptr = rebx_add_param_int(object, hash);  // add a new parameter if it doesn't exist
+        param = rebx_add_param_int(object, hash);  // add a new parameter if it doesn't exist
     }
-    *ptr = value;                                   // update existing value
+    else{
+        param = ptr->paramPtr;
+    }
+    *param = value;                                   // update existing value}
 }
 
 int* rebx_add_param_int(void* object, uint32_t hash){
@@ -449,36 +427,7 @@ int* rebx_add_param_int(void* object, uint32_t hash){
     newparam->hash = hash;
     newparam->type_hash = reb_hash("int");
 
-    return (int*)rebx_set_newparam(object, &newparam);
-}
-
-struct rebx_spring* rebx_get_param_spring(const void* const object, const char* const param_name){
-    uint32_t hash = reb_hash(param_name);
-    void* voidptr = rebx_get_param_hash(object, hash);
-    if (voidptr == NULL){
-        return NULL;
-    }
-    else{
-        return (struct rebx_spring*)voidptr;
-    }
-}
-
-void rebx_set_param_spring(void* object, const char* const param_name, struct rebx_spring value){
-    uint32_t hash = reb_hash(param_name);
-    struct rebx_spring* ptr = rebx_get_param_hash(object, hash);
-    if(ptr == NULL){
-        ptr = rebx_add_param_spring(object, hash);  // add a new parameter if it doesn't exist
-    }
-    *ptr = value;                                   // update existing value
-}
-
-struct rebx_spring* rebx_add_param_spring(void* object, uint32_t hash){
-    struct rebx_param* newparam = malloc(sizeof(*newparam));
-    newparam->paramPtr = malloc(sizeof(struct rebx_spring));
-    newparam->hash = hash;
-    newparam->type_hash = reb_hash("spring");
-
-    return (struct rebx_spring*)rebx_set_newparam(object, &newparam);
+    return (int*)rebx_add_param(object, &newparam);
 }
 
 /***********************************************************************************

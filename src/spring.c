@@ -19,13 +19,8 @@
 // by Simon Clavet, Philippe Beaudoin, and Pierre Poulin 
 #define L_EPS 1e-6; // softening for spring length
 void rebx_spring_forces(struct reb_simulation* const r, struct rebx_effect* const effect){
-    int* NSptr = rebx_get_param_int(effect, "NS");
-    if (NSptr == NULL){
-        reb_error(r, "Need to set NS (number of springs.\n");
-    }
-    const int NS = *NSptr;
-
-    struct rebx_spring* springs = rebx_get_param_spring(effect, "springs");
+    const int NS = *rebx_get_param_int(effect, "NS");
+    struct rebx_spring* const springs = rebx_get_param_springs(effect, "springs");
     
     for (int i=0;i<NS;i++){  // spring forces  
         double L = spring_length(r,springs[i]) + L_EPS; // spring length
@@ -61,36 +56,56 @@ void rebx_spring_forces(struct reb_simulation* const r, struct rebx_effect* cons
                   // gamma is in units of 1/time
                   // force is gamma*dL/dt*mbar * dx/L = gamma*mbar*deps/dt*L*dx/L
         }
-      
     }
 }
 
+struct rebx_spring* rebx_get_param_springs(const void* const object, const char* const param_name){
+    uint32_t hash = reb_hash(param_name);
+    struct rebx_param* ptr = rebx_get_param(object, hash);
+    if (ptr == NULL){
+        return NULL;
+    }
+    else{
+        return (struct rebx_spring*)ptr->paramPtr;
+    }
+}
 
-// add a spring! bare routine no checking
-void springs_add(struct reb_simulation* const r, struct rebx_effect* effect, struct rebx_spring spr){
+struct rebx_spring* rebx_add_param_springs(void* object, uint32_t hash){
+    struct rebx_param* newparam = malloc(sizeof(*newparam));
+    newparam->paramPtr = malloc(sizeof(struct rebx_spring));
+    newparam->hash = hash;
+    newparam->type_hash = reb_hash("spring");
+    
+    return (struct rebx_spring*)rebx_add_param(object, &newparam);
+}
+
+void rebx_set_param_spring(struct reb_simulation* const r, struct rebx_effect* effect, struct rebx_spring spr){
     int* NS = rebx_get_param_int(effect, "NS");
     if (NS == NULL){
-        reb_error(r, "Need to set NS (number of springs.\n");
+        rebx_set_param_int(effect, "NS", 0);
+        NS = rebx_get_param_int(effect, "NS");
     }
     int* NSmax = rebx_get_param_int(effect, "NSmax");
     if (NSmax == NULL){
-        reb_error(r, "Need to set NSmax (max number of springs.\n");
+        rebx_set_param_int(effect, "NSmax", 0);
+        NSmax = rebx_get_param_int(effect, "NSmax");
     }
-   
+    
     while (*NSmax<=*NS){
         *NSmax += 128;
         uint32_t hash = reb_hash("springs");
-        struct rebx_param* springsparam = rebx_get_paramptr_hash(effect, hash);
+        struct rebx_param* springsparam = rebx_get_param(effect, hash);
         if (springsparam == NULL){
-            rebx_add_param_spring(effect, hash);
-            springsparam = rebx_get_paramptr_hash(effect, hash);
+            rebx_add_param_springs(effect, hash);
+            springsparam = rebx_get_param(effect, hash);
         }
-        springsparam->paramPtr = realloc(springsparam->paramPtr,sizeof(struct rebx_spring*)*(*NSmax));
+        springsparam->paramPtr = realloc(springsparam->paramPtr,sizeof(struct rebx_spring)*(*NSmax));
     }
-
-    struct rebx_spring* springs = rebx_get_param_spring(effect, "springs");
+    
+    struct rebx_spring* springs = rebx_get_param_springs(effect, "springs");
     springs[*NS] = spr;
     (*NS)++;
+    
 }
 
 // add a spring given two indices of particles 
@@ -102,8 +117,7 @@ void springs_add(struct reb_simulation* const r, struct rebx_effect* effect, str
 // return -1 if not made because both indices are the same, =bad
 // takes as argument spring_vals to set spring constant and stuff
 // i1,i2 are indexes of 2 particles, spring connects these
-int add_spring_i(struct reb_simulation* const r, struct rebx_effect* effect, int i1, int i2, struct rebx_spring spring_vals)
-{
+int add_spring_i(struct reb_simulation* const r, struct rebx_effect* effect, int i1, int i2, struct rebx_spring spring_vals){
     if (i1==i2) return -1; // don't add  spring, vertices same
     // make sure order of indices is correct
     int il = i1;
@@ -117,7 +131,7 @@ int add_spring_i(struct reb_simulation* const r, struct rebx_effect* effect, int
         reb_error(r, "Need to set NS (number of springs.\n");
     }
     
-    struct rebx_spring* springs = rebx_get_param_spring(effect, "springs");
+    struct rebx_spring* springs = rebx_get_param_springs(effect, "springs");
     for(int ii=0;ii<(*NS);ii++){ // there is another spring already connecting 
                              // these two indices
         if ((springs[ii].i == il) && (springs[ii].j == ih)) return ii;
@@ -129,7 +143,7 @@ int add_spring_i(struct reb_simulation* const r, struct rebx_effect* effect, int
     double dr = spring_length(r,spr); // spring length
     spr.rs0 = dr;       // rest spring length  
     spr.ks = spring_vals.ks;  // spring constant 
-    springs_add(r, effect, spr);
+    rebx_set_param_spring(r, effect, spr);
     return (*NS)-1; // index of new spring!
     // printf("add_spring_i: NS=%d\n",NS);
 }
@@ -138,9 +152,7 @@ int add_spring_i(struct reb_simulation* const r, struct rebx_effect* effect, int
 // distances less than h_dist apart
 // for particle index range [i0,imax-1]
 // spring added with rest length at current length  
-void connect_springs_dist(struct reb_simulation* const r, struct rebx_effect* const effect, double h_dist, int i0, int imax,
-      struct rebx_spring spring_vals)
-{
+void connect_springs_dist(struct reb_simulation* const r, struct rebx_effect* const effect, double h_dist, int i0, int imax, struct rebx_spring spring_vals){
    if (imax <= i0) return;
 // find all the springs for near neighbors
    for(int ii=i0;ii<imax-1;ii++){
@@ -487,8 +499,6 @@ double fill_cubic_cube(struct reb_simulation* r, double dd,
         ,N-i0,dd,min_d/2.0, particle_mass);	
    return min_d;
 }
-
-
 
 /*
 extern int NPERT;  // number of external perturbing bodies

@@ -133,9 +133,7 @@ int main(int argc, char* argv[]){
    fpr = fopen(fname,"w");
 
    int NS=0; // start with no springs
-   int NSmax = 0;
    rebx_set_param_int(effect, "NS", NS); // start with no springs
-   rebx_set_param_int(effect, "NSmax", NSmax); // start with no springs
 
 // do you want volume to be the same? adjusting here!!!!
    double volume_ratio = pow(rball,3.0)*ratio1*ratio2;  // neglecting 4pi/3 factor
@@ -182,7 +180,6 @@ int main(int argc, char* argv[]){
 
    // make springs, all pairs connected within interparticle distance mush_distance
    connect_springs_dist(r,effect,mush_distance, 0, r->N, spring_mush);
-
    /*
    // assume minor semi is rball*ratio2
    double ddr = rball*ratio2 - 0.5*mush_distance;

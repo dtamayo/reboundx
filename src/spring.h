@@ -28,18 +28,27 @@ extern double t_reform; // formation springs timescale
 extern double gamma_all; // for gamma  of all springs
 extern double Q_FORCERED; // force redistribution parameter
 
-void spring_forces();
+void rebx_spring_forces(struct reb_simulation* const r, struct rebx_effect* const effect);
+struct rebx_spring* rebx_get_param_springs(const void* const object, const char* const param_name);
+struct rebx_spring* rebx_add_param_springs(void* object, uint32_t hash);
+void rebx_set_param_spring(struct reb_simulation* const r, struct rebx_effect* effect, struct rebx_spring spr);
+int add_spring_i(struct reb_simulation* const r, struct rebx_effect* effect, int i1, int i2, struct rebx_spring spring_vals);
+void connect_springs_dist(struct reb_simulation* const r, struct rebx_effect* const effect, double h_dist, int i0, int imax, struct rebx_spring spring_vals);
+double spring_length(struct reb_simulation* const r, struct rebx_spring spr);
+int mym(int k);
+void rand_football_from_sphere(struct reb_simulation* r, double dist, double ax, double by, double cz, double total_mass);
+void rand_football(struct reb_simulation* const r, double dist, double ax, double by, double cz, double total_mass);
+double fill_hcp(struct reb_simulation* r, double dd, double ax, double by, double cz, double total_mass);
+double fill_cubic(struct reb_simulation* r, double dd, double ax, double by, double cz, double total_mass);
+double fill_cubic_cube(struct reb_simulation* r, double dd, double ax, double by, double cz, double total_mass);
+    
 void zero_accel();
 
-double spring_length();
 double strain();
-void springs_add();
 void normalize ();
 double mindist();
 void centerbody();
 void connect_springs_dist();
-void rand_football();
-void rand_football_from_sphere();
 double Young_mush();
 void set_gamma();
 void spin();
@@ -63,9 +72,6 @@ void eigenvalues();
 void adjust_ks();
 void adjust_mass_side();
 void rotate_body();
-double fill_hcp();
-double fill_cubic();
-double fill_cubic_cube();
 double epsilon_mom();
 double add_pluto_charon();
 double add_one_mass();
