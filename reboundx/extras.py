@@ -201,6 +201,7 @@ class rebx_effect(Structure):
         return params
 
 rebx_effect._fields_ = [("object_type", c_uint32),
+                        ("hash", c_uint32),
                         ("ap", POINTER(rebx_param)),
                         ("force", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))),
                         ("ptm", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))),
