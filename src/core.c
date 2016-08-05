@@ -260,7 +260,7 @@ void* rebx_add_param(void* const object, struct rebx_param** const param){
     return newparam->paramPtr;
 }
 
-/*static struct reb_simulation* rebx_get_sim(const void* const object){
+static struct reb_simulation* rebx_get_sim(const void* const object){
     enum rebx_object_type object_type = rebx_get_object_type(object);
     switch(object_type){
         case REBX_EFFECT:
@@ -279,7 +279,7 @@ void* rebx_add_param(void* const object, struct rebx_param** const param){
     }
 } 
 
-static void rebx_get_param_warning(const void* const object, const char* const param_name)
+/*static void rebx_get_param_warning(const void* const object, const char* const param_name)
 {
     struct reb_simulation* sim = rebx_get_sim(object);
     char str[200]; // TODO add check for whether using C
@@ -373,7 +373,15 @@ double* rebx_get_param_double(const void* const object, const char* const param_
         return NULL;
     }
     else{
-        return (double*)ptr->paramPtr;
+        if (ptr->type_hash != reb_hash("double")){
+            char str[300];
+            sprintf(str, "Parameter '%s' passed to rebx_get_param_double was found but was of wrong type.  In python, you might need to add a dot at the end of the number when assigning a parameter that REBOUNDx expects as a float.\n", param_name);
+            reb_error(rebx_get_sim(object), str);
+            return NULL;
+        }
+        else{
+            return (double*)ptr->paramPtr;
+        }
     }
 }
 
@@ -406,7 +414,15 @@ int* rebx_get_param_int(const void* const object, const char* const param_name){
         return NULL;
     }
     else{
-        return (int*)ptr->paramPtr;
+        if (ptr->type_hash != reb_hash("int")){
+            char str[300];
+            sprintf(str, "Parameter '%s' passed to rebx_get_param_int was found but was of wrong type.\n", param_name);
+            reb_error(rebx_get_sim(object), str);
+            return NULL;
+        }
+        else{
+            return (int*)ptr->paramPtr;
+        }
     }
 }
 
