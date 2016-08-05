@@ -119,7 +119,7 @@ static double rebx_calculate_radial_force_hamiltonian(struct reb_simulation* con
         const double dy = p.y - source.y;
         const double dz = p.z - source.z;
         const double r2 = dx*dx + dy*dy + dz*dz;
-        if ((gamma-1.) < DBL_EPSILON){
+        if (fabs(gamma+1.) < DBL_EPSILON){ // F propto 1/r
             H -= A*log(sqrt(r2));
         }
         else{
@@ -129,16 +129,31 @@ static double rebx_calculate_radial_force_hamiltonian(struct reb_simulation* con
     return H;
 }
 
-void rebx_radial_force_hamiltonian(struct reb_simulation* const sim){ 
+double rebx_radial_force_hamiltonian(struct reb_simulation* const sim){ 
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
+    double Htot = 0.;
     for (int i=0; i<N_real; i++){
         const double* const Aradial = rebx_get_param_double(&particles[i], "Aradial");
         if (Aradial != NULL){
             const double* const gammaradial = rebx_get_param_double(&particles[i], "gammaradial");
             if (gammaradial != NULL){
-                rebx_calculate_radial_force_hamiltonian(sim, *Aradial, *gammaradial, i); 
+                Htot += rebx_calculate_radial_force_hamiltonian(sim, *Aradial, *gammaradial, i); 
             }
         }
     }
+    return Htot;
 }
+
+double rebx_radial_force_Aradial(const struct reb_particle p, const struct reb_particle primary, const double pomegadot, const double gamma){
+    struct reb_simulation* sim = p.sim;
+    const double G = sim->G;
+    const struct reb_orbit o = reb_tools_particle_to_orbit(G, p, primary);
+    const double n = 2*M_PI/o.P;
+    if (fabs(gamma+2.) < DBL_EPSILON){  // precession goes to 0 at r^-2, so A diverges for gamma=-2
+        reb_error(sim, "Precession vanishes for force law varying as r^-2, so can't initialize Aradial from a precession rate for gamma=-2)\n");
+        return 0.;
+    }
+    return G*primary.m*pomegadot/(1.+gamma/2.)/pow(o.d, gamma+2.)/o.n;
+}
+    
