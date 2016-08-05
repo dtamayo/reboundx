@@ -239,6 +239,8 @@ double rebx_gr_full_hamiltonian(struct reb_simulation* const sim, const struct r
 
 double rebx_tides_precession_hamiltonian(struct reb_simulation* const sim, struct rebx_effect* const effect);
 
+void rebx_radial_force_hamiltonian(struct reb_simulation* const sim);
+
 /** @} */
 /** @} */
 
