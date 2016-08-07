@@ -107,7 +107,7 @@ static void rebx_calculate_tides_precession(struct reb_simulation* const sim, co
 	}
 }
 
-void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_effect* const effect){ 
+void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_effect* effect){
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
     int source_found=0;
@@ -162,7 +162,7 @@ static double rebx_calculate_tides_precession_hamiltonian(struct reb_simulation*
     return H;
 }
 
-double rebx_tides_precession_hamiltonian(struct reb_simulation* const sim, struct rebx_effect* const effect){ 
+double rebx_tides_precession_hamiltonian(struct reb_simulation* const sim){
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
     int source_found=0;
