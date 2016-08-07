@@ -239,8 +239,18 @@ double rebx_gr_hamiltonian(struct reb_simulation* const sim, const struct rebx_e
  */
 double rebx_gr_full_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr_full);
 
-double rebx_tides_precession_hamiltonian(struct reb_simulation* const sim, struct rebx_effect* const effect);
+/**
+ * @brief Calculates the hamiltonian for tides_precession effect.
+ * @param sim pointer to the REBOUND simulation
+ * @return Potential corresponding to tides_precession effect.
+ */
+double rebx_tides_precession_hamiltonian(struct reb_simulation* const sim);
 
+/**
+ * @brief Calculates the hamiltonian for radial_force effect.
+ * @param sim pointer to the REBOUND simulation.
+ * @return Potential corresponding to radial_force effect.
+ */
 double rebx_radial_force_hamiltonian(struct reb_simulation* const sim);
 
 /** @} */
