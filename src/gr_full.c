@@ -65,7 +65,7 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const ef
     const int _N_real = sim->N - sim->N_var;
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
-    const unsigned int _gravity_ignore_10 = sim->gravity_ignore_10;
+    const unsigned int _gravity_ignore_10 = sim->_gravity_ignore_terms==1;
 
     double a_const[_N_real][3]; // array that stores the value of the constant term
     double a_newton[_N_real][3]; // stores the Newtonian term
