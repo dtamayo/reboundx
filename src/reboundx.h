@@ -212,6 +212,14 @@ double rebx_rad_calc_beta(const double G, const double c, const double source_ma
  */
 double rebx_rad_calc_particle_radius(const double G, const double c, const double source_mass, const double source_luminosity, const double beta, const double density, const double Q_pr);
 
+/**
+ * @brief Calculates the Aradial parameter for central_force effect required for a particle to have a particular pericenter precession rate.
+ * @param p Particle whose pericenter precession rate we want to match.
+ * @param primary Central particle for the central force (to which we add the Acentral and gammacentral parameters).
+ * @param pomegadot Pericenter precession rate we want to obtain.
+ * @param gamma Index of the central force law.
+ * @return Acentral Normalization to add to the central particle.
+ */
 double rebx_central_force_Acentral(const struct reb_particle p, const struct reb_particle primary, const double pomegadot, const double gamma);
 
 /**

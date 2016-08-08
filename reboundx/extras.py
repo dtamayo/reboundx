@@ -89,50 +89,10 @@ class Extras(Structure):
     #######################################
 
     def rad_calc_beta(self, G, c, source_mass, source_luminosity, radius, density, Q_pr):
-        """
-        Calculates a particle's beta parameter (the ratio of the radiation force to the gravitational force).
-        All values must be passed in the same units as used for the simulation as a whole (e.g., AU, Msun, yr/2pi).
-
-        :param G: Gravitational constant
-        :param c: Speed of light
-        :param source_mass: Mass of radiation source
-        :param source_luminosity: Luminosity of radiation source
-        :param radius: grain's physical radius
-        :param density: particle bulk density
-        :param Q_pr: radiation pressure coefficient
-        :type G: float
-        :type c: float
-        :type source_mass: float
-        :type source_luminosity: float
-        :type radius: float
-        :type density: float
-        :type Q_pr: float
-        :rtype: float
-        """
         clibreboundx.rebx_rad_calc_beta.restype = c_double
         return clibreboundx.rebx_rad_calc_beta(c_double(G), c_double(c), c_double(source_mass), c_double(source_luminosity), c_double(radius), c_double(density), c_double(Q_pr))
 
     def rad_calc_particle_radius(self, G, c, source_mass, source_luminosity, beta, density, Q_pr):
-        """
-        Calculates a particle's physical radius given its beta parameter.
-        All values must be passed in the same units as used for the simulation as a whole (e.g., AU, Msun, yr/2pi).
-
-        :param G: Gravitational constant
-        :param c: Speed of light
-        :param source_mass: Mass of radiation source
-        :param source_luminosity: Luminosity of radiation source
-        :param beta: Ratio of radiation force to gravitational force
-        :param density: particle bulk density
-        :param Q_pr: radiation pressure coefficient
-        :type G: float
-        :type c: float
-        :type source_mass: float
-        :type source_luminosity: float
-        :type radius: float
-        :type density: float
-        :type Q_pr: float
-        :rtype: float
-        """
         clibreboundx.rebx_rad_calc_particle_radius.restype = c_double
         return clibreboundx.rebx_rad_calc_particle_radius(c_double(G), c_double(c), c_double(source_mass), c_double(source_luminosity), c_double(beta), c_double(density), c_double(Q_pr))
 
@@ -144,44 +104,14 @@ class Extras(Structure):
 
     # Hamiltonian calculation functions
     def gr_hamiltonian(self, sim, params):
-        """
-        Calculates the value of the Hamiltonian from the particle states, when rebx_add_gr has been called.
-        This also includes the classical Newtonian Hamiltonian.
-
-        :param sim: REBOUND simulation.
-        :param params: parameters instance returned by add_gr.
-        :type sim: rebound.Simulation
-        :type params: rebx_params_gr
-        :rtype: float
-        """
         clibreboundx.rebx_gr_hamiltonian.restype = c_double
         return clibreboundx.rebx_gr_hamiltonian(byref(sim), byref(params))
     
     def gr_potential_hamiltonian(self, sim, params):
-        """
-        Calculates the value of the Hamiltonian from the particle states, when rebx_add_gr has been called.
-        This also includes the classical Newtonian Hamiltonian.
-
-        :param sim: REBOUND simulation.
-        :param params: parameters instance returned by add_gr_potential.
-        :type sim: rebound.Simulation
-        :type params: rebx_params_gr_potential
-        :rtype: float
-        """
         clibreboundx.rebx_gr_potential_hamiltonian.restype = c_double
         return clibreboundx.rebx_gr_potential_hamiltonian(byref(sim), byref(params))
     
     def gr_full_hamiltonian(self, sim, params):
-        """
-        Calculates the value of the Hamiltonian from the particle states, when rebx_add_gr_full has been called.
-        This also includes the classical Newtonian Hamiltonian.
-
-        :param sim: REBOUND simulation.
-        :param params: parameters instance returned by add_gr_full.
-        :type sim: rebound.Simulation
-        :type params: rebx_params_gr_full
-        :rtype: float
-        """
         clibreboundx.rebx_gr_full_hamiltonian.restype = c_double
         return clibreboundx.rebx_gr_full_hamiltonian(byref(sim), byref(params))
     

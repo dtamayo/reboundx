@@ -325,3 +325,37 @@ primary (int)                No          Set to 1 to specify the primary.  Defau
 ============================ =========== ==================================================================
 
 
+Central Force
+^^^^^^^^^^^^^^^^^^
+
+.. _central_force:
+
+central_force
+*************
+
+======================= ===============================================
+Authors                 D. Tamayo
+Implementation Paper    *In progress*
+Based on                None
+C Example               :ref:`c_example_central_force`
+Python Example          `CentralForce.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/CentralForce.ipynb>`_.
+======================= ===============================================
+
+Adds a general central acceleration of the form a=Aradial*r^gammaradial, outward along the direction from a central particle to the body.
+Effect is turned on by adding Aradial and gammaradial parameters to a particle, which will act as the central body for the effect,
+and will act on all other particles.
+
+**Effect Parameters**
+
+None
+
+**Particle Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+Aradial (double)             Yes         Normalization for central acceleration.
+gammaradial (double)         Yes         Power index for central acceleration.
+============================ =========== ==================================================================
+
+
