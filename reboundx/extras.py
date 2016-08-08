@@ -136,11 +136,11 @@ class Extras(Structure):
         clibreboundx.rebx_rad_calc_particle_radius.restype = c_double
         return clibreboundx.rebx_rad_calc_particle_radius(c_double(G), c_double(c), c_double(source_mass), c_double(source_luminosity), c_double(beta), c_double(density), c_double(Q_pr))
 
-    def radial_force_Aradial(self, p, primary, pomegadot, gamma):
-        clibreboundx.rebx_radial_force_Aradial.restype = c_double
-        Aradial = clibreboundx.rebx_radial_force_Aradial(p, primary, c_double(pomegadot), c_double(gamma))
+    def central_force_Acentral(self, p, primary, pomegadot, gamma):
+        clibreboundx.rebx_central_force_Acentral.restype = c_double
+        Acentral = clibreboundx.rebx_central_force_Acentral(p, primary, c_double(pomegadot), c_double(gamma))
         self.sim.contents.process_messages()
-        return Aradial
+        return Acentral
 
     # Hamiltonian calculation functions
     def gr_hamiltonian(self, sim, params):
@@ -189,9 +189,9 @@ class Extras(Structure):
         clibreboundx.rebx_tides_precession_hamiltonian.restype = c_double
         return clibreboundx.rebx_tides_precession_hamiltonian(byref(sim), byref(params))
 
-    def radial_force_hamiltonian(self, sim):
-        clibreboundx.rebx_radial_force_hamiltonian.restype = c_double
-        return clibreboundx.rebx_radial_force_hamiltonian(byref(sim))
+    def central_force_hamiltonian(self, sim):
+        clibreboundx.rebx_central_force_hamiltonian.restype = c_double
+        return clibreboundx.rebx_central_force_hamiltonian(byref(sim))
     
 #################################################
 # Generic REBOUNDx definitions
