@@ -1,9 +1,9 @@
-/** * @file    gr_potential.c
- * @brief   Post-newtonian general relativity corrections using a simple potential that gets the pericenter precession right.
- * @author  Pengshuai (Sam) Shi, Hanno Rein, Dan Tamayo <tamayo.daniel@gmail.com>
+/** * @file central_force.c
+ * @brief   A general central force.
+ * @author  Dan Tamayo <tamayo.daniel@gmail.com>
  * 
  * @section     LICENSE
- * Copyright (c) 2015 Pengshuai (Sam) Shi, Hanno Rein, Dan Tamayo
+ * Copyright (c) 2015 Dan Tamayo, Hanno Rein
  *
  * This file is part of reboundx.
  *
@@ -24,38 +24,31 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
- * $General Relativity$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ * $Central Force$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
  *
  * ======================= ===============================================
- * Authors                 H. Rein, D. Tamayo
+ * Authors                 D. Tamayo
  * Implementation Paper    *In progress*
- * Based on                `Nobili and Roxburgh 1986 <http://labs.adsabs.harvard.edu/adsabs/abs/1986IAUS..114..105N/>`_.
- * C Example               :ref:`c_example_gr`
- * Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+ * Based on                None
+ * C Example               :ref:`c_example_central_force`
+ * Python Example          `CentralForce.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/CentralForce.ipynb>`_.
  * ======================= ===============================================
  * 
- * This is the simplest potential you can use for general relativity.
- * It assumes that the masses are dominated by a single central body.
- * It gets the precession right, but gets the mean motion wrong by :math:`\mathcal{O}(GM/ac^2)`.  
- * It's the fastest option, and because it's not velocity-dependent, it automatically keeps WHFast symplectic.  
- * Nice if you have a single-star system, don't need to get GR exactly right, and want speed.
- * 
+ * Adds a general central acceleration of the form a=Aradial*r^gammaradial, outward along the direction from a central particle to the body.
+ * Effect is turned on by adding Aradial and gammaradial parameters to a particle, which will act as the central body for the effect,
+ * and will act on all other particles.
+ *
  * **Effect Parameters**
  * 
- * ============================ =========== ==================================================================
- * Field (C type)               Required    Description
- * ============================ =========== ==================================================================
- * c (double)                   Yes         Speed of light in the units used for the simulation.
- * ============================ =========== ==================================================================
+ * None
  *
  * **Particle Parameters**
  *
- * If no particles have gr_source set, effect will assume the particle at index 0 in the particles array is the source.
- *
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * gr_source (int)              No          Flag identifying the particle as the source of perturbations.
+ * Aradial (double)             Yes         Normalization for central acceleration.
+ * gammaradial (double)         Yes         Power index for central acceleration.
  * ============================ =========== ==================================================================
  * 
  */
@@ -67,7 +60,7 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-static void rebx_calculate_radial_force(struct reb_simulation* const sim, const double A, const double gamma, const int source_index){
+static void rebx_calculate_central_force(struct reb_simulation* const sim, const double A, const double gamma, const int source_index){
     const int _N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
     const struct reb_particle source = sim->particles[source_index];
@@ -91,21 +84,21 @@ static void rebx_calculate_radial_force(struct reb_simulation* const sim, const 
     }
 }
 
-void rebx_radial_force(struct reb_simulation* const sim, struct rebx_effect* const effect){ 
+void rebx_central_force(struct reb_simulation* const sim, struct rebx_effect* const effect){ 
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
     for (int i=0; i<N_real; i++){
-        const double* const Aradial = rebx_get_param_double(&particles[i], "Aradial");
-        if (Aradial != NULL){
-            const double* const gammaradial = rebx_get_param_double(&particles[i], "gammaradial");
-            if (gammaradial != NULL){
-                rebx_calculate_radial_force(sim, *Aradial, *gammaradial, i); // only calculates force if a particle has both Aradial and gammaradial parameters set.
+        const double* const Acentral = rebx_get_param_double(&particles[i], "Acentral");
+        if (Acentral != NULL){
+            const double* const gammacentral = rebx_get_param_double(&particles[i], "gammacentral");
+            if (gammacentral != NULL){
+                rebx_calculate_central_force(sim, *Acentral, *gammacentral, i); // only calculates force if a particle has both Acentral and gammacentral parameters set.
             }
         }
     }
 }
 
-static double rebx_calculate_radial_force_hamiltonian(struct reb_simulation* const sim, const double A, const double gamma, const int source_index){
+static double rebx_calculate_central_force_hamiltonian(struct reb_simulation* const sim, const double A, const double gamma, const int source_index){
     const struct reb_particle* const particles = sim->particles;
 	const int _N_real = sim->N - sim->N_var;
     const struct reb_particle source = particles[source_index];
@@ -119,8 +112,9 @@ static double rebx_calculate_radial_force_hamiltonian(struct reb_simulation* con
         const double dy = p.y - source.y;
         const double dz = p.z - source.z;
         const double r2 = dx*dx + dy*dy + dz*dz;
+
         if (fabs(gamma+1.) < DBL_EPSILON){ // F propto 1/r
-            H -= A*log(sqrt(r2));
+            H -= p.m*A*log(sqrt(r2));
         }
         else{
             H -= p.m*A*pow(r2, (gamma+1.)/2.)/(gamma+1.);
@@ -129,29 +123,28 @@ static double rebx_calculate_radial_force_hamiltonian(struct reb_simulation* con
     return H;
 }
 
-double rebx_radial_force_hamiltonian(struct reb_simulation* const sim){ 
+double rebx_central_force_hamiltonian(struct reb_simulation* const sim){ 
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
     double Htot = 0.;
     for (int i=0; i<N_real; i++){
-        const double* const Aradial = rebx_get_param_double(&particles[i], "Aradial");
-        if (Aradial != NULL){
-            const double* const gammaradial = rebx_get_param_double(&particles[i], "gammaradial");
-            if (gammaradial != NULL){
-                Htot += rebx_calculate_radial_force_hamiltonian(sim, *Aradial, *gammaradial, i); 
+        const double* const Acentral = rebx_get_param_double(&particles[i], "Acentral");
+        if (Acentral != NULL){
+            const double* const gammacentral = rebx_get_param_double(&particles[i], "gammacentral");
+            if (gammacentral != NULL){
+                Htot += rebx_calculate_central_force_hamiltonian(sim, *Acentral, *gammacentral, i); 
             }
         }
     }
     return Htot;
 }
 
-double rebx_radial_force_Aradial(const struct reb_particle p, const struct reb_particle primary, const double pomegadot, const double gamma){
+double rebx_central_force_Acentral(const struct reb_particle p, const struct reb_particle primary, const double pomegadot, const double gamma){
     struct reb_simulation* sim = p.sim;
     const double G = sim->G;
     const struct reb_orbit o = reb_tools_particle_to_orbit(G, p, primary);
-    const double n = 2*M_PI/o.P;
     if (fabs(gamma+2.) < DBL_EPSILON){  // precession goes to 0 at r^-2, so A diverges for gamma=-2
-        reb_error(sim, "Precession vanishes for force law varying as r^-2, so can't initialize Aradial from a precession rate for gamma=-2)\n");
+        reb_error(sim, "Precession vanishes for force law varying as r^-2, so can't initialize Acentral from a precession rate for gamma=-2)\n");
         return 0.;
     }
     return G*primary.m*pomegadot/(1.+gamma/2.)/pow(o.d, gamma+2.)/o.n;

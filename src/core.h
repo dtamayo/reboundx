@@ -131,6 +131,6 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_eff
 void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect);
 void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* const effect);
 void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_effect* const effect);
-void rebx_radial_force(struct reb_simulation* const sim, struct rebx_effect* const effect);
+void rebx_central_force(struct reb_simulation* const sim, struct rebx_effect* const effect);
 
 #endif

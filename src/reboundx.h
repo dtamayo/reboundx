@@ -212,7 +212,7 @@ double rebx_rad_calc_beta(const double G, const double c, const double source_ma
  */
 double rebx_rad_calc_particle_radius(const double G, const double c, const double source_mass, const double source_luminosity, const double beta, const double density, const double Q_pr);
 
-double rebx_radial_force_Aradial(const struct reb_particle p, const struct reb_particle primary, const double pomegadot, const double gamma);
+double rebx_central_force_Acentral(const struct reb_particle p, const struct reb_particle primary, const double pomegadot, const double gamma);
 
 /**
  * @brief Calculates the hamiltonian for gr_potential, including the classical Hamiltonian.
@@ -247,11 +247,11 @@ double rebx_gr_full_hamiltonian(struct reb_simulation* const sim, const struct r
 double rebx_tides_precession_hamiltonian(struct reb_simulation* const sim);
 
 /**
- * @brief Calculates the hamiltonian for radial_force effect.
+ * @brief Calculates the hamiltonian for central_force effect.
  * @param sim pointer to the REBOUND simulation.
- * @return Potential corresponding to radial_force effect.
+ * @return Potential corresponding to central_force effect.
  */
-double rebx_radial_force_hamiltonian(struct reb_simulation* const sim);
+double rebx_central_force_hamiltonian(struct reb_simulation* const sim);
 
 /** @} */
 /** @} */

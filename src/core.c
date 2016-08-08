@@ -178,8 +178,8 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
     else if (effect->hash == reb_hash("tides_precession")){
         effect->force = rebx_tides_precession;
     }
-    else if (effect->hash == reb_hash("radial_force")){
-        effect->force = rebx_radial_force;
+    else if (effect->hash == reb_hash("central_force")){
+        effect->force = rebx_central_force;
     }
     else{
         char str[100]; 
