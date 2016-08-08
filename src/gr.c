@@ -71,7 +71,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, const double C2,
     const int N_real = sim->N - sim->N_var;
     const double G = sim->G;
     struct reb_particle* const particles = sim->particles;
-    const unsigned int _gravity_ignore_10 = sim->_gravity_ignore_terms==1;
+    const unsigned int _gravity_ignore_10 = sim->gravity_ignore_terms==1;
     
 	const double mu = G*particles[source_index].m;
     double aoverm10x, aoverm10y, aoverm10z;
