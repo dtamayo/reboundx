@@ -88,9 +88,9 @@ void rebx_central_force(struct reb_simulation* const sim, struct rebx_effect* co
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
     for (int i=0; i<N_real; i++){
-        const double* const Acentral = rebx_get_param_double(&particles[i], "Acentral");
+        const double* const Acentral = rebx_get_particle_param_double(&particles[i], "Acentral");
         if (Acentral != NULL){
-            const double* const gammacentral = rebx_get_param_double(&particles[i], "gammacentral");
+            const double* const gammacentral = rebx_get_particle_param_double(&particles[i], "gammacentral");
             if (gammacentral != NULL){
                 rebx_calculate_central_force(sim, *Acentral, *gammacentral, i); // only calculates force if a particle has both Acentral and gammacentral parameters set.
             }
@@ -128,9 +128,9 @@ double rebx_central_force_hamiltonian(struct reb_simulation* const sim){
     struct reb_particle* const particles = sim->particles;
     double Htot = 0.;
     for (int i=0; i<N_real; i++){
-        const double* const Acentral = rebx_get_param_double(&particles[i], "Acentral");
+        const double* const Acentral = rebx_get_particle_param_double(&particles[i], "Acentral");
         if (Acentral != NULL){
-            const double* const gammacentral = rebx_get_param_double(&particles[i], "gammacentral");
+            const double* const gammacentral = rebx_get_particle_param_double(&particles[i], "gammacentral");
             if (gammacentral != NULL){
                 Htot += rebx_calculate_central_force_hamiltonian(sim, *Acentral, *gammacentral, i); 
             }

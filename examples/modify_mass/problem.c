@@ -44,12 +44,12 @@ int main(int argc, char* argv[]){
 	rebx_add(rebx, "modify_mass"); 
 
 	// To set an exponential mass loss rate, we set the e-folding timescale (positive for growth, negative for loss)
-    rebx_set_param_double(&sim->particles[0], "tau_mass", -tmax); // star loses mass with e-damping timescale tmax
+    rebx_set_particle_param_double(&sim->particles[0], "tau_mass", -tmax); // star loses mass with e-damping timescale tmax
 
 	// We can approximate a linear mass loss/growth rate if the rate is small by taking tau_mass = M_initial / mass_loss_rate (or growth)
 	double M_dot = 1.e-12; // mass growth rate for the planet (in simulation units--here Msun/yr)
     double tau_mass = sim->particles[1].m / M_dot;
-    rebx_set_param_double(&sim->particles[1], "tau_mass", tau_mass); // first planet gains mass at linear rate M_dot
+    rebx_set_particle_param_double(&sim->particles[1], "tau_mass", tau_mass); // first planet gains mass at linear rate M_dot
 
 	reb_integrate(sim, tmax); 
 	rebx_free(rebx); 	// this explicitly frees all the memory allocated by REBOUNDx 

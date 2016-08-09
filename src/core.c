@@ -215,27 +215,26 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
 }
 
 /*********************************************************************************
- Internal getter/setter functions
+ Type-independent functions for dealing with parameters
  ********************************************************************************/
-
+/*
 // Internal function that detects object type by casting void* to different pointer types.
 static enum rebx_object_type rebx_get_object_type(const void* const object){
     struct rebx_effect* effect = (struct rebx_effect*)object;
     if (effect->object_type == reb_hash("rebx_effect")){
-        return REBX_EFFECT;
+        return REBX_TYPE_EFFECT;
     }
     else{
-        return REBX_REB_PARTICLE;
+        return REBX_TYPE_PARTICLE;
     }
 }
-
-// Internal function that sets a new param in particle or effect linked list
-void* rebx_add_param(void* const object, struct rebx_param** const param){
+*/
+// Internal function that sets a new param of generic type in particle or effect linked list
+void* rebx_add_param(void* const object, struct rebx_param** const param, enum rebx_object_type type){
     struct rebx_param* newparam = *param;
-    enum rebx_object_type object_type = rebx_get_object_type(object);
     struct rebx_extras* rebx;
-    switch(object_type){
-        case REBX_EFFECT:
+    switch(type){
+        case REBX_TYPE_EFFECT:
         {
             struct rebx_effect* effect = (struct rebx_effect*)object;
             newparam->next = effect->ap;
@@ -243,7 +242,7 @@ void* rebx_add_param(void* const object, struct rebx_param** const param){
             rebx = effect->rebx;
             break;
         }
-        case REBX_REB_PARTICLE:
+        case REBX_TYPE_PARTICLE:
         {
             struct reb_particle* p = (struct reb_particle*)object;
             newparam->next = p->ap;
@@ -260,49 +259,16 @@ void* rebx_add_param(void* const object, struct rebx_param** const param){
     return newparam->paramPtr;
 }
 
-static struct reb_simulation* rebx_get_sim(const void* const object){
-    enum rebx_object_type object_type = rebx_get_object_type(object);
-    switch(object_type){
-        case REBX_EFFECT:
-        {
-            struct rebx_effect* effect = (struct rebx_effect*)object;
-            return effect->rebx->sim;
-        }
-        case REBX_REB_PARTICLE:
-        {
-            struct reb_particle* p = (struct reb_particle*)object;
-            return p->sim;
-        }
-        default:
-            fprintf(stderr, "Unsupported case in rebx_get_sim.\n");
-            exit(1);
-    }
-} 
-
-/*static void rebx_get_param_warning(const void* const object, const char* const param_name)
-{
-    struct reb_simulation* sim = rebx_get_sim(object);
-    char str[200]; // TODO add check for whether using C
-    sprintf(str, "Param %s was not found. Accessing pointer returned from rebx_get_param will cause segmentation fault (check for NULL).\n", param_name);
-    reb_warning(sim,str); 
-}
-*/
-
-/*********************************************************************************
- Type-independent functions for dealing with parameters
- ********************************************************************************/
-
-struct rebx_param* rebx_get_param(const void* const object, uint32_t hash){
+struct rebx_param* rebx_get_param(const void* const object, uint32_t hash, enum rebx_object_type type){
     struct rebx_param* current;
-    enum rebx_object_type object_type = rebx_get_object_type(object);
-    switch(object_type){
-        case REBX_EFFECT:
+    switch(type){
+        case REBX_TYPE_EFFECT:
         {
             struct rebx_effect* effect = (struct rebx_effect*)object;
             current = effect->ap;
             break;
         }
-        case REBX_REB_PARTICLE:
+        case REBX_TYPE_PARTICLE:
         {
             struct reb_particle* p = (struct reb_particle*)object;
             current = p->ap;
@@ -322,12 +288,12 @@ struct rebx_param* rebx_get_param(const void* const object, uint32_t hash){
     return NULL;
 }
 
-int rebx_remove_param(const void* const object, const char* const param_name){
+int rebx_remove_param(const void* const object, const char* const param_name, enum rebx_object_type type){
+    // TODO free memory for deleted node
     uint32_t hash = reb_hash(param_name);
     struct rebx_param* current;
-    enum rebx_object_type object_type = rebx_get_object_type(object);
-    switch(object_type){
-        case REBX_EFFECT:
+    switch(type){
+        case REBX_TYPE_EFFECT:
         {
             struct rebx_effect* effect = (struct rebx_effect*)object;
             current = effect->ap;
@@ -337,7 +303,7 @@ int rebx_remove_param(const void* const object, const char* const param_name){
             }
             break;
         }
-        case REBX_REB_PARTICLE:
+        case REBX_TYPE_PARTICLE:
         {
             struct reb_particle* p = (struct reb_particle*)object;
             current = p->ap;
@@ -361,14 +327,32 @@ int rebx_remove_param(const void* const object, const char* const param_name){
     }
     return 0;
 }
-            
+
+static struct reb_simulation* rebx_get_sim(const void* const object, enum rebx_object_type type){
+    switch(type){
+        case REBX_TYPE_EFFECT:
+        {
+            struct rebx_effect* effect = (struct rebx_effect*)object;
+            return effect->rebx->sim;
+        }
+        case REBX_TYPE_PARTICLE:
+        {
+            struct reb_particle* p = (struct reb_particle*)object;
+            return p->sim;
+        }
+        default:
+            fprintf(stderr, "Unsupported case in rebx_get_sim.\n");
+            exit(1);
+    }
+} 
+
 /*********************************************************************************
- Getters and Setters for particle parameters (need new set for each variable type)
+ Internal Getters and Setters for particle parameters of different types
  ********************************************************************************/
 
-double* rebx_get_param_double(const void* const object, const char* const param_name){
+double* rebx_get_param_double(const void* const object, const char* const param_name, enum rebx_object_type type){
     uint32_t hash = reb_hash(param_name);
-    struct rebx_param* ptr = rebx_get_param(object, hash);
+    struct rebx_param* ptr = rebx_get_param(object, hash, type);
     if (ptr == NULL){
         return NULL;
     }
@@ -376,7 +360,7 @@ double* rebx_get_param_double(const void* const object, const char* const param_
         if (ptr->type_hash != reb_hash("double")){
             char str[300];
             sprintf(str, "Parameter '%s' passed to rebx_get_param_double was found but was of wrong type.  In python, you might need to add a dot at the end of the number when assigning a parameter that REBOUNDx expects as a float.\n", param_name);
-            reb_error(rebx_get_sim(object), str);
+            reb_error(rebx_get_sim(object, type), str);
             return NULL;
         }
         else{
@@ -385,12 +369,12 @@ double* rebx_get_param_double(const void* const object, const char* const param_
     }
 }
 
-void rebx_set_param_double(void* object, const char* const param_name, double value){
+void rebx_set_param_double(void* object, const char* const param_name, double value, enum rebx_object_type type){
     uint32_t hash = reb_hash(param_name);
-    struct rebx_param* ptr = rebx_get_param(object, hash);
+    struct rebx_param* ptr = rebx_get_param(object, hash, type);
     double* param;
     if(ptr == NULL){
-        param = rebx_add_param_double(object, hash);  // add a new parameter if it doesn't exist
+        param = rebx_add_param_double(object, hash, type);  // add a new parameter if it doesn't exist
     }
     else{
         param = ptr->paramPtr;
@@ -398,18 +382,18 @@ void rebx_set_param_double(void* object, const char* const param_name, double va
     *param = value;                                   // update existing value
 }
 
-double* rebx_add_param_double(void* object, uint32_t hash){
+double* rebx_add_param_double(void* object, uint32_t hash, enum rebx_object_type type){
     struct rebx_param* newparam = malloc(sizeof(*newparam));
     newparam->paramPtr = malloc(sizeof(double));
     newparam->hash = hash;
     newparam->type_hash = reb_hash("double");
 
-    return (double*)rebx_add_param(object, &newparam);
+    return (double*)rebx_add_param(object, &newparam, type);
 }
 
-int* rebx_get_param_int(const void* const object, const char* const param_name){
+int* rebx_get_param_int(const void* const object, const char* const param_name, enum rebx_object_type type){
     uint32_t hash = reb_hash(param_name);
-    struct rebx_param* ptr = rebx_get_param(object, hash);
+    struct rebx_param* ptr = rebx_get_param(object, hash, type);
     if (ptr == NULL){
         return NULL;
     }
@@ -417,7 +401,7 @@ int* rebx_get_param_int(const void* const object, const char* const param_name){
         if (ptr->type_hash != reb_hash("int")){
             char str[300];
             sprintf(str, "Parameter '%s' passed to rebx_get_param_int was found but was of wrong type.\n", param_name);
-            reb_error(rebx_get_sim(object), str);
+            reb_error(rebx_get_sim(object, type), str);
             return NULL;
         }
         else{
@@ -426,12 +410,12 @@ int* rebx_get_param_int(const void* const object, const char* const param_name){
     }
 }
 
-void rebx_set_param_int(void* object, const char* const param_name, int value){
+void rebx_set_param_int(void* object, const char* const param_name, int value, enum rebx_object_type type){
     uint32_t hash = reb_hash(param_name);
-    struct rebx_param* ptr = rebx_get_param(object, hash);
+    struct rebx_param* ptr = rebx_get_param(object, hash, type);
     int* param;
     if(ptr == NULL){
-        param = rebx_add_param_int(object, hash);  // add a new parameter if it doesn't exist
+        param = rebx_add_param_int(object, hash, type);  // add a new parameter if it doesn't exist
     }
     else{
         param = ptr->paramPtr;
@@ -439,13 +423,48 @@ void rebx_set_param_int(void* object, const char* const param_name, int value){
     *param = value;                                   // update existing value}
 }
 
-int* rebx_add_param_int(void* object, uint32_t hash){
+int* rebx_add_param_int(void* object, uint32_t hash, enum rebx_object_type type){
     struct rebx_param* newparam = malloc(sizeof(*newparam));
     newparam->paramPtr = malloc(sizeof(int));
     newparam->hash = hash;
     newparam->type_hash = reb_hash("int");
 
-    return (int*)rebx_add_param(object, &newparam);
+    return (int*)rebx_add_param(object, &newparam, type);
+}
+
+/*********************************************************************************
+ User interface for parameters
+ ********************************************************************************/
+
+int rebx_remove_effect_param(const struct rebx_effect* const effect, const char* const param_name){
+    return rebx_remove_param(effect, param_name, REBX_TYPE_EFFECT);
+}
+int rebx_remove_particle_param(const struct reb_particle* const p, const char* const param_name){
+    return rebx_remove_param(p, param_name, REBX_TYPE_PARTICLE);
+}
+void rebx_set_effect_param_double(struct rebx_effect* effect, const char* const param_name, double value){
+    rebx_set_param_double(effect, param_name, value, REBX_TYPE_EFFECT);
+}
+void rebx_set_particle_param_double(struct reb_particle* p, const char* const param_name, double value){
+    rebx_set_param_double(p, param_name, value, REBX_TYPE_PARTICLE);
+}
+double* rebx_get_effect_param_double(const struct rebx_effect* const effect, const char* const param_name){
+    return rebx_get_param_double(effect, param_name, REBX_TYPE_EFFECT);
+}
+double* rebx_get_particle_param_double(const struct reb_particle* const p, const char* const param_name){
+    return rebx_get_param_double(p, param_name, REBX_TYPE_PARTICLE);
+}
+int* rebx_get_effect_param_int(const struct rebx_effect* const effect, const char* const param_name){
+    return rebx_get_param_int(effect, param_name, REBX_TYPE_EFFECT);
+}
+int* rebx_get_particle_param_int(const struct reb_particle* const p, const char* const param_name){
+    return rebx_get_param_int(p, param_name, REBX_TYPE_PARTICLE);
+}
+void rebx_set_effect_param_int(struct rebx_effect* effect, const char* const param_name, int value){
+    rebx_set_param_int(effect, param_name, value, REBX_TYPE_EFFECT);
+}
+void rebx_set_particle_param_int(struct reb_particle* p, const char* const param_name, int value){
+    rebx_set_param_int(p, param_name, value, REBX_TYPE_PARTICLE);
 }
 
 /***********************************************************************************

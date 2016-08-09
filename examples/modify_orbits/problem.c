@@ -50,13 +50,13 @@ int main(int argc, char* argv[]){
     // Set the timescales for each particle.  Parameter getter and setter functions always take the address of the particle (&)
     double tmax = 5.e4;
     
-    rebx_set_param_double(&sim->particles[1], "tau_a", -tmax); // add semimajor axis damping on inner planet (e-folding timescale)
-    rebx_set_param_double(&sim->particles[1], "tau_omega", -tmax/10.); // add linear precession on inner planet (precession period). This won't do anything for modify_orbits_forces
-    rebx_set_param_double(&sim->particles[2], "tau_e", -tmax/10.); // add eccentricity damping on particles[2] (e-folding timescale)
+    rebx_set_particle_param_double(&sim->particles[1], "tau_a", -tmax); // add semimajor axis damping on inner planet (e-folding timescale)
+    rebx_set_particle_param_double(&sim->particles[1], "tau_omega", -tmax/10.); // add linear precession on inner planet (precession period). This won't do anything for modify_orbits_forces
+    rebx_set_particle_param_double(&sim->particles[2], "tau_e", -tmax/10.); // add eccentricity damping on particles[2] (e-folding timescale)
 
-    printf("Semimajor axis damping timescale for inner planet is %f.\n", fabs(*rebx_get_param_double(&sim->particles[1], "tau_a")));
-    printf("Precession timescale for inner planet is %f.\n", fabs(*rebx_get_param_double(&sim->particles[1], "tau_omega")));
-    printf("Eccentricity damping timescale for outer planet is %f.\n", fabs(*rebx_get_param_double(&sim->particles[2], "tau_e")));
+    printf("Semimajor axis damping timescale for inner planet is %f.\n", fabs(*rebx_get_particle_param_double(&sim->particles[1], "tau_a")));
+    printf("Precession timescale for inner planet is %f.\n", fabs(*rebx_get_particle_param_double(&sim->particles[1], "tau_omega")));
+    printf("Eccentricity damping timescale for outer planet is %f.\n", fabs(*rebx_get_particle_param_double(&sim->particles[2], "tau_e")));
    
     /* One can also adjust a coupling parameter between eccentricity and semimajor axis damping.  We use the parameter p
      * as defined by Deck & Batygin (2015).  The default p=0 corresponds to no coupling, while p=1 corresponds to e-damping
@@ -68,8 +68,8 @@ int main(int argc, char* argv[]){
      * to the reference particle (not neccesary for barycentric):
      */
 
-    rebx_set_param_int(params, "coordinates", REBX_COORDINATES_PARTICLE);
-    rebx_set_param_int(&sim->particles[0], "primary", 1);
+    rebx_set_effect_param_int(params, "coordinates", REBX_COORDINATES_PARTICLE);
+    rebx_set_particle_param_int(&sim->particles[0], "primary", 1);
 
     reb_integrate(sim, tmax);
     rebx_free(rebx);    // Free all the memory allocated by rebx

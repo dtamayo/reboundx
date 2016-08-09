@@ -33,8 +33,8 @@ int main(int argc, char* argv[]){
     struct rebx_extras* rebx = rebx_init(sim);
     double c = 3.e8;                    /* speed of light in SI units */
     struct rebx_effect* rad_params = rebx_add(rebx, "radiation_forces");
-    rebx_set_param_double(rad_params, "c", c);
-    rebx_set_param_int(&sim->particles[0], "radiation_source", 1); // Make the sun a source of radiation.
+    rebx_set_effect_param_double(rad_params, "c", c);
+    rebx_set_particle_param_int(&sim->particles[0], "radiation_source", 1); // Make the sun a source of radiation.
     
     /* Dust particles
      * We idealize a perfectly coplanar debris disk with particles that have semimajor axes between 100 and 120 AU.
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]){
         p = reb_tools_orbit2d_to_particle(sim->G, sim->particles[0], m, a, e, pomega, f); 
         reb_add(sim, p); 
         
-        rebx_set_param_double(&sim->particles[i], "beta", beta);    /* Only particles with beta set will feel radiation forces */
+        rebx_set_particle_param_double(&sim->particles[i], "beta", beta);    /* Only particles with beta set will feel radiation forces */
     }
 
     reb_move_to_com(sim);

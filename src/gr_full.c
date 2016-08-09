@@ -57,7 +57,7 @@
 #include "reboundx.h"
 
 void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const effect){
-    double* c = rebx_get_param_double(effect, "c");
+    double* c = rebx_get_effect_param_double(effect, "c");
     if (c == NULL){
         reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
     }
@@ -240,7 +240,7 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const ef
 }
 
 double rebx_gr_full_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const effect){
-    double* c = rebx_get_param_double(effect, "c");
+    double* c = rebx_get_effect_param_double(effect, "c");
     if (c == NULL){
         reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
     }

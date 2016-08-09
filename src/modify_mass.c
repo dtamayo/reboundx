@@ -65,7 +65,7 @@ void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* cons
 	const double dt = sim->dt_last_done;
 	for(int i=0; i<_N_real; i++){
 		struct reb_particle* const p = &sim->particles[i];
-        const double* const tau_mass = rebx_get_param_double(p, "tau_mass");
+        const double* const tau_mass = rebx_get_particle_param_double(p, "tau_mass");
         if (tau_mass != NULL){
 		    p->m += p->m*dt/(*tau_mass);
         }
