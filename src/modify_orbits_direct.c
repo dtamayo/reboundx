@@ -85,49 +85,39 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
         return *p;
     }
     const double dt = sim->dt_last_done;
-    const double* tau_a = rebx_get_particle_param_double(p,"tau_a");
-    const double* tau_e = rebx_get_particle_param_double(p,"tau_e");
-    const double* tau_inc = rebx_get_particle_param_double(p,"tau_inc");
-    const double* tau_omega = rebx_get_particle_param_double(p,"tau_omega");
-    const double* tau_Omega = rebx_get_particle_param_double(p,"tau_Omega");
+    double tau_a = INFINITY;
+    double tau_e = INFINITY;
+    double tau_inc = INFINITY;
+    double tau_omega = INFINITY;
+    double tau_Omega = INFINITY;
+    
+    rebx_get_param("tau_a", &tau_a, REBX_TYPE_DOUBLE, p, REBX_TYPE_PARTICLE);
+    rebx_get_param("tau_e", &tau_e, REBX_TYPE_DOUBLE, p, REBX_TYPE_PARTICLE);
+    rebx_get_param("tau_inc", &tau_inc, REBX_TYPE_DOUBLE, p, REBX_TYPE_PARTICLE);
+    rebx_get_param("tau_omega", &tau_omega, REBX_TYPE_DOUBLE, p, REBX_TYPE_PARTICLE);
+    rebx_get_param("tau_Omega", &tau_Omega, REBX_TYPE_DOUBLE, p, REBX_TYPE_PARTICLE);
     
     const double a0 = o.a;
     const double e0 = o.e;
     const double inc0 = o.inc;
 
-    if(tau_a != NULL){
-        o.a += a0*(dt/(*tau_a));
-    }
-    if(tau_e != NULL){
-        o.e += e0*(dt/(*tau_e));
-    }
-    if(tau_inc != NULL){
-        o.inc += inc0*(dt/(*tau_inc));
-    }
-    if(tau_omega != NULL){
-        o.omega += 2.*M_PI*dt/(*tau_omega);
-    }
-    if(tau_Omega != NULL){
-        o.Omega += 2.*M_PI*dt/(*tau_Omega);
-    }
-    if(tau_e != NULL){
-        const double* p_param = rebx_get_particle_param_double(p, "p");
-        if(p_param != NULL){
-            o.a += 2.*a0*e0*e0*(*p_param)*dt/(*tau_e); // Coupling term between e and a
-        }
+    o.a += a0*dt/tau_a;
+    o.e += e0*dt/tau_e;
+    o.inc += inc0*dt/tau_inc;
+    o.omega += 2.*M_PI*dt/tau_omega;
+    o.Omega += 2.*M_PI*dt/tau_Omega;
+   
+    if(tau_e < INFINITY){
+        double p_param = 0;
+        rebx_get_param("p", &p_param, REBX_TYPE_DOUBLE, effect, REBX_TYPE_EFFECT);
+        o.a += 2.*a0*e0*e0*p_param*dt/tau_e; // Coupling term between e and a
     }
     return reb_tools_orbit_to_particle(sim->G, *primary, p->m, o.a, o.e, o.inc, o.Omega, o.omega, o.f);
 }
 
 void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect){
-    int* ptr = rebx_get_effect_param_int(effect, "coordinates");
-    enum REBX_COORDINATES coordinates;
-    if (ptr == NULL){
-        coordinates = REBX_COORDINATES_JACOBI;                  // Default
-    }
-    else{
-        coordinates = *ptr;
-    }
+    enum REBX_COORDINATES coordinates = REBX_COORDINATES_JACOBI;
+    rebx_get_param("coordinates", &coordinates, REBX_TYPE_INT, effect, REBX_TYPE_EFFECT); 
     
     const int back_reactions_inclusive = 1;
     const char* reference_name = "primary";

@@ -19,8 +19,9 @@ void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const 
     }
     else if(coordinates == REBX_COORDINATES_PARTICLE){
         for (int i=0; i < N_real; i++){
-            int* reference = rebx_get_particle_param_int(&sim->particles[i], reference_name);
-            if (reference != NULL){
+            int reference = 0;
+            rebx_get_param(reference_name, &reference, REBX_TYPE_INT, &sim->particles[i], REBX_TYPE_PARTICLE);
+            if (reference){
                 com = sim->particles[i];
                 refindex = i;
                 break;
@@ -110,8 +111,9 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_effect* con
     }
     else if(coordinates == REBX_COORDINATES_PARTICLE){
         for (int i=0; i < N_real; i++){
-            int* reference = rebx_get_particle_param_int(&sim->particles[i], reference_name);
-            if (reference != NULL){
+            int reference = 0;
+            rebx_get_param(reference_name, &reference, REBX_TYPE_INT, &sim->particles[i], REBX_TYPE_PARTICLE);
+            if (reference){
                 com = sim->particles[i];
                 refindex = i;
                 break;
