@@ -37,7 +37,7 @@ def params(self):
 
 rebound.Particle.params = params
 
-from .extras import Extras, rebx_param, rebx_effect
+from .extras import Extras, Param, Effect
 from .tools import coordinates, install_test
 from .params import Params
-__all__ = ["Extras", "rebx_param", "rebx_effect", "Params", "coordinates", "install_test"]
+__all__ = ["Extras", "Param", "Effect", "Params", "coordinates", "install_test"]

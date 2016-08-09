@@ -44,9 +44,9 @@ class Extras(Structure):
         This is the main function for adding effects to simulations.
         :param name: Name of the effect you wish to add.  See http://reboundx.readthedocs.io/en/latest/effects.html for a list of effects.
         :type name: string
-        :rtype: rebx_effect structure
+        :rtype: Effect structure
         """
-        clibreboundx.rebx_add.restype = POINTER(rebx_effect)
+        clibreboundx.rebx_add.restype = POINTER(Effect)
         ptr = clibreboundx.rebx_add(byref(self), c_char_p(name.encode('ascii')))
         self.sim.contents.process_messages()
         return ptr.contents
@@ -60,11 +60,11 @@ class Extras(Structure):
         :param force_is_velocity_dependent: Whether your custom force depends on the particle velocities.
         :type function: Function
         :type c: bool
-        :rtype: rebx_effect structure
+        :rtype: Effect structure
         """
-        REBX_FUNCTION = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))
+        REBX_FUNCTION = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))
         self.custom_effects[function.__name__] = REBX_FUNCTION(function) # store a ref so it doesn't get garbage collected
-        clibreboundx.rebx_add_custom_force.restype = POINTER(rebx_effect)
+        clibreboundx.rebx_add_custom_force.restype = POINTER(Effect)
         ptr = clibreboundx.rebx_add_custom_force(byref(self), c_char_p(function.__name__.encode('ascii')), self.custom_effects[function.__name__], force_is_velocity_dependent)
         return ptr.contents
 
@@ -76,11 +76,11 @@ class Extras(Structure):
         :param function: Custom Python function to be executed between timesteps.
         :type function: Function
         :type c: bool
-        :rtype: rebx_effect structure 
+        :rtype: Effect structure 
         """
-        REBX_FUNCTION = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))
+        REBX_FUNCTION = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))
         self.custom_effects[function.__name__] = REBX_FUNCTION(function) # store a ref so it doesn't get garbage collected
-        clibreboundx.rebx_add_custom_post_timestep_modification.restype = POINTER(rebx_effect)
+        clibreboundx.rebx_add_custom_post_timestep_modification.restype = POINTER(Effect)
         ptr = clibreboundx.rebx_add_custom_post_timestep_modification(byref(self), c_char_p(function.__name__.encode('ascii')), self.custom_effects[function.__name__])
         return ptr.contents
 
@@ -127,36 +127,36 @@ class Extras(Structure):
 # Generic REBOUNDx definitions
 #################################################
 
-class rebx_param(Structure): # need to define fields afterward because of circular ref in linked list
+class Param(Structure): # need to define fields afterward because of circular ref in linked list
     pass    
-rebx_param._fields_ =  [("paramPtr", c_void_p),
+Param._fields_ =  [("paramPtr", c_void_p),
                         ("hash", c_uint32),
                         ("type_hash", c_uint32),
-                        ("next", POINTER(rebx_param))]
+                        ("next", POINTER(Param))]
 
-class rebx_effect(Structure):
+class Effect(Structure):
     @property 
     def params(self):
         params = Params(self)
         return params
 
-rebx_effect._fields_ = [("object_type", c_uint32),
+Effect._fields_ = [("object_type", c_uint32),
                         ("hash", c_uint32),
-                        ("ap", POINTER(rebx_param)),
-                        ("force", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))),
-                        ("ptm", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(rebx_effect))),
+                        ("ap", POINTER(Param)),
+                        ("force", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))),
+                        ("ptm", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))),
                         ("rebx", POINTER(Extras)),
-                        ("next", POINTER(rebx_effect))]
+                        ("next", POINTER(Effect))]
 
-class rebx_param_to_be_freed(Structure):
+class Param_to_be_freed(Structure):
     pass
-rebx_param_to_be_freed._fields_ =  [("param", POINTER(rebx_param)),
-                                    ("next", POINTER(rebx_param_to_be_freed))]
+Param_to_be_freed._fields_ =  [("param", POINTER(Param)),
+                                    ("next", POINTER(Param_to_be_freed))]
 
 
 # Need to put fields after class definition because of self-referencing
 Extras._fields_ =  [("sim", POINTER(rebound.Simulation)),
-                    ("effects", POINTER(rebx_effect)),
-                    ("params_to_be_freed", POINTER(rebx_param_to_be_freed))]
+                    ("effects", POINTER(Effect)),
+                    ("params_to_be_freed", POINTER(Param_to_be_freed))]
 
 from .params import Params
