@@ -32,20 +32,20 @@ For details on particular effect implementations, and for a list of available ef
 We can now set effect parameters.  
 For example, general relativity effects require us to set the speed of light in appropriate units,  e.g.,::
 
-    rebx_set_param_double(gr, "c", 3.e8);
+    rebx_set_effect_param_double(gr, "c", 3.e8);
 
-We can use the same functions to set particle-specific parameters, e.g.::
+Notice that we specify in the function name that we are adding to an `effect` and we specify the variable type.  
+We can use an analogous function to set particle-specific parameters, e.g.::
 
-    rebx_set_param_double(&sim->particles[1], "tau_a", 1.e4);
+    rebx_set_particle_param_double(&sim->particles[1], "tau_a", 1.e4);
 
 Note that
-    * There is a different setter function for each type, named ``rebx_set_param_type`` (replace type, as above).
     * Getter and setter functions always take a pointer to the particle or the effect.
     * We pass the name of the parameter we want to change.
 
-We can then check the value of a particle's parameter with::
+We can then check the value of a particle's parameter with (replace `particle` with `effect` for checking an effect's parameters)::
 
-    double* tau_a = rebx_get_param_double(&sim->particles[1], "tau_a");
+    double* tau_a = rebx_get_particle_param_double(&sim->particles[1], "tau_a");
 
 **Important:** If the parameter is not found (e.g., if we asked for "tau_e"), the tau_a pointer we get back will be set to NULL, so if we try to dereference it we will get a segmentation fault.
 It is therefore prudent to always check the return value for NULL before dereferencing.::
