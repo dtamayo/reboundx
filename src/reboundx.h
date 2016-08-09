@@ -76,7 +76,6 @@ struct rebx_param{
 /*  Structure for all REBOUNDx effects.
  *  These get added as nodes to the effects linked list in the rebx_extras structure.*/
 struct rebx_effect{
-    uint32_t object_type;               // Field used so effects can use particle get/set param functions.
     uint32_t hash;                      // hash corresponding to the effect's name.
     struct rebx_param* ap;              // Linked list of parameters for the effect.
     void (*force) (struct reb_simulation* sim, struct rebx_effect* effect); // Pointer to function to call during forces evaluation.
@@ -214,6 +213,11 @@ void rebx_set_param(const char* const param_name, void* const value, enum rebx_p
  * @return Pointer to the parameter. NULL if parameter is not found in object (user must check for NULL to avoid segmentation fault).
  */
 int rebx_get_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const void* const object, enum rebx_object_type object_type);
+
+double rebx_get_doubleP(const char* const param_name, const void* const object);
+double rebx_get_doubleE(const char* const param_name, const void* const object);
+double rebx_set_doubleP(const char* const param_name, double value, const void* const object);
+double rebx_set_doubleE(const char* const param_name, double value, const void* const object);
 /** @} */
 /** @} */
 

@@ -132,7 +132,6 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
 static struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name){
     struct rebx_effect* effect = malloc(sizeof(*effect));
     
-    effect->object_type = reb_hash("rebx_effect");
     effect->hash = reb_hash(name);
     effect->ap = NULL;
     effect->force = NULL;
@@ -404,6 +403,25 @@ void rebx_set_param(const char* const param_name, void* const value, enum rebx_p
     }
 }
 
+double rebx_get_doubleP(const char* const param_name, const void* const object){
+    double val;
+    rebx_get_param(param_name, &val, REBX_TYPE_DOUBLE, object, REBX_TYPE_PARTICLE);
+    return val;
+}
+
+double rebx_get_doubleE(const char* const param_name, const void* const object){
+    double val;
+    rebx_get_param(param_name, &val, REBX_TYPE_DOUBLE, object, REBX_TYPE_EFFECT);
+    return val;
+}
+
+double rebx_set_doubleP(const char* const param_name, double value, const void* const object){
+    rebx_set_param(param_name, &value, REBX_TYPE_DOUBLE, object, REBX_TYPE_PARTICLE);
+}
+
+double rebx_set_doubleE(const char* const param_name, double value, const void* const object){
+    rebx_set_param(param_name, &value, REBX_TYPE_DOUBLE, object, REBX_TYPE_EFFECT);
+}
 /***********************************************************************************
  * Miscellaneous Functions
 ***********************************************************************************/

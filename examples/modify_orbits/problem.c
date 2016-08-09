@@ -50,14 +50,18 @@ int main(int argc, char* argv[]){
     // Set the timescales for each particle.  Parameter getter and setter functions always take the address of the particle (&)
     double tmax = 5.e4;
 
-    double tau_a = -tmax;
+    /*double tau_a = -tmax;
     double tau_omega = -tmax/10.;
     double tau_e = -tmax/10.;
 
     rebx_set_param("tau_a", &tau_a, REBX_TYPE_DOUBLE, &sim->particles[1], REBX_TYPE_PARTICLE);
     rebx_set_param("tau_omega", &tau_omega, REBX_TYPE_DOUBLE, &sim->particles[1], REBX_TYPE_PARTICLE);
     rebx_set_param("tau_e", &tau_e, REBX_TYPE_DOUBLE, &sim->particles[2], REBX_TYPE_PARTICLE);
-    
+    */
+
+    rebx_set_doubleP("tau_a", -tmax, &sim->particles[1]);
+    rebx_set_doubleP("tau_omega", -tmax/10., &sim->particles[1]);
+    rebx_set_doubleP("tau_e", -tmax/10., &sim->particles[2]);
     /*rebx_set_particle_param_double(&sim->particles[1], "tau_a", -tmax); // add semimajor axis damping on inner planet (e-folding timescale)
     rebx_set_particle_param_double(&sim->particles[1], "tau_omega", -tmax/10.); // add linear precession on inner planet (precession period). This won't do anything for modify_orbits_forces
     rebx_set_particle_param_double(&sim->particles[2], "tau_e", -tmax/10.); // add eccentricity damping on particles[2] (e-folding timescale)
