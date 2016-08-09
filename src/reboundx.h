@@ -32,7 +32,6 @@
 
 #include <stdint.h>
 #include "rebound.h"
-#include "core.h"
 #include "rebxtools.h"
 
 extern const char* rebx_build_str;      ///< Date and time build string.
@@ -42,6 +41,16 @@ extern const char* rebx_version_str;    ///<Version string.
   Enums that might be shared across effects
 *******************************************/
 
+enum rebx_object_type{ 
+    REBX_TYPE_EFFECT,
+    REBX_TYPE_PARTICLE,
+};
+
+enum rebx_param_type{
+    REBX_TYPE_DOUBLE,
+    REBX_TYPE_INT,
+};
+
 /**
  * @brief Enumeration for different coordinate systems.
  */
@@ -49,6 +58,44 @@ enum REBX_COORDINATES{
     REBX_COORDINATES_JACOBI,                        ///< Jacobi coordinates.  Default for REBOUND/REBOUNDx.
     REBX_COORDINATES_BARYCENTRIC,                   ///< Coordinates referenced to the center of mass of the whole system.
     REBX_COORDINATES_PARTICLE,                      ///< Coordinates referenced to a particular particle.
+};
+
+/****************************************
+Basic types in REBOUNDx
+*****************************************/
+
+/* 	Main structure used for all parameters added to particles.
+ 	These get added as nodes to a linked list for each particle, stored at particles[i].ap.*/
+struct rebx_param{
+    void* paramPtr;                     // Pointer to the parameter (void* so it can point to different types).
+    uint32_t hash;                      // Hash for the parameter name.
+    enum rebx_param_type param_type;    // Enum for the parameter type.
+    struct rebx_param* next;            // Pointer to the next parameter in the linked list.
+};
+
+/*  Structure for all REBOUNDx effects.
+ *  These get added as nodes to the effects linked list in the rebx_extras structure.*/
+struct rebx_effect{
+    uint32_t object_type;               // Field used so effects can use particle get/set param functions.
+    uint32_t hash;                      // hash corresponding to the effect's name.
+    struct rebx_param* ap;              // Linked list of parameters for the effect.
+    void (*force) (struct reb_simulation* sim, struct rebx_effect* effect); // Pointer to function to call during forces evaluation.
+    void (*ptm) (struct reb_simulation* sim, struct rebx_effect* effect);   // Pointer to function to call after each timestep.
+    struct rebx_extras* rebx;           // Pointer to the rebx_extras instance effect is in.
+	struct rebx_effect* next;			// Pointer to the next effect in the linked list.
+};
+
+/*	Nodes for a linked list to all the parameters that have been allocated by REBOUNDx (so it can later free them).*/
+struct rebx_param_to_be_freed{
+    struct rebx_param* param;           // Pointer to a parameter node allocated by REBOUNDx.
+    struct rebx_param_to_be_freed* next;// Pointer to the next node in the linked list rebx_extras.params_to_be_freed.
+};
+
+/*  Main REBOUNDx structure*/
+struct rebx_extras {	
+	struct reb_simulation* sim;								// Pointer to the simulation REBOUNDx is linked to.
+	struct rebx_effect* effects;		                    // Linked list with pointers to all the effects added to the simulation.
+	struct rebx_param_to_be_freed* params_to_be_freed; 		// Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
 };
 
 /****************************************
@@ -145,34 +192,20 @@ struct rebx_effect* rebx_add_custom_post_timestep_modification(struct rebx_extra
  */
 
 /**
- * @brief Removes a parameter from a REBOUNDx effect.
- * @param effect Pointer to the rebx_effect we want to remove a parameter from.
- * @param param_name Name of the parameter we want to remove.
- * @return 1 if parameter found and successfully removed, 0 otherwise.
- */
-int rebx_remove_effect_param(const struct rebx_effect* const effect, const char* const param_name);
-/**
  * @brief Removes a parameter from a particle.
  * @param effect Pointer to the particle we want to remove a parameter from.
  * @param param_name Name of the parameter we want to remove.
  * @return 1 if parameter found and successfully removed, 0 otherwise.
  */
-int rebx_remove_particle_param(const struct reb_particle* const p, const char* const param_name);
+int rebx_remove_param(const char* const param_name, const void* const object, enum rebx_object_type object_type);
 
-/**
- * @brief Sets a parameter of type double for a REBOUNDx effect.
- * @param object Pointer to the rebx_effect to which to add the parameter.
- * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org for what parameters are needed for each effect)
- * @param value Value to which we want to set the parameter.
- */
-void rebx_set_effect_param_double(struct rebx_effect* effect, const char* const param_name, double value);
 /**
  * @brief Sets a parameter of type double for a particle.
  * @param object Pointer to the particle to which to add the parameter.
  * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org for what parameters are needed for each effect)
  * @param value Value to which we want to set the parameter.
  */
-void rebx_set_particle_param_double(struct reb_particle* p, const char* const param_name, double value);
+void rebx_set_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const void* const object, enum rebx_object_type object_type);
 
 /**
  * @brief Gets a parameter value of type double from a REBOUNDx effect.
@@ -180,33 +213,7 @@ void rebx_set_particle_param_double(struct reb_particle* p, const char* const pa
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  * @return Pointer to the parameter. NULL if parameter is not found in object (user must check for NULL to avoid segmentation fault).
  */
-double* rebx_get_effect_param_double(const struct rebx_effect* const effect, const char* const param_name);
-/**
- * @brief Gets a parameter value of type double from a particle.
- * @param object Pointer to the particle that holds the parameter.
- * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
- * @return Pointer to the parameter. NULL if parameter is not found in object (user must check for NULL to avoid segmentation fault).
- */
-double* rebx_get_particle_param_double(const struct reb_particle* const p, const char* const param_name);
-
-/**
- * @brief Analogous to functions for type double above.
- */
-int* rebx_get_effect_param_int(const struct rebx_effect* const effect, const char* const param_name);
-/**
- * @brief Analogous to functions for type double above.
- */
-int* rebx_get_particle_param_int(const struct reb_particle* const p, const char* const param_name);
-
-/**
- * @brief Analogous to functions for type double above.
- */
-void rebx_set_effect_param_int(struct rebx_effect* effect, const char* const param_name, int value);
-/**
- * @brief Analogous to functions for type double above.
- */
-void rebx_set_particle_param_int(struct reb_particle* p, const char* const param_name, int value);
-
+int rebx_get_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const void* const object, enum rebx_object_type object_type);
 /** @} */
 /** @} */
 
