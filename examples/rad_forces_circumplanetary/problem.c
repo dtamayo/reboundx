@@ -36,8 +36,8 @@ int main(int argc, char* argv[]){
     struct rebx_extras* rebx = rebx_init(sim); 
     double c = 3.e8;                    /* speed of light in SI units */
     struct rebx_effect* rad_params = rebx_add(rebx, "radiation_forces");
-    rebx_set_param_double(rad_params, "c", c);
-    rebx_set_param_int(&sim->particles[0], "radiation_source", 1);
+    rebx_set_effect_param_double(rad_params, "c", c);
+    rebx_set_particle_param_int(&sim->particles[0], "radiation_source", 1);
 
     /* Saturn (simulation set up in Saturn's orbital plane, i.e., inc=0, so only need 4 orbital elements */
     double mass_sat = 5.68e26;          /* Mass of Saturn */
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]){
 
     // For the first particle we simply specify beta directly.
     double beta = 0.1;
-    rebx_set_param_double(&sim->particles[2], "beta", beta);    
+    rebx_set_particle_param_double(&sim->particles[2], "beta", beta);    
 
     // We now add a 2nd particle on the same orbit, but set its beta using physical parameters.  
     struct reb_particle p2 = reb_tools_orbit_to_particle(sim->G, sim->particles[1], 0., a_dust, e_dust, inc_dust, Omega_dust, omega_dust, f_dust); 
@@ -86,10 +86,10 @@ int main(int argc, char* argv[]){
     double L = 3.85e26;             // Luminosity of the sun in Watts
 
     beta = rebx_rad_calc_beta(sim->G, c, sim->particles[0].m, L, radius, density, Q_pr);
-    rebx_set_param_double(&sim->particles[3], "beta", beta);    
+    rebx_set_particle_param_double(&sim->particles[3], "beta", beta);    
 
-    printf("Particle has beta = %f\n", *rebx_get_param_double(&sim->particles[3], "beta"));
-    printf("Particle has beta = %f\n", *rebx_get_param_double(&sim->particles[2], "beta"));
+    printf("Particle has beta = %f\n", *rebx_get_particle_param_double(&sim->particles[3], "beta"));
+    printf("Particle has beta = %f\n", *rebx_get_particle_param_double(&sim->particles[2], "beta"));
 
     reb_move_to_com(sim);
 

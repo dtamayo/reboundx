@@ -79,9 +79,9 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
     double tau_e = INFINITY;
     double tau_inc = INFINITY;
 
-    double* tau_a_ptr = rebx_get_param_double(p, "tau_a");
-    double* tau_e_ptr = rebx_get_param_double(p, "tau_e");
-    double* tau_inc_ptr = rebx_get_param_double(p, "tau_inc");
+    double* tau_a_ptr = rebx_get_particle_param_double(p, "tau_a");
+    double* tau_e_ptr = rebx_get_particle_param_double(p, "tau_e");
+    double* tau_inc_ptr = rebx_get_particle_param_double(p, "tau_inc");
 
     if(tau_a_ptr != NULL){
         tau_a = *tau_a_ptr;
@@ -118,7 +118,7 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
 }
 
 void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect){
-    int* ptr = rebx_get_param_int(effect, "coordinates");
+    int* ptr = rebx_get_effect_param_int(effect, "coordinates");
     enum REBX_COORDINATES coordinates;
     if (ptr == NULL){
         coordinates = REBX_COORDINATES_JACOBI;                  // Default

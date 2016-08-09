@@ -77,7 +77,7 @@ static void rebx_calculate_radiation_forces(struct reb_simulation* const sim, co
         
         if(i == source_index) continue;
         
-        const double* beta = rebx_get_param_double(&particles[i], "beta");
+        const double* beta = rebx_get_particle_param_double(&particles[i], "beta");
         if(beta == NULL) continue; // only particles with beta set feel radiation forces
         
         const struct reb_particle p = particles[i];
@@ -102,7 +102,7 @@ static void rebx_calculate_radiation_forces(struct reb_simulation* const sim, co
 }
 
 void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const radiation_forces){ 
-    double* c = rebx_get_param_double(radiation_forces, "c");
+    double* c = rebx_get_effect_param_double(radiation_forces, "c");
     if (c == NULL){
         reb_error(sim, "Need to set speed of light in radiation_forces effect.  See examples in documentation.\n");
     }
@@ -110,7 +110,7 @@ void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect*
     struct reb_particle* const particles = sim->particles;
     int source_found=0;
     for (int i=0; i<N_real; i++){
-        if (rebx_get_param_int(&particles[i], "radiation_source") != NULL){
+        if (rebx_get_particle_param_int(&particles[i], "radiation_source") != NULL){
             source_found = 1;
             rebx_calculate_radiation_forces(sim, *c, i);
         }

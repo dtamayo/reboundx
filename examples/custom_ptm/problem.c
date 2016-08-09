@@ -19,7 +19,7 @@
 // for a post_timestep_modification we update the particle states (positions, velocities, masses etc.)
 void simple_drag(struct reb_simulation* const sim, struct rebx_effect* const effect)
 {
-    double* c = rebx_get_param_double(effect, "c"); // get parameters we want user to set
+    double* c = rebx_get_effect_param_double(effect, "c"); // get parameters we want user to set
     double dt = sim->dt_last_done;  // important to check dt for integrators like IAS15 with adaptive timesteps
 
     if(c != NULL){ // check to make sure c is set to avoid segmentation fault if not!
@@ -31,7 +31,7 @@ void simple_drag(struct reb_simulation* const sim, struct rebx_effect* const eff
 
 // for a force we have to update the particle accelerations
 void stark_force(struct reb_simulation* const sim, struct rebx_effect* const effect){
-    double* c = rebx_get_param_double(effect, "c"); // get parameters we want user to set
+    double* c = rebx_get_effect_param_double(effect, "c"); // get parameters we want user to set
 
     if(c != NULL){ // check to make sure c is set to avoid segmentation fault if not!
         sim->particles[2].ax += (*c); // make sure you += not =, which would overwrite other accelerations
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]){
     struct rebx_effect* effect = rebx_add_custom_post_timestep_modification(rebx, "simple_drag", simple_drag);
     //struct rebx_effect* effect = rebx_add_custom_force(rebx, "stark_force", stark_force, 0);
     
-    rebx_set_param_double(effect, "c", 1.e-5);  // we wrote both our functions to read a parameter c, so we set it.
+    rebx_set_effect_param_double(effect, "c", 1.e-5);  // we wrote both our functions to read a parameter c, so we set it.
     
     double tmax = 5.e4;
     reb_integrate(sim, tmax);

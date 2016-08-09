@@ -37,11 +37,11 @@ int main(int argc, char* argv[]){
     double gammacentral = -1.; // must be a double
     
     struct reb_particle* ps = sim->particles;
-    rebx_set_param_double(&ps[0], "gammacentral", gammacentral);
+    rebx_set_particle_param_double(&ps[0], "gammacentral", gammacentral);
 
     // The other parameter to set is the normalization Acentral (F=Acentral*r^gammacentral). E.g.,
 
-    rebx_set_param_double(&ps[0], "Acentral", 1.e-4);
+    rebx_set_particle_param_double(&ps[0], "Acentral", 1.e-4);
 
     /* We can also use the function rebx_central_force_Acentral to calculate the Acentral required
      * for particles[1] (around primary particles[0]) to have a pericenter precession rate of
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]){
     
     double pomegadot = 1.e-3;
     double Acentral = rebx_central_force_Acentral(ps[1], ps[0], pomegadot, gammacentral);
-    rebx_set_param_double(&ps[0], "Acentral", Acentral);
+    rebx_set_particle_param_double(&ps[0], "Acentral", Acentral);
     
     double tmax = 3.e4;
     reb_integrate(sim, tmax); 

@@ -37,14 +37,14 @@ int main(int argc, char* argv[]){
     // Have to set particle radii and k2 Love numbers
     sim->particles[0].r = 0.005; // in consistent units (here we're using default G=1, so AU)
     sim->particles[1].r = 0.0005;
-    rebx_set_param_double(&sim->particles[0], "k2", 0.03);
-    rebx_set_param_double(&sim->particles[1], "k2", 0.3);
+    rebx_set_particle_param_double(&sim->particles[0], "k2", 0.03);
+    rebx_set_particle_param_double(&sim->particles[1], "k2", 0.3);
 
     /* By default, implementation assumes particles[0] is the primary.
      * You can also set the primary flag explicitly:
      */
 
-    rebx_set_param_int(&sim->particles[0], "primary", 1);
+    rebx_set_particle_param_int(&sim->particles[0], "primary", 1);
 
     double tmax = 1000.;
     reb_integrate(sim, tmax); 

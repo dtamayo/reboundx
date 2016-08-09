@@ -69,8 +69,8 @@ struct rebx_extras {
 
 /*  Only needed internally for getters and setters.*/
 enum rebx_object_type{ 
-    REBX_EFFECT,
-    REBX_REB_PARTICLE,
+    REBX_TYPE_EFFECT,
+    REBX_TYPE_PARTICLE,
 };
 
 /*****************************
@@ -104,14 +104,16 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
  General functions for parameters
  ********************************************************************************/
 
-struct rebx_param* rebx_get_param(const void* const object, uint32_t hash); // Returns rebx_param corresponding to hash.  If it doesn't exist, returns NULL.
-void* rebx_add_param(void* const object, struct rebx_param** const param);  // Add rebx_param node
+int rebx_remove_param(const void* const object, const char* const param_name, enum rebx_object_type type);
+
+struct rebx_param* rebx_get_param(const void* const object, uint32_t hash, enum rebx_object_type type); // Returns rebx_param corresponding to hash.  If it doesn't exist, returns NULL.
+void* rebx_add_param(void* const object, struct rebx_param** const param, enum rebx_object_type type);  // Add rebx_param node
 
 /*********************************************************************************
  Getters and Setters for particle parameters (need new set for each variable type)
  ********************************************************************************/
-double* rebx_add_param_double(void* object, uint32_t hash);
-int* rebx_add_param_int(void* object, uint32_t hash);
+double* rebx_add_param_double(void* object, uint32_t hash, enum rebx_object_type type);
+int* rebx_add_param_int(void* object, uint32_t hash, enum rebx_object_type type);
 
 /***********************************************************************************
  * Miscellaneous Functions

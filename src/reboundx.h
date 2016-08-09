@@ -145,31 +145,68 @@ struct rebx_effect* rebx_add_custom_post_timestep_modification(struct rebx_extra
  */
 
 /**
- * @brief Removes a parameter from either a reb_particle or rebx_effect structure.
- * @param object Pointer to either a reb_particle or rebx_effect to which to add the parameter.
+ * @brief Removes a parameter from a REBOUNDx effect.
+ * @param effect Pointer to the rebx_effect we want to remove a parameter from.
  * @param param_name Name of the parameter we want to remove.
  * @return 1 if parameter found and successfully removed, 0 otherwise.
  */
-int rebx_remove_param(const void* const object, const char* const param_name);
+int rebx_remove_effect_param(const struct rebx_effect* const effect, const char* const param_name);
+/**
+ * @brief Removes a parameter from a particle.
+ * @param effect Pointer to the particle we want to remove a parameter from.
+ * @param param_name Name of the parameter we want to remove.
+ * @return 1 if parameter found and successfully removed, 0 otherwise.
+ */
+int rebx_remove_particle_param(const struct reb_particle* const p, const char* const param_name);
 
 /**
- * @brief Sets a parameter of type double for a parameter in a linked list of rebx_params.
- * @param object Pointer to either a reb_particle or rebx_effect to which to add the parameter.
+ * @brief Sets a parameter of type double for a REBOUNDx effect.
+ * @param object Pointer to the rebx_effect to which to add the parameter.
  * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org for what parameters are needed for each effect)
  * @param value Value to which we want to set the parameter.
  */
-void rebx_set_param_double(void* object, const char* const param_name, double value);
+void rebx_set_effect_param_double(struct rebx_effect* effect, const char* const param_name, double value);
+/**
+ * @brief Sets a parameter of type double for a particle.
+ * @param object Pointer to the particle to which to add the parameter.
+ * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org for what parameters are needed for each effect)
+ * @param value Value to which we want to set the parameter.
+ */
+void rebx_set_particle_param_double(struct reb_particle* p, const char* const param_name, double value);
 
 /**
- * @brief Gets a parameter value of type double from a rebx_param linked list.
- * @param object Pointer to either a reb_particle or rebx_effect to which to add the parameter.
+ * @brief Gets a parameter value of type double from a REBOUNDx effect.
+ * @param object Pointer to the effect that holds the parameter.
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  * @return Pointer to the parameter. NULL if parameter is not found in object (user must check for NULL to avoid segmentation fault).
  */
-double* rebx_get_param_double(const void* const object, const char* const param_name);
+double* rebx_get_effect_param_double(const struct rebx_effect* const effect, const char* const param_name);
+/**
+ * @brief Gets a parameter value of type double from a particle.
+ * @param object Pointer to the particle that holds the parameter.
+ * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
+ * @return Pointer to the parameter. NULL if parameter is not found in object (user must check for NULL to avoid segmentation fault).
+ */
+double* rebx_get_particle_param_double(const struct reb_particle* const p, const char* const param_name);
 
-int* rebx_get_param_int(const void* const object, const char* const param_name);
-void rebx_set_param_int(void* object, const char* const param_name, int value);
+/**
+ * @brief Analogous to functions for type double above.
+ */
+int* rebx_get_effect_param_int(const struct rebx_effect* const effect, const char* const param_name);
+/**
+ * @brief Analogous to functions for type double above.
+ */
+int* rebx_get_particle_param_int(const struct reb_particle* const p, const char* const param_name);
+
+/**
+ * @brief Analogous to functions for type double above.
+ */
+void rebx_set_effect_param_int(struct rebx_effect* effect, const char* const param_name, int value);
+/**
+ * @brief Analogous to functions for type double above.
+ */
+void rebx_set_particle_param_int(struct reb_particle* p, const char* const param_name, int value);
+
 /** @} */
 /** @} */
 
