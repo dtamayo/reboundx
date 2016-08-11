@@ -67,9 +67,10 @@ Basic types in REBOUNDx
 /* 	Main structure used for all parameters added to particles.
  	These get added as nodes to a linked list for each particle, stored at particles[i].ap.*/
 struct rebx_param{
-    void* paramPtr;                     // Pointer to the parameter (void* so it can point to different types).
+    void* contents;                     // Pointer to the parameter (void* so it can point to different types).
     uint32_t hash;                      // Hash for the parameter name.
     enum rebx_param_type param_type;    // Enum for the parameter type.
+    unsigned int length;                // 1 if paramPtr points to single value, more if an array.
     struct rebx_param* next;            // Pointer to the next parameter in the linked list.
 };
 
@@ -204,7 +205,7 @@ int rebx_remove_param(const char* const param_name, const void* const object, en
  * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org for what parameters are needed for each effect)
  * @param value Value to which we want to set the parameter.
  */
-void rebx_set_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const void* const object, enum rebx_object_type object_type);
+void rebx_set_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const unsigned int length, const void* const object, enum rebx_object_type object_type);
 
 /**
  * @brief Gets a parameter value of type double from a REBOUNDx effect.
@@ -212,12 +213,16 @@ void rebx_set_param(const char* const param_name, void* const value, enum rebx_p
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  * @return Pointer to the parameter. NULL if parameter is not found in object (user must check for NULL to avoid segmentation fault).
  */
-int rebx_get_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const void* const object, enum rebx_object_type object_type);
+int rebx_get_param(const char* const param_name, void* value, enum rebx_param_type param_type, const unsigned int length, const void* const object, enum rebx_object_type object_type);
 
 double rebx_get_doubleP(const char* const param_name, const void* const object);
 double rebx_get_doubleE(const char* const param_name, const void* const object);
-double rebx_set_doubleP(const char* const param_name, double value, const void* const object);
-double rebx_set_doubleE(const char* const param_name, double value, const void* const object);
+void rebx_set_doubleP(const char* const param_name, double value, const void* const object);
+void rebx_set_doubleE(const char* const param_name, double value, const void* const object);
+void rebx_set_doublesP(const char* const param_name, double* const value, const unsigned int length, const void* const object);
+void rebx_get_doublesP(const char* const param_name, double* const value, const unsigned int length, const void* const object);
+void rebx_set_doublesE(const char* const param_name, double* const value, const unsigned int length, const void* const object);
+void rebx_get_doublesE(const char* const param_name, double* const value, const unsigned int length, const void* const object);
 /** @} */
 /** @} */
 

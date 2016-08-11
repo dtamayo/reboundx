@@ -81,7 +81,7 @@ void rebx_free_params(struct rebx_extras* rebx){
     struct rebx_param_to_be_freed* temp_next;
     while(current != NULL){
         temp_next = current->next;
-        free(current->param->paramPtr);
+        free(current->param->contents);
         free(current->param);
         free(current);
         current = temp_next;
@@ -236,19 +236,20 @@ static struct reb_simulation* rebx_get_sim(const void* const object, enum rebx_o
     }
 } 
 
-static struct rebx_param* rebx_add_param_node(const char* const param_name, enum rebx_param_type param_type, const void* const object, enum rebx_object_type object_type){
+static struct rebx_param* rebx_add_param_node(const char* const param_name, enum rebx_param_type param_type, const unsigned int length, const void* const object, enum rebx_object_type object_type){
     struct rebx_param* newparam = malloc(sizeof(*newparam));
     newparam->hash = reb_hash(param_name);
     newparam->param_type = param_type;
+    newparam->length = length;
     switch(param_type){
         case REBX_TYPE_DOUBLE:
         {
-            newparam->paramPtr = malloc(sizeof(double));
+            newparam->contents = malloc(sizeof(double)*length);
             break;
         }
         case REBX_TYPE_INT:
         {
-            newparam->paramPtr = malloc(sizeof(int));
+            newparam->contents = malloc(sizeof(int)*length);
             break;
         }
     }
@@ -271,7 +272,7 @@ static struct rebx_param* rebx_add_param_node(const char* const param_name, enum
     return newparam;
 }
 
-static struct rebx_param* rebx_get_param_node(const char* const param_name, enum rebx_param_type param_type, const void* const object, enum rebx_object_type object_type){
+static struct rebx_param* rebx_get_param_node(const char* const param_name, const void* const object, enum rebx_object_type object_type){
     struct rebx_param* current;
     switch(object_type){
         case REBX_TYPE_EFFECT:
@@ -300,14 +301,6 @@ static struct rebx_param* rebx_get_param_node(const char* const param_name, enum
         return NULL;
     }
 
-    // Effect searches for param_name, but need to additionally ensure it's right type.
-    if (current->param_type != param_type){
-        char str[300];
-        sprintf(str, "Parameter '%s' passed to rebx_get_param_node was found but was of wrong type.  In python, you might need to add a dot at the end of the number when assigning a parameter that REBOUNDx expects as a float.\n", param_name);
-        reb_error(rebx_get_sim(object, object_type), str);
-        return NULL;
-    }
-   
     return current;
 }
 
@@ -354,73 +347,92 @@ int rebx_remove_param(const char* const param_name, const void* const object, en
     return 0;
 }
 
-int rebx_get_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const void* const object, enum rebx_object_type object_type){
-    struct rebx_param* node = rebx_get_param_node(param_name, param_type, object, object_type);
+int rebx_get_param(const char* const param_name, void* value, enum rebx_param_type param_type, const unsigned int length, const void* const object, enum rebx_object_type object_type){
+    struct rebx_param* node = rebx_get_param_node(param_name, object, object_type);
     if (node == NULL){
+        return 0;
+    }
+    
+    if (node->param_type != param_type){
+        char str[300];
+        sprintf(str, "Parameter '%s' passed to rebx_get_param_node was found but was of wrong type.  See documentation for your particular effect.  In python, you might need to add a dot at the end of the number when assigning a parameter that REBOUNDx expects as a float.\n", param_name);
+        reb_error(rebx_get_sim(object, object_type), str);
+        return 0;
+    }
+
+    if (node->length != length){
+        char str[300];
+        sprintf(str, "Parameter '%s' passed to rebx_get_param_node was found but had wrong length. See documentation for your particular effect.\n", param_name);
+        reb_error(rebx_get_sim(object, object_type), str);
         return 0;
     }
 
     switch(param_type){
         case REBX_TYPE_DOUBLE:
         {
-            double* val = value;    // first cast void pointers
-            double* param = node->paramPtr;
-            *val = *param;
+            memcpy(value, node->contents, sizeof(double)*length);
             return 1;
         }
         case REBX_TYPE_INT:
         {
-            int* val = value;    
-            int* param = node->paramPtr;
-            *val = *param;
+            memcpy(value, node->contents, sizeof(int)*length);
             return 1;
         }
     }
     return 0;
 }
 
-void rebx_set_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const void* const object, enum rebx_object_type object_type){
-    struct rebx_param* node = rebx_get_param_node(param_name, param_type, object, object_type);
+void rebx_set_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const unsigned int length, const void* const object, enum rebx_object_type object_type){ 
+    struct rebx_param* node = rebx_get_param_node(param_name, object, object_type);
     if (node == NULL){  // add a new parameter if it doesn't exist
-        node = rebx_add_param_node(param_name, param_type, object, object_type); 
+        node = rebx_add_param_node(param_name, param_type, length, object, object_type); 
     }
-    
+   
     switch(param_type){
         case REBX_TYPE_DOUBLE:
         {
-            double* val = value;    // first cast void pointers
-            double* param = node->paramPtr;
-            *param = *val;          // update existing value
+            memcpy(node->contents, value, sizeof(double)*length);
             return;
         }
         case REBX_TYPE_INT:
         {
-            int* val = value;    
-            int* param = node->paramPtr;
-            *param = *val;
+            memcpy(node->contents, value, sizeof(int)*length);
             return;
         }
     }
 }
 
+void rebx_get_doublesE(const char* const param_name, double* const value, const unsigned int length, const void* const object){
+    rebx_get_param(param_name, value, REBX_TYPE_DOUBLE, length, object, REBX_TYPE_EFFECT);
+}
+void rebx_set_doublesE(const char* const param_name, double* const value, const unsigned int length, const void* const object){
+    rebx_set_param(param_name, value, REBX_TYPE_DOUBLE, length, object, REBX_TYPE_EFFECT);
+}
+void rebx_get_doublesP(const char* const param_name, double* const value, const unsigned int length, const void* const object){
+    rebx_get_param(param_name, value, REBX_TYPE_DOUBLE, length, object, REBX_TYPE_PARTICLE);
+}
+void rebx_set_doublesP(const char* const param_name, double* const value, const unsigned int length, const void* const object){
+    rebx_set_param(param_name, value, REBX_TYPE_DOUBLE, length, object, REBX_TYPE_PARTICLE);
+}
+
 double rebx_get_doubleP(const char* const param_name, const void* const object){
     double val;
-    rebx_get_param(param_name, &val, REBX_TYPE_DOUBLE, object, REBX_TYPE_PARTICLE);
+    rebx_get_param(param_name, &val, REBX_TYPE_DOUBLE, 1, object, REBX_TYPE_PARTICLE);
     return val;
 }
 
 double rebx_get_doubleE(const char* const param_name, const void* const object){
     double val;
-    rebx_get_param(param_name, &val, REBX_TYPE_DOUBLE, object, REBX_TYPE_EFFECT);
+    rebx_get_param(param_name, &val, REBX_TYPE_DOUBLE, 1, object, REBX_TYPE_EFFECT);
     return val;
 }
 
-double rebx_set_doubleP(const char* const param_name, double value, const void* const object){
-    rebx_set_param(param_name, &value, REBX_TYPE_DOUBLE, object, REBX_TYPE_PARTICLE);
+void rebx_set_doubleP(const char* const param_name, double value, const void* const object){
+    rebx_set_param(param_name, &value, REBX_TYPE_DOUBLE, 1, object, REBX_TYPE_PARTICLE);
 }
 
-double rebx_set_doubleE(const char* const param_name, double value, const void* const object){
-    rebx_set_param(param_name, &value, REBX_TYPE_DOUBLE, object, REBX_TYPE_EFFECT);
+void rebx_set_doubleE(const char* const param_name, double value, const void* const object){
+    rebx_set_param(param_name, &value, REBX_TYPE_DOUBLE, 1, object, REBX_TYPE_EFFECT);
 }
 /***********************************************************************************
  * Miscellaneous Functions

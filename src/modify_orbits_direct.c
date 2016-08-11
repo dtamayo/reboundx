@@ -91,11 +91,11 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
     double tau_omega = INFINITY;
     double tau_Omega = INFINITY;
     
-    rebx_get_param("tau_a", &tau_a, REBX_TYPE_DOUBLE, p, REBX_TYPE_PARTICLE);
-    rebx_get_param("tau_e", &tau_e, REBX_TYPE_DOUBLE, p, REBX_TYPE_PARTICLE);
-    rebx_get_param("tau_inc", &tau_inc, REBX_TYPE_DOUBLE, p, REBX_TYPE_PARTICLE);
-    rebx_get_param("tau_omega", &tau_omega, REBX_TYPE_DOUBLE, p, REBX_TYPE_PARTICLE);
-    rebx_get_param("tau_Omega", &tau_Omega, REBX_TYPE_DOUBLE, p, REBX_TYPE_PARTICLE);
+    rebx_get_param("tau_a", &tau_a, REBX_TYPE_DOUBLE, 1, p, REBX_TYPE_PARTICLE);
+    rebx_get_param("tau_e", &tau_e, REBX_TYPE_DOUBLE, 1, p, REBX_TYPE_PARTICLE);
+    rebx_get_param("tau_inc", &tau_inc, REBX_TYPE_DOUBLE, 1, p, REBX_TYPE_PARTICLE);
+    rebx_get_param("tau_omega", &tau_omega, REBX_TYPE_DOUBLE, 1, p, REBX_TYPE_PARTICLE);
+    rebx_get_param("tau_Omega", &tau_Omega, REBX_TYPE_DOUBLE, 1, p, REBX_TYPE_PARTICLE);
     
     const double a0 = o.a;
     const double e0 = o.e;
@@ -109,7 +109,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
    
     if(tau_e < INFINITY){
         double p_param = 0;
-        rebx_get_param("p", &p_param, REBX_TYPE_DOUBLE, effect, REBX_TYPE_EFFECT);
+        rebx_get_param("p", &p_param, REBX_TYPE_DOUBLE, 1, effect, REBX_TYPE_EFFECT);
         o.a += 2.*a0*e0*e0*p_param*dt/tau_e; // Coupling term between e and a
     }
     return reb_tools_orbit_to_particle(sim->G, *primary, p->m, o.a, o.e, o.inc, o.Omega, o.omega, o.f);
@@ -117,7 +117,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 
 void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect){
     enum REBX_COORDINATES coordinates = REBX_COORDINATES_JACOBI;
-    rebx_get_param("coordinates", &coordinates, REBX_TYPE_INT, effect, REBX_TYPE_EFFECT); 
+    rebx_get_param("coordinates", &coordinates, REBX_TYPE_INT, 1, effect, REBX_TYPE_EFFECT); 
     
     const int back_reactions_inclusive = 1;
     const char* reference_name = "primary";

@@ -54,14 +54,26 @@ int main(int argc, char* argv[]){
     double tau_omega = -tmax/10.;
     double tau_e = -tmax/10.;
 
-    rebx_set_param("tau_a", &tau_a, REBX_TYPE_DOUBLE, &sim->particles[1], REBX_TYPE_PARTICLE);
-    rebx_set_param("tau_omega", &tau_omega, REBX_TYPE_DOUBLE, &sim->particles[1], REBX_TYPE_PARTICLE);
-    rebx_set_param("tau_e", &tau_e, REBX_TYPE_DOUBLE, &sim->particles[2], REBX_TYPE_PARTICLE);
+    rebx_set_param("tau_a", &tau_a, REBX_TYPE_DOUBLE, 1, &sim->particles[1], REBX_TYPE_PARTICLE);
+    rebx_set_param("tau_omega", &tau_omega, REBX_TYPE_DOUBLE, 1, &sim->particles[1], REBX_TYPE_PARTICLE);
+    rebx_set_param("tau_e", &tau_e, REBX_TYPE_DOUBLE, 1, &sim->particles[2], REBX_TYPE_PARTICLE);
     */
 
     rebx_set_doubleP("tau_a", -tmax, &sim->particles[1]);
     rebx_set_doubleP("tau_omega", -tmax/10., &sim->particles[1]);
     rebx_set_doubleP("tau_e", -tmax/10., &sim->particles[2]);
+    
+    double test[5] = {1.,2.,3.,4.,5.};
+    double ret[5];
+    /*rebx_set_param("test", test, REBX_TYPE_DOUBLE, 5, params, REBX_TYPE_EFFECT);
+    rebx_get_param("test", ret, REBX_TYPE_DOUBLE, 5, params, REBX_TYPE_EFFECT);*/
+    rebx_set_doublesE("test", test, 5, params);
+    rebx_get_doublesE("test", ret, 5, params);
+    for(int i=0; i<5;i++){
+        printf("%f\n", ret[i]);
+    }
+    
+    
     /*rebx_set_particle_param_double(&sim->particles[1], "tau_a", -tmax); // add semimajor axis damping on inner planet (e-folding timescale)
     rebx_set_particle_param_double(&sim->particles[1], "tau_omega", -tmax/10.); // add linear precession on inner planet (precession period). This won't do anything for modify_orbits_forces
     rebx_set_particle_param_double(&sim->particles[2], "tau_e", -tmax/10.); // add eccentricity damping on particles[2] (e-folding timescale)
