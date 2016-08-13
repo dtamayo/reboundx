@@ -39,13 +39,8 @@ extern const char* rebx_build_str;      ///< Date and time build string.
 extern const char* rebx_version_str;    ///<Version string.
 
 /******************************************
-  Enums that might be shared across effects
+  REBOUNDx Enums 
 *******************************************/
-
-enum rebx_object_type{ 
-    REBX_TYPE_EFFECT=INT_MAX-2,
-    REBX_TYPE_PARTICLE=INT_MAX-1,
-};
 
 enum rebx_param_type{
     REBX_TYPE_DOUBLE,
@@ -209,7 +204,7 @@ void* rebx_add_param(void* const object, const char* const param_name, enum rebx
  * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org for what parameters are needed for each effect)
  * @param value Value to which we want to set the parameter.
  */
-void rebx_set_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const unsigned int length, const void* const object);
+//void rebx_set_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const unsigned int length, const void* const object);
 
 /**
  * @brief Gets a parameter value of type double from a REBOUNDx effect.
@@ -218,7 +213,7 @@ void rebx_set_param(const char* const param_name, void* const value, enum rebx_p
  * @return Pointer to the parameter. NULL if parameter is not found in object (user must check for NULL to avoid segmentation fault).
  */
 void* rebx_get_param(const void* const object, const char* const param_name);
-void* rebx_get_param_check(const int required, const char* const effect_name, const void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length);
+void* rebx_get_param_check(const void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length);
 
 /** @} */
 /** @} */
