@@ -291,6 +291,46 @@ static struct rebx_param* rebx_validate_ap_address(struct rebx_param* newparam){
     return address[i];
 }
 
+/*********************************************************************************
+ User interface for parameters
+ ********************************************************************************/
+int rebx_remove_param(const void* const object, const char* const param_name){
+    // TODO free memory for deleted node
+    uint32_t hash = reb_hash(param_name);
+    struct rebx_param* current;
+    switch(rebx_get_object_type(object)){
+        case REBX_TYPE_EFFECT:
+        {
+            struct rebx_effect* effect = (struct rebx_effect*)object;
+            current = effect->ap;
+            if(current->hash == hash){
+                effect->ap = current->next;
+                return 1;
+            }
+            break;
+        }
+        case REBX_TYPE_PARTICLE:
+        {
+            struct reb_particle* p = (struct reb_particle*)object;
+            current = p->ap;
+            if(current->hash == hash){
+                p->ap = current->next;
+                return 1;
+            }
+            break;
+        }
+    }    
+  
+    while(current->next != NULL){
+        if(current->next->hash == hash){
+            current->next = current->next->next;
+            return 1;
+        }
+        current = current->next;
+    }
+    return 0;
+}
+
 void* rebx_add_param(void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length){
     struct rebx_param* newparam = malloc(sizeof(*newparam));
     newparam = rebx_validate_ap_address(newparam);
@@ -328,6 +368,15 @@ void* rebx_add_param(void* const object, const char* const param_name, enum rebx
     return newparam->contents;
 }
 
+void* rebx_get_param(const void* const object, const char* const param_name){
+    struct rebx_param* node = rebx_get_param_node(object, param_name);
+    if (node == NULL){
+        return NULL;
+    }
+    return node->contents;
+}
+
+
 struct rebx_param* rebx_get_param_node(const void* const object, const char* const param_name){
     struct rebx_param* current;
     switch(rebx_get_object_type(object)){
@@ -360,57 +409,10 @@ struct rebx_param* rebx_get_param_node(const void* const object, const char* con
     return current;
 }
 
-/*********************************************************************************
- Internal Getters and Setters for particle parameters of different types
- ********************************************************************************/
-int rebx_remove_param(const void* const object, const char* const param_name){
-    // TODO free memory for deleted node
-    uint32_t hash = reb_hash(param_name);
-    struct rebx_param* current;
-    switch(rebx_get_object_type(object)){
-        case REBX_TYPE_EFFECT:
-        {
-            struct rebx_effect* effect = (struct rebx_effect*)object;
-            current = effect->ap;
-            if(current->hash == hash){
-                effect->ap = current->next;
-                return 1;
-            }
-            break;
-        }
-        case REBX_TYPE_PARTICLE:
-        {
-            struct reb_particle* p = (struct reb_particle*)object;
-            current = p->ap;
-            if(current->hash == hash){
-                p->ap = current->next;
-                return 1;
-            }
-            break;
-        }
-        default:
-            fprintf(stderr, "Unsupported case in rebx_remove_param.\n");
-            exit(1);
-    }    
-  
-    while(current->next != NULL){
-        if(current->next->hash == hash){
-            current->next = current->next->next;
-            return 1;
-        }
-        current = current->next;
-    }
-    return 0;
-}
 
-static void* rebx_get_param_check(const int required, const char* const effect_name, const void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length){
+void* rebx_get_param_check(const void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length){
     struct rebx_param* node = rebx_get_param_node(object, param_name);
     if (node == NULL){
-        if (required){
-            char str[300];
-            sprintf(str, "REBOUNDx Error: Parameter '%s' needs to be set for effect '%s'.  See examples in documentation, reboundx.readthedocs.org.\n", param_name, effect_name);
-            reb_error(rebx_get_sim(object), str);
-        }
         return NULL;
     }
     
@@ -431,42 +433,6 @@ static void* rebx_get_param_check(const int required, const char* const effect_n
     return node->contents;
 }
 
-void* rebx_get_param_required(const char* const effect_name, const void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length){
-    return rebx_get_param_check(1, effect_name, object, param_name, param_type, length);
-}
-
-void* rebx_get_param_optional(const char* const effect_name, const void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length){
-    return rebx_get_param_check(0, effect_name, object, param_name, param_type, length);
-}
-
-void* rebx_get_param(const void* const object, const char* const param_name){
-    struct rebx_param* node = rebx_get_param_node(object, param_name);
-    if (node == NULL){
-        return NULL;
-    }
-    return node->contents;
-}
-
-
-void rebx_set_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const unsigned int length, const void* const object){
-    struct rebx_param* node = rebx_get_param_node(param_name, object);
-    if (node == NULL){  // add a new parameter if it doesn't exist
-        node = rebx_add_param_node(param_name, param_type, length, object);
-    }
-   
-    switch(param_type){
-        case REBX_TYPE_DOUBLE:
-        {
-            memcpy(node->contents, value, sizeof(double)*length);
-            return;
-        }
-        case REBX_TYPE_INT:
-        {
-            memcpy(node->contents, value, sizeof(int)*length);
-            return;
-        }
-    }
-}
 /***********************************************************************************
  * Miscellaneous Functions
 ***********************************************************************************/

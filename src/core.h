@@ -30,6 +30,11 @@
 #include "rebound.h"
 #include "reboundx.h"
 
+enum rebx_object_type{										// Internally used enum for identifying structs that can take parameters. 
+    REBX_TYPE_EFFECT=INT_MAX-2,
+    REBX_TYPE_PARTICLE=INT_MAX-1,
+};
+
 /*****************************
  Internal initialization routine.
  ****************************/
