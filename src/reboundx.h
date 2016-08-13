@@ -31,6 +31,7 @@
 #define REBX_C 10064.9150404 // speed of light in default units of AU/(yr/2pi)
 
 #include <stdint.h>
+#include <limits.h>
 #include "rebound.h"
 #include "rebxtools.h"
 
@@ -42,8 +43,8 @@ extern const char* rebx_version_str;    ///<Version string.
 *******************************************/
 
 enum rebx_object_type{ 
-    REBX_TYPE_EFFECT,
-    REBX_TYPE_PARTICLE,
+    REBX_TYPE_EFFECT=INT_MAX-2,
+    REBX_TYPE_PARTICLE=INT_MAX-1,
 };
 
 enum rebx_param_type{
@@ -83,6 +84,7 @@ struct rebx_effect{
     void (*ptm) (struct reb_simulation* sim, struct rebx_effect* effect);   // Pointer to function to call after each timestep.
     struct rebx_extras* rebx;           // Pointer to the rebx_extras instance effect is in.
 	struct rebx_effect* next;			// Pointer to the next effect in the linked list.
+    char pad[100];                      // Pad to be able to cast to reb_particle for get_object_type
 };
 
 /*	Nodes for a linked list to all the parameters that have been allocated by REBOUNDx (so it can later free them).*/
@@ -197,7 +199,9 @@ struct rebx_effect* rebx_add_custom_post_timestep_modification(struct rebx_extra
  * @param param_name Name of the parameter we want to remove.
  * @return 1 if parameter found and successfully removed, 0 otherwise.
  */
-int rebx_remove_param(const char* const param_name, const void* const object, enum rebx_object_type object_type);
+int rebx_remove_param(const void* const object, const char* const param_name);
+
+void* rebx_add_param(void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length);
 
 /**
  * @brief Sets a parameter of type double for a particle.
@@ -205,7 +209,7 @@ int rebx_remove_param(const char* const param_name, const void* const object, en
  * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org for what parameters are needed for each effect)
  * @param value Value to which we want to set the parameter.
  */
-void rebx_set_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const unsigned int length, const void* const object, enum rebx_object_type object_type);
+void rebx_set_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const unsigned int length, const void* const object);
 
 /**
  * @brief Gets a parameter value of type double from a REBOUNDx effect.
@@ -213,16 +217,9 @@ void rebx_set_param(const char* const param_name, void* const value, enum rebx_p
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  * @return Pointer to the parameter. NULL if parameter is not found in object (user must check for NULL to avoid segmentation fault).
  */
-int rebx_get_param(const char* const param_name, void* value, enum rebx_param_type param_type, const unsigned int length, const void* const object, enum rebx_object_type object_type);
+void* rebx_get_param(const void* const object, const char* const param_name);
+void* rebx_get_param_check(const int required, const char* const effect_name, const void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length);
 
-double rebx_get_doubleP(const char* const param_name, const void* const object);
-double rebx_get_doubleE(const char* const param_name, const void* const object);
-void rebx_set_doubleP(const char* const param_name, double value, const void* const object);
-void rebx_set_doubleE(const char* const param_name, double value, const void* const object);
-void rebx_set_doublesP(const char* const param_name, double* const value, const unsigned int length, const void* const object);
-void rebx_get_doublesP(const char* const param_name, double* const value, const unsigned int length, const void* const object);
-void rebx_set_doublesE(const char* const param_name, double* const value, const unsigned int length, const void* const object);
-void rebx_get_doublesE(const char* const param_name, double* const value, const unsigned int length, const void* const object);
 /** @} */
 /** @} */
 
