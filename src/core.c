@@ -150,11 +150,11 @@ static struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char*
 struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
     struct rebx_effect* effect = rebx_add_effect(rebx, name);
     struct reb_simulation* sim = rebx->sim;
-
+/*
     if (effect->hash == reb_hash("modify_orbits_direct")){
         effect->ptm = rebx_modify_orbits_direct;
     }
-/*    if(effect->hash == reb_hash("gr")){
+    if(effect->hash == reb_hash("gr")){
         sim->force_is_velocity_dependent = 1;
         effect->force = rebx_gr;
     }
@@ -331,21 +331,37 @@ int rebx_remove_param(const void* const object, const char* const param_name){
     return 0;
 }
 
-void* rebx_add_param(void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length){
+void* rebx_add_param_(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
+	void* ptr = rebx_get_param(object, param_name);
+	if (ptr != NULL){
+        char str[300];
+        sprintf(str, "REBOUNDx Error: Parameter '%s' passed to rebx_add_param already exists.\n", param_name);
+        reb_error(rebx_get_sim(object), str);
+        return NULL;
+	}
     struct rebx_param* newparam = malloc(sizeof(*newparam));
     newparam = rebx_validate_ap_address(newparam);
     newparam->hash = reb_hash(param_name);
     newparam->param_type = param_type;
-    newparam->length = length;
+    newparam->ndim = ndim;
+	size_t shapesize = sizeof(int)*ndim;
+	newparam->shape = malloc(shapesize);
+	memcpy(newparam->shape, shape, shapesize);
+
+	int size = 1;
+	for(int i=0;i<ndim;i++){
+		size *= shape[i];
+	}
+	newparam->size = size;
     switch(param_type){
         case REBX_TYPE_DOUBLE:
         {
-            newparam->contents = malloc(sizeof(double)*length);
+            newparam->contents = malloc(sizeof(double)*size);
             break;
         }
         case REBX_TYPE_INT:
         {
-            newparam->contents = malloc(sizeof(int)*length);
+            newparam->contents = malloc(sizeof(int)*size);
             break;
         }
     }
@@ -366,6 +382,24 @@ void* rebx_add_param(void* const object, const char* const param_name, enum rebx
         }
     }
     return newparam->contents;
+}
+
+void* rebx_add_param(void* const object, const char* const param_name, enum rebx_param_type param_type){
+	int ndim=1;
+	int shape[1] = {1};
+	return rebx_add_param_(object, param_name, param_type, ndim, shape);
+}
+
+void* rebx_add_param1d(void* const object, const char* const param_name, enum rebx_param_type param_type, const int length){
+	int ndim=1;
+	int shape[1] = {length};
+	return rebx_add_param_(object, param_name, param_type, ndim, shape);
+}
+
+void* rebx_add_param2d(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ncols, const int nrows){
+	int ndim=2;
+	int shape[2] = {ncols, nrows};
+	return rebx_add_param_(object, param_name, param_type, ndim, shape);
 }
 
 void* rebx_get_param(const void* const object, const char* const param_name){
@@ -409,7 +443,7 @@ struct rebx_param* rebx_get_param_node(const void* const object, const char* con
     return current;
 }
 
-
+/*
 void* rebx_get_param_check(const void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length){
     struct rebx_param* node = rebx_get_param_node(object, param_name);
     if (node == NULL){
@@ -432,7 +466,7 @@ void* rebx_get_param_check(const void* const object, const char* const param_nam
 
     return node->contents;
 }
-
+*/
 /***********************************************************************************
  * Miscellaneous Functions
 ***********************************************************************************/

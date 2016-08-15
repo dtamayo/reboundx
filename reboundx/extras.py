@@ -1,5 +1,5 @@
 from . import clibreboundx
-from ctypes import Structure, c_double, POINTER, c_int, c_uint, c_long, c_ulong, c_void_p, c_char_p, CFUNCTYPE, byref, c_uint32, cast
+from ctypes import Structure, c_double, POINTER, c_int, c_uint, c_long, c_ulong, c_void_p, c_char_p, CFUNCTYPE, byref, c_uint32, c_uint, cast, c_char
 import rebound
 import reboundx
 
@@ -129,9 +129,12 @@ class Extras(Structure):
 
 class Param(Structure): # need to define fields afterward because of circular ref in linked list
     pass    
-Param._fields_ =  [("paramPtr", c_void_p),
+Param._fields_ =  [("contents", c_void_p),
                         ("hash", c_uint32),
-                        ("type_hash", c_uint32),
+                        ("param_type", c_int),
+                        ("ndim", c_int),
+                        ("shape", POINTER(c_int)),
+                        ("size", c_int),
                         ("next", POINTER(Param))]
 
 class Effect(Structure):
@@ -140,13 +143,13 @@ class Effect(Structure):
         params = Params(self)
         return params
 
-Effect._fields_ = [("object_type", c_uint32),
-                        ("hash", c_uint32),
-                        ("ap", POINTER(Param)),
-                        ("force", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))),
-                        ("ptm", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))),
-                        ("rebx", POINTER(Extras)),
-                        ("next", POINTER(Effect))]
+Effect._fields_ = [ ("hash", c_uint32),
+                    ("ap", POINTER(Param)),
+                    ("force", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))),
+                    ("ptm", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))),
+                    ("rebx", POINTER(Extras)),
+                    ("next", POINTER(Effect)),
+                    ("pad", c_char*100)]
 
 class Param_to_be_freed(Structure):
     pass
