@@ -66,7 +66,9 @@ struct rebx_param{
     void* contents;                     // Pointer to the parameter (void* so it can point to different types).
     uint32_t hash;                      // Hash for the parameter name.
     enum rebx_param_type param_type;    // Enum for the parameter type.
-    unsigned int length;                // 1 if paramPtr points to single value, more if an array.
+	int ndim;
+	int* shape;
+	int size;
     struct rebx_param* next;            // Pointer to the next parameter in the linked list.
 };
 
@@ -196,7 +198,9 @@ struct rebx_effect* rebx_add_custom_post_timestep_modification(struct rebx_extra
  */
 int rebx_remove_param(const void* const object, const char* const param_name);
 
-void* rebx_add_param(void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length);
+void* rebx_add_param(void* const object, const char* const param_name, enum rebx_param_type param_type);
+void* rebx_add_param1d(void* const object, const char* const param_name, enum rebx_param_type param_type, const int length);
+void* rebx_add_param2d(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ncols, const int nrows);
 
 /**
  * @brief Sets a parameter of type double for a particle.
@@ -213,6 +217,7 @@ void* rebx_add_param(void* const object, const char* const param_name, enum rebx
  * @return Pointer to the parameter. NULL if parameter is not found in object (user must check for NULL to avoid segmentation fault).
  */
 void* rebx_get_param(const void* const object, const char* const param_name);
+struct rebx_param* rebx_get_param_node(const void* const object, const char* const param_name);
 void* rebx_get_param_check(const void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length);
 
 /** @} */
