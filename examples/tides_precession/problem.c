@@ -34,15 +34,16 @@ int main(int argc, char* argv[]){
     
     struct rebx_effect* tides = rebx_add(rebx, "tides_precession");
    
-                        // Have to set particle radii and k2 Love numbers. Could just set one set to consider tides raised on one body only.
+                        // Have to set R_tides (physical radius) and k1 (apsidal motion constant, half the tidal Love number k2) parameters. 
+                        // Could just set one set to consider tides raised on one body only.
     double* R_tides = rebx_add_param(&sim->particles[0], "R_tides", REBX_TYPE_DOUBLE);
     *R_tides = 0.005;         // in consistent units (here we're using default G=1, so AU)
     R_tides = rebx_add_param(&sim->particles[1], "R_tides", REBX_TYPE_DOUBLE);
     *R_tides = 0.0005;
-    double* k2 = rebx_add_param(&sim->particles[0], "k2", REBX_TYPE_DOUBLE);
-    *k2 = 0.03;
-    k2 = rebx_add_param(&sim->particles[1], "k2", REBX_TYPE_DOUBLE);
-    *k2 = 0.3;
+    double* k1 = rebx_add_param(&sim->particles[0], "k1", REBX_TYPE_DOUBLE);
+    *k1 = 0.03;
+    k1 = rebx_add_param(&sim->particles[1], "k1", REBX_TYPE_DOUBLE);
+    *k1 = 0.3;
 
     /* By default, implementation assumes particles[0] is the primary.
      * You can also set the primary flag explicitly:
