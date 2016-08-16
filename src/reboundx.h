@@ -42,9 +42,13 @@ extern const char* rebx_version_str;    ///<Version string.
   REBOUNDx Enums 
 *******************************************/
 
+/**
+ * @brief Enumeration for the different data types available in REBOUNDx for parameters.
+ */
 enum rebx_param_type{
     REBX_TYPE_DOUBLE,
     REBX_TYPE_INT,
+    REBX_TYPE_INT64
 };
 
 /**
@@ -187,38 +191,34 @@ struct rebx_effect* rebx_add_custom_post_timestep_modification(struct rebx_extra
 /**
  * @defgroup ParameterManipulators
  * @brief Functions for accessing and modifying particle and effect parameters.
+ * @detail These functions make up the main interface for users.  See below for more specialized parameter functions.
  * @{
  */
 
 /**
- * @brief Removes a parameter from a particle.
- * @param effect Pointer to the particle we want to remove a parameter from.
+ * @brief Removes a parameter from a particle or effect.
+ * @param object Pointer to the particle or effect we want to remove a parameter from.
  * @param param_name Name of the parameter we want to remove.
  * @return 1 if parameter found and successfully removed, 0 otherwise.
  */
 int rebx_remove_param(const void* const object, const char* const param_name);
 
-void* rebx_add_param(void* const object, const char* const param_name, enum rebx_param_type param_type);
-void* rebx_add_param1d(void* const object, const char* const param_name, enum rebx_param_type param_type, const int length);
-void* rebx_add_param2d(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ncols, const int nrows);
-
 /**
- * @brief Sets a parameter of type double for a particle.
- * @param object Pointer to the particle to which to add the parameter.
+ * @brief Adds a parameter to a particle or effect.
+ * @param object Pointer to the particle or effect to which to add the parameter.
  * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org for what parameters are needed for each effect)
- * @param value Value to which we want to set the parameter.
+ * @param param_type Variable type from rebx_param_type enumeration.
+ * @return A void pointer to the parameter, i.e., the contents member of the new rebx_param structure. 
  */
-//void rebx_set_param(const char* const param_name, void* const value, enum rebx_param_type param_type, const unsigned int length, const void* const object);
+void* rebx_add_param(void* const object, const char* const param_name, enum rebx_param_type param_type);
 
 /**
- * @brief Gets a parameter value of type double from a REBOUNDx effect.
- * @param object Pointer to the effect that holds the parameter.
+ * @brief Gets a parameter from a particle or effect.
+ * @param object Pointer to the particle or effect that holds the parameter.
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
- * @return Pointer to the parameter. NULL if parameter is not found in object (user must check for NULL to avoid segmentation fault).
+ * @return A void pointer to the parameter. NULL if not found.
  */
 void* rebx_get_param(const void* const object, const char* const param_name);
-struct rebx_param* rebx_get_param_node(const void* const object, const char* const param_name);
-void* rebx_get_param_check(const void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length);
 
 /** @} */
 /** @} */
@@ -313,5 +313,38 @@ double rebx_central_force_hamiltonian(struct reb_simulation* const sim);
 
 /** @} */
 /** @} */
+
+/********************************
+ * Specialized Parameter manipulation functions
+ *******************************/
+
+/**
+ * \name Specialized functions for accessing and modifying particle and effect parameters.
+ * @{
+ */
+/**
+ * @defgroup SpecializedParameterManipulators
+ * @brief Specialized functions for accessing and modifying particle and effect parameters.
+ * @detail The main parameter manipulation functions are listed above, but these functions can be useful when writing effects.
+ * @{
+ */
+
+/**
+ * @brief Gets the full rebx_param structure for a particular parameter, rather than just the pointer to the contents.
+ * @detail This can be useful to check properties of the parameter, like the param_type or shape.
+ * @param object Pointer to the particle or effect that holds the parameter.
+ * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
+ * @return Pointer to the rebx_param structure that holds the parameter. NULL if not found.
+ */
+struct rebx_param* rebx_get_param_node(const void* const object, const char* const param_name);
+
+/**
+ * @brief Returns a void pointer to the parameter just like rebx_get_param, but additionally checks that the param_type matches what is expected.
+ * @detail Effects should use this function rather than rebx_get_param to ensure that the user appropriately set parameters if working from Python.
+ * @param object Pointer to the particle or effect that holds the parameter.
+ * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
+ * @return Void pointer to the parameter. NULL if not found or type does not match (will write error to stderr).
+ */
+void* rebx_get_param_check(const void* const object, const char* const param_name, enum rebx_param_type param_type);
 
 #endif
