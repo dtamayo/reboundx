@@ -3,7 +3,6 @@ from collections import MutableMapping
 from .extras import Param, Effect
 from . import clibreboundx
 from ctypes import byref, c_double, c_int, c_char_p, POINTER, cast, c_void_p, memmove, sizeof
-from numpy.ctypeslib import as_ctypes
 import numpy as np
 
 class Params(MutableMapping):
@@ -14,19 +13,19 @@ class Params(MutableMapping):
                 raise AttributeError("Need to attach reboundx.Extras instance to simulation before setting particle params.")
 
         self.parent = parent
-        rebx_param_types = ["REBX_TYPE_DOUBLE", "REBX_TYPE_INT"]
+        
+        rebx_param_types = ["REBX_TYPE_DOUBLE", "REBX_TYPE_INT", "REBX_TYPE_INT64"]
         val = {param_type:value for (value, param_type) in enumerate(rebx_param_types)}
 
-        self.param_types = {c_int:val["REBX_TYPE_INT"], c_double:val["REBX_TYPE_DOUBLE"]}   # ctype to rebx type enum value
-        self.ctypes = {value:key for (key, value) in self.param_types.items()}              # rebx type enum value to ctype
-        self.ctypesP = {int:c_int, float:c_double}                                          # python type to ctype
-        self.python_types = {val["REBX_TYPE_INT"]:int, val["REBX_TYPE_DOUBLE"]:float}       # param_type to python type
-
-    def as_ctypes(self, key, value):
-        try:
-            return self.ctypesP[type(value)](value)
-        except KeyError:
-            raise AttributeError("REBOUNDx Error: Data type {0} for param '{1}' not supported.".format(type(value), key))
+        self.from_type =    {   val["REBX_TYPE_INT"]:(c_int, 'int'), 
+                                val["REBX_TYPE_DOUBLE"]:(c_double, 'float')
+                            }
+        self.from_value =   {   'int':(c_int, val["REBX_TYPE_INT"]), 
+                                'float':(c_double, val["REBX_TYPE_DOUBLE"]), 
+                                'int32':(c_int, val["REBX_TYPE_INT"]), 
+                                'int64':(c_int, val["REBX_TYPE_INT"]), 
+                                'float64':(c_double, val["REBX_TYPE_DOUBLE"])
+                            }
 
     def __getitem__(self, key):
         name = rebound.hash(key).value
@@ -34,13 +33,15 @@ class Params(MutableMapping):
         node = clibreboundx.rebx_get_param_node(byref(self.parent), c_char_p(key.encode('ascii')))
         if node:
             param = node.contents
-            if param.ndim == 1 and param.shape[0] == 1:
-                data = cast(param.contents, POINTER(self.ctypes[param.param_type]))
+            ctype, dtype = self.from_type[param.param_type]
+            if param.ndim == 0:
+                data = cast(param.contents, POINTER(ctype))
                 return data.contents.value
             else:
-                ArrayType = self.ctypes[param.param_type]*param.size
+                ArrayType = ctype*param.size
                 data = cast(param.contents, POINTER(ArrayType))
-                array = np.frombuffer(data.contents, dtype=self.python_types[param.param_type], count=param.size)
+                import numpy as np
+                array = np.frombuffer(data.contents, dtype=dtype, count=param.size)
                 if param.ndim > 1:
                     shape = (param.shape[i] for i in range(param.ndim))
                     array = np.reshape(array, tuple(shape))
@@ -49,39 +50,60 @@ class Params(MutableMapping):
             raise AttributeError("REBOUNDx Error: Parameter '{0}' not found.".format(key))
 
     def __setitem__(self, key, value):
-        if type(value) == np.ndarray:
-            clibreboundx.rebx_add_param_.restype = c_void_p
-            val = clibreboundx.rebx_add_param_(byref(self.parent), c_char_p(key.encode('ascii')), 0, value.ndim, value.ctypes.shape_as(c_int))
-            val = cast(val, POINTER(c_double))
-            memmove(val, value.ctypes.data_as(POINTER(c_double)), sizeof(c_double)*value.size)
-            return
-        if(type(value).__module__ == 'numpy'):
-            ctypevar = as_ctypes(value)
+        if type(value) == list:
+            try:
+                import numpy as np
+                value = np.array(value)
+            except ImportError:
+                raise AttributeError("Need to install numpy in order to assign lists as parameters.")
+    
+        if type(value).__module__ == 'numpy':   # In both cases these get a string with typename (e.g. 'float64' for numpy.float64)
+            valtype = value.dtype.name          # Gets type also for ndarrays
         else:
-            ctypevar = self.as_ctypes(key, value)
-        ctype = type(ctypevar)
-
+            valtype = type(value).__name__
+       
+        try:
+            ctype, rebxtype = self.from_value[valtype]
+        except KeyError:
+            raise AttributeError("REBOUNDx Error: Data type {0} for param '{1}' not supported.".format(valtype, key))
+        
         clibreboundx.rebx_get_param_node.restype = POINTER(Param)
         nodeptr = clibreboundx.rebx_get_param_node(byref(self.parent), c_char_p(key.encode('ascii')))
 
         if nodeptr:
-            node = nodeptr.contents 
-            if node.param_type != self.param_types[ctype]:
-                raise AttributeError("REBOUNDx Error: Cannot update param '{0}' with incompatible data type '{1}'".format(key, ctype))
-            val = node.contents
+            param = nodeptr.contents
+            if param.param_type != rebxtype:
+                raise AttributeError("REBOUNDx Error: Cannot update param '{0}' with new type {1}".format(key, valtype))
+            if type(value).__name__ == 'ndarray':
+                if param.ndim == 0:
+                    raise AttributeError("REBOUNDx Error: Cannot update scalar param '{0}' with a list or numpy array".format(key))
+                else:
+                    ArrayType = c_int*param.ndim
+                    data = cast(param.shape, POINTER(ArrayType))
+                    import numpy as np
+                    shape = np.frombuffer(data.contents, dtype='int32', count=param.ndim)
+                    if not np.array_equal(shape, value.shape):
+                        raise AttributeError("REBOUNDx Error: Cannot update param '{0}' with list/array of different shape".format(key))
+            else:
+                if param.ndim > 0:
+                    raise AttributeError("REBOUNDx Error: Cannot update param '{0}' (a list/array) with scalar".format(key)) 
+            val = nodeptr.contents.contents
         else: # parameter not found. Make new one
-            try:
-                param_type = self.param_types[ctype]
-            except KeyError:
-                raise AttributeError("REBOUNDx Error: Data type {0} for param '{1}' not supported.".format(type(value), key))
-
-            clibreboundx.rebx_add_param.restype = c_void_p
-            val = clibreboundx.rebx_add_param(byref(self.parent), c_char_p(key.encode('ascii')), param_type, 1)
+            if type(value).__name__ == 'ndarray':
+                import numpy as np
+                clibreboundx.rebx_add_param_.restype = c_void_p
+                val = clibreboundx.rebx_add_param_(byref(self.parent), c_char_p(key.encode('ascii')), rebxtype, value.ndim, value.ctypes.shape_as(c_int))
+            else: # single value
+                clibreboundx.rebx_add_param.restype = c_void_p
+                val = clibreboundx.rebx_add_param(byref(self.parent), c_char_p(key.encode('ascii')), rebxtype)
 
         val = cast(val, POINTER(ctype))
-        val[0] = value
-        return
-
+        if type(value).__name__ == 'ndarray':
+            import numpy as np
+            memmove(val, value.ctypes.data_as(POINTER(ctype)), sizeof(ctype)*value.size) # COPIES data
+        else:
+            val[0] = value
+        
     def __delitem__(self, key):
         success = clibreboundx.rebx_remove_param(byref(self.parent), c_char_p(key.encode('ascii')))
         if not success:
