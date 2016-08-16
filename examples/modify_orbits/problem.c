@@ -21,7 +21,7 @@ int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
     // Setup constants
     sim->dt             = 0.012;        // initial timestep.
-    //sim->heartbeat = heartbeat;
+    sim->heartbeat = heartbeat;
 
     struct reb_particle p = {0}; 
     p.m     = 1.;   
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]){
     // There are two options for how to modify orbits.  You would only choose one (comment the other out).  
     // You can't set precession separately with modify_orbits_forces (eccentricity and inclination damping induce pericenter and nodal precession).
 
-    //struct rebx_effect* params = rebx_add(rebx, "modify_orbits_direct");    					// directly update particles' orbital elements each timestep
+    struct rebx_effect* params = rebx_add(rebx, "modify_orbits_direct");    					// directly update particles' orbital elements each timestep
     //struct rebx_effect* params = rebx_add(rebx, "modify_orbits_forces");    					// add forces that orbit-average to give exponential a and e damping
 
     // Set the timescales for each particle.  
@@ -63,13 +63,6 @@ int main(int argc, char* argv[]){
     printf("Precession timescale for inner planet is %f.\n", fabs(*tau_omega));
     printf("Eccentricity damping timescale for outer planet is %f.\n", fabs(*tau_e));
 
-	double test[6] = {0.,1.,2., 3.,4.,5.};
-	double* par = rebx_add_param2d(&sim->particles[1], "test", REBX_TYPE_DOUBLE, 3, 2);
-	memcpy(par, test, sizeof(double)*6);
-	struct rebx_param* node = rebx_get_param_node(&sim->particles[1], "test");
-	double* tester = node->contents;
-	int ncols=node->shape[0];
-	printf("%f\n", tester[1*ncols+1]);
     /* One can also adjust a coupling parameter between eccentricity and semimajor axis damping.  We use the parameter p
      * as defined by Deck & Batygin (2015).  The default p=0 corresponds to no coupling, while p=1 corresponds to e-damping
      * at constant angular momentum.  This is only implemented for modify_orbits_direct.
@@ -81,20 +74,20 @@ int main(int argc, char* argv[]){
      * to the reference particle (not neccesary for barycentric):
      */
 
-	/*int* coordinates = rebx_add_param(params, "coordinates", REBX_TYPE_INT);
-	*coordinates = REBX_COORDINATES_PARTICLE;*/
+	int* coordinates = rebx_add_param(params, "coordinates", REBX_TYPE_INT);
+	*coordinates = REBX_COORDINATES_PARTICLE;
 
 	int* primary = rebx_add_param(&sim->particles[0], "primary", REBX_TYPE_INT);
 	*primary = 1;
 
-    /*reb_integrate(sim, tmax);
+    reb_integrate(sim, tmax);
     rebx_free(rebx);    // Free all the memory allocated by rebx
-    reb_free_simulation(sim);*/
+    reb_free_simulation(sim);
 }
 
 void heartbeat(struct reb_simulation* sim){
     // output a e and pomega (Omega + omega) of inner body
-    if(reb_output_check(sim, 5.e1)){
+    if(reb_output_check(sim, 5.e2)){
         const struct reb_particle sun = sim->particles[0];
         const struct reb_orbit orbit = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sun); // calculate orbit of particles[1]
         printf("%f\t%f\t%f\t%f\n",sim->t,orbit.a, orbit.e, orbit.pomega);
