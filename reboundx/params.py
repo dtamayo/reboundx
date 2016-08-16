@@ -2,7 +2,7 @@ import rebound
 from collections import MutableMapping
 from .extras import Param, Effect
 from . import clibreboundx
-from ctypes import byref, c_double, c_int, c_char_p, POINTER, cast, c_void_p, memmove, sizeof
+from ctypes import byref, c_double, c_int, c_int32, c_int64, c_char_p, POINTER, cast, c_void_p, memmove, sizeof
 import numpy as np
 
 class Params(MutableMapping):
@@ -14,16 +14,22 @@ class Params(MutableMapping):
 
         self.parent = parent
         
+        #### Update here to add new types #####
+        
         rebx_param_types = ["REBX_TYPE_DOUBLE", "REBX_TYPE_INT", "REBX_TYPE_INT64"]
         val = {param_type:value for (value, param_type) in enumerate(rebx_param_types)}
 
-        self.from_type =    {   val["REBX_TYPE_INT"]:(c_int, 'int'), 
-                                val["REBX_TYPE_DOUBLE"]:(c_double, 'float')
+        # takes rebxtype and gives ctype and dtype for numpy arrays
+        self.from_type =    {   val["REBX_TYPE_INT"]:(c_int32, 'int32'), 
+                                val["REBX_TYPE_INT64"]:(c_int64, 'int64'), 
+                                val["REBX_TYPE_DOUBLE"]:(c_double, 'float'),
+
                             }
-        self.from_value =   {   'int':(c_int, val["REBX_TYPE_INT"]), 
-                                'float':(c_double, val["REBX_TYPE_DOUBLE"]), 
+        # takes a variable type and gives ctype and rebxtype
+        self.from_value =   {   'int':(c_int64, val["REBX_TYPE_INT64"]), 
                                 'int32':(c_int, val["REBX_TYPE_INT"]), 
-                                'int64':(c_int, val["REBX_TYPE_INT"]), 
+                                'int64':(c_int64, val["REBX_TYPE_INT64"]), 
+                                'float':(c_double, val["REBX_TYPE_DOUBLE"]), 
                                 'float64':(c_double, val["REBX_TYPE_DOUBLE"])
                             }
 

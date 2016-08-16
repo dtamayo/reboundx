@@ -364,6 +364,12 @@ void* rebx_add_param_(void* const object, const char* const param_name, enum reb
             newparam->contents = malloc(sizeof(int)*size);
             break;
         }
+        case REBX_TYPE_INT64:
+        {
+            newparam->contents = malloc(sizeof(int64_t)*size);
+            break;
+        }
+
     }
     switch(rebx_get_object_type(object)){
         case REBX_TYPE_EFFECT:
@@ -387,18 +393,6 @@ void* rebx_add_param_(void* const object, const char* const param_name, enum reb
 void* rebx_add_param(void* const object, const char* const param_name, enum rebx_param_type param_type){
 	int ndim=0;
 	return rebx_add_param_(object, param_name, param_type, ndim, NULL);
-}
-
-void* rebx_add_param1d(void* const object, const char* const param_name, enum rebx_param_type param_type, const int length){
-	int ndim=1;
-	int shape[1] = {length};
-	return rebx_add_param_(object, param_name, param_type, ndim, shape);
-}
-
-void* rebx_add_param2d(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ncols, const int nrows){
-	int ndim=2;
-	int shape[2] = {ncols, nrows};
-	return rebx_add_param_(object, param_name, param_type, ndim, shape);
 }
 
 void* rebx_get_param(const void* const object, const char* const param_name){
@@ -442,8 +436,7 @@ struct rebx_param* rebx_get_param_node(const void* const object, const char* con
     return current;
 }
 
-/*
-void* rebx_get_param_check(const void* const object, const char* const param_name, enum rebx_param_type param_type, const unsigned int length){
+void* rebx_get_param_check(const void* const object, const char* const param_name, enum rebx_param_type param_type){
     struct rebx_param* node = rebx_get_param_node(object, param_name);
     if (node == NULL){
         return NULL;
@@ -451,21 +444,13 @@ void* rebx_get_param_check(const void* const object, const char* const param_nam
     
     if (node->param_type != param_type){
         char str[300];
-        sprintf(str, "REBOUNDx Error: Parameter '%s' passed to rebx_get_param_node was found but was of wrong type.  See documentation for your particular effect.  In python, you might need to add a dot at the end of the number when assigning a parameter that REBOUNDx expects as a float.\n", param_name);
-        reb_error(rebx_get_sim(object), str);
-        return NULL;
-    }
-
-    if (node->length != length){
-        char str[300];
-        sprintf(str, "REBOUNDx Error: Parameter '%s' passed to rebx_get_param_node was found but had wrong length. See documentation for your particular effect.\n", param_name);
+        sprintf(str, "REBOUNDx Error: Parameter '%s' passed to rebx_get_param_check was found but was of wrong type.  See documentation for your particular effect.  In python, you might need to add a dot at the end of the number when assigning a parameter that REBOUNDx expects as a float.\n", param_name);
         reb_error(rebx_get_sim(object), str);
         return NULL;
     }
 
     return node->contents;
 }
-*/
 /***********************************************************************************
  * Miscellaneous Functions
 ***********************************************************************************/
