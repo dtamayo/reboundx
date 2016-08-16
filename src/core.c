@@ -385,9 +385,8 @@ void* rebx_add_param_(void* const object, const char* const param_name, enum reb
 }
 
 void* rebx_add_param(void* const object, const char* const param_name, enum rebx_param_type param_type){
-	int ndim=1;
-	int shape[1] = {1};
-	return rebx_add_param_(object, param_name, param_type, ndim, shape);
+	int ndim=0;
+	return rebx_add_param_(object, param_name, param_type, ndim, NULL);
 }
 
 void* rebx_add_param1d(void* const object, const char* const param_name, enum rebx_param_type param_type, const int length){
