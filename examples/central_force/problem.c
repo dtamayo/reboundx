@@ -34,22 +34,21 @@ int main(int argc, char* argv[]){
     /* We first choose a power (must be a double!) for our central force (here F goes as r^-1).
      * We then need to add it to the particle(s) that will act as central sources for this force.*/
 
-    double gammacentral = -1.; // must be a double
-    
     struct reb_particle* ps = sim->particles;
-    rebx_set_particle_param_double(&ps[0], "gammacentral", gammacentral);
+    double* gammacentral = rebx_add_param(&ps[0], "gammacentral", REBX_TYPE_DOUBLE);
+    *gammacentral = -1.;
 
     // The other parameter to set is the normalization Acentral (F=Acentral*r^gammacentral). E.g.,
 
-    rebx_set_particle_param_double(&ps[0], "Acentral", 1.e-4);
+    double* Acentral = rebx_add_param(&ps[0], "Acentral", REBX_TYPE_DOUBLE);
+    *Acentral = 1.e-4;
 
     /* We can also use the function rebx_central_force_Acentral to calculate the Acentral required
      * for particles[1] (around primary particles[0]) to have a pericenter precession rate of
      * pomegadot, given a gammacentral value: */
     
     double pomegadot = 1.e-3;
-    double Acentral = rebx_central_force_Acentral(ps[1], ps[0], pomegadot, gammacentral);
-    rebx_set_particle_param_double(&ps[0], "Acentral", Acentral);
+    *Acentral = rebx_central_force_Acentral(ps[1], ps[0], pomegadot, *gammacentral);
     
     double tmax = 3.e4;
     reb_integrate(sim, tmax); 

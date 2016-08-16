@@ -37,7 +37,6 @@
  *
  * This adds precession from the tidal interactions between the particles in the simulation and the central body, both from tides raised on the primary and on the other bodies.
  * In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' physical radii and k2 tidal parameter.
- * The radii should be set directly (particle.r) and not as a parameter (see examples).
  * You can specify the primary with a "primary" flag.
  * If not set, the primary will default to the particle at the 0 index in the particles array.
  * 
@@ -50,6 +49,7 @@
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
+ * R_tides (float)              Yes         Physical radius.
  * k2 (float)                   Yes         k2 Love number (required for contribution from tides raised on the body).
  * primary (int)                No          Set to 1 to specify the primary.  Defaults to treating particles[0] as primary if not set.
  * ============================ =========== ==================================================================
@@ -66,17 +66,19 @@ static void rebx_calculate_tides_precession(struct reb_simulation* const sim, co
     struct reb_particle* const particles = sim->particles;
     struct reb_particle* const source = &particles[source_index];
     const double m0 = source->m;
-    const double R0 = source->r;
-    double* ptr = rebx_get_particle_param_double(source, "k2");
-    double k20;
-    if (ptr == NULL){
-        k20 = 0.;
+    double R0 = 0.;
+    double* R = rebx_get_param_check(source, "R_tides", REBX_TYPE_DOUBLE);
+    if (R){
+        R0 = *R;
     }
-    else{
-        k20 = *ptr;
+    double k20 = 0.;
+    double* k2 = rebx_get_param_check(source, "k2", REBX_TYPE_DOUBLE);
+    if (k2){
+        k20 = *k2;
     }
     const double fac0 = k20*R0*R0*R0*R0*R0; 
     const int _N_real = sim->N - sim->N_var;
+    double k2p, Rp;
     for (int i=0;i<_N_real;i++){
         if(i == source_index) continue;
         struct reb_particle* const p = &particles[i];
@@ -87,11 +89,18 @@ static void rebx_calculate_tides_precession(struct reb_simulation* const sim, co
         double fac=0.; 
         fac += fac0*mratio;
         
-        const double R1 = p->r;
-        const double* k2 = rebx_get_particle_param_double(p, "k2");
-        if(k2 != NULL){
-            fac += (*k2)*R1*R1*R1*R1*R1/mratio;
+        Rp = 0.;
+        R = rebx_get_param_check(p, "R_tides", REBX_TYPE_DOUBLE);
+        if(R){
+            Rp = *R;
         }
+        k2p = 0.;
+        k2 = rebx_get_param_check(p, "k2", REBX_TYPE_DOUBLE);
+        if(k2){
+            k2p = *k2;
+        }
+        
+        fac += k2p*Rp*Rp*Rp*Rp*Rp/mratio;
         const double dx = p->x - source->x; 
         const double dy = p->y - source->y;
         const double dz = p->z - source->z;
@@ -112,7 +121,7 @@ void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_effect*
     struct reb_particle* const particles = sim->particles;
     int source_found=0;
     for (int i=0; i<N_real; i++){
-        if (rebx_get_particle_param_int(&particles[i], "primary") != NULL){
+        if (rebx_get_param_check(&particles[i], "primary", REBX_TYPE_INT) != NULL){
             source_found = 1;
             rebx_calculate_tides_precession(sim, i);
         }
@@ -127,7 +136,7 @@ static double rebx_calculate_tides_precession_hamiltonian(struct reb_simulation*
     struct reb_particle* const source = &particles[source_index];
     const double m0 = source->m;
     const double R0 = source->r;
-    double* ptr = rebx_get_particle_param_double(source, "k2");
+    double* ptr = rebx_get_param_check(source, "k2", REBX_TYPE_DOUBLE);
     double k20;
     if (ptr == NULL){
         k20 = 0.;
@@ -149,7 +158,7 @@ static double rebx_calculate_tides_precession_hamiltonian(struct reb_simulation*
         fac += fac0*mratio;
         
         const double R1 = p->r;
-        const double* k2 = rebx_get_particle_param_double(p, "k2");
+        const double* k2 = rebx_get_param_check(p, "k2", REBX_TYPE_DOUBLE);
         if(k2 != NULL){
             fac += (*k2)*R1*R1*R1*R1*R1/mratio;
         }
@@ -168,7 +177,7 @@ double rebx_tides_precession_hamiltonian(struct reb_simulation* const sim){
     int source_found=0;
     double H=0.;
     for (int i=0; i<N_real; i++){
-        if (rebx_get_particle_param_int(&particles[i], "primary") != NULL){
+        if (rebx_get_param_check(&particles[i], "primary", REBX_TYPE_INT) != NULL){
             source_found = 1;
             H = rebx_calculate_tides_precession_hamiltonian(sim, i);
         }
