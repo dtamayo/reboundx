@@ -16,19 +16,18 @@ class Params(MutableMapping):
         
         #### Update here to add new types #####
         
-        rebx_param_types = ["REBX_TYPE_DOUBLE", "REBX_TYPE_INT", "REBX_TYPE_INT64"]
+        rebx_param_types = ["REBX_TYPE_DOUBLE", "REBX_TYPE_INT"]
         val = {param_type:value for (value, param_type) in enumerate(rebx_param_types)}
 
         # takes rebxtype and gives ctype and dtype for numpy arrays
-        self.from_type =    {   val["REBX_TYPE_INT"]:(c_int32, 'int32'), 
-                                val["REBX_TYPE_INT64"]:(c_int64, 'int64'), 
+        self.from_type =    {   val["REBX_TYPE_INT"]:(c_int, 'int32'), # REBOUNDx uses 32 bit int for all integer parameters
                                 val["REBX_TYPE_DOUBLE"]:(c_double, 'float'),
 
                             }
         # takes a variable type and gives ctype and rebxtype
-        self.from_value =   {   'int':(c_int64, val["REBX_TYPE_INT64"]), 
+        self.from_value =   {   'int':(c_int, val["REBX_TYPE_INT"]), 
                                 'int32':(c_int, val["REBX_TYPE_INT"]), 
-                                'int64':(c_int64, val["REBX_TYPE_INT64"]), 
+                                'int64':(c_int, val["REBX_TYPE_INT"]), 
                                 'float':(c_double, val["REBX_TYPE_DOUBLE"]), 
                                 'float64':(c_double, val["REBX_TYPE_DOUBLE"])
                             }
@@ -105,9 +104,13 @@ class Params(MutableMapping):
 
         val = cast(val, POINTER(ctype))
         if type(value).__name__ == 'ndarray':
+            if 'int' in valtype:
+                value = value.astype('int32', casting='same_kind')
             import numpy as np
             memmove(val, value.ctypes.data_as(POINTER(ctype)), sizeof(ctype)*value.size) # COPIES data
         else:
+            if 'int' in valtype and value > 2147483648:
+                raise OverflowError("REBOUNDx Error: Integer parameters cannot exceed 2^31")
             val[0] = value
         
     def __delitem__(self, key):

@@ -86,11 +86,11 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
     }
     const double dt = sim->dt_last_done;
     
-    const double* const tau_a = rebx_get_param_check(p, "tau_a", REBX_TYPE_DOUBLE, 1);
-    const double* const tau_e = rebx_get_param_check(p, "tau_e", REBX_TYPE_DOUBLE, 1);
-    const double* const tau_inc = rebx_get_param_check(p, "tau_inc", REBX_TYPE_DOUBLE, 1);
-    const double* const tau_omega = rebx_get_param_check(p, "tau_omega", REBX_TYPE_DOUBLE, 1);
-    const double* const tau_Omega = rebx_get_param_check(p, "tau_Omega", REBX_TYPE_DOUBLE, 1);
+    const double* const tau_a = rebx_get_param_check(p, "tau_a", REBX_TYPE_DOUBLE);
+    const double* const tau_e = rebx_get_param_check(p, "tau_e", REBX_TYPE_DOUBLE);
+    const double* const tau_inc = rebx_get_param_check(p, "tau_inc", REBX_TYPE_DOUBLE);
+    const double* const tau_omega = rebx_get_param_check(p, "tau_omega", REBX_TYPE_DOUBLE);
+    const double* const tau_Omega = rebx_get_param_check(p, "tau_Omega", REBX_TYPE_DOUBLE);
     
     const double a0 = o.a;
     const double e0 = o.e;
@@ -113,7 +113,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 	}
    
     if(tau_e != NULL){
-        const double* const p_param = rebx_get_param_check(effect, "p", REBX_TYPE_DOUBLE, 1);
+        const double* const p_param = rebx_get_param_check(effect, "p", REBX_TYPE_DOUBLE);
         if(p_param != NULL){
 			o.a += 2.*a0*e0*e0*(*p_param)*dt/(*tau_e); // Coupling term between e and a
 		}
@@ -122,7 +122,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 }
 
 void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect){
-    const int* const ptr = rebx_get_param_check(effect, "coordinates", REBX_TYPE_INT, 1);
+    const int* const ptr = rebx_get_param_check(effect, "coordinates", REBX_TYPE_INT);
    	enum REBX_COORDINATES coordinates = REBX_COORDINATES_JACOBI;
 	if (ptr != NULL){
 		coordinates = *ptr;
