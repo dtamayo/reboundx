@@ -37,14 +37,16 @@ int main(int argc, char* argv[]){
     struct rebx_effect* gr_params = rebx_add(rebx, "gr");
    
     // Have to set speed of light in right units (set by G & initial conditions).  Here we use default units of AU/(yr/2pi)
-    rebx_set_effect_param_double(gr_params, "c", REBX_C);  
+    double* c = rebx_add_param(gr_params, "c", REBX_TYPE_DOUBLE);  
+    *c = REBX_C;
 
     /* By default, the 'gr' and 'gr_potential' effects assume the massive particle is at index 0.  
      * If it has a different index, or you think the particle might move in the array (e.g. with a custom merger routine)
      * you can add a gr_source flag to the massive particle (for "gr_full" all particles act as sources so this is not necessary):
      */
 
-    rebx_set_particle_param_int(&sim->particles[0], "gr_source", 1);
+    int* source = rebx_add_param(&sim->particles[0], "gr_source", REBX_TYPE_INT);
+    *source = 1;
 
     double tmax = 5.e-2;
     reb_integrate(sim, tmax); 

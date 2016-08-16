@@ -154,7 +154,11 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
     if (effect->hash == reb_hash("modify_orbits_direct")){
         effect->ptm = rebx_modify_orbits_direct;
     }
-/*    if(effect->hash == reb_hash("gr")){
+    else if (effect->hash == reb_hash("modify_orbits_forces")){
+        sim->force_is_velocity_dependent = 1;
+        effect->force = rebx_modify_orbits_forces;
+    }
+    else if(effect->hash == reb_hash("gr")){
         sim->force_is_velocity_dependent = 1;
         effect->force = rebx_gr;
     }
@@ -167,13 +171,6 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
     }
     else if (effect->hash == reb_hash("modify_mass")){
         effect->ptm = rebx_modify_mass;
-    }
-    else if (effect->hash == reb_hash("modify_orbits_direct")){
-        effect->ptm = rebx_modify_orbits_direct;
-    }
-    else if (effect->hash == reb_hash("modify_orbits_forces")){
-        sim->force_is_velocity_dependent = 1;
-        effect->force = rebx_modify_orbits_forces;
     }
     else if (effect->hash == reb_hash("radiation_forces")){
         sim->force_is_velocity_dependent = 1;
@@ -189,7 +186,7 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
         char str[100]; 
         sprintf(str, "Effect '%s' passed to rebx_add not found.\n", name);
         reb_error(sim, str);
-    }*/
+    }
     
     return effect;
 }
