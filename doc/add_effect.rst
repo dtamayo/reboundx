@@ -59,7 +59,7 @@ In our case, our function reads
 .. code-block:: c
 
     void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const radiation_forces){ 
-        double* c = rebx_get_param_double(radiation_forces, "c");
+        double* c = rebx_get_param_check(radiation_forces, "c", REBX_TYPE_DOUBLE);
         if (c == NULL){
             reb_error(sim, "Need to set speed of light in radiation_forces effect.  See examples in documentation.\n");
         }
@@ -67,13 +67,13 @@ In our case, our function reads
         struct reb_particle* const particles = sim->particles;
         int source_found=0;
         for (int i=0; i<N_real; i++){
-            if (rebx_get_param_int(&particles[i], "radiation_source") != NULL){
+            if (rebx_get_param_check(&particles[i], "radiation_source", REBX_TYPE_INT) != NULL){
                 source_found = 1;
-                rebx_calculate_radiation_forces(sim, \*c, i);
+                rebx_calculate_radiation_forces(sim, *c, i);
             }
         }
         if (!source_found){
-            rebx_calculate_radiation_forces(sim, \*c, 0);    // default source to index 0 if "radiation_source" not found on any particle
+            rebx_calculate_radiation_forces(sim, *c, 0);    // default source to index 0 if "radiation_source" not found on any particle
         }
     }
 
@@ -81,11 +81,9 @@ This gives a recipe for accessing the effect parameters, checking for NULL to av
 It's also important to use ``_N_real`` for the number of particles in the simulation, since ``sim->N`` includes any variational particles that have been added.
 The idea is to search for a particle that has a ``radiation_source`` flag set, and then call an internal function that does the force calculation given the source's index in the ``particles`` array.
 This is the safe way for the user to use the effect, since it is robust against particles moving around in the ``particles`` array.
-If particle with ``radiation_source`` set is found, it defaults to the 0 index particle being the source, which makes sense for simple cases.
+If particle has the ``radiation_source`` parameter set, it defaults to the 0 index particle being the source, which makes sense for simple cases.
 
-REBOUNDx uses a hash function to change parameter names to an unsigned integer code, which it uses to set and retrieve particle parameters (stored as a linked list starting from the `ap` void pointer (ap = additional parameters) in reb_particle).
-There needs to be a separate ``rebx_get_param`` and ``rebx_set_param`` for every different variable type.
-You can find these functions in core.c if you need to write one for a new type.
+Contact me if you need to add support for parameters with different types than those in the rebx_param_type enumeration (see the Enums section of :ref:`c_api`).
 
 core.c and core.h
 ^^^^^^^^^^^^^^^^^
