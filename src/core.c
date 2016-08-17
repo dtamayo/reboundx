@@ -355,20 +355,14 @@ void* rebx_add_param_(void* const object, const char* const param_name, enum reb
     switch(param_type){
         case REBX_TYPE_DOUBLE:
         {
-            newparam->contents = malloc(sizeof(double)*size);
+            newparam->contents = malloc(sizeof(double)*newparam->size);
             break;
         }
         case REBX_TYPE_INT:
         {
-            newparam->contents = malloc(sizeof(int)*size);
+            newparam->contents = malloc(sizeof(int)*newparam->size);
             break;
         }
-        case REBX_TYPE_INT64:
-        {
-            newparam->contents = malloc(sizeof(int64_t)*size);
-            break;
-        }
-
     }
     switch(rebx_get_object_type(object)){
         case REBX_TYPE_EFFECT:
