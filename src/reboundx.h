@@ -1,7 +1,7 @@
 /**
  * @file    reboundx.h
  * @brief   REBOUNDx API definition.
- * @author  Dan Tamayo <tamayo.daniel@gmail.com>
+ * @author  Dan Tamayo <tamayo.daniel@gmail.com>, Hanno Rein
  * 
  * @section     LICENSE
  * Copyright (c) 2015 Dan Tamayo, Hanno Rein
@@ -46,9 +46,8 @@ extern const char* rebx_version_str;    ///<Version string.
  * @brief Enumeration for the different data types available in REBOUNDx for parameters.
  */
 enum rebx_param_type{
-    REBX_TYPE_DOUBLE,
-    REBX_TYPE_INT,
-    REBX_TYPE_INT64
+    REBX_TYPE_DOUBLE,                               ///< C type double
+    REBX_TYPE_INT,                                  ///< C type int
 };
 
 /**
@@ -64,41 +63,40 @@ enum REBX_COORDINATES{
 Basic types in REBOUNDx
 *****************************************/
 
-/* 	Main structure used for all parameters added to particles.
- 	These get added as nodes to a linked list for each particle, stored at particles[i].ap.*/
+/**
+ * @brief Main structure used for all parameters added to particles.
+ */
 struct rebx_param{
-    void* contents;                     // Pointer to the parameter (void* so it can point to different types).
-    uint32_t hash;                      // Hash for the parameter name.
-    enum rebx_param_type param_type;    // Enum for the parameter type.
-	int ndim;
-	int* shape;
-	int size;
-    struct rebx_param* next;            // Pointer to the next parameter in the linked list.
+    void* contents;                                 ///< Pointer to the parameter (void* so it can point to different types).
+    uint32_t hash;                                  ///< Hash for the parameter name.
+    enum rebx_param_type param_type;                ///< Enum for the parameter type.
+	int ndim;                                       ///< Number of dimensions (to support array parameters)
+	int* shape;                                     ///< Array of length ndim for the array shapes (NULL for scalars).
+	int size;                                       ///< Total number of values in array (1 for scalars).
+    struct rebx_param* next;                        ///< Pointer to the next parameter in the linked list.
 };
 
-/*  Structure for all REBOUNDx effects.
- *  These get added as nodes to the effects linked list in the rebx_extras structure.*/
+/**
+ * @brief Structure for all REBOUNDx effects.
+ * @detail These get added as nodes to the effects linked list in the rebx_extras structure.
+ */
 struct rebx_effect{
-    uint32_t hash;                      // hash corresponding to the effect's name.
-    struct rebx_param* ap;              // Linked list of parameters for the effect.
-    void (*force) (struct reb_simulation* sim, struct rebx_effect* effect); // Pointer to function to call during forces evaluation.
-    void (*ptm) (struct reb_simulation* sim, struct rebx_effect* effect);   // Pointer to function to call after each timestep.
-    struct rebx_extras* rebx;           // Pointer to the rebx_extras instance effect is in.
-	struct rebx_effect* next;			// Pointer to the next effect in the linked list.
-    char pad[100];                      // Pad to be able to cast to reb_particle for get_object_type
+    uint32_t hash;                                  ///< Hash for the effect's name.
+    struct rebx_param* ap;                          ///< Linked list of parameters for the effect.
+    void (*force) (struct reb_simulation* sim, struct rebx_effect* effect); ///< Pointer to function to call during forces evaluation.
+    void (*ptm) (struct reb_simulation* sim, struct rebx_effect* effect);   ///< Pointer to function to call after each timestep.
+    struct rebx_extras* rebx;                       ///< Pointer to the rebx_extras instance effect is in.
+	struct rebx_effect* next;			            ///< Pointer to the next effect in the linked list.
+    char pad[100];                                  ///< Pad to be able to cast to reb_particle for get_object_type function.
 };
 
-/*	Nodes for a linked list to all the parameters that have been allocated by REBOUNDx (so it can later free them).*/
-struct rebx_param_to_be_freed{
-    struct rebx_param* param;           // Pointer to a parameter node allocated by REBOUNDx.
-    struct rebx_param_to_be_freed* next;// Pointer to the next node in the linked list rebx_extras.params_to_be_freed.
-};
-
-/*  Main REBOUNDx structure*/
+/**
+ * @brief Main REBOUNDx structure.
+ */
 struct rebx_extras {	
-	struct reb_simulation* sim;								// Pointer to the simulation REBOUNDx is linked to.
-	struct rebx_effect* effects;		                    // Linked list with pointers to all the effects added to the simulation.
-	struct rebx_param_to_be_freed* params_to_be_freed; 		// Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
+	struct reb_simulation* sim;					    ///< Pointer to the simulation REBOUNDx is linked to.
+	struct rebx_effect* effects;		            ///< Linked list with pointers to all the effects added to the simulation.
+	struct rebx_param_to_be_freed* params_to_be_freed; 	///< Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
 };
 
 /****************************************

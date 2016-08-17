@@ -341,15 +341,17 @@ void* rebx_add_param_(void* const object, const char* const param_name, enum reb
     newparam->hash = reb_hash(param_name);
     newparam->param_type = param_type;
     newparam->ndim = ndim;
-	size_t shapesize = sizeof(int)*ndim;
-	newparam->shape = malloc(shapesize);
-	memcpy(newparam->shape, shape, shapesize);
+    newparam->shape = NULL;
+    newparam->size = 1;
+    if (ndim > 0){
+	    size_t shapesize = sizeof(int)*ndim;
+	    newparam->shape = malloc(shapesize);
+	    memcpy(newparam->shape, shape, shapesize);
 
-	int size = 1;
-	for(int i=0;i<ndim;i++){
-		size *= shape[i];
-	}
-	newparam->size = size;
+	    for(int i=0;i<ndim;i++){
+		    newparam->size *= shape[i];
+	    }
+    }
     switch(param_type){
         case REBX_TYPE_DOUBLE:
         {

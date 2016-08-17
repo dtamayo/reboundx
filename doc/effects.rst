@@ -306,8 +306,7 @@ Python Example          `TidesPrecession.ipynb <https://github.com/dtamayo/rebou
 ======================= ===============================================
 
 This adds precession from the tidal interactions between the particles in the simulation and the central body, both from tides raised on the primary and on the other bodies.
-In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' physical radii and k2 tidal parameter.
-The radii should be set directly (particle.r) and not as a parameter (see examples).
+In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' R_tides (physical radius) and k1 (apsidal motion constant, half the tidal Love number).
 You can specify the primary with a "primary" flag.
 If not set, the primary will default to the particle at the 0 index in the particles array.
 
@@ -320,7 +319,8 @@ None
 ============================ =========== ==================================================================
 Field (C type)               Required    Description
 ============================ =========== ==================================================================
-k2 (float)                   Yes         k2 Love number (required for contribution from tides raised on the body).
+R_tides (float)              Yes         Physical radius (required for contribution from tides raised on the body).
+k1 (float)                   Yes         Apsidal motion constant (half the tidal Love number k2).
 primary (int)                No          Set to 1 to specify the primary.  Defaults to treating particles[0] as primary if not set.
 ============================ =========== ==================================================================
 
