@@ -29,32 +29,33 @@ For example, to add general relativity effects,::
     struct rebx_effect* gr = rebx_add_effect(rebx, "gr");
 
 For details on particular effect implementations, and for a list of available effects, see :ref:`effects`.
-We can now set effect parameters.  
-For example, general relativity effects require us to set the speed of light in appropriate units,  e.g.,::
 
-    rebx_set_effect_param_double(gr, "c", 3.e8);
+We can now set parameters to our particles and effects.  
+**To understand which parameters need to be set for particular effects, consult** :ref:`effects`.
+For example, general relativity effects require us to set the speed of light in appropriate units.
 
-Notice that we specify in the function name that we are adding to an `effect` and we specify the variable type.  
-We can use an analogous function to set particle-specific parameters, e.g.::
+We always first add a parameter to the effect (or particle), specifying the appropriate type from the rebx_param_type enumeration (see :ref:`c_api` under enums).
+This gives us back a pointer that we can then use to set the value::
 
-    rebx_set_particle_param_double(&sim->particles[1], "tau_a", 1.e4);
+    double* c = rebx_add_param(gr, "c", REBX_TYPE_DOUBLE);
+    *c = 3.e8;
 
-Note that
-    * Getter and setter functions always take a pointer to the particle or the effect.
-    * We pass the name of the parameter we want to change.
+The same goes for a particle, e.g. setting a semimajor axis damping timescale for the modify_orbits_forces effect::
 
-We can then check the value of a particle's parameter with (replace `particle` with `effect` for checking an effect's parameters)::
+    double* tau_a = rebx_add_param(&sim->particles[1], "tau_a", REBX_TYPE_DOUBLE);
+    *tau_a = -1.e4;
 
-    double* tau_a = rebx_get_particle_param_double(&sim->particles[1], "tau_a");
+Note that rebx_add_param and rebx_get_param (below) always take a pointer to the particle or the effect.
 
-**Important:** If the parameter is not found (e.g., if we asked for "tau_e"), the tau_a pointer we get back will be set to NULL, so if we try to dereference it we will get a segmentation fault.
-It is therefore prudent to always check the return value for NULL before dereferencing.::
+We can check the value of a particle's parameter with the pointer we got back (c and tau_a above), but if particles or effects are removed from the simulation, dereferencing these pointers leads to undefined behavior / segmentation faults.
+When accessing parameters, one should therefore retrieve them each time with rebx_get_param::
 
-In general a particular effect will require you to set particle-specific parameters in particles, and general effect parameters in the effect.
-**The user is responsible for checking what parameters need to be set for a particular effect, which can be found at** :ref:`effects`.
+    double* tau_a = rebx_get_param(&sim->particles[1], "tau_a");
 
-You can add as many modifications as you'd like in the same simulation.
-Once you're done setting up all the modifications you want, just run the REBOUND simulation as usual::
+This allows you to check whether the pointer is valid, as rebx_get_param will return NULL if the parameter is not found (**so make sure you check for NULL!**).
+
+You can add as many effects as you'd like in the same simulation.
+Once you're done setting up all the effects you want, just run the REBOUND simulation as usual::
 
     reb_integrate(sim, tmax);
 

@@ -35,6 +35,12 @@ enum rebx_object_type{										// Internally used enum for identifying structs 
     REBX_TYPE_PARTICLE=INT_MAX-1,
 };
 
+// Nodes for a linked list to all the parameters that have been allocated by REBOUNDx (so it can later free them).
+struct rebx_param_to_be_freed{
+    struct rebx_param* param;           // Pointer to a parameter node allocated by REBOUNDx.
+    struct rebx_param_to_be_freed* next;// Pointer to the next node in the linked list rebx_extras.params_to_be_freed.
+};
+
 /*****************************
  Internal initialization routine.
  ****************************/
