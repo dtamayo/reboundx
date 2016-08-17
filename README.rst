@@ -1,4 +1,4 @@
-.. image:: http://img.shields.io/badge/REBOUNDx-v2.12.0-green.svg?style=flat
+.. image:: http://img.shields.io/badge/REBOUNDx-v2.13.0-green.svg?style=flat
     :target: http://reboundx.readthedocs.org
 .. image:: https://badge.fury.io/py/reboundx.svg
     :target: https://badge.fury.io/py/reboundx
@@ -15,9 +15,16 @@
 
 Changelog
 =========
-
+2.13.0 Fixed collision for long integrations and added support for arrays
+2.12.0 Added central force effect
 2.11.0 Added tidal precession
 2.10.0 Streamlined code for adding new effects (see below)
+
+Update: REBOUNDx 2.13.0
+=======================
+
+We have added support for array parameters, and have settled on what we think should be a general enough API going forward.
+We also fixed a memory collision issue for long integrations, so you should update to the new version when possible.
 
 Update: REBOUNDx 2.10.0
 =======================
