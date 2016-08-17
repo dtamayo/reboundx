@@ -3,6 +3,23 @@
 Adding A New Effect
 ============================
 
+Why Add A New Effect?
+---------------------
+
+Adding a new effect will allow other people to use (and cite!) your effect.  
+More egoistically, incorporating your effect into the master branch ensures that it always stays up to date as REBOUND and REBOUNDx expand.
+Otherwise things may fall out of sync as the code is updated.
+
+Do I Have To Write It In C?
+---------------------------
+
+The effect functions are called every timestep, and the overhead of REBOUND calling a Python function each timestep makes it a factor of a few slower than if the effect was written in C.
+Therefore all effects in REBOUNDx are written in C.
+You might therefore write an effect in Python for a quick test (I sometimes do this), but to add your effect to the REBOUNDx repository you will have to write it in C.
+
+Adding An Effect Is Easy!
+-------------------------
+
 REBOUNDx aims to be modular, so that when adding your own new effect, you don't have to get into all the low-level code details (in ``core.c``).
 You just have to write your effect following the REBOUNDx layout, and rely on REBOUNDx to appropriately store, access and call it at the right time.
 Here we will code the ``radiation_forces`` effect as an example.
