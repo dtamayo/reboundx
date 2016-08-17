@@ -67,7 +67,7 @@ At this point you should ask yourself whether your effect is an additional force
 If you're adding a force, you might copy ``radiation_forces``.
 If you're adding a post timestep modification, you might copy ``modify_orbits_direct``.
 
-You might look at different effect implementations for examples of how to access parameters.
+Particularly if you are used to the Python side of REBOUND/REBOUNDx, you should read :ref:`c_quickstart` to see how to access parameters, and consult effects that are already written.
 In our case, our function reads
 
 .. code-block:: c
