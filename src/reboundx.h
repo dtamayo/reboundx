@@ -48,6 +48,7 @@ extern const char* rebx_version_str;    ///<Version string.
 enum rebx_param_type{
     REBX_TYPE_DOUBLE,                               ///< C type double
     REBX_TYPE_INT,                                  ///< C type int
+    REBX_TYPE_UINT32,                               ///< C type uint32_t
 };
 
 /**
