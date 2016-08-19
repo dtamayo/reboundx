@@ -182,6 +182,9 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
     else if (effect->hash == reb_hash("central_force")){
         effect->force = rebx_central_force;
     }
+    else if (effect->hash == reb_hash("track_min_distance")){
+        effect->ptm = rebx_track_min_distance;
+    }
     else{
         char str[100]; 
         sprintf(str, "Effect '%s' passed to rebx_add not found.\n", name);
@@ -361,6 +364,11 @@ void* rebx_add_param_(void* const object, const char* const param_name, enum reb
         case REBX_TYPE_INT:
         {
             newparam->contents = malloc(sizeof(int)*newparam->size);
+            break;
+        }
+        case REBX_TYPE_UINT32:
+        {
+            newparam->contents = malloc(sizeof(uint32_t)*newparam->size);
             break;
         }
     }
