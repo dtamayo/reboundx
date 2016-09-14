@@ -31,8 +31,8 @@
 #include "reboundx.h"
 
 enum rebx_object_type{										// Internally used enum for identifying structs that can take parameters. 
-    REBX_TYPE_EFFECT=INT_MAX-2,
-    REBX_TYPE_PARTICLE=INT_MAX-1,
+    REBX_OBJECT_TYPE_EFFECT=INT_MAX-2,
+    REBX_OBJECT_TYPE_PARTICLE=INT_MAX-1,
 };
 
 // Nodes for a linked list to all the parameters that have been allocated by REBOUNDx (so it can later free them).

@@ -143,7 +143,7 @@ static struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char*
     rebx->effects = effect;
    
     struct reb_particle* p = (struct reb_particle*)effect;
-    p->ap = (void*)REBX_TYPE_EFFECT;
+    p->ap = (void*)REBX_OBJECT_TYPE_EFFECT;
     return effect;
 }
 
@@ -224,11 +224,11 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
 
 static enum rebx_object_type rebx_get_object_type(const void* const object){
     struct reb_particle* p = (struct reb_particle*)object;
-    if (p->ap == (void*)(intptr_t)REBX_TYPE_EFFECT){    // In add_effect we cast effect to a particle and set p->ap to REBX_TYPE_EFFECT
-        return REBX_TYPE_EFFECT;
+    if (p->ap == (void*)(intptr_t)REBX_OBJECT_TYPE_EFFECT){    // In add_effect we cast effect to a particle and set p->ap to REBX_OBJECT_TYPE_EFFECT
+        return REBX_OBJECT_TYPE_EFFECT;
     }
     else{
-        return REBX_TYPE_PARTICLE;
+        return REBX_OBJECT_TYPE_PARTICLE;
     }
 }
 
@@ -236,12 +236,12 @@ static enum rebx_object_type rebx_get_object_type(const void* const object){
 // get simulation pointer from an object
 static struct reb_simulation* rebx_get_sim(const void* const object){
     switch(rebx_get_object_type(object)){
-        case REBX_TYPE_EFFECT:
+        case REBX_OBJECT_TYPE_EFFECT:
         {
             struct rebx_effect* effect = (struct rebx_effect*)object;
             return effect->rebx->sim;
         }
-        case REBX_TYPE_PARTICLE:
+        case REBX_OBJECT_TYPE_PARTICLE:
         {
             struct reb_particle* p = (struct reb_particle*)object;
             return p->sim;
@@ -251,7 +251,7 @@ static struct reb_simulation* rebx_get_sim(const void* const object){
 
 static struct rebx_param* rebx_validate_ap_address(struct rebx_param* newparam){
     int collision=0;
-    for(int j=REBX_TYPE_EFFECT; j<=REBX_TYPE_PARTICLE; j++){
+    for(int j=REBX_OBJECT_TYPE_EFFECT; j<=REBX_OBJECT_TYPE_PARTICLE; j++){
         /* need this cast to avoid warnings (we are converting 32 bit int enum to 64 bit pointer). I think behavior
          * is implemetation defined, but this is OK because we are always checking the ap pointer in this way, so 
          * just need that whatever implementation defined result we get from this comparison is false for the address
@@ -271,7 +271,7 @@ static struct rebx_param* rebx_validate_ap_address(struct rebx_param* newparam){
     for(i=0; i<=5; i++){
         address[i] = malloc(sizeof(*newparam));
         collision = 0;
-        for(int j=REBX_TYPE_EFFECT; j<=REBX_TYPE_PARTICLE; j++){
+        for(int j=REBX_OBJECT_TYPE_EFFECT; j<=REBX_OBJECT_TYPE_PARTICLE; j++){
             if(address[i] == (void*)(intptr_t)j){
                 collision=1;
             }
@@ -299,7 +299,7 @@ int rebx_remove_param(const void* const object, const char* const param_name){
     uint32_t hash = reb_hash(param_name);
     struct rebx_param* current;
     switch(rebx_get_object_type(object)){
-        case REBX_TYPE_EFFECT:
+        case REBX_OBJECT_TYPE_EFFECT:
         {
             struct rebx_effect* effect = (struct rebx_effect*)object;
             current = effect->ap;
@@ -309,7 +309,7 @@ int rebx_remove_param(const void* const object, const char* const param_name){
             }
             break;
         }
-        case REBX_TYPE_PARTICLE:
+        case REBX_OBJECT_TYPE_PARTICLE:
         {
             struct reb_particle* p = (struct reb_particle*)object;
             current = p->ap;
@@ -373,14 +373,14 @@ void* rebx_add_param_(void* const object, const char* const param_name, enum reb
         }
     }
     switch(rebx_get_object_type(object)){
-        case REBX_TYPE_EFFECT:
+        case REBX_OBJECT_TYPE_EFFECT:
         {
             struct rebx_effect* effect = (struct rebx_effect*)object;
             newparam->next = effect->ap;
             effect->ap = newparam;
             break;
         }
-        case REBX_TYPE_PARTICLE:
+        case REBX_OBJECT_TYPE_PARTICLE:
         {
             struct reb_particle* p = (struct reb_particle*)object;
             newparam->next = p->ap;
@@ -408,13 +408,13 @@ void* rebx_get_param(const void* const object, const char* const param_name){
 struct rebx_param* rebx_get_param_node(const void* const object, const char* const param_name){
     struct rebx_param* current;
     switch(rebx_get_object_type(object)){
-        case REBX_TYPE_EFFECT:
+        case REBX_OBJECT_TYPE_EFFECT:
         {
             struct rebx_effect* effect = (struct rebx_effect*)object;
             current = effect->ap;
             break;
         }
-        case REBX_TYPE_PARTICLE:
+        case REBX_OBJECT_TYPE_PARTICLE:
         {
             struct reb_particle* p = (struct reb_particle*)object;
             current = p->ap;
