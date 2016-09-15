@@ -148,7 +148,7 @@ class TestArrays(unittest.TestCase):
             self.assertEqual(mycomp(orbit, self.sim.particles[i+1].orbit), True)
         
     def test_incorrectarray(self): # param is array of custom classes but dtype=object not set
-        print(type(np.array(self.sim.calculate_orbits())[0]).__name__)
+        print(np.array(self.sim.calculate_orbits()).dtype)
         with self.assertRaises(AttributeError):
             self.sim.particles[0].params["badarray"] = np.array(self.sim.calculate_orbits())
 
