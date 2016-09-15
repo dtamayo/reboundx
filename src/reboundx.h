@@ -49,6 +49,7 @@ enum rebx_param_type{
     REBX_TYPE_DOUBLE,                               ///< C type double
     REBX_TYPE_INT,                                  ///< C type int
     REBX_TYPE_UINT32,                               ///< C type uint32_t
+    REBX_TYPE_ORBIT,                                ///< reb_orbit structure
 };
 
 /**
