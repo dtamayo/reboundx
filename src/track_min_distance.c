@@ -47,12 +47,13 @@
  * initially.  By default distance is measured from sim->particles[0], but you can specify a different particle by setting
  * the ``min_distance_from`` parameter to the hash of the target particle.
  * 
- * ============================ =========== =======================================================
- * Name (C type)                Required    Description
- * ============================ =========== =======================================================
- * min_distance (double)        Yes         Particle's miminimum distance.
- * min_distance_from (uint32)   No          Hash for particle from which to measure distance
- * ============================ =========== =======================================================
+ * ================================ =========== =======================================================
+ * Name (C type)                    Required    Description
+ * ================================ =========== =======================================================
+ * min_distance (double)            Yes         Particle's miminimum distance.
+ * min_distance_from (uint32)       No          Hash for particle from which to measure distance
+ * min_distance_orbit (reb_orbit)   No          Parameter to store orbital elements at moment corresponding to min_distance (heliocentric)
+ * ================================ =========== =======================================================
  *
  */
 
@@ -82,6 +83,10 @@ void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_effec
             const double r2 = dx*dx + dy*dy + dz*dz;
             if (r2 < *min_distance*(*min_distance)){
                 *min_distance = sqrt(r2);
+                struct reb_orbit* const orbit = rebx_get_param_check(p, "min_distance_orbit", REBX_TYPE_ORBIT);
+                if (orbit){
+                    *orbit = reb_tools_particle_to_orbit(sim->G, *p, *source);
+                }
             }
         }
 	}
