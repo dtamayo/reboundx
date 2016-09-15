@@ -371,6 +371,11 @@ void* rebx_add_param_(void* const object, const char* const param_name, enum reb
             newparam->contents = malloc(sizeof(uint32_t)*newparam->size);
             break;
         }
+        case REBX_TYPE_ORBIT:
+        {
+            newparam->contents = malloc(sizeof(struct reb_orbit)*newparam->size);
+            break;
+        }
     }
     switch(rebx_get_object_type(object)){
         case REBX_OBJECT_TYPE_EFFECT:
