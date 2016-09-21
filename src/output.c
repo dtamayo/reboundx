@@ -23,8 +23,15 @@
  *
  */
 
+#include <stdio.h>
+#include <string.h>
+#include "reboundx.h"
+
+void rebx_write_effect(struct rebx_effect* effect){
+    printf("hi\n");
+}
+
 void rebx_output_binary(struct rebx_extras* rebx, char* filename){
-    //reb_output_binary(sim, filename);
     struct reb_simulation* sim = rebx->sim;
 
     FILE* of = fopen(filename,"wb"); 
@@ -44,39 +51,53 @@ void rebx_output_binary(struct rebx_extras* rebx, char* filename){
         lenheader += 1;
     }
 
+    int neffects=0;
     struct rebx_effect* current = rebx->effects;
     while (current != NULL){
-        fwrite(current, sizeof(struct rebx_effect), 1, of);
-    /*// Output main simulation structure    
-    fwrite(r,sizeof(struct reb_simulation),1,of);
-
-    // Output particles
-    fwrite(r->particles,sizeof(struct reb_particle),r->N,of);
-
-    // Output variational configuration structures
-    if (r->var_config_N){
-        fwrite(r->var_config,sizeof(struct reb_variational_configuration),r->var_config_N,of);
+        current = current->next;
+        neffects++;
     }
     
-    // Output IAS15 temporary arrays (needed for bit-by-bit reproducability)
-    if (r->ri_ias15.allocatedN){
-        int N3 = r->ri_ias15.allocatedN;
-        fwrite(r->ri_ias15.at,sizeof(double),N3,of);
-        fwrite(r->ri_ias15.x0,sizeof(double),N3,of);
-        fwrite(r->ri_ias15.v0,sizeof(double),N3,of);
-        fwrite(r->ri_ias15.a0,sizeof(double),N3,of);
-        fwrite(r->ri_ias15.csx,sizeof(double),N3,of);
-        fwrite(r->ri_ias15.csv,sizeof(double),N3,of);
-        fwrite(r->ri_ias15.csa0,sizeof(double),N3,of);
-        reb_save_dp7(&(r->ri_ias15.g)  ,N3,of);
-        reb_save_dp7(&(r->ri_ias15.b)  ,N3,of);
-        reb_save_dp7(&(r->ri_ias15.csb),N3,of);
-        reb_save_dp7(&(r->ri_ias15.e)  ,N3,of);
-        reb_save_dp7(&(r->ri_ias15.br) ,N3,of);
-        reb_save_dp7(&(r->ri_ias15.er) ,N3,of);
-    }*/
+    while (neffects > 0){
+        current = rebx->effects;
+        for(int i=0;i<neffects-1;i++){
+            current=current->next;
+        }
+        rebx_write_effect(current);
+        neffects--;
+    }
     fclose(of);
 }
+//fwrite(current, sizeof(struct rebx_effect), 1, of);
+/*// Output main simulation structure
+ fwrite(r,sizeof(struct reb_simulation),1,of);
+ 
+ // Output particles
+ fwrite(r->particles,sizeof(struct reb_particle),r->N,of);
+ 
+ // Output variational configuration structures
+ if (r->var_config_N){
+ fwrite(r->var_config,sizeof(struct reb_variational_configuration),r->var_config_N,of);
+ }
+ 
+ // Output IAS15 temporary arrays (needed for bit-by-bit reproducability)
+ if (r->ri_ias15.allocatedN){
+ int N3 = r->ri_ias15.allocatedN;
+ fwrite(r->ri_ias15.at,sizeof(double),N3,of);
+ fwrite(r->ri_ias15.x0,sizeof(double),N3,of);
+ fwrite(r->ri_ias15.v0,sizeof(double),N3,of);
+ fwrite(r->ri_ias15.a0,sizeof(double),N3,of);
+ fwrite(r->ri_ias15.csx,sizeof(double),N3,of);
+ fwrite(r->ri_ias15.csv,sizeof(double),N3,of);
+ fwrite(r->ri_ias15.csa0,sizeof(double),N3,of);
+ reb_save_dp7(&(r->ri_ias15.g)  ,N3,of);
+ reb_save_dp7(&(r->ri_ias15.b)  ,N3,of);
+ reb_save_dp7(&(r->ri_ias15.csb),N3,of);
+ reb_save_dp7(&(r->ri_ias15.e)  ,N3,of);
+ reb_save_dp7(&(r->ri_ias15.br) ,N3,of);
+ reb_save_dp7(&(r->ri_ias15.er) ,N3,of);
+ }*/
+
 /*
 void reb_output_binary_positions(struct reb_simulation* r, char* filename){
     const int N = r->N;

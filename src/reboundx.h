@@ -76,6 +76,7 @@ Basic types in REBOUNDx
 struct rebx_param{
     void* contents;                                 ///< Pointer to the parameter (void* so it can point to different types).
     uint32_t hash;                                  ///< Hash for the parameter name.
+    char* name;                                     ///< String for the parameter's name.
     enum rebx_param_type param_type;                ///< Enum for the parameter type.
 	int ndim;                                       ///< Number of dimensions (to support array parameters)
 	int* shape;                                     ///< Array of length ndim for the array shapes (NULL for scalars).
@@ -89,6 +90,7 @@ struct rebx_param{
  */
 struct rebx_effect{
     uint32_t hash;                                  ///< Hash for the effect's name.
+    char* name;                                     ///< String for the effect's name.
     struct rebx_param* ap;                          ///< Linked list of parameters for the effect.
     void (*force) (struct reb_simulation* sim, struct rebx_effect* effect); ///< Pointer to function to call during forces evaluation.
     void (*ptm) (struct reb_simulation* sim, struct rebx_effect* effect);   ///< Pointer to function to call after each timestep.
@@ -102,7 +104,7 @@ struct rebx_effect{
  */
 struct rebx_object_binary_field{
     enum rebx_object_type object_type;              ///< Type of object
-    long size;                                      ///< Size in bytes of the object data (only what follows, not including this structure). So you can skip ahead.
+    long field_size;                                      ///< Size in bytes of the object data (only what follows, not including this structure). So you can skip ahead.
 };
 
 struct rebx_param_binary_field{
@@ -333,6 +335,8 @@ double rebx_central_force_hamiltonian(struct reb_simulation* const sim);
 
 /** @} */
 /** @} */
+
+void rebx_output_binary(struct rebx_extras* rebx, char* filename);
 
 /********************************
  * Specialized Parameter manipulation functions
