@@ -23,7 +23,7 @@
  *
  */
 
-void rebx_load_effects(struct reb_simulation* sim, char* filename, enum reb_input_binary_messages* warnings){
+/*void rebx_load_effects(struct reb_simulation* sim, char* filename, enum reb_input_binary_messages* warnings){
     FILE* inf = fopen(filename,"rb"); 
     if (inf){
         struct reb_simulation* r = malloc(sizeof(struct reb_simulation));
@@ -119,5 +119,5 @@ void rebx_load_effects(struct reb_simulation* sim, char* filename, enum reb_inpu
     *warnings |= REB_INPUT_BINARY_ERROR_NOFILE;
     return NULL;
 }
-
+*/
 

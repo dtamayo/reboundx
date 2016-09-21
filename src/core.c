@@ -138,6 +138,10 @@ static struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char*
     effect->ptm = NULL;
     effect->rebx = rebx;
     
+    effect->name = malloc(strlen(name) + 1); // +1 for \0 at end
+    if (effect->name != NULL){
+        strcpy(effect->name, name);
+    }
     
     effect->next = rebx->effects;
     rebx->effects = effect;
@@ -363,6 +367,10 @@ void* rebx_add_param_(void* const object, const char* const param_name, enum reb
 	}
     struct rebx_param* newparam = malloc(sizeof(*newparam));
     newparam = rebx_validate_ap_address(newparam);
+    newparam->name = malloc(strlen(param_name) + 1); // +1 for \0 at end
+    if (newparam->name != NULL){
+        strcpy(newparam->name, param_name);
+    }
     newparam->hash = reb_hash(param_name);
     newparam->param_type = param_type;
     newparam->ndim = ndim;
