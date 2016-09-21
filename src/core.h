@@ -30,11 +30,6 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-enum rebx_object_type{										// Internally used enum for identifying structs that can take parameters. 
-    REBX_OBJECT_TYPE_EFFECT=INT_MAX-2,
-    REBX_OBJECT_TYPE_PARTICLE=INT_MAX-1,
-};
-
 // Nodes for a linked list to all the parameters that have been allocated by REBOUNDx (so it can later free them).
 struct rebx_param_to_be_freed{
     struct rebx_param* param;           // Pointer to a parameter node allocated by REBOUNDx.
@@ -75,7 +70,9 @@ void* rebx_add_param_(void* const object, const char* const param_name, enum reb
  * Miscellaneous Functions
 ***********************************************************************************/
 
-double install_test(void);  // Function for testing whether REBOUNDx can load librebound.so and call REBOUND functions. */
+size_t rebx_sizeof(enum rebx_param_type param_type); // Returns size in bytes of the corresponding rebx_param_type type
+
+double install_test(void);  // Function for testing whether REBOUNDx can load librebound.so and call REBOUND functions.
 
 /****************************************
 Effect function prototypes
