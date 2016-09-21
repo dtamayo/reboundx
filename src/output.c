@@ -28,7 +28,7 @@
 #include "reboundx.h"
 
 void rebx_write_effect(struct rebx_effect* effect){
-    printf("hi\n");
+    printf("%s\n", effect->name);
 }
 
 void rebx_output_binary(struct rebx_extras* rebx, char* filename){
