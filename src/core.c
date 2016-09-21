@@ -331,6 +331,28 @@ int rebx_remove_param(const void* const object, const char* const param_name){
     return 0;
 }
 
+size_t rebx_sizeof(enum rebx_param_type param_type){
+    switch(param_type){
+        case REBX_TYPE_DOUBLE:
+        {
+            return sizeof(double);
+        }
+        case REBX_TYPE_INT:
+        {
+            return sizeof(int);
+        }
+        case REBX_TYPE_UINT32:
+        {
+            return sizeof(uint32_t);
+        }
+        case REBX_TYPE_ORBIT:
+        {
+            return sizeof(struct reb_orbit);
+        }
+    }
+    return 0; // type not found
+}
+
 void* rebx_add_param_(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
 	void* ptr = rebx_get_param(object, param_name);
 	if (ptr != NULL){
@@ -355,28 +377,17 @@ void* rebx_add_param_(void* const object, const char* const param_name, enum reb
 		    newparam->size *= shape[i];
 	    }
     }
-    switch(param_type){
-        case REBX_TYPE_DOUBLE:
-        {
-            newparam->contents = malloc(sizeof(double)*newparam->size);
-            break;
-        }
-        case REBX_TYPE_INT:
-        {
-            newparam->contents = malloc(sizeof(int)*newparam->size);
-            break;
-        }
-        case REBX_TYPE_UINT32:
-        {
-            newparam->contents = malloc(sizeof(uint32_t)*newparam->size);
-            break;
-        }
-        case REBX_TYPE_ORBIT:
-        {
-            newparam->contents = malloc(sizeof(struct reb_orbit)*newparam->size);
-            break;
-        }
+    size_t element_size = rebx_sizeof(param_type);
+    if (element_size){
+        newparam->contents = malloc(element_size*newparam->size); // newparam->size = number of elements in array (1 if scalar)
     }
+
+    else{
+        char str[300];
+        sprintf(str, "REBOUNDx Error: Parameter type '%d' passed to rebx_add_param_ not supported.\n", param_type);
+        reb_error(rebx_get_sim(object), str);
+    }
+
     switch(rebx_get_object_type(object)){
         case REBX_OBJECT_TYPE_EFFECT:
         {
