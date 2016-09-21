@@ -131,6 +131,7 @@ class Param(Structure): # need to define fields afterward because of circular re
     pass    
 Param._fields_ =  [("contents", c_void_p),
                         ("hash", c_uint32),
+                        ("name", c_char_p),
                         ("param_type", c_int),
                         ("ndim", c_int),
                         ("shape", POINTER(c_int)),
@@ -144,6 +145,7 @@ class Effect(Structure):
         return params
 
 Effect._fields_ = [ ("hash", c_uint32),
+                    ("name", c_char_p),
                     ("ap", POINTER(Param)),
                     ("force", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))),
                     ("ptm", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))),
