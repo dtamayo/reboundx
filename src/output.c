@@ -34,12 +34,13 @@ void rebx_write_param(struct rebx_param* param, FILE* of){
     fwrite(&field, sizeof(field), 1, of);
     
     long pos_start_effect = ftell(of);
-    struct rebx_binary_param_metadata metadata = {.type = param->param_type, .ndim = param->ndim, .namelength = strlen(param->name)+1L};
-    printf("before metadata %lu\n", ftell(of));
-    fwrite(&metadata, sizeof(metadata), 1, of);
+    size_t namelength = strlen(param->name) + 1; // +1 for \0 at end
+    //printf("bef name %lu\n", ftell(of));
+    fwrite(&namelength, sizeof(namelength), 1, of);
     printf("before name %lu\n", ftell(of));
-    fwrite(param->name, sizeof(*param->name), metadata.namelength, of);
-    printf("ndim %d\n", metadata.ndim);
+    fwrite(param->name, sizeof(*param->name), namelength, of);
+    fwrite(&param->param_type, sizeof(param->param_type), 1, of);
+    fwrite(&param->ndim, sizeof(param->ndim), 1, of);
     printf("before shape %lu\n", ftell(of));
     fwrite(param->shape, sizeof(*param->shape), param->ndim, of);
     printf("after shape %lu\n", ftell(of));

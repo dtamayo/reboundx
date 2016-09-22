@@ -31,21 +31,23 @@
 #include "core.h"
 
 void rebx_load_param(void* const object, struct rebx_binary_field* field, struct rebx_extras* rebx, FILE* inf, enum reb_input_binary_messages* warnings){
-    struct rebx_binary_param_metadata metadata;
-    printf("before metadata %lu\n", ftell(inf));
-    fread(&metadata, sizeof(metadata), 1, inf);
-    printf("%d\t%d\t%lu\n", metadata.type, metadata.ndim, metadata.namelength);
-    
-    char* name = malloc(metadata.namelength);
+    size_t namelength;
+    //printf("aL %lu\n", ftell(inf));
+    fread(&namelength, sizeof(namelength), 1, inf);
+    char* name = malloc(namelength);
     printf("before name %lu\n", ftell(inf));
-    fread(name, sizeof(*name), metadata.namelength, inf);
-    printf("%s\t%lu\t%lu\n", name, strlen(name), metadata.namelength);
-    int* shape = malloc(metadata.ndim*sizeof(*shape));
-    printf("ndim %d\n", metadata.ndim);
+    fread(name, sizeof(*name), namelength, inf);
+    printf("%s\t%lu\t%lu\n", name, strlen(name), namelength);
+    enum rebx_param_type param_type;
+    fread(&param_type, sizeof(param_type), 1, inf);
+    int ndim;
+    fread(&ndim, sizeof(ndim), 1, inf);
+    int* shape = malloc(ndim*sizeof(*shape));
+    printf("ndim %d\n", ndim);
     printf("before shape %lu\n", ftell(inf));
-    fread(shape, sizeof(*shape), metadata.ndim, inf);
+    fread(shape, sizeof(*shape), ndim, inf);
     printf("after shape %lu\n", ftell(inf));
-    struct rebx_param* param = rebx_add_param_node(object, name, metadata.type, metadata.ndim, shape);
+    struct rebx_param* param = rebx_add_param_node(object, name, param_type, ndim, shape);
     free(name);
     free(shape);
     fread(param->contents, rebx_sizeof(param->param_type), param->size, inf);

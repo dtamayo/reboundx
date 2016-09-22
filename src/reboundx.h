@@ -91,7 +91,8 @@ struct rebx_param{
     char* name;                                     ///< String for the parameter's name.
     enum rebx_param_type param_type;                ///< Enum for the parameter type.
 	int ndim;                                       ///< Number of dimensions (to support array parameters)
-	int* shape;                                     ///< Array of length ndim for the array shapes (NULL for scalars).
+	int* shape;                                     ///< Array of length ndim for the array shape (NULL for scalars).
+    int* strides;                                   ///< Strides along the different dimensions for array indexing (NULL for scalars).
 	int size;                                       ///< Total number of values in array (1 for scalars).
     struct rebx_param* next;                        ///< Pointer to the next parameter in the linked list.
 };

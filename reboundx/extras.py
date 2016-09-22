@@ -135,6 +135,7 @@ Param._fields_ =  [("contents", c_void_p),
                         ("param_type", c_int),
                         ("ndim", c_int),
                         ("shape", POINTER(c_int)),
+                        ("strides", POINTER(c_int)),
                         ("size", c_int),
                         ("next", POINTER(Param))]
 
