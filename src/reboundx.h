@@ -61,9 +61,21 @@ enum REBX_COORDINATES{
     REBX_COORDINATES_PARTICLE,                      ///< Coordinates referenced to a particular particle.
 };
 
-enum rebx_object_type{										// Internally used enum for identifying structs that can take parameters. 
+/**
+ * @brief Internally used enum for identifying structs that can take parameters.
+ */
+enum rebx_object_type{
     REBX_OBJECT_TYPE_EFFECT=INT_MAX-2,
     REBX_OBJECT_TYPE_PARTICLE=INT_MAX-1,
+};
+
+/**
+ * @brief Enum for identifying different fields for binary files
+ */
+enum rebx_binary_field_type{
+    REBX_BINARY_FIELD_TYPE_EFFECT=0,
+    REBX_BINARY_FIELD_TYPE_PARTICLE=1,
+    REBX_BINARY_FIELD_TYPE_PARAM=2,
 };
 
 /****************************************
@@ -102,16 +114,15 @@ struct rebx_effect{
 /**
  * @brief This structure is used to save and load binary files.
  */
-struct rebx_object_binary_field{
-    enum rebx_object_type object_type;              ///< Type of object
-    long field_size;                                      ///< Size in bytes of the object data (only what follows, not including this structure). So you can skip ahead.
+struct rebx_binary_field{
+    enum rebx_binary_field_type type;               ///< Type of object
+    long size;                                      ///< Size in bytes of the object data (only what follows, not including this structure). So you can skip ahead.
 };
 
-struct rebx_param_binary_field{
+struct rebx_param_metadata{
     enum rebx_param_type param_type;                ///< Parameter type
     int ndim;                                       ///< Number of dimensions for arrays (0 for scalars)
     int namelength;                                 ///< Length of the parameter name.
-    long field_size;                                ///< Size in bytes of the parameter data (only what follows, not including this structure). So you can skip ahead.
 };
 
 /**
@@ -346,7 +357,7 @@ double rebx_central_force_hamiltonian(struct reb_simulation* const sim);
 /** @} */
 
 void rebx_output_binary(struct rebx_extras* rebx, char* filename);
-
+struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, const char* const filename);
 /********************************
  * Specialized Parameter manipulation functions
  *******************************/
