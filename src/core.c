@@ -49,13 +49,12 @@ struct rebx_extras* rebx_init(struct reb_simulation* sim){  // reboundx.h
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     sim->extras = rebx;
     rebx->sim = sim;
-
-    if(sim->additional_forces || sim->post_timestep_modifications){
-        reb_warning(sim, "sim->additional_forces or sim->post_timestep_modifications was already set.  If you want to use REBOUNDx, you should add custom effects through REBOUNDx also.  See http://reboundx.readthedocs.org/en/latest/c_examples.html#adding-custom-post-timestep-modifications-and-forces for a tutorial.");
-    }
-
 	rebx->params_to_be_freed = NULL;
 	rebx->effects = NULL;
+    
+    if(sim->additional_forces || sim->post_timestep_modifications){
+        reb_warning(sim, "REBOUNDx will overwrite sim->additional_forces and sim->post_timestep_modifications.  If you are using custom functions you wrote and setting them through these function pointers, this won't work.  You should instead add your custom effects through REBOUNDx.  See http://reboundx.readthedocs.org/en/latest/c_examples.html#adding-custom-post-timestep-modifications-and-forces for a tutorial.");
+    }
 }
 
 /*****************************
@@ -256,6 +255,7 @@ static struct reb_simulation* rebx_get_sim(const void* const object){
             return p->sim;
         }
     }
+    return NULL;
 } 
 
 static struct rebx_param* rebx_validate_ap_address(struct rebx_param* newparam){
@@ -362,7 +362,7 @@ size_t rebx_sizeof(enum rebx_param_type param_type){
     return 0; // type not found
 }
 
-void* rebx_add_param_(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
+struct rebx_param* rebx_add_param_node(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
 	void* ptr = rebx_get_param(object, param_name);
 	if (ptr != NULL){
         char str[300];
@@ -417,7 +417,11 @@ void* rebx_add_param_(void* const object, const char* const param_name, enum reb
             break;
         }
     }
-    return newparam->contents;
+    return newparam;
+}
+
+void* rebx_add_param_(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
+    return rebx_add_param_node(object, param_name, param_type, ndim, shape)->contents;
 }
 
 void* rebx_add_param(void* const object, const char* const param_name, enum rebx_param_type param_type){
@@ -482,9 +486,8 @@ void* rebx_get_param_check(const void* const object, const char* const param_nam
     return node->contents;
 }
 
-struct rebx_effect* rebx_get_effect(const void* const object, const char* const effect_name){
-    struct rebx_effect* current;
-    
+struct rebx_effect* rebx_get_effect(struct rebx_extras* const rebx, const char* const effect_name){
+    struct rebx_effect* current = rebx->effects;
     uint32_t hash = reb_hash(effect_name);
     while(current != NULL){
         if(current->hash == hash){

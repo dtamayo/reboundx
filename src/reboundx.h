@@ -119,10 +119,10 @@ struct rebx_binary_field{
     long size;                                      ///< Size in bytes of the object data (only what follows, not including this structure). So you can skip ahead.
 };
 
-struct rebx_param_metadata{
-    enum rebx_param_type param_type;                ///< Parameter type
+struct rebx_binary_param_metadata{
+    enum rebx_param_type type;                      ///< Parameter type
     int ndim;                                       ///< Number of dimensions for arrays (0 for scalars)
-    int namelength;                                 ///< Length of the parameter name.
+    size_t namelength;                                 ///< Length of the parameter name.
 };
 
 /**
@@ -217,7 +217,7 @@ struct rebx_effect* rebx_add_custom_post_timestep_modification(struct rebx_extra
  * @param effect_name Name of the effect (string).
  * @return Pointer to the corresponding rebx_effect structure, or NULL if not found.
  */
-struct rebx_effect* rebx_get_effect(const void* const object, const char* const effect_name);
+struct rebx_effect* rebx_get_effect(struct rebx_extras* const rebx, const char* const effect_name);
 
 /** @} */
 /** @} */
