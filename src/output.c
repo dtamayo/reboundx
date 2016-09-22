@@ -29,17 +29,17 @@
 
 void rebx_write_effect(struct rebx_effect* effect, FILE* of){
     long pos_initial = ftell(of);
-    struct rebx_object_binary_field field = {.object_type = REBX_OBJECT_TYPE_EFFECT, .field_size=0};
-    fwrite(&field, sizeof(struct rebx_object_binary_field), 1, of);
+    struct rebx_binary_field field = {.type = REBX_BINARY_FIELD_TYPE_EFFECT, .size=0};
+    fwrite(&field, sizeof(struct rebx_binary_field), 1, of);
     
     double a = 8;
     double b= 6.;
     fwrite(&a, sizeof(double), 1, of);
     fwrite(&b, sizeof(double), 1, of);
-    field.field_size += 2*sizeof(double);
+    field.size += 2*sizeof(double);
     
     fseek(of, pos_initial, SEEK_SET);
-    fwrite(&field, sizeof(struct rebx_object_binary_field), 1, of);
+    fwrite(&field, sizeof(struct rebx_binary_field), 1, of);
     fseek(of, pos_initial, SEEK_END);
     
     double c=10.;

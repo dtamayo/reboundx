@@ -24,17 +24,20 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "rebound.h"
 #include "reboundx.h"
+#include "core.h"
 
-void rebx_read_binary(struct reb_simulation* sim, char* filename, enum reb_input_binary_messages* warnings){
+static struct rebx_extras* rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum reb_input_binary_messages* warnings){
     FILE* inf = fopen(filename,"rb"); 
     if (inf){
-        struct reb_simulation* r = malloc(sizeof(struct reb_simulation));
         long objects = 0;
         // Input header.
-        const char str[] = "REBOUND Binary File. Version: ";
+        const char str[] = "REBOUNDx Binary File. Version: ";
         char readbuf[65], curvbuf[65];
-        sprintf(curvbuf,"%s%s",str,reb_version_str);
+        sprintf(curvbuf,"%s%s",str,rebx_version_str);
         for(size_t j=strlen(curvbuf);j<63;j++){
             curvbuf[j] = ' ';
         }
@@ -43,84 +46,51 @@ void rebx_read_binary(struct reb_simulation* sim, char* filename, enum reb_input
         if(strcmp(readbuf,curvbuf)!=0){
             *warnings |= REB_INPUT_BINARY_WARNING_VERSION;
         }
-
-        // Read main simulation oject.
-        objects += fread(r,sizeof(struct reb_simulation),1,inf);
-        int ri_ias15_allocatedN = r->ri_ias15.allocatedN;
-        if(reb_reset_function_pointers(r)){
-            *warnings |= REB_INPUT_BINARY_WARNING_POINTERS;
-        }
-        reb_reset_temporary_pointers(r);
-        r->allocatedN = r->N;
-        r->tree_root = NULL;
-
-        // Read particles
-        if (r->N>0){
-            r->particles = malloc(sizeof(struct reb_particle)*r->N);
-            if (r->particles){
-                objects = fread(r->particles,sizeof(struct reb_particle),r->N,inf);
-                if (objects==r->N){
-                    for (int l=0;l<r->N;l++){
-                        r->particles[l].c = NULL;
-                        r->particles[l].ap = NULL;
-                        r->particles[l].sim = r;
-                    }
-                }else{
-                    *warnings |= REB_INPUT_BINARY_WARNING_PARTICLES;
-                }
-            }else{
-                *warnings |= REB_INPUT_BINARY_WARNING_PARTICLES;
+        printf("%s\n", readbuf);
+        struct rebx_binary_field field;
+        size_t elements_read = fread(&field, sizeof(field), 1, inf);
+        switch (field.type){
+            case REBX_BINARY_FIELD_TYPE_EFFECT:
+            {
+                break;
             }
+            case REBX_BINARY_FIELD_TYPE_PARTICLE:
+            {
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_PARAM:
+            {
+                break;
+            }
+            default:
+                *warnings |= REB_INPUT_BINARY_WARNING_FIELD_UNKOWN;
+                fseek(inf,field.size,SEEK_CUR); // type unrecognized (diff version?) try skipping
+                break;
         }
         
-        // Read variational config structures
-        if (r->var_config_N>0){
-            r->var_config = malloc(sizeof(struct reb_variational_configuration)*r->var_config_N);
-            if (r->var_config){
-                objects = fread(r->var_config,sizeof(struct reb_variational_configuration),r->var_config_N,inf);
-                if (objects==r->var_config_N){
-                    for (int l=0;l<r->var_config_N;l++){
-                        r->var_config[l].sim = r;
-                    }
-                }else{
-                    *warnings |= REB_INPUT_BINARY_WARNING_VARCONFIG;
-                }
-            }else{
-                *warnings |= REB_INPUT_BINARY_WARNING_VARCONFIG;
-            }
-        }
-
-        // Read temporary arrays for IAS15 (needed for bit-by-bit reproducability)
-        if (ri_ias15_allocatedN && !(*warnings & REB_INPUT_BINARY_WARNING_PARTICLES)){
-            int N3 = ri_ias15_allocatedN;
-            r->ri_ias15.allocatedN = N3;
-            r->ri_ias15.at = malloc(sizeof(double)*N3);
-            fread(r->ri_ias15.at,sizeof(double),N3,inf);
-            r->ri_ias15.x0 = malloc(sizeof(double)*N3);
-            fread(r->ri_ias15.x0,sizeof(double),N3,inf);
-            r->ri_ias15.v0 = malloc(sizeof(double)*N3);
-            fread(r->ri_ias15.v0,sizeof(double),N3,inf);
-            r->ri_ias15.a0 = malloc(sizeof(double)*N3);
-            fread(r->ri_ias15.a0,sizeof(double),N3,inf);
-            r->ri_ias15.csx = malloc(sizeof(double)*N3);
-            fread(r->ri_ias15.csx,sizeof(double),N3,inf);
-            r->ri_ias15.csv = malloc(sizeof(double)*N3);
-            fread(r->ri_ias15.csv,sizeof(double),N3,inf);
-            r->ri_ias15.csa0 = malloc(sizeof(double)*N3);
-            fread(r->ri_ias15.csa0,sizeof(double),N3,inf);
-            reb_read_dp7(&(r->ri_ias15.g)  ,N3,inf);
-            reb_read_dp7(&(r->ri_ias15.b)  ,N3,inf);
-            reb_read_dp7(&(r->ri_ias15.csb),N3,inf);
-            reb_read_dp7(&(r->ri_ias15.e)  ,N3,inf);
-            reb_read_dp7(&(r->ri_ias15.br) ,N3,inf);
-            reb_read_dp7(&(r->ri_ias15.er) ,N3,inf);
-        }
         fclose(inf);
         
-        return r;
+        return rebx;
     }
     *warnings |= REB_INPUT_BINARY_ERROR_NOFILE;
     return NULL;
 }
-*/
 
+struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, const char* const filename){
+    enum reb_input_binary_messages warnings = REB_INPUT_BINARY_WARNING_NONE;
+    struct rebx_extras* rebx = rebx_init(sim);
+    rebx_create_extras_from_binary_with_messages(rebx, filename, &warnings);
+    
+    if (warnings & REB_INPUT_BINARY_WARNING_VERSION){
+        reb_warning(sim,"REBOUNDx: Binary file was saved with a different version of REBOUNDx. Binary format might have changed and corrupted the loading. Check that effects and parameters are loaded as expected.");
+    }
+    if (warnings & REB_INPUT_BINARY_WARNING_FIELD_UNKOWN){
+        reb_warning(sim,"REBOUNDx: Unknown field found in binary file. Any unknown fields not loaded.  This can happen if the binary was created with a later version of REBOUNDx than the one used to read it.");
+    }
+    if (warnings & REB_INPUT_BINARY_ERROR_NOFILE){
+        reb_error(sim,"REBOUNDx: Cannot read binary file. Check filename and file contents.");
+        rebx_free(rebx);
+        rebx = NULL;
+    }
+    return rebx;
+}
