@@ -54,9 +54,6 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
         reb_warning(sim, "sim->additional_forces or sim->post_timestep_modifications was already set.  If you want to use REBOUNDx, you should add custom effects through REBOUNDx also.  See http://reboundx.readthedocs.org/en/latest/c_examples.html#adding-custom-post-timestep-modifications-and-forces for a tutorial.");
     }
 
-    sim->additional_forces = rebx_forces;
-    sim->post_timestep_modifications = rebx_post_timestep_modifications;
-
 	rebx->params_to_be_freed = NULL;
 	rebx->effects = NULL;
 }
@@ -193,6 +190,14 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
         char str[100]; 
         sprintf(str, "Effect '%s' passed to rebx_add not found.\n", name);
         reb_error(sim, str);
+    }
+    
+    // Make sure function pointers in simulation are set, but only set them if there's at least one REBOUNDx effect using them.
+    if(effect->force){
+        sim->additional_forces = rebx_forces;
+    }
+    if(effect->ptm){
+        sim->post_timestep_modifications = rebx_post_timestep_modifications;
     }
     
     return effect;
