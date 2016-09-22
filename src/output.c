@@ -26,25 +26,80 @@
 #include <stdio.h>
 #include <string.h>
 #include "reboundx.h"
+#include "core.h"
+
+void rebx_write_param(struct rebx_param* param, FILE* of){
+    long pos_rewrite = ftell(of);
+    struct rebx_binary_field field = {.type = REBX_BINARY_FIELD_TYPE_PARAM, .size=0};
+    fwrite(&field, sizeof(field), 1, of);
+    
+    long pos_start_effect = ftell(of);
+    struct rebx_binary_param_metadata metadata = {.type = param->param_type, .ndim = param->ndim, .namelength = strlen(param->name)+1L};
+    printf("before metadata %lu\n", ftell(of));
+    fwrite(&metadata, sizeof(metadata), 1, of);
+    printf("before name %lu\n", ftell(of));
+    fwrite(param->name, sizeof(*param->name), metadata.namelength, of);
+    printf("ndim %d\n", metadata.ndim);
+    printf("before shape %lu\n", ftell(of));
+    fwrite(param->shape, sizeof(*param->shape), param->ndim, of);
+    printf("after shape %lu\n", ftell(of));
+    fwrite(param->contents, rebx_sizeof(param->param_type), param->size, of);
+    printf("after contents %lu\n", ftell(of));
+    
+    /*double a = 8;
+    double b= 6.;
+    fwrite(&a, sizeof(a), 1, of);
+    fwrite(&b, sizeof(b), 1, of);
+    */
+    long pos_end_effect = ftell(of);
+    field.size = pos_end_effect - pos_start_effect;
+    //printf("%lu\t%lu\t%lu\n", pos_start_effect, pos_end_effect, field.size);
+    
+    fseek(of, pos_rewrite, SEEK_SET);
+    fwrite(&field, sizeof(field), 1, of);
+    fseek(of, 0, SEEK_END);
+    //printf("%lu\n", ftell(of));
+}
+    
+void rebx_write_params(struct rebx_param* ap, FILE* of){
+    int nparams=0;
+    struct rebx_param* current = ap;
+    while (current != NULL){
+        current = current->next;
+        nparams++;
+    }
+    
+    while (nparams > 0){
+        current = ap;
+        for(int i=0;i<nparams-1;i++){
+            current=current->next;
+        }
+        rebx_write_param(current, of);
+        nparams--;
+    }
+}
 
 void rebx_write_effect(struct rebx_effect* effect, FILE* of){
-    long pos_initial = ftell(of);
+    //printf("bef effect %lu\n", ftell(of));
+    long pos_rewrite = ftell(of);
     struct rebx_binary_field field = {.type = REBX_BINARY_FIELD_TYPE_EFFECT, .size=0};
-    fwrite(&field, sizeof(struct rebx_binary_field), 1, of);
+    fwrite(&field, sizeof(field), 1, of);
     
-    double a = 8;
-    double b= 6.;
-    fwrite(&a, sizeof(double), 1, of);
-    fwrite(&b, sizeof(double), 1, of);
-    field.size += 2*sizeof(double);
+    long pos_start_effect = ftell(of);
+    size_t namelength = strlen(effect->name) + 1; // +1 for \0 at end
+    //printf("bef name %lu\n", ftell(of));
+    fwrite(&namelength, sizeof(namelength), 1, of);
+    fwrite(effect->name, sizeof(*effect->name), namelength, of);
+    rebx_write_params(effect->ap, of);
     
-    fseek(of, pos_initial, SEEK_SET);
-    fwrite(&field, sizeof(struct rebx_binary_field), 1, of);
-    fseek(of, pos_initial, SEEK_END);
-    
-    double c=10.;
-    fwrite(&c, sizeof(double), 1, of);
-    return;
+    // update size in binary_field to reflect the size of the effect now that we can calculate how big it is
+    long pos_end_effect = ftell(of);
+    field.size = pos_end_effect - pos_start_effect;
+    //printf("%lu\t%lu\t%lu\n", pos_start_effect, pos_end_effect, field.size);
+    fseek(of, pos_rewrite, SEEK_SET);
+    fwrite(&field, sizeof(field), 1, of);
+    fseek(of, 0, SEEK_END);
+    //printf("%lu\n", ftell(of));
 }
 
 void rebx_output_binary(struct rebx_extras* rebx, char* filename){
