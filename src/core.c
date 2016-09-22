@@ -476,6 +476,25 @@ void* rebx_get_param_check(const void* const object, const char* const param_nam
 
     return node->contents;
 }
+
+struct rebx_effect* rebx_get_effect(const void* const object, const char* const effect_name){
+    struct rebx_effect* current;
+    
+    uint32_t hash = reb_hash(effect_name);
+    while(current != NULL){
+        if(current->hash == hash){
+            return current;
+        }
+        current = current->next;
+    }
+    
+    if (current == NULL){   // effect_name not found.  Return immediately.
+        return NULL;
+    }
+    
+    return current;
+}
+
 /***********************************************************************************
  * Miscellaneous Functions
 ***********************************************************************************/

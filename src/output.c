@@ -27,8 +27,24 @@
 #include <string.h>
 #include "reboundx.h"
 
-void rebx_write_effect(struct rebx_effect* effect){
-    printf("%s\n", effect->name);
+void rebx_write_effect(struct rebx_effect* effect, FILE* of){
+    long pos_initial = ftell(of);
+    struct rebx_object_binary_field field = {.object_type = REBX_OBJECT_TYPE_EFFECT, .field_size=0};
+    fwrite(&field, sizeof(struct rebx_object_binary_field), 1, of);
+    
+    double a = 8;
+    double b= 6.;
+    fwrite(&a, sizeof(double), 1, of);
+    fwrite(&b, sizeof(double), 1, of);
+    field.field_size += 2*sizeof(double);
+    
+    fseek(of, pos_initial, SEEK_SET);
+    fwrite(&field, sizeof(struct rebx_object_binary_field), 1, of);
+    fseek(of, pos_initial, SEEK_END);
+    
+    double c=10.;
+    fwrite(&c, sizeof(double), 1, of);
+    return;
 }
 
 void rebx_output_binary(struct rebx_extras* rebx, char* filename){
@@ -63,7 +79,7 @@ void rebx_output_binary(struct rebx_extras* rebx, char* filename){
         for(int i=0;i<neffects-1;i++){
             current=current->next;
         }
-        rebx_write_effect(current);
+        rebx_write_effect(current, of);
         neffects--;
     }
     fclose(of);

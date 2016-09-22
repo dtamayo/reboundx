@@ -161,15 +161,15 @@ void rebx_free(struct rebx_extras* rebx);
 /** @} */
 
 /****************************************
-  Functions for adding effects
+  Functions for manipulating effects
 *****************************************/
 /**
- * \name Functions for adding effects in REBOUNDx
+ * \name Functions for manipulating effects in REBOUNDx
  * @{
  */
 /**
- * @defgroup EffectAdders
- * @details These are the functions for adding effects in REBOUNDx.
+ * @defgroup EffectManipulators
+ * @details These are the functions for manipulating effects in REBOUNDx.
  * @{
  */
 
@@ -199,6 +199,15 @@ struct rebx_effect* rebx_add_custom_force(struct rebx_extras* rebx, const char* 
  * @return Returns a pointer to a rebx_effect structure for the effect.
  */
 struct rebx_effect* rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, const char* name, void (*custom_ptm)(struct reb_simulation* const sim, struct rebx_effect* const effect));
+
+/**
+ * @brief Get a pointer to an effect by name.
+ * @param rebx Pointer to the rebx_extras instance returned by rebx_init.
+ * @param effect_name Name of the effect (string).
+ * @return Pointer to the corresponding rebx_effect structure, or NULL if not found.
+ */
+struct rebx_effect* rebx_get_effect(const void* const object, const char* const effect_name);
+
 /** @} */
 /** @} */
 
