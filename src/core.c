@@ -384,9 +384,10 @@ struct rebx_param* rebx_add_param_node(void* const object, const char* const par
     if (ndim > 0){
 	    size_t shapesize = sizeof(int)*ndim;
 	    newparam->shape = malloc(shapesize);
+        newparam->strides = malloc(shapesize);
 	    memcpy(newparam->shape, shape, shapesize);
-
-	    for(int i=0;i<ndim;i++){
+	    for(int i=ndim-1;i>=0;i--){ // going backward allows us to calculate strides at the same time
+            newparam->strides[i] = newparam->size;  // stride[i] is equal to the product of the shapes for all indices > i
 		    newparam->size *= shape[i];
 	    }
     }
@@ -506,7 +507,6 @@ struct rebx_effect* rebx_get_effect(struct rebx_extras* const rebx, const char* 
 /***********************************************************************************
  * Miscellaneous Functions
 ***********************************************************************************/
-
 double install_test(void){
     struct reb_simulation* sim = reb_create_simulation();
     struct reb_particle p = {0};
