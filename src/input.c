@@ -26,73 +26,136 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include "rebound.h"
 #include "reboundx.h"
 #include "core.h"
 
-void rebx_load_param(void* const object, struct rebx_binary_field* field, struct rebx_extras* rebx, FILE* inf, enum reb_input_binary_messages* warnings){
+#define CASE(typename, value) case REB_BINARY_FIELD_TYPE_##typename: \
+    {\
+    fread(value, field.size,1,inf);\
+    }\
+    break;
+
+void rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, enum rebx_input_binary_messages* warnings){
     size_t namelength;
-    //printf("aL %lu\n", ftell(inf));
-    fread(&namelength, sizeof(namelength), 1, inf);
-    char* name = malloc(namelength);
-    printf("before name %lu\n", ftell(inf));
-    fread(name, sizeof(*name), namelength, inf);
-    printf("%s\t%lu\t%lu\n", name, strlen(name), namelength);
-    enum rebx_param_type param_type;
-    fread(&param_type, sizeof(param_type), 1, inf);
-    int ndim;
-    fread(&ndim, sizeof(ndim), 1, inf);
-    int* shape = malloc(ndim*sizeof(*shape));
-    printf("ndim %d\n", ndim);
-    printf("before shape %lu\n", ftell(inf));
-    fread(shape, sizeof(*shape), ndim, inf);
-    printf("after shape %lu\n", ftell(inf));
-    struct rebx_param* param = rebx_add_param_node(object, name, param_type, ndim, shape);
+    char* name = NULL;
+    enum rebx_param_type param_type = INT_MIN;
+    int ndim = INT_MIN;
+    int* shape = NULL;
+    
+    struct rebx_binary_field field;
+    int reading_fields = 1;
+    while (reading_fields){
+        printf("reading field %lu\n", ftell(inf));
+        fread(&field, sizeof(field), 1, inf);
+        switch (field.type){
+            case REBX_BINARY_FIELD_TYPE_NAME:
+            {
+                printf("before namelength %lu\n", ftell(inf));
+                fread(&namelength, sizeof(namelength), 1, inf);
+                name = malloc(namelength);
+                printf("before name %lu\n", ftell(inf));
+                fread(name, sizeof(*name), namelength, inf);
+                printf("%s\t%lu\t%lu\n", name, strlen(name), namelength);
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_PARAM_TYPE:
+            {
+                printf("before param_type %lu\n", ftell(inf));
+                fread(&param_type, sizeof(param_type), 1, inf);
+                printf("after param_type %lu\n", ftell(inf));
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_SHAPE:
+            {
+                printf("before ndim %lu\n", ftell(inf));
+                fread(&ndim, sizeof(ndim), 1, inf);
+                shape = malloc(ndim*sizeof(*shape));
+                printf("ndim %d\n", ndim);
+                printf("before shape %lu\n", ftell(inf));
+                fread(shape, sizeof(*shape), ndim, inf);
+                printf("after shape %lu\n", ftell(inf));
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_CONTENTS:
+            {
+                if (!name || !shape || param_type == INT_MIN || ndim == INT_MIN){
+                    *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
+                    reading_fields = 0;
+                }
+                else{
+                    struct rebx_param* param = rebx_add_param_node(object, name, param_type, ndim, shape);
+                    printf("before contents %lu\n", ftell(inf));
+                    fread(param->contents, rebx_sizeof(param->param_type), param->size, inf);
+                    printf("after contents %lu\n", ftell(inf));
+                }
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_END:
+            {
+                printf("before end %lu\n", ftell(inf));
+                reading_fields=0;
+                printf("after end %lu\n", ftell(inf));
+                break;
+            }
+            default:
+                *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN;
+                fseek(inf,field.size,SEEK_CUR);
+                break;
+        }
+    }
     free(name);
     free(shape);
-    fread(param->contents, rebx_sizeof(param->param_type), param->size, inf);
-    printf("after contents %lu\n", ftell(inf));
-}
-    
-static size_t rebx_load_effect(struct rebx_binary_field* field, struct rebx_extras* rebx, FILE* inf, enum reb_input_binary_messages* warnings){
-    size_t namelength;
-    //printf("aL %lu\n", ftell(inf));
-    fread(&namelength, sizeof(namelength), 1, inf);
-    char* name = malloc(namelength);
-    fread(name, sizeof(*name), namelength, inf);
-    printf("%s\t%lu\t%lu\n", name, strlen(name), namelength);
-    struct rebx_effect* effect = rebx_add(rebx, name);
-    free(name);
-    /*fseek(inf, field.size, SEEK_CUR);
-     size_t elements_read = fread(&field, sizeof(field), 1, inf);
-     printf("%lu\n", field.size);
-     */
-    /*double a,b;
-    if(!fread(&a, sizeof(a), 1, inf)){
-        *warnings |= REB_INPUT_BINARY_WARNING_INCOMPATIBLE_FORMAT;
-        return 0;
-    }
-    if(!fread(&b, sizeof(b), 1, inf)){
-        *warnings |= REB_INPUT_BINARY_WARNING_INCOMPATIBLE_FORMAT;
-        return 0;
-    }
-    
-    printf("%f\t%f\n", a, b);*/
-    //printf("bef next read %lu\n", ftell(inf));
-    size_t field_successfully_read = fread(field, sizeof(*field), 1, inf);
-    while(field_successfully_read && field->type == REBX_BINARY_FIELD_TYPE_PARAM){
-        rebx_load_param(effect, field, rebx, inf, warnings);
-        field_successfully_read = fread(field, sizeof(*field), 1, inf);
-    }
-    //printf("%lu", sizeof(field));
-    //printf("after read %lu\n", ftell(inf));
-    return field_successfully_read;
 }
 
-static void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum reb_input_binary_messages* warnings){
+static void rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
+    size_t namelength;
+    char* name = NULL;
+    
+    struct rebx_effect* effect;
+    struct rebx_binary_field field;
+    int reading_fields = 1;
+    while (reading_fields){
+        printf("reading field %lu\n", ftell(inf));
+        fread(&field, sizeof(field), 1, inf);
+        switch (field.type){
+            case REBX_BINARY_FIELD_TYPE_NAME:
+            {
+                printf("before namelength %lu\n", ftell(inf));
+                fread(&namelength, sizeof(namelength), 1, inf);
+                name = malloc(namelength);
+                printf("before name %lu\n", ftell(inf));
+                fread(name, sizeof(*name), namelength, inf);
+                printf("%s\t%lu\t%lu\n", name, strlen(name), namelength);
+                effect = rebx_add(rebx, name);
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_PARAM:
+            {
+                rebx_load_param(rebx, effect, inf, warnings);
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_END:
+            {
+                printf("before end %lu\n", ftell(inf));
+                reading_fields=0;
+                printf("after end %lu\n", ftell(inf));
+                break;
+            }
+            default:
+                *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN;
+                fseek(inf,field.size,SEEK_CUR);
+                break;
+        }
+    }
+    free(name);
+}
+
+static void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings){
     FILE* inf = fopen(filename,"rb");
     if (!inf){
-        *warnings |= REB_INPUT_BINARY_ERROR_NOFILE;
+        *warnings |= REBX_INPUT_BINARY_ERROR_NOFILE;
         return;
     }
     
@@ -107,50 +170,55 @@ static void rebx_create_extras_from_binary_with_messages(struct rebx_extras* reb
     curvbuf[63] = '\0';
     objects += fread(readbuf,sizeof(*str),64,inf);
     if(strcmp(readbuf,curvbuf)!=0){
-        *warnings |= REB_INPUT_BINARY_WARNING_VERSION;
+        *warnings |= REBX_INPUT_BINARY_WARNING_VERSION;
     }
     printf("%s\n", readbuf);
+    
     struct rebx_binary_field field;
-    size_t field_successfully_read = fread(&field, sizeof(field), 1, inf); // fread will return 1 if it successfully read 1 element
-    printf("%lu\n", field.size);
-    while(field_successfully_read) {
+    int reading_fields = 1;
+    while (reading_fields){
+        printf("reading field %lu\n", ftell(inf));
+        fread(&field, sizeof(field), 1, inf);
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_EFFECT:
             {
-                field_successfully_read = rebx_load_effect(&field, rebx, inf, warnings);
+                rebx_load_effect(rebx, inf, warnings);
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_PARTICLE:
             {
                 break;
             }
-            case REBX_BINARY_FIELD_TYPE_PARAM:
+            case REBX_BINARY_FIELD_TYPE_END:
             {
+                printf("before end %lu\n", ftell(inf));
+                reading_fields=0;
+                printf("after end %lu\n", ftell(inf));
                 break;
             }
             default:
-                *warnings |= REB_INPUT_BINARY_WARNING_FIELD_UNKOWN;
-                fseek(inf,field.size,SEEK_CUR); // type unrecognized (diff version?) try skipping
+                *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN;
+                fseek(inf,field.size,SEEK_CUR);
                 break;
         }
     }
-    
+
     fclose(inf);
     return;
 }
 
 struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, const char* const filename){
-    enum reb_input_binary_messages warnings = REB_INPUT_BINARY_WARNING_NONE;
+    enum rebx_input_binary_messages warnings = REBX_INPUT_BINARY_WARNING_NONE;
     struct rebx_extras* rebx = rebx_init(sim);
     rebx_create_extras_from_binary_with_messages(rebx, filename, &warnings);
     
-    if (warnings & REB_INPUT_BINARY_WARNING_VERSION){
+    if (warnings & REBX_INPUT_BINARY_WARNING_VERSION){
         reb_warning(sim,"REBOUNDx: Binary file was saved with a different version of REBOUNDx. Binary format might have changed and corrupted the loading. Check that effects and parameters are loaded as expected.");
     }
-    if (warnings & REB_INPUT_BINARY_WARNING_FIELD_UNKOWN){
+    if (warnings & REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN){
         reb_warning(sim,"REBOUNDx: Unknown field found in binary file. Any unknown fields not loaded.  This can happen if the binary was created with a later version of REBOUNDx than the one used to read it.");
     }
-    if (warnings & REB_INPUT_BINARY_ERROR_NOFILE){
+    if (warnings & REBX_INPUT_BINARY_ERROR_NOFILE){
         reb_error(sim,"REBOUNDx: Cannot read binary file. Check filename and file contents.");
         rebx_free(rebx);
         rebx = NULL;
