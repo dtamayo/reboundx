@@ -382,6 +382,8 @@ double rebx_central_force_hamiltonian(struct reb_simulation* const sim);
 
 void rebx_output_binary(struct rebx_extras* rebx, char* filename);
 struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, const char* const filename);
+void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings);
+
 /********************************
  * Specialized Parameter manipulation functions
  *******************************/

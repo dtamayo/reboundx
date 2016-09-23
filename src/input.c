@@ -184,6 +184,7 @@ static void rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_inpu
 }
 
 static void rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
+    fprintf(stderr, "loading particle\n");
     struct reb_particle* p = NULL;
     struct rebx_binary_field field;
     int reading_fields = 1;
@@ -224,7 +225,7 @@ static void rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_in
 }
 
 
-static void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings){
+void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings){
     FILE* inf = fopen(filename,"rb");
     if (!inf){
         *warnings |= REBX_INPUT_BINARY_ERROR_NOFILE;
