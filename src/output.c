@@ -28,41 +28,88 @@
 #include "reboundx.h"
 #include "core.h"
 
-void rebx_write_param(struct rebx_param* param, FILE* of){
-    long pos_rewrite = ftell(of);
-    struct rebx_binary_field field = {.type = REBX_BINARY_FIELD_TYPE_PARAM, .size=0};
-    fwrite(&field, sizeof(field), 1, of);
+static void rebx_write_param(struct rebx_param* param, FILE* of){
+    long pos_param_rewrite = ftell(of);
+    struct rebx_binary_field param_field = {.type = REBX_BINARY_FIELD_TYPE_PARAM, .size=0};
+    printf("before param_field %lu\n", ftell(of));
+    fwrite(&param_field, sizeof(param_field), 1, of);
+    printf("after param_field %lu\n", ftell(of));
+    long pos_start_param = ftell(of);
     
-    long pos_start_effect = ftell(of);
+    struct rebx_binary_field field;
+    long pos_field_rewrite, pos_start_field, pos_end_field;
+    
+    // Write simple fields we know the length of ahead of time
+    field.type = REBX_BINARY_FIELD_TYPE_PARAM_TYPE;
+    field.size = sizeof(param->param_type);
+    printf("before param_type_field %lu\n", ftell(of));
+    fwrite(&field, sizeof(field), 1, of);
+    printf("after param_type_field %lu\n", ftell(of));
+    fwrite(&param->param_type, sizeof(param->param_type), 1, of);
+    printf("after param_type value %lu\n", ftell(of));
+    
+    // Write variable-sized fields by caching file position and then overwriting at end
+    
+    field.type = REBX_BINARY_FIELD_TYPE_NAME; // update size at the end
+    pos_field_rewrite = ftell(of);
+    fwrite(&field, sizeof(field), 1, of);
+    pos_start_field = ftell(of);
     size_t namelength = strlen(param->name) + 1; // +1 for \0 at end
-    //printf("bef name %lu\n", ftell(of));
     fwrite(&namelength, sizeof(namelength), 1, of);
     printf("before name %lu\n", ftell(of));
     fwrite(param->name, sizeof(*param->name), namelength, of);
-    fwrite(&param->param_type, sizeof(param->param_type), 1, of);
+    pos_end_field = ftell(of);
+    field.size = pos_end_field - pos_start_field;
+    //printf("%lu\t%lu\t%lu\n", pos_start_effect, pos_end_effect, field.size);
+    fseek(of, pos_field_rewrite, SEEK_SET);
+    fwrite(&field, sizeof(field), 1, of);
+    fseek(of, 0, SEEK_END);
+    
+    field.type = REBX_BINARY_FIELD_TYPE_SHAPE;
+    pos_field_rewrite = ftell(of);
+    fwrite(&field, sizeof(field), 1, of);
+    pos_start_field = ftell(of);
     fwrite(&param->ndim, sizeof(param->ndim), 1, of);
     printf("before shape %lu\n", ftell(of));
     fwrite(param->shape, sizeof(*param->shape), param->ndim, of);
     printf("after shape %lu\n", ftell(of));
+    pos_end_field = ftell(of);
+    field.size = pos_end_field - pos_start_field;
+    //printf("%lu\t%lu\t%lu\n", pos_start_effect, pos_end_effect, field.size);
+    fseek(of, pos_field_rewrite, SEEK_SET);
+    fwrite(&field, sizeof(field), 1, of);
+    fseek(of, 0, SEEK_END);
+    
+    // CONTENTS must come after PARAM_TYPE, NAME AND SHAPE
+    field.type = REBX_BINARY_FIELD_TYPE_CONTENTS;
+    pos_field_rewrite = ftell(of);
+    fwrite(&field, sizeof(field), 1, of);
+    pos_start_field = ftell(of);
     fwrite(param->contents, rebx_sizeof(param->param_type), param->size, of);
     printf("after contents %lu\n", ftell(of));
-    
-    /*double a = 8;
-    double b= 6.;
-    fwrite(&a, sizeof(a), 1, of);
-    fwrite(&b, sizeof(b), 1, of);
-    */
-    long pos_end_effect = ftell(of);
-    field.size = pos_end_effect - pos_start_effect;
+    pos_end_field = ftell(of);
+    field.size = pos_end_field - pos_start_field;
     //printf("%lu\t%lu\t%lu\n", pos_start_effect, pos_end_effect, field.size);
-    
-    fseek(of, pos_rewrite, SEEK_SET);
+    fseek(of, pos_field_rewrite, SEEK_SET);
     fwrite(&field, sizeof(field), 1, of);
+    fseek(of, 0, SEEK_END);
+
+    // Write end marker
+    field.type = REBX_BINARY_FIELD_TYPE_END;
+    field.size = 0;
+    fwrite(&field, sizeof(field), 1, of);
+    
+    // Go back and write size of entire parameter and reset file position to end of file
+    long pos_end_param = ftell(of);
+    param_field.size = pos_end_param - pos_start_param;
+    //printf("%lu\t%lu\t%lu\n", pos_start_effect, pos_end_effect, field.size);
+    fseek(of, pos_param_rewrite, SEEK_SET);
+    fwrite(&param_field, sizeof(param_field), 1, of);
     fseek(of, 0, SEEK_END);
     //printf("%lu\n", ftell(of));
 }
     
-void rebx_write_params(struct rebx_param* ap, FILE* of){
+static void rebx_write_params(struct rebx_param* ap, FILE* of){
     int nparams=0;
     struct rebx_param* current = ap;
     while (current != NULL){
@@ -80,8 +127,52 @@ void rebx_write_params(struct rebx_param* ap, FILE* of){
     }
 }
 
-void rebx_write_effect(struct rebx_effect* effect, FILE* of){
-    //printf("bef effect %lu\n", ftell(of));
+static void rebx_write_effect(struct rebx_effect* effect, FILE* of){
+    long pos_effect_rewrite = ftell(of);
+    struct rebx_binary_field effect_field = {.type = REBX_BINARY_FIELD_TYPE_EFFECT, .size=0};
+    printf("before effect_field %lu\n", ftell(of));
+    fwrite(&effect_field, sizeof(effect_field), 1, of);
+    printf("after effect_field %lu\n", ftell(of));
+    long pos_start_effect = ftell(of);
+    
+    struct rebx_binary_field field;
+    long pos_field_rewrite, pos_start_field, pos_end_field;
+
+    // Write variable-sized fields by caching file position and then overwriting at end
+    
+    field.type = REBX_BINARY_FIELD_TYPE_NAME; // update size at the end
+    pos_field_rewrite = ftell(of);
+    fwrite(&field, sizeof(field), 1, of);
+    pos_start_field = ftell(of);
+    size_t namelength = strlen(effect->name) + 1; // +1 for \0 at end
+    fwrite(&namelength, sizeof(namelength), 1, of);
+    printf("before name %lu\n", ftell(of));
+    fwrite(effect->name, sizeof(*effect->name), namelength, of);
+    pos_end_field = ftell(of);
+    field.size = pos_end_field - pos_start_field;
+    //printf("%lu\t%lu\t%lu\n", pos_start_effect, pos_end_effect, field.size);
+    fseek(of, pos_field_rewrite, SEEK_SET);
+    fwrite(&field, sizeof(field), 1, of);
+    fseek(of, 0, SEEK_END);
+
+    // Write all parameters
+    rebx_write_params(effect->ap, of);
+    
+    // Write end marker
+    field.type = REBX_BINARY_FIELD_TYPE_END;
+    field.size = 0;
+    fwrite(&field, sizeof(field), 1, of);
+    
+    // Go back and write size of entire parameter and reset file position to end of file
+    long pos_end_effect = ftell(of);
+    effect_field.size = pos_end_effect - pos_start_effect;
+    //printf("%lu\t%lu\t%lu\n", pos_start_effect, pos_end_effect, field.size);
+    fseek(of, pos_effect_rewrite, SEEK_SET);
+    fwrite(&effect_field, sizeof(effect_field), 1, of);
+    fseek(of, 0, SEEK_END);
+    //printf("%lu\n", ftell(of));
+    
+    /*//printf("bef effect %lu\n", ftell(of));
     long pos_rewrite = ftell(of);
     struct rebx_binary_field field = {.type = REBX_BINARY_FIELD_TYPE_EFFECT, .size=0};
     fwrite(&field, sizeof(field), 1, of);
@@ -100,7 +191,7 @@ void rebx_write_effect(struct rebx_effect* effect, FILE* of){
     fseek(of, pos_rewrite, SEEK_SET);
     fwrite(&field, sizeof(field), 1, of);
     fseek(of, 0, SEEK_END);
-    //printf("%lu\n", ftell(of));
+    //printf("%lu\n", ftell(of));*/
 }
 
 void rebx_output_binary(struct rebx_extras* rebx, char* filename){
@@ -138,58 +229,9 @@ void rebx_output_binary(struct rebx_extras* rebx, char* filename){
         rebx_write_effect(current, of);
         neffects--;
     }
+    
+    // Write end marker for binary
+    struct rebx_binary_field field = {.type = REBX_BINARY_FIELD_TYPE_END, .size=0};
+    fwrite(&field, sizeof(field), 1, of);
     fclose(of);
 }
-//fwrite(current, sizeof(struct rebx_effect), 1, of);
-/*// Output main simulation structure
- fwrite(r,sizeof(struct reb_simulation),1,of);
- 
- // Output particles
- fwrite(r->particles,sizeof(struct reb_particle),r->N,of);
- 
- // Output variational configuration structures
- if (r->var_config_N){
- fwrite(r->var_config,sizeof(struct reb_variational_configuration),r->var_config_N,of);
- }
- 
- // Output IAS15 temporary arrays (needed for bit-by-bit reproducability)
- if (r->ri_ias15.allocatedN){
- int N3 = r->ri_ias15.allocatedN;
- fwrite(r->ri_ias15.at,sizeof(double),N3,of);
- fwrite(r->ri_ias15.x0,sizeof(double),N3,of);
- fwrite(r->ri_ias15.v0,sizeof(double),N3,of);
- fwrite(r->ri_ias15.a0,sizeof(double),N3,of);
- fwrite(r->ri_ias15.csx,sizeof(double),N3,of);
- fwrite(r->ri_ias15.csv,sizeof(double),N3,of);
- fwrite(r->ri_ias15.csa0,sizeof(double),N3,of);
- reb_save_dp7(&(r->ri_ias15.g)  ,N3,of);
- reb_save_dp7(&(r->ri_ias15.b)  ,N3,of);
- reb_save_dp7(&(r->ri_ias15.csb),N3,of);
- reb_save_dp7(&(r->ri_ias15.e)  ,N3,of);
- reb_save_dp7(&(r->ri_ias15.br) ,N3,of);
- reb_save_dp7(&(r->ri_ias15.er) ,N3,of);
- }*/
-
-/*
-void reb_output_binary_positions(struct reb_simulation* r, char* filename){
-    const int N = r->N;
-#ifdef MPI
-    char filename_mpi[1024];
-    sprintf(filename_mpi,"%s_%d",filename,r->mpi_id);
-    FILE* of = fopen(filename_mpi,"wb"); 
-#else // MPI
-    FILE* of = fopen(filename,"wb"); 
-#endif // MPI
-    if (of==NULL){
-        reb_exit("Can not open file.");
-    }
-    for (int i=0;i<N;i++){
-        struct reb_vec3d v;
-        v.x = r->particles[i].x;
-        v.y = r->particles[i].y;
-        v.z = r->particles[i].z;
-        fwrite(&(v),sizeof(struct reb_vec3d),1,of);
-    }
-    fclose(of);
-}
-*/
