@@ -3,6 +3,13 @@ from ctypes import Structure, c_double, POINTER, c_int, c_uint, c_long, c_ulong,
 import rebound
 import reboundx
 
+REBX_BINARY_WARNINGS = [
+    ("Cannot read binary file. Check filename and file contents.", 1),
+    ("Binary file was saved with a different version of REBOUND. Binary format might have changed.", 2),
+    ("You have to reset function pointers after creating a reb_simulation struct with a binary file.", 4),
+    ("Binary file might be corrupted. Number of particles found does not match particle number expected.", 8),
+    ("Unknown field found in binary file.", 128)
+]
 
 class Extras(Structure):
     """
@@ -23,6 +30,34 @@ class Extras(Structure):
         sim._extras_ref = self # add a reference to this instance in sim to make sure it's not garbage collected
         self.custom_effects = {} # dictionary to keep references to custom effects so they don't get garbage collected
 
+    @classmethod
+    def from_file(cls, sim, filename):
+        """
+        Loads REBOUNDx effects along with effect and particle parameters from a binary file.
+        
+        Arguments
+        ---------
+        filename : str
+            Filename of the binary file.
+        
+        Returns
+        ------- 
+        A reboundx.Extras object.
+        
+        """
+        w = c_int(0)
+        clibreboundx.rebx_init.restype = POINTER(Extras)
+        extrasp = clibreboundx.rebx_init(byref(sim))
+        clibreboundx.rebx_create_extras_from_binary_with_messages(extrasp, c_char_p(filename.encode("ascii")),byref(w))
+        if (extrasp is None) or (w.value & 1):     # Major error
+            raise ValueError(REBX_BINARY_WARNINGS[0])
+        for message, value in REBX_BINARY_WARNINGS:  # Just warnings
+            if w.value & value and value!=1:
+                warnings.warn(message, RuntimeWarning)
+        extras = extrasp.contents
+        sim.save_messages = 1 # Warnings will be checked within python
+        return extras 
+
     def __del__(self):
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_effects(byref(self))
@@ -36,7 +71,7 @@ class Extras(Structure):
         clibreboundx.rebx_remove_from_simulation(byref(sim))
 
     #######################################
-    # Functions for adding REBOUNDx effects
+    # Functions for manipulating REBOUNDx effects
     #######################################
 
     def add(self, name):
@@ -83,6 +118,24 @@ class Extras(Structure):
         clibreboundx.rebx_add_custom_post_timestep_modification.restype = POINTER(Effect)
         ptr = clibreboundx.rebx_add_custom_post_timestep_modification(byref(self), c_char_p(function.__name__.encode('ascii')), self.custom_effects[function.__name__])
         return ptr.contents
+    
+    def get_effect(self, name):
+        clibreboundx.rebx_get_effect.restype = POINTER(Effect)
+        ptr = clibreboundx.rebx_get_effect(byref(self), c_char_p(name.encode('ascii')))
+        if ptr:
+            return ptr.contents
+        else:
+            warnings.warn("Parameter {0} not found".format(name), RuntimeWarning)
+            return
+    
+    #######################################
+    # Input/Output Routines
+    #######################################
+    def save(self, filename):
+        """
+        Save the entire REBOUND simulation to a binary file.
+        """
+        clibreboundx.rebx_output_binary(byref(self), c_char_p(filename.encode("ascii")))
 
     #######################################
     # Convenience Functions

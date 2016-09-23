@@ -197,27 +197,44 @@ static void rebx_write_effect(struct rebx_effect* effect, FILE* of){
     fwrite(&effect_field, sizeof(effect_field), 1, of);
     fseek(of, 0, SEEK_END);
     //printf("%lu\n", ftell(of));
+}
+
+static void rebx_write_particle(struct reb_particle* particle, int index, FILE* of){
+    long pos_particle_rewrite = ftell(of);
+    struct rebx_binary_field particle_field = {.type = REBX_BINARY_FIELD_TYPE_PARTICLE, .size=0};
+    //printf("before particle_field %lu\n", ftell(of));
+    fwrite(&particle_field, sizeof(particle_field), 1, of);
+    //printf("after particle_field %lu\n", ftell(of));
+    long pos_start_particle = ftell(of);
     
-    /*//printf("bef effect %lu\n", ftell(of));
-    long pos_rewrite = ftell(of);
-    struct rebx_binary_field field = {.type = REBX_BINARY_FIELD_TYPE_EFFECT, .size=0};
+    struct rebx_binary_field field;
+    
+    // Write simple fields we know the length of ahead of time
+    
+    field.type = REBX_BINARY_FIELD_TYPE_PARTICLE_INDEX;
+    field.size = sizeof(index);
+    //printf("before namelength field %lu\n", ftell(of));
+    fwrite(&field, sizeof(field), 1, of);
+    //printf("before namelength value %lu\n", ftell(of));
+    fwrite(&index, sizeof(index), 1, of);
+    //printf("after namelength value %lu\n", ftell(of));
+    
+    // Write all parameters
+    rebx_write_params(particle->ap, of);
+    
+    // Write end marker
+    field.type = REBX_BINARY_FIELD_TYPE_END;
+    field.size = 0;
     fwrite(&field, sizeof(field), 1, of);
     
-    long pos_start_effect = ftell(of);
-    size_t namelength = strlen(effect->name) + 1; // +1 for \0 at end
-    //printf("bef name %lu\n", ftell(of));
-    fwrite(&namelength, sizeof(namelength), 1, of);
-    fwrite(effect->name, sizeof(*effect->name), namelength, of);
-    rebx_write_params(effect->ap, of);
-    
-    // update size in binary_field to reflect the size of the effect now that we can calculate how big it is
-    long pos_end_effect = ftell(of);
-    field.size = pos_end_effect - pos_start_effect;
-    //printf("%lu\t%lu\t%lu\n", pos_start_effect, pos_end_effect, field.size);
-    fseek(of, pos_rewrite, SEEK_SET);
-    fwrite(&field, sizeof(field), 1, of);
+    // Go back and write size of entire parameter and reset file position to end of file
+    long pos_end_particle = ftell(of);
+    particle_field.size = pos_end_particle - pos_start_particle;
+    //printf("%lu\t%lu\t%lu\n", pos_start_particle, pos_end_particle, field.size);
+    fseek(of, pos_particle_rewrite, SEEK_SET);
+    fwrite(&particle_field, sizeof(particle_field), 1, of);
     fseek(of, 0, SEEK_END);
-    //printf("%lu\n", ftell(of));*/
+    //printf("%lu\n", ftell(of));
 }
 
 void rebx_output_binary(struct rebx_extras* rebx, char* filename){
@@ -254,6 +271,10 @@ void rebx_output_binary(struct rebx_extras* rebx, char* filename){
         }
         rebx_write_effect(current, of);
         neffects--;
+    }
+    
+    for (int i=0; i<sim->N; i++){
+        rebx_write_particle(&sim->particles[i], i, of);
     }
     
     // Write end marker for binary
