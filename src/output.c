@@ -40,6 +40,7 @@ static void rebx_write_param(struct rebx_param* param, FILE* of){
     long pos_field_rewrite, pos_start_field, pos_end_field;
     
     // Write simple fields we know the length of ahead of time
+    
     field.type = REBX_BINARY_FIELD_TYPE_PARAM_TYPE;
     field.size = sizeof(param->param_type);
     printf("before param_type_field %lu\n", ftell(of));
@@ -48,14 +49,29 @@ static void rebx_write_param(struct rebx_param* param, FILE* of){
     fwrite(&param->param_type, sizeof(param->param_type), 1, of);
     printf("after param_type value %lu\n", ftell(of));
     
+    field.type = REBX_BINARY_FIELD_TYPE_NDIM;
+    field.size = sizeof(param->ndim);
+    printf("before ndim field %lu\n", ftell(of));
+    fwrite(&field, sizeof(field), 1, of);
+    printf("before ndim value %lu\n", ftell(of));
+    fwrite(&param->ndim, sizeof(param->ndim), 1, of);
+    printf("after ndim value %lu\n", ftell(of));
+    
+    field.type = REBX_BINARY_FIELD_TYPE_NAMELENGTH;
+    size_t namelength = strlen(param->name) + 1; // +1 for \0 at end
+    field.size = sizeof(namelength);
+    printf("before namelength field %lu\n", ftell(of));
+    fwrite(&field, sizeof(field), 1, of);
+    printf("before namelength value %lu\n", ftell(of));
+    fwrite(&namelength, sizeof(namelength), 1, of);
+    printf("after namelength value %lu\n", ftell(of));
+    
     // Write variable-sized fields by caching file position and then overwriting at end
     
     field.type = REBX_BINARY_FIELD_TYPE_NAME; // update size at the end
     pos_field_rewrite = ftell(of);
     fwrite(&field, sizeof(field), 1, of);
     pos_start_field = ftell(of);
-    size_t namelength = strlen(param->name) + 1; // +1 for \0 at end
-    fwrite(&namelength, sizeof(namelength), 1, of);
     printf("before name %lu\n", ftell(of));
     fwrite(param->name, sizeof(*param->name), namelength, of);
     pos_end_field = ftell(of);
@@ -65,22 +81,23 @@ static void rebx_write_param(struct rebx_param* param, FILE* of){
     fwrite(&field, sizeof(field), 1, of);
     fseek(of, 0, SEEK_END);
     
-    field.type = REBX_BINARY_FIELD_TYPE_SHAPE;
-    pos_field_rewrite = ftell(of);
-    fwrite(&field, sizeof(field), 1, of);
-    pos_start_field = ftell(of);
-    fwrite(&param->ndim, sizeof(param->ndim), 1, of);
-    printf("before shape %lu\n", ftell(of));
-    fwrite(param->shape, sizeof(*param->shape), param->ndim, of);
-    printf("after shape %lu\n", ftell(of));
-    pos_end_field = ftell(of);
-    field.size = pos_end_field - pos_start_field;
-    //printf("%lu\t%lu\t%lu\n", pos_start_effect, pos_end_effect, field.size);
-    fseek(of, pos_field_rewrite, SEEK_SET);
-    fwrite(&field, sizeof(field), 1, of);
-    fseek(of, 0, SEEK_END);
+    if(param->ndim > 0){
+        field.type = REBX_BINARY_FIELD_TYPE_SHAPE;
+        pos_field_rewrite = ftell(of);
+        fwrite(&field, sizeof(field), 1, of);
+        pos_start_field = ftell(of);
+        printf("before shape %lu\n", ftell(of));
+        fwrite(param->shape, sizeof(*param->shape), param->ndim, of);
+        printf("after shape %lu\n", ftell(of));
+        pos_end_field = ftell(of);
+        field.size = pos_end_field - pos_start_field;
+        //printf("%lu\t%lu\t%lu\n", pos_start_effect, pos_end_effect, field.size);
+        fseek(of, pos_field_rewrite, SEEK_SET);
+        fwrite(&field, sizeof(field), 1, of);
+        fseek(of, 0, SEEK_END);
+    }
     
-    // CONTENTS must come after PARAM_TYPE, NAME AND SHAPE
+    // CONTENTS must come after PARAM_TYPE, NAME, NDIM AND SHAPE
     field.type = REBX_BINARY_FIELD_TYPE_CONTENTS;
     pos_field_rewrite = ftell(of);
     fwrite(&field, sizeof(field), 1, of);
@@ -138,14 +155,23 @@ static void rebx_write_effect(struct rebx_effect* effect, FILE* of){
     struct rebx_binary_field field;
     long pos_field_rewrite, pos_start_field, pos_end_field;
 
+    // Write simple fields we know the length of ahead of time
+    
+    field.type = REBX_BINARY_FIELD_TYPE_NAMELENGTH;
+    size_t namelength = strlen(effect->name) + 1; // +1 for \0 at end
+    field.size = sizeof(namelength);
+    printf("before namelength field %lu\n", ftell(of));
+    fwrite(&field, sizeof(field), 1, of);
+    printf("before namelength value %lu\n", ftell(of));
+    fwrite(&namelength, sizeof(namelength), 1, of);
+    printf("after namelength value %lu\n", ftell(of));
+    
     // Write variable-sized fields by caching file position and then overwriting at end
     
     field.type = REBX_BINARY_FIELD_TYPE_NAME; // update size at the end
     pos_field_rewrite = ftell(of);
     fwrite(&field, sizeof(field), 1, of);
     pos_start_field = ftell(of);
-    size_t namelength = strlen(effect->name) + 1; // +1 for \0 at end
-    fwrite(&namelength, sizeof(namelength), 1, of);
     printf("before name %lu\n", ftell(of));
     fwrite(effect->name, sizeof(*effect->name), namelength, of);
     pos_end_field = ftell(of);

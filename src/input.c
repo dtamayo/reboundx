@@ -38,28 +38,18 @@
     break;
 
 void rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, enum rebx_input_binary_messages* warnings){
-    size_t namelength;
+    size_t namelength = 0;
     char* name = NULL;
     enum rebx_param_type param_type = INT_MIN;
     int ndim = INT_MIN;
     int* shape = NULL;
-    
+
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
         printf("reading field %lu\n", ftell(inf));
         fread(&field, sizeof(field), 1, inf);
         switch (field.type){
-            case REBX_BINARY_FIELD_TYPE_NAME:
-            {
-                printf("before namelength %lu\n", ftell(inf));
-                fread(&namelength, sizeof(namelength), 1, inf);
-                name = malloc(namelength);
-                printf("before name %lu\n", ftell(inf));
-                fread(name, sizeof(*name), namelength, inf);
-                printf("%s\t%lu\t%lu\n", name, strlen(name), namelength);
-                break;
-            }
             case REBX_BINARY_FIELD_TYPE_PARAM_TYPE:
             {
                 printf("before param_type %lu\n", ftell(inf));
@@ -67,10 +57,38 @@ void rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, en
                 printf("after param_type %lu\n", ftell(inf));
                 break;
             }
-            case REBX_BINARY_FIELD_TYPE_SHAPE:
+            case REBX_BINARY_FIELD_TYPE_NDIM:
             {
                 printf("before ndim %lu\n", ftell(inf));
                 fread(&ndim, sizeof(ndim), 1, inf);
+                printf("after ndim %lu\n", ftell(inf));
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_NAMELENGTH:
+            {
+                printf("before namelength %lu\n", ftell(inf));
+                fread(&namelength, sizeof(namelength), 1, inf);
+                printf("after namelength %lu\n", ftell(inf));
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_NAME:
+            {
+                if (namelength == 0){
+                    fseek(inf,field.size,SEEK_CUR);
+                    break;
+                }
+                name = malloc(namelength);
+                printf("before name %lu\n", ftell(inf));
+                fread(name, sizeof(*name), namelength, inf);
+                printf("%s\t%lu\t%lu\n", name, strlen(name), namelength);
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_SHAPE:
+            {
+                if(ndim<0){
+                    fseek(inf,field.size,SEEK_CUR);
+                    break;
+                }
                 shape = malloc(ndim*sizeof(*shape));
                 printf("ndim %d\n", ndim);
                 printf("before shape %lu\n", ftell(inf));
@@ -80,9 +98,9 @@ void rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, en
             }
             case REBX_BINARY_FIELD_TYPE_CONTENTS:
             {
-                if (!name || !shape || param_type == INT_MIN || ndim == INT_MIN){
+                if (!name || param_type == INT_MIN || ndim == INT_MIN){ // OK for shape to be NULL if ndim = 0
                     *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
-                    reading_fields = 0;
+                    fseek(inf,field.size,SEEK_CUR);
                 }
                 else{
                     struct rebx_param* param = rebx_add_param_node(object, name, param_type, ndim, shape);
@@ -110,20 +128,29 @@ void rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, en
 }
 
 static void rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
-    size_t namelength;
+    size_t namelength = 0;
     char* name = NULL;
     
-    struct rebx_effect* effect;
+    struct rebx_effect* effect = NULL;
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
         printf("reading field %lu\n", ftell(inf));
         fread(&field, sizeof(field), 1, inf);
         switch (field.type){
-            case REBX_BINARY_FIELD_TYPE_NAME:
+            case REBX_BINARY_FIELD_TYPE_NAMELENGTH:
             {
                 printf("before namelength %lu\n", ftell(inf));
                 fread(&namelength, sizeof(namelength), 1, inf);
+                printf("after namelength %lu\n", ftell(inf));
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_NAME:
+            {
+                if (namelength == 0){
+                    fseek(inf,field.size,SEEK_CUR);
+                    break;
+                }
                 name = malloc(namelength);
                 printf("before name %lu\n", ftell(inf));
                 fread(name, sizeof(*name), namelength, inf);
@@ -133,6 +160,10 @@ static void rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_inpu
             }
             case REBX_BINARY_FIELD_TYPE_PARAM:
             {
+                if(!effect){
+                    *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
+                    fseek(inf,field.size,SEEK_CUR);
+                }
                 rebx_load_param(rebx, effect, inf, warnings);
                 break;
             }
@@ -151,6 +182,47 @@ static void rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_inpu
     }
     free(name);
 }
+
+static void rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
+    struct reb_particle* p = NULL;
+    struct rebx_binary_field field;
+    int reading_fields = 1;
+    while (reading_fields){
+        printf("reading field %lu\n", ftell(inf));
+        fread(&field, sizeof(field), 1, inf);
+        switch (field.type){
+            case REBX_BINARY_FIELD_TYPE_PARTICLE_INDEX:
+            {
+                int index;
+                printf("before particle index %lu\n", ftell(inf));
+                fread(&index, sizeof(index), 1, inf);
+                p = &rebx->sim->particles[index];
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_PARAM:
+            {
+                if(!p){
+                    *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
+                    fseek(inf,field.size,SEEK_CUR);
+                }
+                rebx_load_param(rebx, p, inf, warnings);
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_END:
+            {
+                printf("before end %lu\n", ftell(inf));
+                reading_fields=0;
+                printf("after end %lu\n", ftell(inf));
+                break;
+            }
+            default:
+                *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN;
+                fseek(inf,field.size,SEEK_CUR);
+                break;
+        }
+    }
+}
+
 
 static void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings){
     FILE* inf = fopen(filename,"rb");
@@ -187,6 +259,7 @@ static void rebx_create_extras_from_binary_with_messages(struct rebx_extras* reb
             }
             case REBX_BINARY_FIELD_TYPE_PARTICLE:
             {
+                rebx_load_particle(rebx, inf, warnings);
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_END:
