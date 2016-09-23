@@ -184,7 +184,6 @@ static void rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_inpu
 }
 
 static void rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
-    fprintf(stderr, "loading particle\n");
     struct reb_particle* p = NULL;
     struct rebx_binary_field field;
     int reading_fields = 1;
