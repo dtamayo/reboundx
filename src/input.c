@@ -47,28 +47,21 @@ void rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, en
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
-        //printf("reading field %lu\n", ftell(inf));
         fread(&field, sizeof(field), 1, inf);
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_PARAM_TYPE:
             {
-                //printf("before param_type %lu\n", ftell(inf));
                 fread(&param_type, sizeof(param_type), 1, inf);
-                //printf("after param_type %lu\n", ftell(inf));
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_NDIM:
             {
-                //printf("before ndim %lu\n", ftell(inf));
                 fread(&ndim, sizeof(ndim), 1, inf);
-                //printf("after ndim %lu\n", ftell(inf));
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_NAMELENGTH:
             {
-                //printf("before namelength %lu\n", ftell(inf));
                 fread(&namelength, sizeof(namelength), 1, inf);
-                //printf("after namelength %lu\n", ftell(inf));
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_NAME:
@@ -78,9 +71,7 @@ void rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, en
                     break;
                 }
                 name = malloc(namelength);
-                //printf("before name %lu\n", ftell(inf));
                 fread(name, sizeof(*name), namelength, inf);
-                //printf("%s\t%lu\t%lu\n", name, strlen(name), namelength);
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_SHAPE:
@@ -90,10 +81,7 @@ void rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, en
                     break;
                 }
                 shape = malloc(ndim*sizeof(*shape));
-                //printf("ndim %d\n", ndim);
-                //printf("before shape %lu\n", ftell(inf));
                 fread(shape, sizeof(*shape), ndim, inf);
-                //printf("after shape %lu\n", ftell(inf));
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_CONTENTS:
@@ -104,17 +92,13 @@ void rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, en
                 }
                 else{
                     struct rebx_param* param = rebx_add_param_node(object, name, param_type, ndim, shape);
-                    //printf("before contents %lu\n", ftell(inf));
                     fread(param->contents, rebx_sizeof(param->param_type), param->size, inf);
-                    //printf("after contents %lu\n", ftell(inf));
                 }
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_END:
             {
-                //printf("before end %lu\n", ftell(inf));
                 reading_fields=0;
-                //printf("after end %lu\n", ftell(inf));
                 break;
             }
             default:
@@ -135,14 +119,11 @@ static void rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_inpu
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
-        //printf("reading field %lu\n", ftell(inf));
         fread(&field, sizeof(field), 1, inf);
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_NAMELENGTH:
             {
-                //printf("before namelength %lu\n", ftell(inf));
                 fread(&namelength, sizeof(namelength), 1, inf);
-                //printf("after namelength %lu\n", ftell(inf));
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_NAME:
@@ -152,9 +133,7 @@ static void rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_inpu
                     break;
                 }
                 name = malloc(namelength);
-                //printf("before name %lu\n", ftell(inf));
                 fread(name, sizeof(*name), namelength, inf);
-                //printf("%s\t%lu\t%lu\n", name, strlen(name), namelength);
                 effect = rebx_add(rebx, name);
                 break;
             }
@@ -169,9 +148,7 @@ static void rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_inpu
             }
             case REBX_BINARY_FIELD_TYPE_END:
             {
-                //printf("before end %lu\n", ftell(inf));
                 reading_fields=0;
-                //printf("after end %lu\n", ftell(inf));
                 break;
             }
             default:
@@ -188,13 +165,11 @@ static void rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_in
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
-        //printf("reading field %lu\n", ftell(inf));
         fread(&field, sizeof(field), 1, inf);
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_PARTICLE_INDEX:
             {
                 int index;
-                //printf("before particle index %lu\n", ftell(inf));
                 fread(&index, sizeof(index), 1, inf);
                 p = &rebx->sim->particles[index];
                 break;
@@ -210,9 +185,7 @@ static void rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_in
             }
             case REBX_BINARY_FIELD_TYPE_END:
             {
-                //printf("before end %lu\n", ftell(inf));
                 reading_fields=0;
-                //printf("after end %lu\n", ftell(inf));
                 break;
             }
             default:
@@ -244,12 +217,10 @@ void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, cons
     if(strcmp(readbuf,curvbuf)!=0){
         *warnings |= REBX_INPUT_BINARY_WARNING_VERSION;
     }
-    //printf("%s\n", readbuf);
     
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
-        //printf("reading field %lu\n", ftell(inf));
         fread(&field, sizeof(field), 1, inf);
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_EFFECT:
@@ -264,9 +235,7 @@ void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, cons
             }
             case REBX_BINARY_FIELD_TYPE_END:
             {
-                //printf("before end %lu\n", ftell(inf));
                 reading_fields=0;
-                //printf("after end %lu\n", ftell(inf));
                 break;
             }
             default:
