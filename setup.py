@@ -62,7 +62,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='reboundx',
-    version='2.14.2',
+    version='2.14.3',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
     url='http://github.com/dtamayo/reboundx',
