@@ -37,7 +37,7 @@
     }\
     break;
 
-void rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, enum rebx_input_binary_messages* warnings){
+int rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, enum rebx_input_binary_messages* warnings){
     size_t namelength = 0;
     char* name = NULL;
     enum rebx_param_type param_type = INT_MIN;
@@ -109,9 +109,10 @@ void rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, en
     }
     free(name);
     free(shape);
+    return 1;
 }
 
-static void rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
+static int rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
     size_t namelength = 0;
     char* name = NULL;
     
@@ -158,14 +159,17 @@ static void rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_inpu
         }
     }
     free(name);
+    return 1;
 }
 
-static void rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
+static int rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
     struct reb_particle* p = NULL;
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
-        fread(&field, sizeof(field), 1, inf);
+        if (!fread(&field, sizeof(field), 1, inf)){
+            return 0;
+        }
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_PARTICLE_INDEX:
             {
@@ -180,7 +184,10 @@ static void rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_in
                     *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
                     fseek(inf,field.size,SEEK_CUR);
                 }
-                rebx_load_param(rebx, p, inf, warnings);
+                else if (!rebx_load_param(rebx, p, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
+                    fseek(inf,field.size,SEEK_CUR);
+                }
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_END:
@@ -194,6 +201,7 @@ static void rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_in
                 break;
         }
     }
+    return 1;
 }
 
 
@@ -221,16 +229,19 @@ void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, cons
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
-        fread(&field, sizeof(field), 1, inf);
+        if (!fread(&field, sizeof(field), 1, inf)){
+            *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+            break;
+        }
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_EFFECT:
             {
-                rebx_load_effect(rebx, inf, warnings);
+                reading_fields = rebx_load_effect(rebx, inf, warnings);
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_PARTICLE:
             {
-                rebx_load_particle(rebx, inf, warnings);
+                reading_fields = rebx_load_particle(rebx, inf, warnings);
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_END:
