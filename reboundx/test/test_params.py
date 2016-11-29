@@ -33,7 +33,7 @@ class TestEffectParams(unittest.TestCase):
         self.assertEqual(self.gr.params["N"], 14)
 
     def test_types(self):
-        for t in [int, float, np.int32, np.float64, np.int64]:
+        for t in [int, float, np.int32, np.float64]:
             var = t(3) # make instance of type
             self.gr.params[t.__name__] = var
             self.assertAlmostEqual(self.gr.params[t.__name__], var)
@@ -123,9 +123,7 @@ class TestArrays(unittest.TestCase):
         self.sim = rebound.Simulation()
         self.rebx = reboundx.Extras(self.sim)
         data.add_earths(self.sim, ei=1.e-3) 
-        self.sim.particles[0].params["list"] = [1.,2.,3.,4.] 
         self.sim.particles[0].params["array"] = np.array([1.,2.,3.,4.])
-        self.sim.particles[0].params["orbitlist"] = self.sim.calculate_orbits() 
         self.sim.particles[0].params["orbitarray"] = np.array(self.sim.calculate_orbits(), dtype=object)
         self.ndarray = np.array([[[1.,2.,3.],[4.,5.,6.]], [[1.,2.,3.],[4.,5.,6.]],[[1.,2.,3.],[4.,5.,6.]], [[1.,2.,3.],[4.,5.,6.]]])
         self.sim.particles[1].params["ndarray"] = self.ndarray
@@ -134,16 +132,10 @@ class TestArrays(unittest.TestCase):
         self.objndarray = np.array([[[o1,o2],[o2,o1],[o1,o1]], [[o1,o2],[o2,o1],[o1,o1]],[[o1,o2],[o2,o1],[o1,o1]],[[o1,o2],[o2,o1],[o1,o1]]], dtype=object)
         self.sim.particles[1].params["objndarray"] = self.objndarray
         self.sim.particles[1].params["scalar"] = 3
+
     def tearDown(self):
         self.sim = None
    
-    def test_list(self): # param is list of standard types
-        self.assertEqual(np.array_equal(self.sim.particles[0].params["list"], self.sim.particles[0].params["array"]), True)
-    
-    def test_objectlist(self): # param is list of custom classes
-        for i, orbit in enumerate(self.sim.particles[0].params["orbitlist"]):
-            self.assertEqual(mycomp(orbit, self.sim.particles[i+1].orbit), True)
-    
     def test_objectarray(self): # param is array of custom classes with dtype=object
         for i, orbit in enumerate(self.sim.particles[0].params["orbitarray"]):
             self.assertEqual(mycomp(orbit, self.sim.particles[i+1].orbit), True)
@@ -167,9 +159,6 @@ class TestArrays(unittest.TestCase):
         q = self.sim.particles[0].params["orbitarray"]
         q[0].a = 298
         self.assertAlmostEqual(self.sim.particles[0].params["orbitarray"][0].a, 298, delta=1.e-15)
-        q = self.sim.particles[0].params["orbitlist"]
-        q[0].a = 299
-        self.assertAlmostEqual(self.sim.particles[0].params["orbitlist"][0].a, 299, delta=1.e-15)
 
     def test_diff_shape(self):
         with self.assertRaises(AttributeError):
@@ -194,8 +183,6 @@ class TestArrays(unittest.TestCase):
         newarray = np.array(newlist)
         self.sim.particles[0].params["array"] = newarray
         self.assertEqual(np.array_equal(self.sim.particles[0].params["array"], newarray), True)
-        self.sim.particles[0].params["array"] = newlist
-        self.assertEqual(np.array_equal(self.sim.particles[0].params["array"], newarray), True)
     
     def test_iter(self):
         with self.assertRaises(AttributeError):
@@ -203,24 +190,14 @@ class TestArrays(unittest.TestCase):
                 pass
 
     def test_length(self):
-        self.assertEqual(len(self.sim.particles[0].params), 4)
+        self.assertEqual(len(self.sim.particles[0].params), 2)
 
     def test_del(self):
         del self.sim.particles[0].params["array"]
         with self.assertRaises(AttributeError):
             self.sim.particles[0].params["array"]
-        self.assertEqual(len(self.sim.particles[0].params), 3)
-
-        del self.sim.particles[0].params["list"]
-        with self.assertRaises(AttributeError):
-            self.sim.particles[0].params["list"]
-        self.assertEqual(len(self.sim.particles[0].params), 2)
-
-        del self.sim.particles[0].params["orbitlist"]
-        with self.assertRaises(AttributeError):
-            self.sim.particles[0].params["orbitlist"]
         self.assertEqual(len(self.sim.particles[0].params), 1)
-        
+
         del self.sim.particles[0].params["orbitarray"]
         with self.assertRaises(AttributeError):
             self.sim.particles[0].params["orbitarray"]
