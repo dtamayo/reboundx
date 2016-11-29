@@ -8,7 +8,7 @@ import numpy as np
 
 class Params(MutableMapping):
     def __init__(self, parent):
-        self.verbose = 1 # set to 1 to diagnose problems
+        self.verbose = 0 # set to 1 to diagnose problems
         self.parent = parent
 
         # Check rebx instance is attached, otherwise memory isn't allocated.
@@ -17,7 +17,9 @@ class Params(MutableMapping):
                 raise AttributeError("Need to attach reboundx.Extras instance to simulation before setting"
                         " particle params.")
 
-        #### Update here to add new types #####
+        #### Update here to add new types. Update only rebx_param_types with new C rebx_types
+        #### and self.types for new python types.
+        #### ADD ONLY TO THE END OF EACH LIST 
         
         rebx_param_types = ["REBX_TYPE_DOUBLE", 
                             "REBX_TYPE_INT", 
@@ -26,40 +28,35 @@ class Params(MutableMapping):
                            ] # In same order as C enum
         val = {param_type:value for (value, param_type) in enumerate(rebx_param_types)}
 
-        # takes rebxtype and gives ctype and dtype for numpy arrays
-        self.from_type =    {val["REBX_TYPE_INT"]:(int, c_int, 'int32'), # REBOUNDx uses 32 bit int for all int params 
-                             val["REBX_TYPE_DOUBLE"]:(float, c_double, 'float'),
-                             val["REBX_TYPE_UINT32"]:(c_uint32, c_uint32, 'object'),
-                             val["REBX_TYPE_ORBIT"]:(rebound.Orbit, rebound.Orbit, 'object'),
-                            }
-
-        # takes a variable type and gives ctype and rebxtype
-        self.from_value =   {'int':(c_int, val["REBX_TYPE_INT"]), 
-                             'int32':(c_int, val["REBX_TYPE_INT"]), 
-                             'int64':(c_int, val["REBX_TYPE_INT"]), 
-                             'float':(c_double, val["REBX_TYPE_DOUBLE"]), 
-                             'float64':(c_double, val["REBX_TYPE_DOUBLE"]),
-                             'c_uint':(c_uint, val["REBX_TYPE_UINT32"]),
-                             'c_uint8':(c_uint, val["REBX_TYPE_UINT32"]),
-                             'c_uint16':(c_uint, val["REBX_TYPE_UINT32"]),
-                             'c_uint32':(c_uint, val["REBX_TYPE_UINT32"]),
-                             'c_uint64':(c_uint, val["REBX_TYPE_UINT32"]),
-                             'Orbit':(rebound.Orbit, val["REBX_TYPE_ORBIT"]),
-                            }
+        # tuples of corresponding (python type, dtype, ctype, rebxtype enum value). ONLY ADD TO THE END OF THIS LIST
+        # dtype should be same as python type for 'primitive' types, and object for any ctypes structure
+        type_tuples = [(int, int, c_int, val["REBX_TYPE_INT"]), 
+                       (np.int32, np.int32, c_int, val["REBX_TYPE_INT"]), 
+                       (float, float, c_double, val["REBX_TYPE_DOUBLE"]), 
+                       (np.float64, np.float64, c_double, val["REBX_TYPE_DOUBLE"]),
+                       (c_uint, object, c_uint, val["REBX_TYPE_UINT32"]),
+                       (c_uint32, object, c_uint32, val["REBX_TYPE_UINT32"]),
+                       (rebound.Orbit, object, rebound.Orbit, val["REBX_TYPE_ORBIT"]),
+                      ]
+        
+        python_types = [item[0] for item in type_tuples]
+        self.ptype = {enum:ptype for (enum, ptype) in enumerate(python_types)} # get python type from enum value
+        self.penum = {ptype:enum for (enum, ptype) in enumerate(python_types)} # get enum from python type
+        self.types = {item[0]:(item[1], item[2], item[3]) for item in type_tuples} # (dtype, ctype, rebxtype)from ptype
 
     def __getitem__(self, key):
         if self.verbose: print("*****")
-
         clibreboundx.rebx_get_param_node.restype = POINTER(Param)
         node = clibreboundx.rebx_get_param_node(byref(self.parent), c_char_p(key.encode('ascii')))
-        
+       
         if node: 
             if self.verbose: print("Parameter {0} found".format(key))
             param = node.contents
-            pythontype, ctype, dtype = self.from_type[param.param_type]
+            pythontype = self.ptype[param.python_type]
+            dtype, ctype, rebxtype = self.types[pythontype]
             if self.verbose:
-                print("pythontype = {0}, ctype = {1}, param_type = {2}".format(pythontype, ctype, dtype))
-                print("param_type = {0}".format(param.param_type))
+                print("param.python_type= {0}, pythontype = {1}".format(param.python_type, pythontype))
+                print("dtype = {0}, ctype = {1}, rebxtype = {2}".format(dtype, ctype, rebxtype))
 
             if param.ndim == 0: 
                 if self.verbose: print("Scalar")
@@ -72,26 +69,18 @@ class Params(MutableMapping):
                     retval = data.contents # cases where scalar is a Structure, e.g., rebound.Orbit
             else:
                 if self.verbose: print("Parameter is an Array. ndim = {0}".format(param.ndim))
-                try:
-                    import numpy as np
-                except ImportError:
-                    raise AttributeError("Need to install numpy in order to use array parameters.")
-                
                 if self.verbose: print("Size = {0}".format(param.size))
                 ArrayType = ctype*param.size
                 data = cast(param.contents, POINTER(ArrayType))
-
-                if self.verbose: print("dtype = {0}".format(dtype))
-                if dtype == 'object': # can't use frombuffer with objects. 
+                if dtype == object: # can't use frombuffer with objects. 
                     array = np.array([data.contents[i] for i in range(param.size)], dtype=dtype)
                     #Makes copies of the ctypes.Structure instances, but fields share memory with C.
                 else:
                     array = np.frombuffer(data.contents, dtype=dtype, count=param.size)# shares memory with C
-
                 if param.ndim > 1:
                     shape = [param.shape[i] for i in range(param.ndim)]
                     array = np.reshape(array, shape)
-                    print("Array shape = {0}".format(shape))
+                    if self.verbose: print("Array shape = {0}".format(shape))
                 retval = array
         else:
             raise AttributeError("REBOUNDx Error: Parameter '{0}' not found.".format(key))
@@ -101,14 +90,10 @@ class Params(MutableMapping):
 
     def __setitem__(self, key, value):
         if type(value) == list:
-            try:
-                import numpy as np
-                value = np.array(value, dtype=object) 
-                # with list of class instances, need dtype=object so we can detect type later.  
-                # Otherwise numpy autogenerates dtype from all fields, which we can't use.
-            except ImportError:
-                raise AttributeError("Need to install numpy in order to assign lists as parameters.")
-     
+            raise AttributeError("Can't assign lists as params. Use numpy arrays instead. See documentation.")
+            '''
+            value = np.array(value, dtype=object) 
+            ''' 
         tempval = value
         try:
             while True: # keep going through nested arrays until we get to a real entry (that we can't index)
@@ -118,31 +103,35 @@ class Params(MutableMapping):
                     raise AttributeError('When setting a numpy array of objects, have to set dtype=object, '
                             'e.g., ps[1].params["array"] = numpy.array([obj1, obj2, obj3], dtype=object)')
         except:
-            valtype = type(tempval).__name__
+            pythontype = type(tempval)
+            if self.verbose: print("1st array item (to check type) = {0}, type = {1}".format(tempval, pythontype))
 
         try:
-            ctype, rebxtype = self.from_value[valtype]
+            dtype, ctype, rebxtype = self.types[pythontype]
+            if self.verbose: print("ctype = {0}, rebxtype = {1}".format(ctype, rebxtype))
         except KeyError:
             raise AttributeError("REBOUNDx Error: Data type {0} for param '{1}' "
-            "not supported.".format(valtype, key))
+            "not supported.".format(pythontype, key))
         
         clibreboundx.rebx_get_param_node.restype = POINTER(Param)
         nodeptr = clibreboundx.rebx_get_param_node(byref(self.parent), c_char_p(key.encode('ascii')))
 
         if nodeptr:
+            if self.verbose: print("Parameter {0} found.".format(key))
             param = nodeptr.contents
             if param.param_type != rebxtype:
                 raise AttributeError("REBOUNDx Error: Can't update param '{0}' with "
-                "new type {1}".format(key, valtype))
+                "new type {1}".format(key, pythontype))
             if type(value).__name__ == 'ndarray':
+                if self.verbose: print("Param is an array")
                 if param.ndim == 0:
                     raise AttributeError("REBOUNDx Error: Cannot update scalar param '{0}' with "
                     "a list or numpy array".format(key))
                 else:
                     ArrayType = c_int*param.ndim # shape is an integer array, so we recast it to ctypes array
                     data = cast(param.shape, POINTER(ArrayType))
-                    import numpy as np
                     shape = np.frombuffer(data.contents, dtype='int32', count=param.ndim)
+                    if self.verbose: print("Array shape = {0}".format(shape))
                     if not np.array_equal(shape, value.shape):
                         raise AttributeError("REBOUNDx Error: Cannot update param '{0}' with a "
                         "list/array of different shape".format(key))
@@ -152,30 +141,32 @@ class Params(MutableMapping):
                     "(a list/array) with scalar".format(key)) 
             val = nodeptr.contents.contents
         else: # parameter not found. Make new one
-            if type(value).__name__ == 'ndarray':
-                import numpy as np
-                clibreboundx.rebx_add_param_.restype = c_void_p
-                val = clibreboundx.rebx_add_param_(
+            if self.verbose: print("Parameter {0} not found. Making new one".format(key))
+            if type(value) == np.ndarray:
+                if self.verbose: print("Param is an array of dimension {0}".format(value.ndim))
+                clibreboundx.rebx_add_param_node.restype = POINTER(Param)
+                nodeptr = clibreboundx.rebx_add_param_node(
                         byref(self.parent), c_char_p(key.encode('ascii')), rebxtype, 
                         value.ndim, value.ctypes.shape_as(c_int))
             else: # single value
-                clibreboundx.rebx_add_param.restype = c_void_p
-                val = clibreboundx.rebx_add_param(byref(self.parent), c_char_p(key.encode('ascii')), rebxtype)
+                if self.verbose: print("Param is a scalar")
+                clibreboundx.rebx_add_param_node.restype = POINTER(Param)
+                nodeptr = clibreboundx.rebx_add_param_node(
+                        byref(self.parent), c_char_p(key.encode('ascii')), rebxtype, 
+                        0, None)
 
-        val = cast(val, POINTER(ctype))
-        if type(value).__name__ == 'ndarray':
+            nodeptr.contents.python_type = c_int(self.penum[pythontype])
+            if self.verbose:
+                print("param.python_type = {0}, pythontype = {1}".format(nodeptr.contents.python_type, pythontype))
+
+        val = cast(nodeptr.contents.contents, POINTER(ctype))
+        if type(value) == np.ndarray:
             ArrayType = ctype*value.size
             ctypesarray = ArrayType(*(i for i in value.flatten())) # need to flatten to 1D (final format anyway)
                                                                    # so we don't populate ctypesarray with 
                                                                    # arrays for multidim arrays
             memmove(val, ctypesarray, sizeof(ctype)*value.size)    # COPIES data so that C owns the memory
         else:
-            if 'int' in valtype:
-                if 'uint' in valtype:
-                    if value.value > 4294967295:
-                        raise OverflowError("REBOUNDx Error: Unsigned integer parameters cannot exceed 2^32")
-                elif value > 2147483648:
-                    raise OverflowError("REBOUNDx Error: Integer parameters cannot exceed 2^31")
             val[0] = value
         
     def __delitem__(self, key):

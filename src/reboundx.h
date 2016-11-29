@@ -116,6 +116,7 @@ struct rebx_param{
     uint32_t hash;                                  ///< Hash for the parameter name.
     char* name;                                     ///< String for the parameter's name.
     enum rebx_param_type param_type;                ///< Enum for the parameter type.
+    int python_type;                                ///< Used by python side to store python type
 	int ndim;                                       ///< Number of dimensions (to support array parameters)
 	int* shape;                                     ///< Array of length ndim for the array shape (NULL for scalars).
     int* strides;                                   ///< Strides along the different dimensions for array indexing (NULL for scalars).
