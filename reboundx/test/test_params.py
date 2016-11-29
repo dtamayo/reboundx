@@ -4,6 +4,7 @@ from reboundx import data
 import unittest
 import math
 import numpy as np
+from ctypes import c_uint, c_uint8, c_uint32, c_uint64
 
 def mycomp(obj1, obj2):
     if type(obj1) != type(obj2):
@@ -32,7 +33,7 @@ class TestEffectParams(unittest.TestCase):
         self.assertEqual(self.gr.params["N"], 14)
 
     def test_types(self):
-        for t in [int, float, np.int32, np.float64]:
+        for t in [int, float, np.int32, np.float64, np.int64]:
             var = t(3) # make instance of type
             self.gr.params[t.__name__] = var
             self.assertAlmostEqual(self.gr.params[t.__name__], var)

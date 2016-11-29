@@ -8,7 +8,7 @@ import numpy as np
 
 class Params(MutableMapping):
     def __init__(self, parent):
-        self.verbose = 0 # set to 1 to diagnose problems
+        self.verbose = 1 # set to 1 to diagnose problems
         self.parent = parent
 
         # Check rebx instance is attached, otherwise memory isn't allocated.
@@ -27,10 +27,10 @@ class Params(MutableMapping):
         val = {param_type:value for (value, param_type) in enumerate(rebx_param_types)}
 
         # takes rebxtype and gives ctype and dtype for numpy arrays
-        self.from_type =    {val["REBX_TYPE_INT"]:(c_int, 'int32'), # REBOUNDx uses 32 bit int for all int params 
-                             val["REBX_TYPE_DOUBLE"]:(c_double, 'float'),
-                             val["REBX_TYPE_UINT32"]:(c_uint32, 'uint32'),
-                             val["REBX_TYPE_ORBIT"]:(rebound.Orbit, 'object'),
+        self.from_type =    {val["REBX_TYPE_INT"]:(int, c_int, 'int32'), # REBOUNDx uses 32 bit int for all int params 
+                             val["REBX_TYPE_DOUBLE"]:(float, c_double, 'float'),
+                             val["REBX_TYPE_UINT32"]:(c_uint32, c_uint32, 'object'),
+                             val["REBX_TYPE_ORBIT"]:(rebound.Orbit, rebound.Orbit, 'object'),
                             }
 
         # takes a variable type and gives ctype and rebxtype
@@ -56,15 +56,17 @@ class Params(MutableMapping):
         if node: 
             if self.verbose: print("Parameter {0} found".format(key))
             param = node.contents
-            ctype, dtype = self.from_type[param.param_type]
+            pythontype, ctype, dtype = self.from_type[param.param_type]
             if self.verbose:
-                print("ctype = {0}, param_type = {2}".format(ctype, dtype, param.param_type))
+                print("pythontype = {0}, ctype = {1}, param_type = {2}".format(pythontype, ctype, dtype))
+                print("param_type = {0}".format(param.param_type))
 
             if param.ndim == 0: 
                 if self.verbose: print("Scalar")
                 data = cast(param.contents, POINTER(ctype))
                 try:
                     retval = data.contents.value # cases where scalar is a ctype, so we get python type back 
+                    retval = pythontype(retval)
                 except AttributeError:
                     if self.verbose: print("Parameter is a Structure")
                     retval = data.contents # cases where scalar is a Structure, e.g., rebound.Orbit
@@ -87,8 +89,7 @@ class Params(MutableMapping):
                     array = np.frombuffer(data.contents, dtype=dtype, count=param.size)# shares memory with C
 
                 if param.ndim > 1:
-                    shape = (param.shape[i] for i in range(param.ndim))
-                    shape = tuple(shape)
+                    shape = [param.shape[i] for i in range(param.ndim)]
                     array = np.reshape(array, shape)
                     print("Array shape = {0}".format(shape))
                 retval = array
