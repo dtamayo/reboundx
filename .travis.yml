@@ -5,7 +5,7 @@ os:
 addons:
     apt:
         packages:
-            - freeglut3-dev
+            - libglfw3-dev
             - python-virtualenv
             - python-numpy
             - python-matplotlib
