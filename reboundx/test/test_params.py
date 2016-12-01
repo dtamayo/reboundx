@@ -37,6 +37,14 @@ class TestEffectParams(unittest.TestCase):
             var = t(3) # make instance of type
             self.gr.params[t.__name__] = var
             self.assertAlmostEqual(self.gr.params[t.__name__], var)
+            self.assertEqual(type(self.gr.params[t.__name__]), type(var))
+        for t in [c_uint, c_uint32]:
+            var = t(3) # make instance of type
+            self.gr.params[t.__name__] = var
+            self.assertAlmostEqual(self.gr.params[t.__name__].value, var.value)
+            self.assertEqual(type(self.gr.params[t.__name__]), type(var))
+        self.gr.params["orbit"] = rebound.Orbit()
+        self.assertEqual(type(self.gr.params["orbit"]), rebound.Orbit)
 
     def test_iter(self):
         with self.assertRaises(AttributeError):
