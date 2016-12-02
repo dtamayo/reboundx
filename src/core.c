@@ -209,12 +209,14 @@ struct rebx_effect* rebx_add_custom_force(struct rebx_extras* rebx, const char* 
     if(force_is_velocity_dependent){
         sim->force_is_velocity_dependent = 1;
     }
+    rebx->sim->additional_forces = rebx_forces;
     return effect;
 }
 
 struct rebx_effect* rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, const char* name, void (*custom_ptm)(struct reb_simulation* const sim, struct rebx_effect* const effect)){
     struct rebx_effect* effect = rebx_add_effect(rebx, name);
     effect->ptm = custom_ptm;
+    rebx->sim->post_timestep_modifications = rebx_post_timestep_modifications;
     return effect;
 }
     
