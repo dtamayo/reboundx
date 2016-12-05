@@ -4,8 +4,13 @@ os:
     - linux
 addons:
     apt:
+        sources:
+            - debian-sid
         packages:
             - libglfw3-dev
+            - python-virtualenv
+            - python-numpy
+            - python-matplotlib
 install:
     - virtualenv --system-site-packages venv && source venv/bin/activate
     - pip install coveralls
