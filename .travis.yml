@@ -50,15 +50,6 @@ install:
   - if [[ $TESTPART == "CCOVERAGE" ]]; then CFLAGS="-fprofile-arcs -ftest-coverage" pip install -e .; fi
   - if [[ $TESTPART == *"PYTHON"* ]]; then python setup.py install; fi
 
-#install:
-#    - virtualenv --system-site-packages venv && source venv/bin/activate
-#    - pip install matplotlib
-#    - pip install coveralls
-#    - pip install rebound
-#    - pip install -e .
-#compiler:
-#    - gcc
-
 script:
     - if [[ $TESTPART == "CCOVERAGE" ]]; then cd $TRAVIS_BUILD_DIR/ && python setup.py test; fi
     - if [[ $TESTPART == "C" ]]; then cd $TRAVIS_BUILD_DIR/examples/ && make; fi
@@ -72,23 +63,6 @@ script:
     - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py ModifyMass.ipynb; fi
     - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py TidesPrecession.ipynb; fi
 
-#script:
-#    - cd $TRAVIS_BUILD_DIR/../ && git clone https://github.com/hannorein/rebound
-#    - cd $TRAVIS_BUILD_DIR && coverage run --source=rebound setup.py test
-#    - cd $TRAVIS_BUILD_DIR/examples/ && make all
-#    - cd $TRAVIS_BUILD_DIR/src && make clean
-#    - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py EccAndIncDamping.ipynb | python 
-#    - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py GeneralRelativity.ipynb | python 
-#    - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Migration.ipynb | python 
-#    - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Radiation_Forces_Circumplanetary_Dust.ipynb | python 
-#    - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Radiation_Forces_Debris_Disk.ipynb | python 
-#    - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Custom_Effects.ipynb | python 
-#    - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py ModifyMass.ipynb | python 
-#    - cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py TidesPrecession.ipynb | python 
-#    - cd $TRAVIS_BUILD_DIR 
-#    - coverage run --source=reboundx setup.py test
-#after_success:
-#    coveralls
 after_success:
     - if [[ $TESTPART == "PYTHON" ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "2.7" ]]; then coveralls; fi
     - if [[ $TESTPART == "CCOVERAGE" ]]; then cp -r src build/*/src/ ; fi
