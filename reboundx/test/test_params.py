@@ -131,13 +131,22 @@ class TestArrays(unittest.TestCase):
         self.sim = rebound.Simulation()
         self.rebx = reboundx.Extras(self.sim)
         data.add_earths(self.sim, ei=1.e-3) 
-        self.sim.particles[0].params["array"] = np.array([1.,2.,3.,4.])
-        self.sim.particles[0].params["orbitarray"] = np.array(self.sim.calculate_orbits(), dtype=object)
+        self.array=np.array([1.,2.,3.,4.])
+        self.intarray=np.array([1,2,3,4])
+        self.cuintarray=np.array([c_uint(1),c_uint(2),c_uint(3),c_uint(4)], dtype=object)
+        self.cuint32array=np.array([c_uint32(1),c_uint32(2),c_uint32(3),c_uint32(4)], dtype=object)
         self.ndarray = np.array([[[1.,2.,3.],[4.,5.,6.]], [[1.,2.,3.],[4.,5.,6.]],[[1.,2.,3.],[4.,5.,6.]], [[1.,2.,3.],[4.,5.,6.]]])
-        self.sim.particles[1].params["ndarray"] = self.ndarray
+        self.orbitarray =np.array(self.sim.calculate_orbits(), dtype=object) 
         o1 = self.sim.particles[1].orbit
         o2 = self.sim.particles[2].orbit
         self.objndarray = np.array([[[o1,o2],[o2,o1],[o1,o1]], [[o1,o2],[o2,o1],[o1,o1]],[[o1,o2],[o2,o1],[o1,o1]],[[o1,o2],[o2,o1],[o1,o1]]], dtype=object)
+        
+        self.sim.particles[0].params["array"] = self.array
+        self.sim.particles[0].params["intarray"] = self.intarray
+        self.sim.particles[0].params["cuintarray"] = self.cuintarray
+        self.sim.particles[0].params["cuint32array"] = self.cuint32array 
+        self.sim.particles[1].params["ndarray"] = self.ndarray
+        self.sim.particles[0].params["orbitarray"] = self.orbitarray
         self.sim.particles[1].params["objndarray"] = self.objndarray
         self.sim.particles[1].params["scalar"] = 3
 
@@ -155,8 +164,12 @@ class TestArrays(unittest.TestCase):
             self.sim.particles[0].params["badarray"] = np.array(self.sim.calculate_orbits())
     '''
 
-    def test_ndarray(self): # 3d array of floats
+    def test_arrays(self): # 3d array of floats
+        self.assertEqual(np.array_equal(self.array, self.sim.particles[0].params["array"]), True)
+        self.assertEqual(np.array_equal(self.intarray, self.sim.particles[0].params["intarray"]), True)
         self.assertEqual(np.array_equal(self.ndarray, self.sim.particles[1].params["ndarray"]), True)
+        self.assertAlmostEqual(self.sim.particles[0].params["cuintarray"][0].value, self.cuintarray[0].value)
+        self.assertAlmostEqual(self.sim.particles[0].params["cuint32array"][0].value, self.cuint32array[0].value)
 
     def test_objndarray(self): # 3d array of rebound.Orbits
         flat = self.objndarray.flatten()
@@ -198,18 +211,18 @@ class TestArrays(unittest.TestCase):
                 pass
 
     def test_length(self):
-        self.assertEqual(len(self.sim.particles[0].params), 2)
+        self.assertEqual(len(self.sim.particles[0].params), 5)
 
     def test_del(self):
         del self.sim.particles[0].params["array"]
         with self.assertRaises(AttributeError):
             self.sim.particles[0].params["array"]
-        self.assertEqual(len(self.sim.particles[0].params), 1)
+        self.assertEqual(len(self.sim.particles[0].params), 4)
 
         del self.sim.particles[0].params["orbitarray"]
         with self.assertRaises(AttributeError):
             self.sim.particles[0].params["orbitarray"]
-        self.assertEqual(len(self.sim.particles[0].params), 0)
+        self.assertEqual(len(self.sim.particles[0].params), 3)
 
 class TestRebxNotAttached(unittest.TestCase):
     def test_rebx_not_attached(self):

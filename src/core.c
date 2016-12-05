@@ -360,6 +360,10 @@ size_t rebx_sizeof(enum rebx_param_type param_type){
         {
             return sizeof(struct reb_orbit);
         }
+        case REBX_TYPE_LONGLONG:
+        {
+            return sizeof(long long);
+        }
     }
     return 0; // type not found
 }
