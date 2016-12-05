@@ -2,7 +2,7 @@ import rebound
 from collections import MutableMapping
 from .extras import Param, Effect
 from . import clibreboundx
-from ctypes import byref, c_double, c_int, c_int32, c_int64, c_uint, c_uint32, c_char_p, POINTER, cast
+from ctypes import byref, c_double, c_int, c_int32, c_int64, c_uint, c_uint32, c_longlong, c_char_p, POINTER, cast
 from ctypes import c_void_p, memmove, sizeof, addressof
 import numpy as np
 
@@ -25,6 +25,7 @@ class Params(MutableMapping):
                             "REBX_TYPE_INT", 
                             "REBX_TYPE_UINT32", 
                             "REBX_TYPE_ORBIT",
+                            "REBX_TYPE_LONGLONG",
                            ] # In same order as C enum
         val = {param_type:value for (value, param_type) in enumerate(rebx_param_types)}
 
@@ -37,6 +38,7 @@ class Params(MutableMapping):
                        (c_uint, object, c_uint, val["REBX_TYPE_UINT32"]),
                        (c_uint32, object, c_uint32, val["REBX_TYPE_UINT32"]),
                        (rebound.Orbit, object, rebound.Orbit, val["REBX_TYPE_ORBIT"]),
+                       (np.int64, np.int64, c_longlong, val["REBX_TYPE_LONGLONG"]),
                       ]
         
         python_types = [item[0] for item in type_tuples]
@@ -73,7 +75,11 @@ class Params(MutableMapping):
                 ArrayType = ctype*param.size
                 data = cast(param.contents, POINTER(ArrayType))
                 if dtype == object: # can't use frombuffer with objects. 
-                    array = np.array([data.contents[i] for i in range(param.size)], dtype=dtype)
+                    try:
+                        array = np.array([pythontype(data.contents[i]) for i in range(param.size)], dtype=dtype)
+                    except TypeError: # for cases where a custom ctypes Structure can't take a class instance in __init__
+                        array = np.array([data.contents[i] for i in range(param.size)], dtype=dtype)
+
                     #Makes copies of the ctypes.Structure instances, but fields share memory with C.
                 else:
                     array = np.frombuffer(data.contents, dtype=dtype, count=param.size)# shares memory with C
@@ -154,7 +160,6 @@ class Params(MutableMapping):
                 nodeptr = clibreboundx.rebx_add_param_node(
                         byref(self.parent), c_char_p(key.encode('ascii')), rebxtype, 
                         0, None)
-
             nodeptr.contents.python_type = c_int(self.penum[pythontype])
             if self.verbose:
                 print("param.python_type = {0}, pythontype = {1}".format(nodeptr.contents.python_type, pythontype))

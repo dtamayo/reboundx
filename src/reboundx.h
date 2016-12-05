@@ -50,6 +50,7 @@ enum rebx_param_type{
     REBX_TYPE_INT,                                  ///< C type int
     REBX_TYPE_UINT32,                               ///< C type uint32_t
     REBX_TYPE_ORBIT,                                ///< reb_orbit structure
+    REBX_TYPE_LONGLONG,                             ///< To hold python 64 bit int
 };
 
 /**
