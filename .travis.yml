@@ -39,10 +39,10 @@ before_install:
 
 install:
   - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then conda update --yes conda; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "2.7" ]]; then conda create -n testenv --yes libgfortran=1.0 numpy=1.9 scipy=0.16 matplotlib=1.4 setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
+  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "2.7" ]]; then conda create -n testenv --yes libgfortran=1.0 numpy=1.9 scipy=0.16 matplotlib=1.4 rebound setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
   - if [[ $TESTPART == "CCOVERAGE" ]]; then conda create -n testenv --yes numpy=1.9 matplotlib=1.4 setuptools python=$TRAVIS_PYTHON_VERSION; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "3.4" ]]; then conda create -n testenv --yes libgfortran=1.0 numpy=1.9 scipy=0.16 matplotlib=1.4 setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "3.5" ]]; then conda create -n testenv --yes numpy scipy matplotlib setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
+  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "3.4" ]]; then conda create -n testenv --yes libgfortran=1.0 numpy=1.9 scipy=0.16 matplotlib=1.4 rebound setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
+  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "3.5" ]]; then conda create -n testenv --yes numpy scipy matplotlib rebound setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
   - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then source activate testenv; fi
   - if [[ $TESTPART == *"PYTHON"* ]]; then pip install coveralls; fi
   - if [[ $TESTPART == "CCOVERAGE" ]]; then pip install cpp-coveralls; fi
@@ -61,7 +61,7 @@ install:
 script:
     - if [[ $TESTPART == "CCOVERAGE" ]]; then cd $TRAVIS_BUILD_DIR/ && python setup.py test; fi
     - if [[ $TESTPART == "C" ]]; then cd $TRAVIS_BUILD_DIR/examples/ && make; fi
-    - if [[ $TESTPART == "PYTHON" ]]; then cd $TRAVIS_BUILD_DIR && coverage run --source=rebound setup.py test; fi
+    - if [[ $TESTPART == "PYTHON" ]]; then cd $TRAVIS_BUILD_DIR && coverage run --source=reboundx setup.py test; fi
     - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py EccAndIncDamping.ipynb; fi
     - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py GeneralRelativity.ipynb; fi
     - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Migration.ipynb; fi
