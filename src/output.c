@@ -48,15 +48,11 @@ static void rebx_write_param(struct rebx_param* param, FILE* of){
     fwrite(&param_field, sizeof(param_field), 1, of);
     long pos_start_param = ftell(of);
     
-    size_t namelength = strlen(param->name) + 1; // +1 for \0 at end
-    
     REBX_WRITE_FIELD(PARAM_TYPE,    &param->param_type,     sizeof(param->param_type),      1);
+    REBX_WRITE_FIELD(PYTHON_TYPE,   &param->python_type,    sizeof(param->python_type),     1);
     REBX_WRITE_FIELD(NDIM,          &param->ndim,           sizeof(param->ndim),            1);
-    REBX_WRITE_FIELD(NAMELENGTH,    &namelength,            sizeof(namelength),             1);
-    REBX_WRITE_FIELD(NAME,          param->name,            sizeof(*param->name),           namelength);
-    if(param->ndim > 0){
-        REBX_WRITE_FIELD(SHAPE,     param->shape,           sizeof(*param->shape),          param->ndim);
-    }
+    REBX_WRITE_FIELD(NAME,          param->name,            strlen(param->name) + 1,        1); // +1 for \0 at end
+    REBX_WRITE_FIELD(SHAPE,         param->shape,           sizeof(*param->shape),          param->ndim);
     REBX_WRITE_FIELD(CONTENTS,      param->contents,        rebx_sizeof(param->param_type), param->size);
     // Write end marker for param
     REBX_WRITE_FIELD(END,           NULL,                   0,                              0);
@@ -93,9 +89,7 @@ static void rebx_write_effect(struct rebx_effect* effect, FILE* of){
     fwrite(&effect_field, sizeof(effect_field), 1, of);
     long pos_start_effect = ftell(of);
     
-    size_t namelength = strlen(effect->name) + 1; // +1 for \0 at end
-    REBX_WRITE_FIELD(NAMELENGTH,    &namelength,            sizeof(namelength),             1);
-    REBX_WRITE_FIELD(NAME,          effect->name,            sizeof(*effect->name),           namelength);
+    REBX_WRITE_FIELD(NAME,          effect->name,           strlen(effect->name) + 1,       1); // +1 for \0 at end
     rebx_write_params(effect->ap, of); // Write all parameters
     // Write end marker for effect
     REBX_WRITE_FIELD(END,           NULL,                   0,                              0);

@@ -85,6 +85,7 @@ enum rebx_binary_field_type{
     REBX_BINARY_FIELD_TYPE_CONTENTS=8,
     REBX_BINARY_FIELD_TYPE_END=9,
     REBX_BINARY_FIELD_TYPE_PARTICLE_INDEX=10,
+    REBX_BINARY_FIELD_TYPE_PYTHON_TYPE=11,
 };
 
 /**
@@ -145,13 +146,13 @@ struct rebx_effect{
  */
 struct rebx_binary_field{
     enum rebx_binary_field_type type;               ///< Type of object
-    long size;                                      ///< Size in bytes of the object data (only what follows, not including this structure). So you can skip ahead.
+    long size;                                      ///< Size in bytes of the object data (not including this structure). So you can skip ahead.
 };
 
 struct rebx_binary_param_metadata{
     enum rebx_param_type type;                      ///< Parameter type
     int ndim;                                       ///< Number of dimensions for arrays (0 for scalars)
-    size_t namelength;                                 ///< Length of the parameter name.
+    size_t namelength;                              ///< Length of the parameter name.
 };
 
 /**

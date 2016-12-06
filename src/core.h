@@ -69,6 +69,8 @@ void* rebx_add_param_(void* const object, const char* const param_name, enum reb
 /***********************************************************************************
  * Miscellaneous Functions
 ***********************************************************************************/
+struct rebx_param* rebx_create_param();
+struct rebx_param* rebx_attach_param_node(void* const object, struct rebx_param* param);
 struct rebx_param* rebx_add_param_node(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape);
 size_t rebx_sizeof(enum rebx_param_type param_type); // Returns size in bytes of the corresponding rebx_param_type type
 

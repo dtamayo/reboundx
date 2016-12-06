@@ -31,68 +31,48 @@
 #include "reboundx.h"
 #include "core.h"
 
-#define CASE(typename, value) case REB_BINARY_FIELD_TYPE_##typename: \
+#define CASE(typename, value) case REBX_BINARY_FIELD_TYPE_##typename: \
     {\
     fread(value, field.size,1,inf);\
     }\
     break;
 
-int rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, enum rebx_input_binary_messages* warnings){
-    size_t namelength = 0;
-    char* name = NULL;
-    enum rebx_param_type param_type = INT_MIN;
-    int ndim = INT_MIN;
-    int* shape = NULL;
+#define CASE_MALLOC(typename, valueref) case REBX_BINARY_FIELD_TYPE_##typename: \
+    {\
+    valueref = malloc(field.size);\
+    fread(valueref, field.size,1,inf);\
+    }\
+    break;
 
+int rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, enum rebx_input_binary_messages* warnings){
+    struct rebx_param* param = rebx_create_param();
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
         fread(&field, sizeof(field), 1, inf);
         switch (field.type){
-            case REBX_BINARY_FIELD_TYPE_PARAM_TYPE:
-            {
-                fread(&param_type, sizeof(param_type), 1, inf);
-                break;
-            }
-            case REBX_BINARY_FIELD_TYPE_NDIM:
-            {
-                fread(&ndim, sizeof(ndim), 1, inf);
-                break;
-            }
-            case REBX_BINARY_FIELD_TYPE_NAMELENGTH:
-            {
-                fread(&namelength, sizeof(namelength), 1, inf);
-                break;
-            }
+            CASE(PARAM_TYPE,        &param->param_type);
+            CASE(PYTHON_TYPE,       &param->python_type);
+            CASE(NDIM,              &param->ndim);
+            CASE_MALLOC(CONTENTS,   param->contents);
             case REBX_BINARY_FIELD_TYPE_NAME:
             {
-                if (namelength == 0){
-                    fseek(inf,field.size,SEEK_CUR);
-                    break;
-                }
-                name = malloc(namelength);
-                fread(name, sizeof(*name), namelength, inf);
+                param->name = malloc(field.size);
+                fread(param->name, field.size,1,inf);
+                param->hash = reb_hash(param->name);
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_SHAPE:
             {
-                if(ndim<0){
-                    fseek(inf,field.size,SEEK_CUR);
-                    break;
-                }
-                shape = malloc(ndim*sizeof(*shape));
-                fread(shape, sizeof(*shape), ndim, inf);
-                break;
-            }
-            case REBX_BINARY_FIELD_TYPE_CONTENTS:
-            {
-                if (!name || param_type == INT_MIN || ndim == INT_MIN){ // OK for shape to be NULL if ndim = 0
-                    *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
-                    fseek(inf,field.size,SEEK_CUR);
-                }
-                else{
-                    struct rebx_param* param = rebx_add_param_node(object, name, param_type, ndim, shape);
-                    fread(param->contents, rebx_sizeof(param->param_type), param->size, inf);
+                param->size = 1;
+                if (param->ndim > 0){
+                    param->shape = malloc(field.size);
+                    param->strides = malloc(field.size);
+                    fread(param->shape, field.size,1,inf);
+                    for(int i=param->ndim-1;i>=0;i--){
+                        param->strides[i] = param->size;
+                        param->size *= param->shape[i];
+                    }
                 }
                 break;
             }
@@ -107,13 +87,11 @@ int rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, enu
                 break;
         }
     }
-    free(name);
-    free(shape);
+    param = rebx_attach_param_node(object, param);
     return 1;
 }
 
 static int rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
-    size_t namelength = 0;
     char* name = NULL;
     
     struct rebx_effect* effect = NULL;
@@ -122,19 +100,10 @@ static int rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_input
     while (reading_fields){
         fread(&field, sizeof(field), 1, inf);
         switch (field.type){
-            case REBX_BINARY_FIELD_TYPE_NAMELENGTH:
-            {
-                fread(&namelength, sizeof(namelength), 1, inf);
-                break;
-            }
             case REBX_BINARY_FIELD_TYPE_NAME:
             {
-                if (namelength == 0){
-                    fseek(inf,field.size,SEEK_CUR);
-                    break;
-                }
-                name = malloc(namelength);
-                fread(name, sizeof(*name), namelength, inf);
+                name = malloc(field.size);
+                fread(name, field.size, 1, inf);
                 effect = rebx_add(rebx, name);
                 break;
             }
