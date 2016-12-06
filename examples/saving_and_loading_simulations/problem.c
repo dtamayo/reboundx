@@ -167,4 +167,12 @@ int main(int argc, char* argv[]){
         printf("%f\t", orbit2[i].e);
     }
     printf("\n");
+    
+    struct rebx_param* param = rebx_get_param_node(planet, "integ2");
+    
+    printf("%s\n", param->name);
+    printf("%d\t%d\n", param->shape[0], param->shape[1]);
+    
+    struct rebx_param* param2 = rebx_get_param_node(planet, "doub2");
+    printf("%d\t%d\n", param2->shape[0], param2->shape[1]);
 }

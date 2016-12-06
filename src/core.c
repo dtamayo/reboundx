@@ -260,7 +260,8 @@ static struct reb_simulation* rebx_get_sim(const void* const object){
     return NULL;
 } 
 
-static struct rebx_param* rebx_validate_ap_address(struct rebx_param* newparam){
+struct rebx_param* rebx_create_param(){
+    struct rebx_param* newparam = malloc(sizeof(*newparam));
     int collision=0;
     for(int j=REBX_OBJECT_TYPE_EFFECT; j<=REBX_OBJECT_TYPE_PARTICLE; j++){
         /* need this cast to avoid warnings (we are converting 32 bit int enum to 64 bit pointer). I think behavior
@@ -272,34 +273,33 @@ static struct rebx_param* rebx_validate_ap_address(struct rebx_param* newparam){
         }
     }
     
-    if (collision == 0){
-        return newparam;    // No collision, use original
-    }
-    
-    free(newparam);
-    struct rebx_param* address[5] = {NULL};
-    int i;
-    for(i=0; i<=5; i++){
-        address[i] = malloc(sizeof(*newparam));
-        collision = 0;
-        for(int j=REBX_OBJECT_TYPE_EFFECT; j<=REBX_OBJECT_TYPE_PARTICLE; j++){
-            if(address[i] == (void*)(intptr_t)j){
-                collision=1;
+    if (collision){
+        free(newparam);
+        struct rebx_param* address[5] = {NULL};
+        int i;
+        for(i=0; i<=5; i++){
+            address[i] = malloc(sizeof(*newparam));
+            collision = 0;
+            for(int j=REBX_OBJECT_TYPE_EFFECT; j<=REBX_OBJECT_TYPE_PARTICLE; j++){
+                if(address[i] == (void*)(intptr_t)j){
+                    collision=1;
+                }
+            }
+            if (collision == 0){
+                newparam = address[i];
+                break;
             }
         }
-        if (collision == 0){
-            break;
+
+        if (i==5){
+            fprintf(stderr, "REBOUNDx Error:  Can't allocate valid memory for parameter.\n");
+            return NULL;
+        }
+        for(int j=0;j<i;j++){
+            free(address[j]);
         }
     }
-
-    if (i==5){
-        fprintf(stderr, "REBOUNDx Error:  Can't allocate valid memory for parameter.\n");
-        exit(1);
-    }
-    for(int j=0;j<i;j++){
-        free(address[j]);
-    }
-    return address[i];
+    return newparam;
 }
 
 /*********************************************************************************
@@ -368,22 +368,44 @@ size_t rebx_sizeof(enum rebx_param_type param_type){
     return 0; // type not found
 }
 
-struct rebx_param* rebx_add_param_node(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
-	void* ptr = rebx_get_param(object, param_name);
-	if (ptr != NULL){
+struct rebx_param* rebx_attach_param_node(void* const object, struct rebx_param* param){
+    void* ptr = rebx_get_param(object, param->name);
+    if (ptr != NULL){
         char str[300];
-        sprintf(str, "REBOUNDx Error: Parameter '%s' passed to rebx_add_param already exists.\n", param_name);
+        sprintf(str, "REBOUNDx Error: Parameter '%s' passed to rebx_add_param already exists.\n", param->name);
         reb_error(rebx_get_sim(object), str);
         return NULL;
-	}
-    struct rebx_param* newparam = malloc(sizeof(*newparam));
-    newparam = rebx_validate_ap_address(newparam);
+    }
+    
+    switch(rebx_get_object_type(object)){
+        case REBX_OBJECT_TYPE_EFFECT:
+        {
+            struct rebx_effect* effect = (struct rebx_effect*)object;
+            param->next = effect->ap;
+            effect->ap = param;
+            break;
+        }
+        case REBX_OBJECT_TYPE_PARTICLE:
+        {
+            struct reb_particle* p = (struct reb_particle*)object;
+            param->next = p->ap;
+            p->ap = param;
+            break;
+        }
+    }
+    
+    return param;
+}
+
+struct rebx_param* rebx_add_param_node(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
+    struct rebx_param* newparam = rebx_create_param();
     newparam->name = malloc(strlen(param_name) + 1); // +1 for \0 at end
     if (newparam->name != NULL){
         strcpy(newparam->name, param_name);
     }
     newparam->hash = reb_hash(param_name);
     newparam->param_type = param_type;
+    newparam->python_type = INT_MIN; // not used by C
     newparam->ndim = ndim;
     newparam->shape = NULL;
     newparam->size = 1;
@@ -408,22 +430,7 @@ struct rebx_param* rebx_add_param_node(void* const object, const char* const par
         reb_error(rebx_get_sim(object), str);
     }
 
-    switch(rebx_get_object_type(object)){
-        case REBX_OBJECT_TYPE_EFFECT:
-        {
-            struct rebx_effect* effect = (struct rebx_effect*)object;
-            newparam->next = effect->ap;
-            effect->ap = newparam;
-            break;
-        }
-        case REBX_OBJECT_TYPE_PARTICLE:
-        {
-            struct reb_particle* p = (struct reb_particle*)object;
-            newparam->next = p->ap;
-            p->ap = newparam;
-            break;
-        }
-    }
+    newparam = rebx_attach_param_node(object, newparam);
     return newparam;
 }
 
