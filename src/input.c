@@ -44,12 +44,18 @@
     }\
     break;
 
-int rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, enum rebx_input_binary_messages* warnings){
+static int rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, enum rebx_input_binary_messages* warnings){
     struct rebx_param* param = rebx_create_param();
+    if(!param){
+        return 0;
+    }
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
-        fread(&field, sizeof(field), 1, inf);
+        if (!fread(&field, sizeof(field), 1, inf)){
+            *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+            break;
+        }
         switch (field.type){
             CASE(PARAM_TYPE,        &param->param_type);
             CASE(PYTHON_TYPE,       &param->python_type);
@@ -93,12 +99,14 @@ int rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, enu
 
 static int rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
     char* name = NULL;
-    
     struct rebx_effect* effect = NULL;
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
-        fread(&field, sizeof(field), 1, inf);
+        if (!fread(&field, sizeof(field), 1, inf)){
+            *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+            break;
+        }
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_NAME:
             {
@@ -110,10 +118,13 @@ static int rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_input
             case REBX_BINARY_FIELD_TYPE_PARAM:
             {
                 if(!effect){
-                    *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
-                    fseek(inf,field.size,SEEK_CUR);
+                    return 0;
                 }
-                rebx_load_param(rebx, effect, inf, warnings);
+                long field_start = ftell(inf);
+                if (!rebx_load_param(rebx, effect, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
+                    fseek(inf,field_start + field.size,SEEK_SET);
+                }
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_END:
@@ -137,7 +148,8 @@ static int rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_inp
     int reading_fields = 1;
     while (reading_fields){
         if (!fread(&field, sizeof(field), 1, inf)){
-            return 0;
+            *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+            break;
         }
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_PARTICLE_INDEX:
@@ -150,12 +162,12 @@ static int rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_inp
             case REBX_BINARY_FIELD_TYPE_PARAM:
             {
                 if(!p){
-                    *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
-                    fseek(inf,field.size,SEEK_CUR);
+                    return 0;
                 }
-                else if (!rebx_load_param(rebx, p, inf, warnings)){
+                long field_start = ftell(inf);
+                if (!rebx_load_param(rebx, p, inf, warnings)){
                     *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
-                    fseek(inf,field.size,SEEK_CUR);
+                    fseek(inf,field_start + field.size,SEEK_SET);
                 }
                 break;
             }
@@ -205,12 +217,20 @@ void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, cons
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_EFFECT:
             {
-                reading_fields = rebx_load_effect(rebx, inf, warnings);
+                long field_start = ftell(inf);
+                if (!rebx_load_effect(rebx, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_WARNING_EFFECT_NOT_LOADED;
+                    fseek(inf,field_start + field.size,SEEK_SET);
+                }
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_PARTICLE:
             {
-                reading_fields = rebx_load_particle(rebx, inf, warnings);
+                long field_start = ftell(inf);
+                if (!rebx_load_particle(rebx, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_WARNING_PARTICLE_NOT_LOADED;
+                    fseek(inf,field_start + field.size,SEEK_SET);
+                }
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_END:
@@ -234,16 +254,31 @@ struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, c
     struct rebx_extras* rebx = rebx_init(sim);
     rebx_create_extras_from_binary_with_messages(rebx, filename, &warnings);
     
+    if (warnings & REBX_INPUT_BINARY_ERROR_NOFILE){
+        reb_error(sim,"REBOUNDx: Cannot open binary file. Check filename.");
+        rebx_free(rebx);
+        rebx = NULL;
+    }
+    if (warnings & REBX_INPUT_BINARY_ERROR_CORRUPT){
+        reb_error(sim,"REBOUNDx: Binary file is unreadable. Please open an issue on Github mentioning the version of REBOUND and REBOUNDx you are using and including the binary file.");
+        rebx_free(rebx);
+        rebx = NULL;
+    }
     if (warnings & REBX_INPUT_BINARY_WARNING_VERSION){
-        reb_warning(sim,"REBOUNDx: Binary file was saved with a different version of REBOUNDx. Binary format might have changed and corrupted the loading. Check that effects and parameters are loaded as expected.");
+        reb_warning(sim,"REBOUNDx: Binary file was saved with a different version of REBOUNDx. Binary format might have changed. Check that effects and parameters are loaded as expected.");
+    }
+    if (warnings & REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED){
+        reb_warning(sim,"REBOUNDx: At least one parameter was not loaded from the binary file.");
+    }
+    if (warnings & REBX_INPUT_BINARY_WARNING_PARTICLE_NOT_LOADED){
+        reb_warning(sim,"REBOUNDx: At least one particle's parameters were not loaded from the binary file.");
+    }
+    if (warnings & REBX_INPUT_BINARY_WARNING_EFFECT_NOT_LOADED){
+        reb_warning(sim,"REBOUNDx: At least one effect was not loaded from the binary file. If binary was created with newer version of REBOUNDx, a particular effect may not be implemented in your current version of REBOUNDx.");
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN){
         reb_warning(sim,"REBOUNDx: Unknown field found in binary file. Any unknown fields not loaded.  This can happen if the binary was created with a later version of REBOUNDx than the one used to read it.");
     }
-    if (warnings & REBX_INPUT_BINARY_ERROR_NOFILE){
-        reb_error(sim,"REBOUNDx: Cannot read binary file. Check filename and file contents.");
-        rebx_free(rebx);
-        rebx = NULL;
-    }
+    
     return rebx;
 }
