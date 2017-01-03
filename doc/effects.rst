@@ -389,11 +389,12 @@ update this parameter when the particle gets closer than the value of ``min_dist
 initially.  By default distance is measured from sim->particles[0], but you can specify a different particle by setting
 the ``min_distance_from`` parameter to the hash of the target particle.
 
-============================ =========== =======================================================
-Name (C type)                Required    Description
-============================ =========== =======================================================
-min_distance (double)        Yes         Particle's miminimum distance.
-min_distance_from (uint32)   No          Hash for particle from which to measure distance
-============================ =========== =======================================================
+================================ =========== =======================================================
+Name (C type)                    Required    Description
+================================ =========== =======================================================
+min_distance (double)            Yes         Particle's miminimum distance.
+min_distance_from (uint32)       No          Hash for particle from which to measure distance
+min_distance_orbit (reb_orbit)   No          Parameter to store orbital elements at moment corresponding to min_distance (heliocentric)
+================================ =========== =======================================================
 
 

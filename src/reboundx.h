@@ -146,12 +146,6 @@ struct rebx_binary_field{
     long size;                                      ///< Size in bytes of the object data (not including this structure). So you can skip ahead.
 };
 
-struct rebx_binary_param_metadata{
-    enum rebx_param_type type;                      ///< Parameter type
-    int ndim;                                       ///< Number of dimensions for arrays (0 for scalars)
-    size_t namelength;                              ///< Length of the parameter name.
-};
-
 /**
  * @brief Main REBOUNDx structure.
  */
@@ -192,9 +186,32 @@ void rebx_remove_from_simulation(struct reb_simulation* sim);
 /**
  * @brief Frees all memory allocated by REBOUNDx instance.
  * @details Should be called after simulation is done if memory is a concern.
- * @param rebx the rebx_extras pointer returned from the initial call to rebx_init.
+ * @param rebx The rebx_extras pointer returned from the initial call to rebx_init.
  */
 void rebx_free(struct rebx_extras* rebx);
+
+/**
+ * @brief Save a binary file with all the effects in the simulation, as well as all particle and effect parameters.
+ * @param rebx The rebx_extras pointer returned from the initial call to rebx_init.
+ * @param filename Filename to which to save the binary file.
+ */
+void rebx_output_binary(struct rebx_extras* rebx, char* filename);
+
+/**
+ * @brief Reads a REBOUNDx binary file, loads all effects and parameters.
+ * @param sim Pointer to the simulation to which the effects and parameters should be added.
+ * @param filename Filename of the saved binary file.
+ */
+struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, const char* const filename);
+
+/**
+ * @brief Similar to rebx_create_extras_from_binary(), but takes an extras instance (must be attached to a simulation) and allows for manual message handling.
+ * @param rebx Pointer to a rebx_extras instance to be updated.
+ * @param filename Filename of the saved binary file.
+ * @param warnings Pointer to an array of warnings to be populated during loading. 
+ */
+void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings);
+
 /** @} */
 /** @} */
 
@@ -393,10 +410,6 @@ double rebx_central_force_hamiltonian(struct reb_simulation* const sim);
 
 /** @} */
 /** @} */
-
-void rebx_output_binary(struct rebx_extras* rebx, char* filename);
-struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, const char* const filename);
-void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings);
 
 /********************************
  * Specialized Parameter manipulation functions
