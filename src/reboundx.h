@@ -282,6 +282,17 @@ int rebx_remove_param(const void* const object, const char* const param_name);
 void* rebx_add_param(void* const object, const char* const param_name, enum rebx_param_type param_type);
 
 /**
+ * @brief Adds an array parameter to a particle or effect.
+ * @param object Pointer to the particle or effect to which to add the parameter.
+ * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org for what parameters are needed for each effect)
+ * @param param_type Variable type from rebx_param_type enumeration.
+ * @param ndim Number of dimensions in the array.
+ * @param shape Pointer to an integer array specifying the length of the array in each dimension.
+ * @return A void pointer to the parameter, i.e., the contents member of the new rebx_param structure.
+ */void* rebx_add_param_array(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape);
+
+
+/**
  * @brief Gets a parameter from a particle or effect.
  * @param object Pointer to the particle or effect that holds the parameter.
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
