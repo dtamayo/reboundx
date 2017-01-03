@@ -20,7 +20,7 @@ __build__ = c_char_p.in_dll(clibreboundx, "rebx_build_str").value.decode('ascii'
 # Check for version
 
 # Githash
-__githash__ = c_char_p.in_dll(clibrebound, "reb_githash_str").value.decode('ascii')
+__githash__ = c_char_p.in_dll(clibreboundx, "rebx_githash_str").value.decode('ascii')
 
 try:
     moduleversion = pkg_resources.require("reboundx")[0].version
