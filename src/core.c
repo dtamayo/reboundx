@@ -426,7 +426,7 @@ struct rebx_param* rebx_add_param_node(void* const object, const char* const par
 
     else{
         char str[300];
-        sprintf(str, "REBOUNDx Error: Parameter type '%d' passed to rebx_add_param_ not supported.\n", param_type);
+        sprintf(str, "REBOUNDx Error: Parameter type '%d' passed to rebx_add_param_node not supported.\n", param_type);
         reb_error(rebx_get_sim(object), str);
     }
 
@@ -434,13 +434,13 @@ struct rebx_param* rebx_add_param_node(void* const object, const char* const par
     return newparam;
 }
 
-void* rebx_add_param_(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
+void* rebx_add_param_array(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
     return rebx_add_param_node(object, param_name, param_type, ndim, shape)->contents;
 }
 
 void* rebx_add_param(void* const object, const char* const param_name, enum rebx_param_type param_type){
 	int ndim=0;
-	return rebx_add_param_(object, param_name, param_type, ndim, NULL);
+	return rebx_add_param_array(object, param_name, param_type, ndim, NULL);
 }
 
 void* rebx_get_param(const void* const object, const char* const param_name){

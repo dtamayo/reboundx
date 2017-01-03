@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
     int* integers = rebx_add_param_(planet, "integers", REBX_TYPE_INT, 1, &shape1D);
     memcpy(integers, ints, sizeof(*integers)*3);
     
-    struct reb_orbit* orbits = rebx_add_param_(planet, "orbit", REBX_TYPE_ORBIT, 1, &shape1D);
+    struct reb_orbit* orbits = rebx_add_param_(planet, "orbits", REBX_TYPE_ORBIT, 1, &shape1D);
     struct reb_orbit orbs[3] = {{.a=1., .e=0.1}, {.a=2., .e=0.2}, {.a=3., .e=0.3}};
     memcpy(orbits, orbs, sizeof(*orbits)*3);
     

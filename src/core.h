@@ -63,9 +63,6 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim);  // Calls all
 // Add a parameter to the params_to_be_freed linked list for later freeing.
 void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
 
-// General internal parameter adder
-void* rebx_add_param_(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape);
-
 /***********************************************************************************
  * Miscellaneous Functions
 ***********************************************************************************/
