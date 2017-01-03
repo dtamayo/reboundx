@@ -2,13 +2,16 @@ from . import clibreboundx
 from ctypes import Structure, c_double, POINTER, c_int, c_uint, c_long, c_ulong, c_void_p, c_char_p, CFUNCTYPE, byref, c_uint32, c_uint, cast, c_char
 import rebound
 import reboundx
+import warnings
 
 REBX_BINARY_WARNINGS = [
-    ("Cannot read binary file. Check filename and file contents.", 1),
-    ("Binary file was saved with a different version of REBOUND. Binary format might have changed.", 2),
-    ("You have to reset function pointers after creating a reb_simulation struct with a binary file.", 4),
-    ("Binary file might be corrupted. Number of particles found does not match particle number expected.", 8),
-    ("Unknown field found in binary file.", 128)
+        ("REBOUNDx Error: Cannot read binary file. Check filename and file contents.", 1),
+        ("REBOUNDx Error: Binary file was corrupt. Could not read.", 2),
+        ("REBOUNDx Warning: Binary file was saved with a different version of REBOUNDx. Binary format might have changed.", 4),
+        ("REBOUNDx Warning: At least one parameter in the binary file was not loaded. Check simulation.", 8),
+        ("REBOUNDx Warning: At least one particle's parameters in the binary file were not loaded. Check simulation.", 16),
+        ("REBOUNDx Warning: At least one effect and its parameters were not loaded from the binary file. Check simulation.", 32),
+        ("REBOUNDx Warning: At least one field in the binary field was not recognized, and not loaded. Probably binary was created with more recent REBOUNDx version than you are using.", 64),
 ]
 
 class Extras(Structure):

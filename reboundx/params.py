@@ -21,13 +21,13 @@ class Params(MutableMapping):
         #### and self.types for new python types.
         #### ADD ONLY TO THE END OF EACH LIST 
         
-        rebx_param_types = ["REBX_TYPE_DOUBLE", 
-                            "REBX_TYPE_INT", 
-                            "REBX_TYPE_UINT32", 
-                            "REBX_TYPE_ORBIT",
-                            "REBX_TYPE_LONGLONG",
-                           ] # In same order as C enum
-        val = {param_type:value for (value, param_type) in enumerate(rebx_param_types)}
+        rebx_param_types = [("REBX_TYPE_DOUBLE", float),
+                            ("REBX_TYPE_INT", np.int32),
+                            ("REBX_TYPE_UINT32", c_uint),
+                            ("REBX_TYPE_ORBIT", rebound.Orbit),
+                            ("REBX_TYPE_LONGLONG", np.int64),
+                           ] # In same order as C enum, with default python types for each
+        val = {param_type[0]:value for (value, param_type) in enumerate(rebx_param_types)}
 
         # tuples of corresponding (python type, dtype, ctype, rebxtype enum value). ONLY ADD TO THE END OF THIS LIST
         # dtype should be same as python type for 'primitive' types, and object for any ctypes structure
@@ -43,6 +43,7 @@ class Params(MutableMapping):
         
         python_types = [item[0] for item in type_tuples]
         self.ptype = {enum:ptype for (enum, ptype) in enumerate(python_types)} # get python type from enum value
+        self.defaultptype = {val[rebxtype]:ptype for (rebxtype, ptype) in rebx_param_types} # get default python type from C rebx type
         self.penum = {ptype:enum for (enum, ptype) in enumerate(python_types)} # get enum from python type
         self.types = {item[0]:(item[1], item[2], item[3]) for item in type_tuples} # (dtype, ctype, rebxtype)from ptype
 
@@ -54,7 +55,11 @@ class Params(MutableMapping):
         if node: 
             if self.verbose: print("Parameter {0} found".format(key))
             param = node.contents
-            pythontype = self.ptype[param.python_type]
+            try:
+                pythontype = self.ptype[param.python_type]
+            except KeyError:
+                pythontype = self.defaultptype[param.param_type] # Parameter was set in C, use default
+
             dtype, ctype, rebxtype = self.types[pythontype]
             if self.verbose:
                 print("param.python_type= {0}, pythontype = {1}".format(param.python_type, pythontype))
@@ -79,10 +84,9 @@ class Params(MutableMapping):
                         array = np.array([pythontype(data.contents[i]) for i in range(param.size)], dtype=dtype)
                     except TypeError: # for cases where a custom ctypes Structure can't take a class instance in __init__
                         array = np.array([data.contents[i] for i in range(param.size)], dtype=dtype)
-
                     #Makes copies of the ctypes.Structure instances, but fields share memory with C.
                 else:
-                    array = np.frombuffer(data.contents, dtype=dtype, count=param.size)# shares memory with C
+                    array = np.frombuffer(data.contents, dtype=dtype, count=param.size)
                 if param.ndim > 1:
                     shape = [param.shape[i] for i in range(param.ndim)]
                     array = np.reshape(array, shape)

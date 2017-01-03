@@ -405,7 +405,7 @@ struct rebx_param* rebx_add_param_node(void* const object, const char* const par
     }
     newparam->hash = reb_hash(param_name);
     newparam->param_type = param_type;
-    newparam->python_type = INT_MIN; // not used by C
+    newparam->python_type = -1; // not used by C
     newparam->ndim = ndim;
     newparam->shape = NULL;
     newparam->size = 1;
