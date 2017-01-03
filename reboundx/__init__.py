@@ -19,6 +19,9 @@ __version__ = c_char_p.in_dll(clibreboundx, "rebx_version_str").value.decode('as
 __build__ = c_char_p.in_dll(clibreboundx, "rebx_build_str").value.decode('ascii')
 # Check for version
 
+# Githash
+__githash__ = c_char_p.in_dll(clibrebound, "reb_githash_str").value.decode('ascii')
+
 try:
     moduleversion = pkg_resources.require("reboundx")[0].version
     libreboundxversion = __version__
@@ -40,4 +43,4 @@ rebound.Particle.params = params
 from .extras import Extras, Param, Effect
 from .tools import coordinates, install_test
 from .params import Params
-__all__ = ["Extras", "Param", "Effect", "Params", "coordinates", "install_test"]
+__all__ = ["__version__", "__build__", "__githash__", "Extras", "Param", "Effect", "Params", "coordinates", "install_test"]

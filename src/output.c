@@ -131,15 +131,13 @@ void rebx_output_binary(struct rebx_extras* rebx, char* filename){
 
     // Output header.
     const char str[] = "REBOUNDx Binary File. Version: ";
+    char zero = '\0';
     size_t lenheader = strlen(str)+strlen(rebx_version_str);
     fwrite(str,sizeof(char),strlen(str),of);
     fwrite(rebx_version_str,sizeof(char), strlen(rebx_version_str),of);
-    while (lenheader<64){ //padding
-        char space = ' ';
-        if (lenheader==63) space = '\0';
-        fwrite(&space,sizeof(char),1,of);
-        lenheader += 1;
-    }
+    fwrite(&zero,sizeof(char),1,of);
+    fwrite(rebx_githash_str,sizeof(char),62-lenheader,of);
+    fwrite(&zero,sizeof(char),1,of);
 
     int neffects=0;
     struct rebx_effect* current = rebx->effects;
