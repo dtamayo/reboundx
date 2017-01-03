@@ -1,5 +1,5 @@
 /**
- * Restarting simulations
+ * Saving and loading simulations
  * 
  * This example demonstrates how to restart a simulation with all REBOUNDx effects and parameters.
  */
