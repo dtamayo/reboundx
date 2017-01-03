@@ -34,9 +34,13 @@
 #include <limits.h>
 #include "rebound.h"
 #include "rebxtools.h"
+#ifndef REBXGITHASH
+#define REBXGITHASH notavailable0000000000000000000000000001 
+#endif // REBXGITHASH
 
 extern const char* rebx_build_str;      ///< Date and time build string.
 extern const char* rebx_version_str;    ///<Version string.
+extern const char* rebx_githash_str;    ///< Current git hash.
 
 /******************************************
   REBOUNDx Enums 

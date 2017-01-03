@@ -15,6 +15,14 @@ suffix = sysconfig.get_config_var('EXT_SUFFIX')
 if suffix is None:
     suffix = ".so"
 
+# Try to get git hash
+try:
+    import subprocess
+    ghash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii")
+    ghash_arg = "-DREBXGITHASH="+ghash
+except:
+    ghash_arg = "-DREBXGITHASH=de6647e2b083fc91472d636355512ada02b9f3f6" #GITHASHAUTOUPDATE
+
 class build_ext(_build_ext):
     def finalize_options(self):
         _build_ext.finalize_options(self)
@@ -53,7 +61,7 @@ libreboundxmodule = Extension('libreboundx',
                     runtime_library_dirs = ["."],
                     libraries=['rebound'+suffix[:-3]], #take off .so from the suffix
                     define_macros=[ ('LIBREBOUNDX', None) ],
-                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-fPIC', '-Wpointer-arith'],
+                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', ghash_arg, '-fPIC', '-Wpointer-arith'],
                     extra_link_args=extra_link_args,
                     )
 
@@ -62,7 +70,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='reboundx',
-    version='2.15.0',
+    version='2.15.1',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
     url='http://github.com/dtamayo/reboundx',

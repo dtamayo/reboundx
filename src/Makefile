@@ -17,6 +17,11 @@ endif
 include $(REB_DIR)/src/Makefile.defs
 OPT+= -fPIC -DLIBREBOUNDX
 
+ifndef REBXGITHASH
+	REBXGITHASH = $(shell git rev-parse HEAD || echo '0000000000gitnotfound0000000000000000000')
+	PREDEF+= -DREBXGITHASH=$(REBXGITHASH)
+endif
+
 SOURCES=central_force.c core.c gr.c gr_full.c gr_potential.c input.c modify_mass.c modify_orbits_direct.c modify_orbits_forces.c output.c radiation_forces.c rebxtools.c tides_precession.c track_min_distance.c 
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=rebxtools.h reboundx.h
