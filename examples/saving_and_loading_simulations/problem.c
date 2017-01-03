@@ -24,14 +24,14 @@ int main(int argc, char* argv[]){
     struct rebx_effect* gr = rebx_add(rebx, "gr");
     double* a = rebx_add_param(gr, "a", REBX_TYPE_DOUBLE);
     double* b = rebx_add_param(gr, "b", REBX_TYPE_DOUBLE);
-    double* c = rebx_add_param(gr, "c", REBX_TYPE_DOUBLE);
+    int* c = rebx_add_param(gr, "c", REBX_TYPE_INT);
     *a = 1.;
     *b = 2.;
-    *c = 3.;
+    *c = 3;
     
     printf("a: Original = %f\n", *a);
     printf("b: Original = %f\n", *b);
-    printf("c: Original = %f\n", *c);
+    printf("c: Original = %d\n", *c);
 
     // See array_parameters example for details on adding array parameters
     int ndim = 3;
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]){
     
     printf("a: Loaded = %f\n", *a);
     printf("b: Loaded = %f\n", *b);
-    printf("c: Loaded = %f\n", *c);
+    printf("c: Loaded = %d\n", *c);
     
     printf("Original planet integers:\t");
     for(int i=0; i<24; i++){
