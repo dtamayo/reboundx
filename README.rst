@@ -25,12 +25,12 @@ For a list of supported effects, installation instructions, tutorials/examples a
 
 Changelog
 =========
-  -2.16.0 Added support for binaries and simulationarchive
-  -2.14.0 Added track_min_distance
-  -2.13.0 Fixed collision for long integrations and added support for arrays
-  -2.12.0 Added central force effect
-  -2.11.0 Added tidal precession
-  -2.10.0 Streamlined code for adding new effects (see below)
+  - 2.16.0 Added support for binaries and simulationarchive
+  - 2.14.0 Added track_min_distance
+  - 2.13.0 Fixed collision for long integrations and added support for arrays
+  - 2.12.0 Added central force effect
+  - 2.11.0 Added tidal precession
+  - 2.10.0 Streamlined code for adding new effects (see below)
 
 Update: REBOUNDx 2.16.0
 =======================
