@@ -13,12 +13,29 @@
 .. image:: https://img.shields.io/badge/launch-binder-ff69b4.svg?style=flat
     :target: http://mybinder.org/repo/dtamayo/reboundx
 
+ Welcome to REBOUNDx (eXtras)
+====================================
+
+REBOUNDx allows you to easily incorporate additional physics into your REBOUND simulations.
+All the computationally expensive parts of the code are written in C, so that the code will run much faster than if you define your own custom `additional_forces` functions in Python.
+
+For a list of supported effects, installation instructions, tutorials/examples and documentation, please see http://reboundx.readthedocs.org.
+
+.. image:: https://github.com/dtamayo/dtamayo.github.io/blob/master/pix/reboundx.png
+
 Changelog
 =========
-2.13.0 Fixed collision for long integrations and added support for arrays
-2.12.0 Added central force effect
-2.11.0 Added tidal precession
-2.10.0 Streamlined code for adding new effects (see below)
+  -2.16.0 Added support for binaries and simulationarchive
+  -2.14.0 Added track_min_distance
+  -2.13.0 Fixed collision for long integrations and added support for arrays
+  -2.12.0 Added central force effect
+  -2.11.0 Added tidal precession
+  -2.10.0 Streamlined code for adding new effects (see below)
+
+Update: REBOUNDx 2.16.0
+=======================
+
+We have added support for writing and loading REBOUNDx binary save files, making it possible to use REBOUND SimulationArchives for machine-independent, bit-by-bit reproducible simulations with additional effects. We also improved the support for array parameters, and updated the documentation. We added information in the binary files of the githash used to generate it, making it easier to match up versions to reproduce simulations.
 
 Update: REBOUNDx 2.13.0
 =======================
@@ -39,13 +56,4 @@ The changes should be clear from inspection of the various examples in the docum
 Some of these changes led to feature additions in REBOUND, so you should also update REBOUND to at least version 2.19.2 (see Sec. 5.3 of http://rebound.readthedocs.org/en/latest/python_quickstart.html).
 Let me know if you have any feedback / issues.
 
-Welcome to REBOUNDx (eXtras)
-====================================
-
-REBOUNDx allows you to easily incorporate additional physics into your REBOUND simulations.
-All the computationally expensive parts of the code are written in C, so that the code will run much faster than if you define your own custom `additional_forces` functions in Python.
-
-For a list of supported effects, installation instructions, tutorials/examples and documentation, please see http://reboundx.readthedocs.org.
-
-.. image:: https://github.com/dtamayo/dtamayo.github.io/blob/master/pix/reboundx.png
 
