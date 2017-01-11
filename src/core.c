@@ -188,6 +188,9 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
     else if (effect->hash == reb_hash("track_min_distance")){
         effect->ptm = rebx_track_min_distance;
     }
+    else if (effect->hash == reb_hash("moon_quadrupole_laskar")){
+        effect->force = rebx_moon_quadrupole_laskar;
+    }
     else{
         char str[100]; 
         sprintf(str, "Effect '%s' passed to rebx_add not found.\n", name);
