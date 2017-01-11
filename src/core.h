@@ -87,5 +87,6 @@ void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* cons
 void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_effect* const effect);
 void rebx_central_force(struct reb_simulation* const sim, struct rebx_effect* const effect);
 void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_effect* const effect);
+void rebx_moon_quadrupole_laskar(struct reb_simulation* const sim, struct rebx_effect* const effect){ 
 
 #endif

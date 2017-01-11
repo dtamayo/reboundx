@@ -22,7 +22,7 @@ ifndef REBXGITHASH
 	PREDEF+= -DREBXGITHASH=$(REBXGITHASH)
 endif
 
-SOURCES=central_force.c core.c gr.c gr_full.c gr_potential.c input.c modify_mass.c modify_orbits_direct.c modify_orbits_forces.c output.c radiation_forces.c rebxtools.c tides_precession.c track_min_distance.c 
+SOURCES=central_force.c core.c gr.c gr_full.c gr_potential.c input.c modify_mass.c modify_orbits_direct.c modify_orbits_forces.c moon_quadrupole_laskar.c output.c radiation_forces.c rebxtools.c tides_precession.c track_min_distance.c 
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=rebxtools.h reboundx.h
 

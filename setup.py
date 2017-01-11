@@ -55,7 +55,7 @@ if sys.platform == 'darwin':
     extra_link_args.append('-Wl,-install_name,@rpath/libreboundx'+suffix)
 
 libreboundxmodule = Extension('libreboundx',
-                    sources = [ 'src/central_force.c', 'src/core.c', 'src/gr.c', 'src/gr_full.c', 'src/gr_potential.c', 'src/input.c', 'src/modify_mass.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/output.c', 'src/radiation_forces.c', 'src/rebxtools.c', 'src/tides_precession.c', 'src/track_min_distance.c'],
+                    sources = [ 'src/central_force.c', 'src/core.c', 'src/gr.c', 'src/gr_full.c', 'src/gr_potential.c', 'src/input.c', 'src/modify_mass.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/moon_quadrupole_laskar.c', 'src/output.c', 'src/radiation_forces.c', 'src/rebxtools.c', 'src/tides_precession.c', 'src/track_min_distance.c'],
                     include_dirs = ['src'],
                     library_dirs = [],
                     runtime_library_dirs = ["."],
