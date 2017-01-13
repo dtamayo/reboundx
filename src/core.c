@@ -39,6 +39,68 @@ const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build strin
 const char* rebx_version_str = "2.16.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(GITHASH);             // This line gets updated automatically. Do not edit manually.
 
+void drag_force(struct reb_simulation* const r, struct reb_particle* const ps){
+    double tau = 100.;
+    struct reb_particle* source = &ps[0];
+    struct reb_particle* p = &ps[1];
+    const double dvx = p->vx - source->vx;
+    const double dvy = p->vy - source->vy;
+    const double dvz = p->vz - source->vz;
+    p->ax -= dvx/tau;
+    p->ay -= dvy/tau;
+    p->az -= dvz/tau;
+    source->ax += p->m/source->m*dvx/tau;
+    source->ay += p->m/source->m*dvy/tau;
+    source->az += p->m/source->m*dvz/tau;
+}
+
+void avg_particles(struct reb_particle* const ps_avg, struct reb_particle* const ps1, struct reb_particle* const ps2, int N){
+    for(int i=0; i<N; i++){
+        ps_avg[i].x = 0.5*(ps1[i].x + ps2[i].x);
+        ps_avg[i].y = 0.5*(ps1[i].y + ps2[i].y);
+        ps_avg[i].z = 0.5*(ps1[i].z + ps2[i].z); 
+        ps_avg[i].vx = 0.5*(ps1[i].vx + ps2[i].vx);
+        ps_avg[i].vy = 0.5*(ps1[i].vy + ps2[i].vy);
+        ps_avg[i].vz = 0.5*(ps1[i].vz + ps2[i].vz);
+        ps_avg[i].m = 0.5*(ps1[i].m + ps2[i].m);
+    }
+    fprintf(stderr, "Avg vy = %.16f\n", ps_avg[1].vy);
+}
+
+int compare(struct reb_particle* ps1, struct reb_particle* ps2, int N){
+    for(int i=0; i<N; i++){
+        fprintf(stderr, "%.16f\t%.16f\t%.4e\n", ps1[i].vy, ps2[i].vy, fabs((ps1[i].vy - ps2[i].vy)/ps1[i].vy));
+        if (ps1[i].vx != ps2[i].vx || ps1[i].vy != ps2[i].vy || ps1[i].vz != ps2[i].vz){
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void drag(struct reb_simulation* const r, struct reb_particle* restrict p_canon, double dt, int N){
+    struct reb_particle* ps = r->particles;
+    struct reb_particle* ps_orig = malloc(r->N*sizeof(*ps_orig));
+    struct reb_particle* ps_old = malloc(r->N*sizeof(*ps_orig));
+    struct reb_particle* ps_avg = malloc(r->N*sizeof(*ps_avg));
+    memcpy(ps_orig, r->particles, r->N*sizeof(*ps_orig));
+
+    int n, converged;
+    for(n=1;n<10;n++){
+        memcpy(ps_old, ps, r->N*sizeof(*ps_old));
+        avg_particles(ps_avg, ps, ps_old, N);
+        drag_force(r, ps_avg);
+        for(int i=0; i<N; i++){
+            ps[i].vx = ps_orig[i].vx + dt*ps_avg[i].ax;
+            ps[i].vy = ps_orig[i].vy + dt*ps_avg[i].ay;
+            ps[i].vz = ps_orig[i].vz + dt*ps_avg[i].az;
+        }
+        converged = compare(ps, ps_old, N);
+        if (converged){
+            break;
+        }
+    }
+    fprintf(stderr, "%d\n", n);
+}
 /*****************************
  Initialization routines.
  ****************************/
@@ -51,6 +113,7 @@ struct rebx_extras* rebx_init(struct reb_simulation* sim){  // reboundx.h
 
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     sim->extras = rebx;
+    sim->ri_whfast.symplectic_operator = drag;
     rebx->sim = sim;
 	rebx->params_to_be_freed = NULL;
 	rebx->effects = NULL;
