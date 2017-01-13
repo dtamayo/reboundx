@@ -74,6 +74,8 @@ static double sqrt9(double a){
 }
 
 static void rebx_calculate_force(struct reb_simulation* const sim, const double m_ratio_earthmoon_mql, const double a0_mql, const double a1_mql, const double a2_mql, const double alpha_mql, const double f_mql, const int i){
+    double a1 = 0.10283022841433383;
+    double a2 = -0.016869154631638014;
     struct reb_particle* const particles = sim->particles;
     const struct reb_particle source = sim->particles[0];
     const struct reb_particle p = particles[i];
@@ -88,23 +90,12 @@ static void rebx_calculate_force(struct reb_simulation* const sim, const double 
 
     const double A = (-3.0/4.0)*sim->G*source.m*(f_mql)*r_earthmoon_mql*r_earthmoon_mql*massratio;
     const double prefac = A*pow(r2, -5./2.);
-// Machine independent implementation of pow(*,1./7.)
-static double sqrt7(double a){
-    double x = 1.;
-    for (int k=0; k<20;k++){  // A smaller number should be ok too.
-        double x6 = x*x*x*x*x*x;
-        x += (a/x6-x)/7.;
-    }
-    return x;
-}
-
     particles[i].ax += prefac*dx;
     particles[i].ay += prefac*dy;
     particles[i].az += prefac*dz;
     particles[0].ax -= p.m/source.m*prefac*dx;
     particles[0].ay -= p.m/source.m*prefac*dy;
     particles[0].az -= p.m/source.m*prefac*dz;
-    printf("%f\n", sqrt9(18.));
 }
 
 void rebx_moon_quadrupole_laskar(struct reb_simulation* const sim, struct rebx_effect* const effect){ 
