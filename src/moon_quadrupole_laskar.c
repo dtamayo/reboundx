@@ -29,12 +29,13 @@
  * ======================= ===============================================
  * Authors                 A. Rachkov, D. Tamayo
  * Implementation Paper    *In progress*
- * Based on                None
+ * Based on                Quinn et al., 1991, Laskar & Gastineau, 2009 
  * C Example               :ref:`c_example_moon_quadrupole_laskar`
  * Python Example          `MoonQuadrupoleLaskar.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/MoonQuadrupoleLaskar.ipynb>`_.
  * ======================= ===============================================
  * 
- * Add description here 
+ * This effect adds a correction term for
+ * Add description here of effect 
  *
  * **Effect Parameters**
  * 
@@ -45,8 +46,12 @@
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * Aradial (double)             Yes         Normalization for central acceleration.
- * gammaradial (double)         Yes         Power index for central acceleration.
+ * m_ratio_earthmoon_mql (double)             Yes         Earth mass over Moon mass ratio.
+ * a0_mql (double)         Yes         a0 parameter from the tidal dissipation model, equation 1 in Supplementary Material from Laskar & Gastineau, 2009.
+ * a1_mql (double)         Yes         a1 parameter from the tidal dissipation model, equation 1 in Supplementary Material from Laskar & Gastineau, 2009.
+ * a2_mql (double)         Yes         a2 parameter from the tidal dissipation model, equation 1 in Supplementary Material from Laskar & Gastineau, 2009.
+ * alpha_mql (double)         Yes         alpha parameter from the tidal dissipation model, equation 1 in Supplementary Material Laskar & Gastineau, 2009.
+ * f_mql (double)         Yes         correction factor f added due to representing the average lunar orbit as a circular ring, coming from equation 2 in Quinn et al., 1991.
  * ============================ =========== ==================================================================
  * 
  */
@@ -67,10 +72,8 @@ static void rebx_calculate_force(struct reb_simulation* const sim, const double 
     const double dz = p.z - source.z;
     const double r2 = dx*dx + dy*dy + dz*dz;
     
-
     // Calculate A. Put in right value of gamma
-    double r_earthmoon_mql = a0_mql*pow((1.0+(a1_mql/alpha_mql)*1.e-9*2.*M_PI*0.+a2_mql*1.e-18*4.*M_PI*M_PI*0.*0.),alpha_mql);
-//    double r_earthmoon_mql = a0_mql*pow((1.0+(a1_mql/alpha_mql)*1.e-9*2.*M_PI*sim->t+a2_mql*1.e-18*4.*M_PI*M_PI*sim->t*sim->t),alpha_mql);
+    double r_earthmoon_mql = a0_mql*pow((1.0+(a1_mql/alpha_mql)*1.e-9*2.*M_PI*sim->t+a2_mql*1.e-18*4.*M_PI*M_PI*sim->t*sim->t),alpha_mql);
     double massratio = 1.0/(m_ratio_earthmoon_mql + 2.0 + 1.0/m_ratio_earthmoon_mql);
 
     const double A = (-3.0/4.0)*sim->G*source.m*(f_mql)*r_earthmoon_mql*r_earthmoon_mql*massratio;
@@ -119,8 +122,7 @@ static double rebx_calculate_hamiltonian(struct reb_simulation* const sim, const
     const double dz = p.z - source.z;
     const double r2 = dx*dx + dy*dy + dz*dz;
 
-    double r_earthmoon_mql = a0_mql*pow((1.0+(a1_mql/alpha_mql)*1.e-9*2.*M_PI*0.+a2_mql*1.e-18*4.*M_PI*M_PI*0.*0.),alpha_mql);
-//    double r_earthmoon_mql = a0_mql*pow((1.0+(a1_mql/alpha_mql)*1.e-9*2.*M_PI*sim->t+a2_mql*1.e-18*4.*M_PI*M_PI*sim->t*sim->t),alpha_mql);
+    double r_earthmoon_mql = a0_mql*pow((1.0+(a1_mql/alpha_mql)*1.e-9*2.*M_PI*sim->t+a2_mql*1.e-18*4.*M_PI*M_PI*sim->t*sim->t),alpha_mql);
     double massratio = 1.0/(m_ratio_earthmoon_mql + 2.0 + 1.0/m_ratio_earthmoon_mql);
 
     const double A = (-1.0/4.0)*sim->G*source.m*(f_mql)*r_earthmoon_mql*r_earthmoon_mql*massratio;
