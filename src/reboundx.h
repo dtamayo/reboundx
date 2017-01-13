@@ -412,7 +412,7 @@ double rebx_tides_precession_hamiltonian(struct reb_simulation* const sim);
  */
 double rebx_central_force_hamiltonian(struct reb_simulation* const sim);
 
-double rebx_moon_quadrupole_laskar_hamiltonian(struct reb_simulation* const sim){ 
+double rebx_moon_quadrupole_laskar_hamiltonian(struct reb_simulation* const sim);
 
 /** @} */
 /** @} */

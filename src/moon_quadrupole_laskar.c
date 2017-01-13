@@ -58,8 +58,7 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-static void rebx_calculate_force(struct reb_simulation* const sim, const double A, const double gamma, const int source_index){
-    const int _N_real = sim->N - sim->N_var;
+static void rebx_calculate_force(struct reb_simulation* const sim, const double m_ratio_earthmoon_mql, const double a0_mql, const double a1_mql, const double a2_mql, const double alpha_mql, const double f_mql, const int i){
     struct reb_particle* const particles = sim->particles;
     const struct reb_particle source = sim->particles[0];
     const struct reb_particle p = particles[i];
@@ -67,9 +66,15 @@ static void rebx_calculate_force(struct reb_simulation* const sim, const double 
     const double dy = p.y - source.y;
     const double dz = p.z - source.z;
     const double r2 = dx*dx + dy*dy + dz*dz;
+    
 
     // Calculate A. Put in right value of gamma
-    const double prefac = A*pow(r2, (gamma-1.)/2.);
+    double r_earthmoon_mql = a0_mql*pow((1.0+(a1_mql/alpha_mql)*1.e-9*2.*M_PI*0.+a2_mql*1.e-18*4.*M_PI*M_PI*0.*0.),alpha_mql);
+//    double r_earthmoon_mql = a0_mql*pow((1.0+(a1_mql/alpha_mql)*1.e-9*2.*M_PI*sim->t+a2_mql*1.e-18*4.*M_PI*M_PI*sim->t*sim->t),alpha_mql);
+    double massratio = 1.0/(m_ratio_earthmoon_mql + 2.0 + 1.0/m_ratio_earthmoon_mql);
+
+    const double A = (-3.0/4.0)*sim->G*source.m*(f_mql)*r_earthmoon_mql*r_earthmoon_mql*massratio;
+    const double prefac = A*pow(r2, -5./2.);
 
     particles[i].ax += prefac*dx;
     particles[i].ay += prefac*dy;
@@ -83,29 +88,43 @@ void rebx_moon_quadrupole_laskar(struct reb_simulation* const sim, struct rebx_e
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
     for (int i=1; i<N_real; i++){
-        const double* const m_moon_mql = rebx_get_param_check(&particles[i], "m_moon_mql", REBX_TYPE_DOUBLE);
-        if (m_moon_mql != NULL){
+        const double* const m_ratio_earthmoon_mql = rebx_get_param_check(&particles[i], "m_ratio_earthmoon_mql", REBX_TYPE_DOUBLE);
+        if (m_ratio_earthmoon_mql != NULL){
             const double* const a0_mql = rebx_get_param_check(&particles[i], "a0_mql", REBX_TYPE_DOUBLE);
             if (a0_mql != NULL){
-                // keep chaining ifs to get all the parameters
-                rebx_calculate_force(sim, *m_moon_mql, *a0, *a1, *a2, *alpha, i); // only calculates force if all parameters set
+		        const double* const a1_mql = rebx_get_param_check(&particles[i], "a1_mql", REBX_TYPE_DOUBLE);
+		        if (a1_mql != NULL){
+			        const double* const a2_mql = rebx_get_param_check(&particles[i], "a2_mql", REBX_TYPE_DOUBLE);
+			        if (a2_mql != NULL){
+				        const double* const alpha_mql = rebx_get_param_check(&particles[i], "alpha_mql", REBX_TYPE_DOUBLE);
+				        if (alpha_mql != NULL){
+					        const double* const f_mql = rebx_get_param_check(&particles[i], "f_mql", REBX_TYPE_DOUBLE);
+				            if (f_mql != NULL){
+				                rebx_calculate_force(sim, *m_ratio_earthmoon_mql, *a0_mql, *a1_mql, *a2_mql, *alpha_mql, *f_mql, i); // only calculates force if all parameters set
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-static double rebx_calculate_hamiltonian(struct reb_simulation* const sim, const double A, const double gamma, const int source_index){
+static double rebx_calculate_hamiltonian(struct reb_simulation* const sim, const double m_ratio_earthmoon_mql, const double a0_mql, const double a1_mql, const double a2_mql, const double alpha_mql, const double f_mql, const int i){
     const struct reb_particle* const particles = sim->particles;
-	const int _N_real = sim->N - sim->N_var;
     const struct reb_particle source = particles[0];
-    double H = 0.;
     const struct reb_particle p = particles[i];
     const double dx = p.x - source.x;
     const double dy = p.y - source.y;
     const double dz = p.z - source.z;
     const double r2 = dx*dx + dy*dy + dz*dz;
 
-    H -= p.m*A*pow(r2, (gamma+1.)/2.)/(gamma+1.); // figure this out
+    double r_earthmoon_mql = a0_mql*pow((1.0+(a1_mql/alpha_mql)*1.e-9*2.*M_PI*0.+a2_mql*1.e-18*4.*M_PI*M_PI*0.*0.),alpha_mql);
+//    double r_earthmoon_mql = a0_mql*pow((1.0+(a1_mql/alpha_mql)*1.e-9*2.*M_PI*sim->t+a2_mql*1.e-18*4.*M_PI*M_PI*sim->t*sim->t),alpha_mql);
+    double massratio = 1.0/(m_ratio_earthmoon_mql + 2.0 + 1.0/m_ratio_earthmoon_mql);
+
+    const double A = (-1.0/4.0)*sim->G*source.m*(f_mql)*r_earthmoon_mql*r_earthmoon_mql*massratio;
+    double H = p.m*A*pow(r2, -3./2.); // figure this out
    
     return H;
 }
@@ -116,11 +135,23 @@ double rebx_moon_quadrupole_laskar_hamiltonian(struct reb_simulation* const sim)
     double Htot = 0.;
     for (int i=1; i<N_real; i++){
         // copy paste the chain of if statements from above
-        const double* const Acentral = rebx_get_param_check(&particles[i], "Acentral", REBX_TYPE_DOUBLE);
-        if (Acentral != NULL){
-            const double* const gammacentral = rebx_get_param_check(&particles[i], "gammacentral", REBX_TYPE_DOUBLE);
-            if (gammacentral != NULL){
-                Htot += rebx_calculate_hamiltonian(sim, *m_moon_mql, *a0, *a1, *a2, *alpha, i);
+        const double* const m_ratio_earthmoon_mql = rebx_get_param_check(&particles[i], "m_ratio_earthmoon_mql", REBX_TYPE_DOUBLE);
+        if (m_ratio_earthmoon_mql != NULL){
+            const double* const a0_mql = rebx_get_param_check(&particles[i], "a0_mql", REBX_TYPE_DOUBLE);
+            if (a0_mql != NULL){
+                const double* const a1_mql = rebx_get_param_check(&particles[i], "a1_mql", REBX_TYPE_DOUBLE);
+                if (a1_mql != NULL){
+                    const double* const a2_mql = rebx_get_param_check(&particles[i], "a2_mql", REBX_TYPE_DOUBLE);
+                    if (a2_mql != NULL){
+                        const double* const alpha_mql = rebx_get_param_check(&particles[i], "alpha_mql", REBX_TYPE_DOUBLE);
+                        if (alpha_mql != NULL){
+                            const double* const f_mql = rebx_get_param_check(&particles[i], "f_mql", REBX_TYPE_DOUBLE);
+                                if (f_mql != NULL){
+                                    Htot += rebx_calculate_hamiltonian(sim, *m_ratio_earthmoon_mql, *a0_mql, *a1_mql, *a2_mql, *alpha_mql, *f_mql, i);
+                            }
+                        }
+                    }
+                }
             }
         }
     }
