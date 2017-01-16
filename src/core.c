@@ -39,6 +39,81 @@ const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build strin
 const char* rebx_version_str = "2.16.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(GITHASH);             // This line gets updated automatically. Do not edit manually.
 
+void gr(struct reb_simulation* const sim, struct reb_particle* const particles){
+    const double C2 = 1.e6;//10064.915*10064.915;
+    const source_index = 0;
+    const int N_real = sim->N - sim->N_var;
+    const double G = sim->G;
+    const unsigned int _gravity_ignore_10 = sim->gravity_ignore_terms==1;
+    
+    const double mu = G*particles[source_index].m;
+    double aoverm10x, aoverm10y, aoverm10z;
+    
+    if (_gravity_ignore_10){
+        const double dx = particles[0].x - particles[1].x;
+        const double dy = particles[0].y - particles[1].y;
+        const double dz = particles[0].z - particles[1].z;
+        const double softening2 = sim->softening*sim->softening;
+        const double r2 = dx*dx + dy*dy + dz*dz + softening2;
+        const double r = sqrt(r2);
+        const double prefac = G/(r2*r);
+        
+        aoverm10x = prefac*dx;
+        aoverm10y = prefac*dy;
+        aoverm10z = prefac*dz;
+    }
+    
+    const struct reb_particle source = particles[source_index];
+    for (int i=0; i<N_real; i++){
+        if(i == source_index){
+            continue;
+        }
+        const struct reb_particle pi = particles[i];
+        
+        const double dx = pi.x - source.x;
+        const double dy = pi.y - source.y;
+        const double dz = pi.z - source.z;
+        const double r2 = dx*dx + dy*dy + dz*dz;
+        const double r = sqrt(r2);
+        const double vx = pi.vx;
+        const double vy = pi.vy;
+        const double vz = pi.vz;
+        const double v2 = vx*vx + vy*vy + vz*vz;
+        double ax = pi.ax;
+        double ay = pi.ay;
+        double az = pi.az;
+        if(_gravity_ignore_10 && i==1){
+            ax += particles[0].m*aoverm10x;
+            ay += particles[0].m*aoverm10y;
+            az += particles[0].m*aoverm10z;
+        }
+        if(_gravity_ignore_10 && i==0){
+            ax -= particles[1].m*aoverm10x;
+            ay -= particles[1].m*aoverm10y;
+            az -= particles[1].m*aoverm10z;
+        }
+        
+        const double a1_x = (mu*mu*dx/(r2*r2) - 3.*mu*v2*dx/(2.*r2*r))/C2;
+        const double a1_y = (mu*mu*dy/(r2*r2) - 3.*mu*v2*dy/(2.*r2*r))/C2;
+        const double a1_z = (mu*mu*dz/(r2*r2) - 3.*mu*v2*dz/(2.*r2*r))/C2;
+        
+        const double va = vx*ax + vy*ay + vz*az;
+        const double rv = dx*vx + dy*vy + dz*vz;
+        
+        ax = a1_x-(va*vx + v2*ax/2. + 3.*mu*(ax*r-vx*rv/r)/r2)/C2;
+        ay = a1_y-(va*vy + v2*ay/2. + 3.*mu*(ay*r-vy*rv/r)/r2)/C2;
+        az = a1_z-(va*vz + v2*az/2. + 3.*mu*(az*r-vz*rv/r)/r2)/C2;
+        
+        //fprintf(stderr, "%e\t%e\n", ax, ay);
+        particles[i].ax += ax;
+        particles[i].ay += ay;
+        particles[i].az += az;
+        particles[source_index].ax -= pi.m/source.m*ax;
+        particles[source_index].ay -= pi.m/source.m*ay; 
+        particles[source_index].az -= pi.m/source.m*az; 
+    }	
+}
+
 void drag_force(struct reb_simulation* const r, struct reb_particle* const ps){
     double tau = 100.;
     struct reb_particle* source = &ps[0];
@@ -62,14 +137,17 @@ void avg_particles(struct reb_particle* const ps_avg, struct reb_particle* const
         ps_avg[i].vx = 0.5*(ps1[i].vx + ps2[i].vx);
         ps_avg[i].vy = 0.5*(ps1[i].vy + ps2[i].vy);
         ps_avg[i].vz = 0.5*(ps1[i].vz + ps2[i].vz);
+        ps_avg[i].ax = 0.;
+        ps_avg[i].ay = 0.;
+        ps_avg[i].az = 0.;
         ps_avg[i].m = 0.5*(ps1[i].m + ps2[i].m);
     }
-    fprintf(stderr, "Avg vy = %.16f\n", ps_avg[1].vy);
+    //fprintf(stderr, "ps = %.16f\t ps_old = %.16f\t Avg = %.16f\n", ps1[1].vy, ps2[1].vy, ps_avg[1].vy);
 }
 
 int compare(struct reb_particle* ps1, struct reb_particle* ps2, int N){
+    //fprintf(stderr, "ps = %.16f\t ps_old = %.16f\t%.4e\n", ps1[1].vy, ps2[1].vy, fabs((ps1[1].vy - ps2[1].vy)/ps1[1].vy));
     for(int i=0; i<N; i++){
-        fprintf(stderr, "%.16f\t%.16f\t%.4e\n", ps1[i].vy, ps2[i].vy, fabs((ps1[i].vy - ps2[i].vy)/ps1[i].vy));
         if (ps1[i].vx != ps2[i].vx || ps1[i].vy != ps2[i].vy || ps1[i].vz != ps2[i].vz){
             return 0;
         }
@@ -78,6 +156,7 @@ int compare(struct reb_particle* ps1, struct reb_particle* ps2, int N){
 }
 
 void drag(struct reb_simulation* const r, struct reb_particle* restrict p_canon, double dt, int N){
+    r->ri_whfast.recalculate_jacobi_this_timestep = 1;
     struct reb_particle* ps = r->particles;
     struct reb_particle* ps_orig = malloc(r->N*sizeof(*ps_orig));
     struct reb_particle* ps_old = malloc(r->N*sizeof(*ps_orig));
@@ -88,7 +167,8 @@ void drag(struct reb_simulation* const r, struct reb_particle* restrict p_canon,
     for(n=1;n<10;n++){
         memcpy(ps_old, ps, r->N*sizeof(*ps_old));
         avg_particles(ps_avg, ps, ps_old, N);
-        drag_force(r, ps_avg);
+        gr(r, ps_avg);//drag_force(r, ps_avg);
+        //fprintf(stderr, "ps_orig = %.16f\n", ps_avg[1].ay);
         for(int i=0; i<N; i++){
             ps[i].vx = ps_orig[i].vx + dt*ps_avg[i].ax;
             ps[i].vy = ps_orig[i].vy + dt*ps_avg[i].ay;
@@ -100,6 +180,11 @@ void drag(struct reb_simulation* const r, struct reb_particle* restrict p_canon,
         }
     }
     fprintf(stderr, "%d\n", n);
+    //fprintf(stderr, "%e\n", fabs((ps[1].vy-ps_orig[1].vy)/ps_orig[1].vy));
+    double v = sqrt(ps[1].vx*ps[1].vx + ps[1].vy*ps[1].vy);
+    double v_orig = sqrt(ps_orig[1].vx*ps_orig[1].vx + ps_orig[1].vy*ps_orig[1].vy);
+    fprintf(stderr, "%e\n", fabs((v-v_orig)/v_orig));
+
 }
 /*****************************
  Initialization routines.
