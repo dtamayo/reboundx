@@ -130,7 +130,11 @@ class Extras(Structure):
         else:
             warnings.warn("Parameter {0} not found".format(name), RuntimeWarning)
             return
-    
+
+    def gr_acc(self, acc, C2):
+        #sixdoub = c_double*6
+        #clibreboundx.rebx_gr_acc.restype = POINTER(sixdoub)
+        clibreboundx.rebx_gr_acc(byref(self), acc, c_double(C2))
     #######################################
     # Input/Output Routines
     #######################################

@@ -39,16 +39,22 @@ const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build strin
 const char* rebx_version_str = "2.16.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(GITHASH);             // This line gets updated automatically. Do not edit manually.
 
-void gr(struct reb_simulation* const sim, struct reb_particle* const particles){
-    const double C2 = 1.e6;//10064.915*10064.915;
-    const source_index = 0;
+void rebx_gr_acc(struct rebx_extras* const rebx, double* acc, const double C2){
+    struct reb_simulation* const sim = rebx->sim;
+    struct reb_particle* const particles = sim->particles;
+    const int source_index = 0;
     const int N_real = sim->N - sim->N_var;
     const double G = sim->G;
     const unsigned int _gravity_ignore_10 = sim->gravity_ignore_terms==1;
     
     const double mu = G*particles[source_index].m;
     double aoverm10x, aoverm10y, aoverm10z;
-    
+   
+    for(int i=0; i<N_real;i++){
+        sim->particles[i].ax = 0;
+        sim->particles[i].ay = 0;
+        sim->particles[i].az = 0;
+    }
     if (_gravity_ignore_10){
         const double dx = particles[0].x - particles[1].x;
         const double dy = particles[0].y - particles[1].y;
@@ -104,7 +110,6 @@ void gr(struct reb_simulation* const sim, struct reb_particle* const particles){
         ay = a1_y-(va*vy + v2*ay/2. + 3.*mu*(ay*r-vy*rv/r)/r2)/C2;
         az = a1_z-(va*vz + v2*az/2. + 3.*mu*(az*r-vz*rv/r)/r2)/C2;
         
-        //fprintf(stderr, "%e\t%e\n", ax, ay);
         particles[i].ax += ax;
         particles[i].ay += ay;
         particles[i].az += az;
@@ -112,8 +117,15 @@ void gr(struct reb_simulation* const sim, struct reb_particle* const particles){
         particles[source_index].ay -= pi.m/source.m*ay; 
         particles[source_index].az -= pi.m/source.m*az; 
     }	
-}
 
+    acc[0] = particles[0].ax;
+    acc[1] = particles[0].ay;
+    acc[2] = particles[0].az;
+    acc[3] = particles[1].ax;
+    acc[4] = particles[1].ay;
+    acc[5] = particles[1].az;
+}
+/*
 void drag_force(struct reb_simulation* const r, struct reb_particle* const ps){
     double tau = 100.;
     struct reb_particle* source = &ps[0];
@@ -155,7 +167,8 @@ int compare(struct reb_particle* ps1, struct reb_particle* ps2, int N){
     return 1;
 }
 
-void drag(struct reb_simulation* const r, struct reb_particle* restrict p_canon, double dt, int N){
+void drag(struct reb_simulation* const r, const double dt){
+    const int N = r->N - r->N_var;
     r->ri_whfast.recalculate_jacobi_this_timestep = 1;
     struct reb_particle* ps = r->particles;
     struct reb_particle* ps_orig = malloc(r->N*sizeof(*ps_orig));
@@ -185,7 +198,7 @@ void drag(struct reb_simulation* const r, struct reb_particle* restrict p_canon,
     double v_orig = sqrt(ps_orig[1].vx*ps_orig[1].vx + ps_orig[1].vy*ps_orig[1].vy);
     fprintf(stderr, "%e\n", fabs((v-v_orig)/v_orig));
 
-}
+}*/
 /*****************************
  Initialization routines.
  ****************************/
@@ -198,7 +211,6 @@ struct rebx_extras* rebx_init(struct reb_simulation* sim){  // reboundx.h
 
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     sim->extras = rebx;
-    sim->ri_whfast.symplectic_operator = drag;
     rebx->sim = sim;
 	rebx->params_to_be_freed = NULL;
 	rebx->effects = NULL;
