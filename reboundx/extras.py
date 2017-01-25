@@ -135,6 +135,9 @@ class Extras(Structure):
         #sixdoub = c_double*6
         #clibreboundx.rebx_gr_acc.restype = POINTER(sixdoub)
         clibreboundx.rebx_gr_acc(byref(self), acc, c_double(C2))
+    def calculate_energy(self):
+        clibreboundx.rebx_calculate_energy.restype = c_double
+        return clibreboundx.rebx_calculate_energy(self.sim)
     #######################################
     # Input/Output Routines
     #######################################

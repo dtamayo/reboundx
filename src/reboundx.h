@@ -449,5 +449,6 @@ struct rebx_param* rebx_get_param_node(const void* const object, const char* con
 void* rebx_get_param_check(const void* const object, const char* const param_name, enum rebx_param_type param_type);
 
 void rebx_gr_acc(struct rebx_extras* const rebx, double* acc, const double C2);
+double rebx_calculate_energy(struct reb_simulation* const sim);
 
 #endif
