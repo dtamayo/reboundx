@@ -46,12 +46,12 @@ int main(int argc, char* argv[]){
    
     // Have to set speed of light in right units (set by G & initial conditions).  Here we use default units of AU/(yr/2pi)
     double* c = rebx_add_param(gr_params, "c", REBX_TYPE_DOUBLE);  
-    *c = 1.e3;
+    *c = 1.e4;
 
     tmax = 10.;
     E0 = rebx_gr_hamiltonian(sim, gr_params);
-    reb_integrate(sim, tmax); 
-    rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 
+    reb_integrate(sim, tmax);
+    rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx
     reb_free_simulation(sim);
 }
 
