@@ -132,11 +132,16 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, const double C2,
         }
 
         const double B = (mu/ri - 1.5*vi2)*mu/(ri*ri*ri)/C2;
-        const double vdota = vi.x*p.ax + vi.y*p.ay + vi.z*p.az;
         const double vdotr = vi.x*p.x + vi.y*p.x + vi.z*p.z;
         const double rdotrdot = p.x*p.vx + p.y*p.vy + p.z*p.vz;
-        const double D = (vdota + B*vdotr - 3.*mu/(ri*ri*ri)*rdotrdot)/C2;
-
+        
+        struct reb_vec3d vidot;
+        vidot.x = p.ax + B*p.x;
+        vidot.y = p.ay + B*p.y;
+        vidot.z = p.az + B*p.z;
+        
+        const double vdota = vi.x*vidot.x + vi.y*vidot.y + vi.z*vidot.z;
+        const double D = (vdota - 3.*mu/(ri*ri*ri)*rdotrdot)/C2;
         ps_j[i].ax = B*(1.-A)*p.x - A*p.ax - D*vi.x;
         ps_j[i].ay = B*(1.-A)*p.y - A*p.ay - D*vi.y;
         ps_j[i].az = B*(1.-A)*p.z - A*p.az - D*vi.z;
