@@ -69,7 +69,7 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-static void rebx_calculate_gr(struct reb_simulation* const sim, const double C2, const int no_iteration){
+static void rebx_calculate_gr(struct reb_simulation* const sim, const double C2, const int max_iterations){
     const int N_real = sim->N - sim->N_var;
     const double G = sim->G;
 
@@ -125,30 +125,29 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, const double C2,
         double vi2=vi.x*vi.x + vi.y*vi.y + vi.z*vi.z;
         const double ri = sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
         int q = 0;
-        double A;
-        if (no_iteration){
+        double A = (0.5*vi2 + 3.*mu/ri)/C2;
+        struct reb_vec3d old_v;
+        for(q=0; q<max_iterations; q++){
+            old_v.x = vi.x;
+            old_v.y = vi.y;
+            old_v.z = vi.z;
+            vi.x = p.vx/(1.-A);
+            vi.y = p.vy/(1.-A);
+            vi.z = p.vz/(1.-A);
+            vi2 =vi.x*vi.x + vi.y*vi.y + vi.z*vi.z;
             A = (0.5*vi2 + 3.*mu/ri)/C2;
-        }
-        else{
-            struct reb_vec3d old_v;
-            for(q=0; q<10; q++){
-                old_v.x = vi.x;
-                old_v.y = vi.y;
-                old_v.z = vi.z;
-                A = (0.5*vi2 + 3.*mu/ri)/C2;
-                vi.x = p.vx/(1.-A);
-                vi.y = p.vy/(1.-A);
-                vi.z = p.vz/(1.-A);
-                vi2 =vi.x*vi.x + vi.y*vi.y + vi.z*vi.z;
-                const double dvx = vi.x - old_v.x;
-                const double dvy = vi.y - old_v.y;
-                const double dvz = vi.z - old_v.z;
-                if ((dvx*dvx + dvy*dvy + dvz*dvz)/vi2 < DBL_EPSILON*DBL_EPSILON){
-                    break;
-                }
+            const double dvx = vi.x - old_v.x;
+            const double dvy = vi.y - old_v.y;
+            const double dvz = vi.z - old_v.z;
+            if ((dvx*dvx + dvy*dvy + dvz*dvz)/vi2 < DBL_EPSILON*DBL_EPSILON){
+                break;
             }
         }
-        //fprintf(stderr, "%d\n", q);
+        const int default_max_iterations = 10;
+        if(q==default_max_iterations){
+            reb_warning(sim, "REBOUNDx: 10 iterations in gr.c failed to converge. This is typically because the perturbation is too strong for the current implementation.");
+        }
+  
         const double B = (mu/ri - 1.5*vi2)*mu/(ri*ri*ri)/C2;
         const double rdotrdot = p.x*p.vx + p.y*p.vy + p.z*p.vz;
         
@@ -157,11 +156,20 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, const double C2,
         vidot.y = p.ay + B*p.y;
         vidot.z = p.az + B*p.z;
         
-        const double vdota = vi.x*vidot.x + vi.y*vidot.y + vi.z*vidot.z;
-        const double D = (vdota - 3.*mu/(ri*ri*ri)*rdotrdot)/C2;
+        const double vdotvdot = vi.x*vidot.x + vi.y*vidot.y + vi.z*vidot.z;
+        const double D = (vdotvdot - 3.*mu/(ri*ri*ri)*rdotrdot)/C2;
+        
         ps_j[i].ax = B*(1.-A)*p.x - A*p.ax - D*vi.x;
         ps_j[i].ay = B*(1.-A)*p.y - A*p.ay - D*vi.y;
         ps_j[i].az = B*(1.-A)*p.z - A*p.az - D*vi.z;
+        
+        /*
+        const double Cprimev = 0.;//3.*mu*vi2/(ri*ri*ri*C2);
+        const double Aprimev = 0.;//vi2/C2;
+        //ps_j[i].ax -= A*(Cprimev*p.x + Aprimev*p.ax);// + Adotprimev*vi.x);
+        //ps_j[i].ay -= A*(Cprimev*p.y + Aprimev*p.ay);// + Adotprimev*vi.y);
+        //ps_j[i].az -= A*(Cprimev*p.z + Aprimev*p.az);// + Adotprimev*vi.z);
+        */
     }
     ps_j[0].ax = 0.;
     ps_j[0].ay = 0.;
@@ -187,14 +195,14 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const gr){ //
     const double C2 = (*c)*(*c);
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
-    int no_iteration;
-    if(rebx_get_param_check(gr, "no_iteration", REBX_TYPE_INT) != NULL){
-        no_iteration = 1;
+    int* max_iterations = rebx_get_param_check(gr, "max_iterations", REBX_TYPE_INT);
+    if(max_iterations != NULL){
+        rebx_calculate_gr(sim, C2, *max_iterations);
     }
     else{
-        no_iteration = 0;
+        const int default_max_iterations = 10;
+        rebx_calculate_gr(sim, C2, default_max_iterations);
     }
-    rebx_calculate_gr(sim, C2, no_iteration);  // gr_source not found, default to index=0
 }
 
 static double rebx_calculate_gr_hamiltonian(struct reb_simulation* const sim, const double C2, const int source_index){
