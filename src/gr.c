@@ -62,82 +62,128 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
+#include <float.h>
 #include <limits.h>
 #include "rebound.h"
 #include "reboundx.h"
 
-static void rebx_calculate_gr(struct reb_simulation* const sim, const double C2, const int source_index){
+static void rebx_calculate_gr(struct reb_simulation* const sim, const double C2, const int max_iterations){
     const int N_real = sim->N - sim->N_var;
     const double G = sim->G;
-    struct reb_particle* const particles = sim->particles;
-    const unsigned int _gravity_ignore_10 = sim->gravity_ignore_terms==1;
+
+    struct reb_particle* const ps = malloc(N_real*sizeof(*ps));
+    struct reb_particle* const ps_j = malloc(N_real*sizeof(*ps_j));
+    memcpy(ps, sim->particles, N_real*sizeof(*ps));
     
-	const double mu = G*particles[source_index].m;
-    double aoverm10x, aoverm10y, aoverm10z;
-
-    if (_gravity_ignore_10){
-        const double dx = particles[0].x - particles[1].x;
-        const double dy = particles[0].y - particles[1].y;
-        const double dz = particles[0].z - particles[1].z;
-        const double softening2 = sim->softening*sim->softening;
-        const double r2 = dx*dx + dy*dy + dz*dz + softening2;
-        const double r = sqrt(r2);
-        const double prefac = G/(r2*r);
-        
-        aoverm10x = prefac*dx;
-        aoverm10y = prefac*dy;
-        aoverm10z = prefac*dz;
+    // Calculate Newtonian accelerations 
+    for(int i=0; i<N_real; i++){
+        ps[i].ax = 0.;
+        ps[i].ay = 0.;
+        ps[i].az = 0.;
     }
-	
-    const struct reb_particle source = particles[source_index];
-    for (int i=0; i<N_real; i++){
-        if(i == source_index){
-            continue;
+
+    for(int i=0; i<N_real; i++){
+        const struct reb_particle pi = ps[i];
+        for(int j=i+1; j<N_real; j++){
+            const struct reb_particle pj = ps[j];
+            const double dx = pi.x - pj.x;
+            const double dy = pi.y - pj.y;
+            const double dz = pi.z - pj.z;
+            const double softening2 = sim->softening*sim->softening;
+            const double r2 = dx*dx + dy*dy + dz*dz + softening2;
+            const double r = sqrt(r2);
+            const double prefac = G/(r2*r);
+            ps[i].ax -= prefac*pj.m*dx;
+            ps[i].ay -= prefac*pj.m*dy;
+            ps[i].az -= prefac*pj.m*dz;
+            ps[j].ax += prefac*pi.m*dx;
+            ps[j].ay += prefac*pi.m*dy;
+            ps[j].az += prefac*pi.m*dz;
         }
-		const struct reb_particle pi = particles[i];
-		
-		const double dx = pi.x - source.x;
-		const double dy = pi.y - source.y;
-		const double dz = pi.z - source.z;
-		const double r2 = dx*dx + dy*dy + dz*dz;
-		const double r = sqrt(r2);
-		const double vx = pi.vx;
-		const double vy = pi.vy;
-		const double vz = pi.vz;
-		const double v2 = vx*vx + vy*vy + vz*vz;
-        double ax = pi.ax;
-        double ay = pi.ay;
-        double az = pi.az;
-        if(_gravity_ignore_10 && i==1){
-            ax += particles[0].m*aoverm10x;
-            ay += particles[0].m*aoverm10y;
-            az += particles[0].m*aoverm10z;
+    }
+   
+    // Transform to Jacobi coordinates
+    const struct reb_particle source = ps[0];
+	const double mu = G*source.m;
+    double* const eta = malloc(N_real*sizeof(*eta));
+    eta[0] = ps[0].m;
+    for (unsigned int i=1;i<N_real;i++){
+        eta[i] = eta[i-1] + ps[i].m;
+    }
+  
+    to_jacobi_posvel(ps, ps_j, eta, ps, N_real);
+    to_jacobi_acc(ps, ps_j, eta, ps, N_real);
+
+    for (int i=1; i<N_real; i++){
+        struct reb_particle p = ps_j[i];
+        struct reb_vec3d vi;
+        vi.x = p.vx;
+        vi.y = p.vy;
+        vi.z = p.vz;
+        double vi2=vi.x*vi.x + vi.y*vi.y + vi.z*vi.z;
+        const double ri = sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+        int q = 0;
+        double A = (0.5*vi2 + 3.*mu/ri)/C2;
+        struct reb_vec3d old_v;
+        for(q=0; q<max_iterations; q++){
+            old_v.x = vi.x;
+            old_v.y = vi.y;
+            old_v.z = vi.z;
+            vi.x = p.vx/(1.-A);
+            vi.y = p.vy/(1.-A);
+            vi.z = p.vz/(1.-A);
+            vi2 =vi.x*vi.x + vi.y*vi.y + vi.z*vi.z;
+            A = (0.5*vi2 + 3.*mu/ri)/C2;
+            const double dvx = vi.x - old_v.x;
+            const double dvy = vi.y - old_v.y;
+            const double dvz = vi.z - old_v.z;
+            if ((dvx*dvx + dvy*dvy + dvz*dvz)/vi2 < DBL_EPSILON*DBL_EPSILON){
+                break;
+            }
         }
-        if(_gravity_ignore_10 && i==0){
-            ax -= particles[1].m*aoverm10x;
-            ay -= particles[1].m*aoverm10y;
-            az -= particles[1].m*aoverm10z;
+        const int default_max_iterations = 10;
+        if(q==default_max_iterations){
+            reb_warning(sim, "REBOUNDx: 10 iterations in gr.c failed to converge. This is typically because the perturbation is too strong for the current implementation.");
         }
+  
+        const double B = (mu/ri - 1.5*vi2)*mu/(ri*ri*ri)/C2;
+        const double rdotrdot = p.x*p.vx + p.y*p.vy + p.z*p.vz;
         
-        const double a1_x = (mu*mu*dx/(r2*r2) - 3.*mu*v2*dx/(2.*r2*r))/C2;
-		const double a1_y = (mu*mu*dy/(r2*r2) - 3.*mu*v2*dy/(2.*r2*r))/C2;
-		const double a1_z = (mu*mu*dz/(r2*r2) - 3.*mu*v2*dz/(2.*r2*r))/C2;
+        struct reb_vec3d vidot;
+        vidot.x = p.ax + B*p.x;
+        vidot.y = p.ay + B*p.y;
+        vidot.z = p.az + B*p.z;
+        
+        const double vdotvdot = vi.x*vidot.x + vi.y*vidot.y + vi.z*vidot.z;
+        const double D = (vdotvdot - 3.*mu/(ri*ri*ri)*rdotrdot)/C2;
+        
+        ps_j[i].ax = B*(1.-A)*p.x - A*p.ax - D*vi.x;
+        ps_j[i].ay = B*(1.-A)*p.y - A*p.ay - D*vi.y;
+        ps_j[i].az = B*(1.-A)*p.z - A*p.az - D*vi.z;
+        
+        /*
+        const double Cprimev = 0.;//3.*mu*vi2/(ri*ri*ri*C2);
+        const double Aprimev = 0.;//vi2/C2;
+        //ps_j[i].ax -= A*(Cprimev*p.x + Aprimev*p.ax);// + Adotprimev*vi.x);
+        //ps_j[i].ay -= A*(Cprimev*p.y + Aprimev*p.ay);// + Adotprimev*vi.y);
+        //ps_j[i].az -= A*(Cprimev*p.z + Aprimev*p.az);// + Adotprimev*vi.z);
+        */
+    }
+    ps_j[0].ax = 0.;
+    ps_j[0].ay = 0.;
+    ps_j[0].az = 0.;
 
-		const double va = vx*ax + vy*ay + vz*az;
-		const double rv = dx*vx + dy*vy + dz*vz;
-	
-        ax = a1_x-(va*vx + v2*ax/2. + 3.*mu*(ax*r-vx*rv/r)/r2)/C2;
-        ay = a1_y-(va*vy + v2*ay/2. + 3.*mu*(ay*r-vy*rv/r)/r2)/C2;
-        az = a1_z-(va*vz + v2*az/2. + 3.*mu*(az*r-vz*rv/r)/r2)/C2;
-
-		particles[i].ax += ax;
-		particles[i].ay += ay; 
-		particles[i].az += az;
-		particles[source_index].ax -= pi.m/source.m*ax; 
-		particles[source_index].ay -= pi.m/source.m*ay; 
-		particles[source_index].az -= pi.m/source.m*az; 
-    }	
+    to_inertial_acc(ps, ps_j, eta, ps, N_real);
+    for (int i=0; i<N_real; i++){
+        sim->particles[i].ax += ps[i].ax;
+        sim->particles[i].ay += ps[i].ay;
+        sim->particles[i].az += ps[i].az;
+    }
+    free(ps);
+    free(ps_j);
+    free(eta);
 }
 
 void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const gr){ // First find gr sources
@@ -149,60 +195,80 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const gr){ //
     const double C2 = (*c)*(*c);
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
-    for (int i=0; i<N_real; i++){
-        if (rebx_get_param_check(&particles[i], "gr_source", REBX_TYPE_INT) != NULL){
-            rebx_calculate_gr(sim, C2, i);
-            return;                 // only apply effect for first gr_source found.  For multiple sources, need gr_full
-        }
+    int* max_iterations = rebx_get_param_check(gr, "max_iterations", REBX_TYPE_INT);
+    if(max_iterations != NULL){
+        rebx_calculate_gr(sim, C2, *max_iterations);
     }
-    rebx_calculate_gr(sim, C2, 0);  // gr_source not found, default to index=0
+    else{
+        const int default_max_iterations = 10;
+        rebx_calculate_gr(sim, C2, default_max_iterations);
+    }
 }
 
 static double rebx_calculate_gr_hamiltonian(struct reb_simulation* const sim, const double C2, const int source_index){
     const int N_real = sim->N - sim->N_var;
     const double G = sim->G;
-    struct reb_particle* const particles = sim->particles;
-	const double mu = G*particles[source_index].m;
 
-	double e_kin = 0.;
-	double e_pot = 0.;
-	double e_pn  = 0.;
-	const struct reb_particle source = particles[source_index];
-	for (int i=0;i<N_real;i++){
-		struct reb_particle pi = particles[i];
-		if (i != source_index){
-			double dx = pi.x - source.x;
-			double dy = pi.y - source.y;
-			double dz = pi.z - source.z;
-			double r2 = dx*dx + dy*dy + dz*dz;
-			double r = sqrt(r2);
+    struct reb_particle* const ps_j = malloc(N_real*sizeof(*ps_j));
+    struct reb_particle* const ps = sim->particles; 
+    // Calculate Newtonian potentials
 
-			double vx = pi.vx;
-			double vy = pi.vy;
-			double vz = pi.vz;
-			double v2 = vx*vx + vy*vy + vz*vz;
-			
-            double A = 1. - (v2/2. + 3.*mu/r)/C2;
-			double v_tilde2 = v2/(A*A);
+    double V_newt = 0.;
+    for(int i=0; i<N_real; i++){
+        const struct reb_particle pi = ps[i];
+        for(int j=i+1; j<N_real; j++){
+            const struct reb_particle pj = ps[j];
+            const double dx = pi.x - pj.x;
+            const double dy = pi.y - pj.y;
+            const double dz = pi.z - pj.z;
+            const double softening2 = sim->softening*sim->softening;
+            const double r2 = dx*dx + dy*dy + dz*dz + softening2;
+            V_newt -= G*pi.m*pj.m/sqrt(r2);
+        }
+    }
+   
+    // Transform to Jacobi coordinates
+    const struct reb_particle source = ps[0];
+	const double mu = G*source.m;
+    double* const eta = malloc(N_real*sizeof(*eta));
+    double* const m_j = malloc(N_real*sizeof(*m_j));
+    eta[0] = ps[0].m;
+    for (unsigned int i=1;i<N_real;i++){
+        eta[i] = eta[i-1] + ps[i].m;
+        m_j[i] = ps[i].m*eta[i-1]/eta[i];
+    }
+    m_j[0] = eta[N_real-1];
 
-			e_kin += 0.5*pi.m*v_tilde2;
-            e_pn += (mu*mu*pi.m/(2.*r2) - v_tilde2*v_tilde2*pi.m/8. - 3.*mu*v_tilde2*pi.m/(2.*r))/C2;
-		}		
-		else{
-			double source_v2 = source.vx*source.vx + source.vy*source.vy + source.vz*source.vz;
-			e_kin += 0.5 * source.m * source_v2;
-		}
-		for (int j=i+1; j<N_real; j++){
-			struct reb_particle pj = particles[j];
-			double dx = pi.x - pj.x;
-			double dy = pi.y - pj.y;
-			double dz = pi.z - pj.z;	
-			double r = sqrt(dx*dx + dy*dy + dz*dz);
+    to_jacobi_posvel(ps, ps_j, eta, ps, N_real);
 
-			e_pot -= G*pi.m*pj.m/r;
-		}
-	}
-	return e_kin + e_pot + e_pn;
+    double T = 0.5*m_j[0]*(ps_j[0].vx*ps_j[0].vx + ps_j[0].vy*ps_j[0].vy + ps_j[0].vz*ps_j[0].vz);
+    double V_PN = 0.;
+    for (int i=1; i<N_real; i++){
+        struct reb_particle p = ps_j[i];
+        const double rdoti2 = p.vx*p.vx + p.vy*p.vy + p.vz*p.vz;
+        double vtildei2 = rdoti2;
+        double A, old_vtildei2;
+        const double ri = sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+        const double vscale2 = mu/ri; // characteristic v^2
+        for(int q=0; q<10; q++){
+            old_vtildei2 = vtildei2;
+            A = (0.5*vtildei2 + 3.*vscale2)/C2;
+            vtildei2 = rdoti2/((1.-A)*(1.-A));
+            if ((vtildei2 - old_vtildei2)/vtildei2 < DBL_EPSILON){
+                break;
+            }
+        }
+
+        V_PN += m_j[i]*(0.5*mu*mu/(ri*ri) - 0.125*vtildei2*vtildei2 - 1.5*mu*vtildei2/ri);
+        T += 0.5*m_j[i]*vtildei2;
+    }
+    V_PN /= C2;
+    
+    free(ps_j);
+    free(eta);
+    free(m_j);
+    
+	return T + V_newt + V_PN;
 }
 
 double rebx_gr_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr){ 
