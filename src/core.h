@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef REBX_CORE_H
-#define REBX_CORE_H
+#ifndef _REBX_CORE_H
+#define _REBX_CORE_H
 
 #include <stdint.h>
 #include "rebound.h"
@@ -54,6 +54,7 @@ void rebx_free_effects(struct rebx_extras* rebx);           // Frees all effects
  *********************************************/
 
 void rebx_forces(struct reb_simulation* sim);                       // Calls all the forces that have been added to the simulation.
+void rebx_pre_timestep_modifications(struct reb_simulation* sim);   // Calls all the pre-timestep modifications that have been added to the simulation.
 void rebx_post_timestep_modifications(struct reb_simulation* sim);  // Calls all the post-timestep modifications that have been added to the simulation.
 
 /**********************************************
@@ -74,18 +75,21 @@ size_t rebx_sizeof(enum rebx_param_type param_type); // Returns size in bytes of
 double install_test(void);  // Function for testing whether REBOUNDx can load librebound.so and call REBOUND functions.
 
 /****************************************
-Effect function prototypes
+Force prototypes
 *****************************************/
-void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const effect);
+void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const gr, struct reb_particle* const particles, const int N);
 void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const effect);
 void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* const effect);
-void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* const effect);
 void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const effect);
 void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect);
-void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect);
-void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* const effect);
 void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_effect* const effect);
 void rebx_central_force(struct reb_simulation* const sim, struct rebx_effect* const effect);
-void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_effect* const effect);
+
+/****************************************
+ Operator prototypes
+ *****************************************/
+void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing);
+void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing);
+void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing);
 
 #endif

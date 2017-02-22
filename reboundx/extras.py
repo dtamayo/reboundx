@@ -4,6 +4,8 @@ import rebound
 import reboundx
 import warnings
 
+INTEGRATORS = {"implicit_midpoint": 0, "euler": 1, "none": 2}
+  
 REBX_BINARY_WARNINGS = [
         ("REBOUNDx Error: Cannot read binary file. Check filename and file contents.", 1),
         ("REBOUNDx Error: Binary file was corrupt. Could not read.", 2),
@@ -73,6 +75,33 @@ class Extras(Structure):
         del sim._extras_ref
         clibreboundx.rebx_remove_from_simulation(byref(sim))
 
+    @property
+    def integrator(self):
+        """
+        Get or set the intergrator module.
+
+        Available integrators are:
+
+        - ``'implicit_midpoint'`` (default)
+        
+        Check the online documentation for a full description of each of the integrators. 
+        """
+        i = self._integrator
+        for name, _i in INTEGRATORS.items():
+            if i==_i:
+                return name
+        return i
+    @integrator.setter
+    def integrator(self, value):
+        if isinstance(value, int):
+            self._integrator = c_int(value)
+        elif isinstance(value, basestring):
+            value = value.lower()
+            if value in INTEGRATORS: 
+                self._integrator = INTEGRATORS[value]
+            else:
+                raise ValueError("Warning. Integrator not found.")
+    
     #######################################
     # Functions for manipulating REBOUNDx effects
     #######################################
@@ -100,13 +129,13 @@ class Extras(Structure):
         :type c: bool
         :rtype: Effect structure
         """
-        REBX_FUNCTION = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))
-        self.custom_effects[function.__name__] = REBX_FUNCTION(function) # store a ref so it doesn't get garbage collected
+        REBX_FORCE = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))
+        self.custom_effects[function.__name__] = REBX_FORCE(function) # store a ref so it doesn't get garbage collected
         clibreboundx.rebx_add_custom_force.restype = POINTER(Effect)
         ptr = clibreboundx.rebx_add_custom_force(byref(self), c_char_p(function.__name__.encode('ascii')), self.custom_effects[function.__name__], force_is_velocity_dependent)
         return ptr.contents
 
-    def add_custom_post_timestep_modification(self, function):
+    def add_custom_operator(self, function):
         """
         This function allows you to add your own custom python function to REBOUNDx that is executed between integrator timesteps.
         You need to use this if you want to both use your own custom functions and the built-in REBOUNDx effects.  
@@ -116,10 +145,10 @@ class Extras(Structure):
         :type c: bool
         :rtype: Effect structure 
         """
-        REBX_FUNCTION = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))
-        self.custom_effects[function.__name__] = REBX_FUNCTION(function) # store a ref so it doesn't get garbage collected
-        clibreboundx.rebx_add_custom_post_timestep_modification.restype = POINTER(Effect)
-        ptr = clibreboundx.rebx_add_custom_post_timestep_modification(byref(self), c_char_p(function.__name__.encode('ascii')), self.custom_effects[function.__name__])
+        REBX_OPERATOR = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect), c_double, c_int)
+        self.custom_effects[function.__name__] = REBX_OPERATOR(function) # store a ref so it doesn't get garbage collected
+        clibreboundx.rebx_add_custom_operator.restype = POINTER(Effect)
+        ptr = clibreboundx.rebx_add_custom_operator(byref(self), c_char_p(function.__name__.encode('ascii')), self.custom_effects[function.__name__])
         return ptr.contents
     
     def get_effect(self, name):
@@ -212,10 +241,13 @@ class Effect(Structure):
 Effect._fields_ = [ ("hash", c_uint32),
                     ("name", c_char_p),
                     ("ap", POINTER(Param)),
-                    ("force", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))),
-                    ("ptm", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))),
+                    ("force_as_operator", c_int),
+                    ("force", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect), POINTER(rebound.Particle), c_int)),
+                    ("operator", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect), c_double, c_int)),
+                    ("operator_order", c_int),
                     ("rebx", POINTER(Extras)),
                     ("next", POINTER(Effect)),
+                    ("prev", POINTER(Effect)),
                     ("pad", c_char*100)]
 
 class Param_to_be_freed(Structure):
@@ -227,6 +259,7 @@ Param_to_be_freed._fields_ =  [("param", POINTER(Param)),
 # Need to put fields after class definition because of self-referencing
 Extras._fields_ =  [("sim", POINTER(rebound.Simulation)),
                     ("effects", POINTER(Effect)),
-                    ("params_to_be_freed", POINTER(Param_to_be_freed))]
+                    ("params_to_be_freed", POINTER(Param_to_be_freed)),
+                    ("_integrator", c_int),]
 
 from .params import Params

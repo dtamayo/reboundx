@@ -32,6 +32,9 @@
 #include <limits.h>
 #include "core.h"
 #include "rebound.h"
+#include "integrator_implicit_midpoint.h"
+#include "euler.h"
+
 #define STRINGIFY(s) str(s)
 #define str(s) #s
 
@@ -125,7 +128,7 @@ const char* rebx_githash_str = STRINGIFY(GITHASH);             // This line gets
     acc[4] = particles[1].ay;
     acc[5] = particles[1].az;
 }
-*/
+
 
 static void gr(struct reb_simulation* const sim, struct reb_particle* ps, const double C2){
     const int N_real = sim->N - sim->N_var;
@@ -289,6 +292,29 @@ void integrate(struct reb_simulation* const r, const double dt){
         r->particles[i].vz = ps[i].vz;
     }
 }
+*/
+
+void rebx_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect){
+    if (effect->force == NULL){
+        char str[300];
+        sprintf(str, "REBOUNDx Error: rebx_integrate called with non-force effect '%s'.\n", effect->name);
+        reb_error(sim, str);
+    }
+    struct rebx_extras* rebx = sim->extras;
+    
+    switch(rebx->integrator){
+        case REBX_INTEGRATOR_IMPLICIT_MIDPOINT:
+            rebx_integrator_implicit_midpoint_integrate(sim, dt, effect);
+            break;
+        case REBX_INTEGRATOR_EULER:
+            rebx_integrator_euler_integrate(sim, dt, effect);
+            break;
+        case REBX_INTEGRATOR_NONE:
+            break;
+        default:
+            break;
+    }
+}
 
 /*****************************
  Initialization routines.
@@ -302,14 +328,16 @@ struct rebx_extras* rebx_init(struct reb_simulation* sim){  // reboundx.h
 
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     sim->extras = rebx;
-    sim->ri_whfast.symplectic_operator = integrate;
     rebx->sim = sim;
 	rebx->params_to_be_freed = NULL;
 	rebx->effects = NULL;
     
     if(sim->additional_forces || sim->post_timestep_modifications){
-        reb_warning(sim, "REBOUNDx will overwrite sim->additional_forces and sim->post_timestep_modifications.  If you are using custom functions you wrote and setting them through these function pointers, this won't work.  You should instead add your custom effects through REBOUNDx.  See http://reboundx.readthedocs.org/en/latest/c_examples.html#adding-custom-post-timestep-modifications-and-forces for a tutorial.");
+        reb_warning(sim, "REBOUNDx overwrites sim->additional_forces, sim->pre_timestep_modifications and sim->post_timestep_modifications.  If you want to use REBOUNDx together with your own custom functions that use these callbacks, you should add them through REBOUNDx.  See http://reboundx.readthedocs.org/en/latest/c_examples.html#adding-custom-post-timestep-modifications-and-forces for a tutorial.");
     }
+    sim->additional_forces = rebx_forces;
+    sim->pre_timestep_modifications = rebx_pre_timestep_modifications;
+    sim->post_timestep_modifications = rebx_post_timestep_modifications;
 }
 
 /*****************************
@@ -354,26 +382,98 @@ void rebx_free_effects(struct rebx_extras* rebx){
  Functions executing forces & ptm each timestep
  *********************************************/
 
+static void rebx_reset_accelerations(struct reb_particle* const ps, const int N){
+    for(int i=0; i<N; i++){
+        ps[i].ax = 0.;
+        ps[i].ay = 0.;
+        ps[i].az = 0.;
+    }
+}
+
 void rebx_forces(struct reb_simulation* sim){
 	struct rebx_extras* rebx = sim->extras;
 	struct rebx_effect* current = rebx->effects;
 	while(current != NULL){
-        if(current->force != NULL){
-		    current->force(sim, current);
+        if(current->force != NULL && current->force_as_operator == 0){
+            if(sim->force_is_velocity_dependent && sim->integrator==REB_INTEGRATOR_WHFAST){
+                reb_warning(sim, "REBOUNDx: Passing a velocity-dependent force to WHFAST. Need to apply as an operator.");
+            }
+            const double N = sim->N - sim->N_var;
+		    current->force(sim, current, sim->particles, N);
         }
 		current = current->next;
 	}
 }
 
+void rebx_pre_timestep_modifications(struct reb_simulation* sim){
+    if(sim->integrator==REB_INTEGRATOR_IAS15 && sim->ri_ias15.epsilon != 0){
+        reb_warning(sim, "REBOUNDx: Can't use second order scheme with adaptive timesteps (IAS15). Must use operator_order = 1 or apply as force to get sensible results.");
+    }
+    struct rebx_extras* rebx = sim->extras;
+    struct rebx_effect* current = rebx->effects;
+    const double dt2 = sim->dt/2.;    // pre_timestep only executes order=2 effects, so always use a half timestep
+    
+    const double N = sim->N - sim->N_var;
+    rebx_reset_accelerations(sim->particles, N);
+                             
+    while(current != NULL){
+        if(current->operator_order == 2){                // if order = 1, only apply post_timestep
+            if(current->operator != NULL){      // Always apply operator if set
+                current->operator(sim, current, dt2, REBX_TIMING_PRE_TIMESTEP);
+            }
+            else{                               // It's a force: numerically integrate as operator if flag set
+                if(current->force_as_operator == 1){
+                    rebx_integrate(sim, dt2, current);
+                }
+            }
+        }
+        current = current->next;
+    }
+}
+
 void rebx_post_timestep_modifications(struct reb_simulation* sim){
 	struct rebx_extras* rebx = sim->extras;
 	struct rebx_effect* current = rebx->effects;
+    struct rebx_effect* prev = NULL;
+    
+    // first do the 2nd order operators for half a timestep, in reverse order
+    const double dt2 = sim->dt_last_done/2.;
 	while(current != NULL){
-        if(current->ptm != NULL){
-		    current->ptm(sim, current);
-        }
+        prev = current;
 		current = current->next;
 	}
+    
+    current = prev;
+    while(current != NULL){
+        if(current->operator_order == 2){
+            if(current->operator != NULL){      // Always apply operator if set
+                current->operator(sim, current, dt2, REBX_TIMING_POST_TIMESTEP);
+            }
+            else{                               // It's a force: numerically integrate as operator if flag set
+                if(current->force_as_operator == 1){
+                    rebx_integrate(sim, dt2, current);
+                }
+            }
+        }
+        current = current->prev;
+    }
+    
+    // now do the 1st order operators
+    const double dt = sim->dt_last_done;
+    current = rebx->effects;
+    while(current != NULL){
+        if(current->operator_order == 1){
+            if(current->operator != NULL){      // Always apply operator if set
+                current->operator(sim, current, dt, REBX_TIMING_POST_TIMESTEP);
+            }
+            else{                               // It's a force: numerically integrate as operator if flag set
+                if(current->force_as_operator == 1){
+                    rebx_integrate(sim, dt, current);
+                }
+            }
+        }
+        current = current->next;
+    }
 }
 
 /**********************************************
@@ -386,8 +486,10 @@ static struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char*
     effect->hash = reb_hash(name);
     effect->ap = NULL;
     effect->force = NULL;
-    effect->ptm = NULL;
+    effect->operator = NULL;
     effect->rebx = rebx;
+    effect->operator_order = 1;
+    effect->force_as_operator = 0;
     
     effect->name = malloc(strlen(name) + 1); // +1 for \0 at end
     if (effect->name != NULL){
@@ -395,8 +497,12 @@ static struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char*
     }
     
     effect->next = rebx->effects;
+    effect->prev = NULL;
     rebx->effects = effect;
-   
+    if (effect->next){
+        effect->next->prev = effect;
+    }
+    
     struct reb_particle* p = (struct reb_particle*)effect;
     p->ap = (void*)REBX_OBJECT_TYPE_EFFECT;
     return effect;
@@ -405,9 +511,9 @@ static struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char*
 struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
     struct rebx_effect* effect = rebx_add_effect(rebx, name);
     struct reb_simulation* sim = rebx->sim;
-
+    
     if (effect->hash == reb_hash("modify_orbits_direct")){
-        effect->ptm = rebx_modify_orbits_direct;
+        effect->operator = rebx_modify_orbits_direct;
     }
     else if (effect->hash == reb_hash("modify_orbits_forces")){
         sim->force_is_velocity_dependent = 1;
@@ -425,7 +531,7 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
         effect->force = rebx_gr_potential;
     }
     else if (effect->hash == reb_hash("modify_mass")){
-        effect->ptm = rebx_modify_mass;
+        effect->operator = rebx_modify_mass;
     }
     else if (effect->hash == reb_hash("radiation_forces")){
         sim->force_is_velocity_dependent = 1;
@@ -438,7 +544,7 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
         effect->force = rebx_central_force;
     }
     else if (effect->hash == reb_hash("track_min_distance")){
-        effect->ptm = rebx_track_min_distance;
+        effect->operator = rebx_track_min_distance;
     }
     else{
         char str[100]; 
@@ -446,18 +552,10 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
         reb_error(sim, str);
     }
     
-    // Make sure function pointers in simulation are set, but only set them if there's at least one REBOUNDx effect using them.
-    if(effect->force){
-        sim->additional_forces = rebx_forces;
-    }
-    if(effect->ptm){
-        sim->post_timestep_modifications = rebx_post_timestep_modifications;
-    }
-    
     return effect;
 }
 
-struct rebx_effect* rebx_add_custom_force(struct rebx_extras* rebx, const char* name, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* const effect), const int force_is_velocity_dependent){
+struct rebx_effect* rebx_add_custom_force(struct rebx_extras* rebx, const char* name, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N), const int force_is_velocity_dependent){
     struct rebx_effect* effect = rebx_add_effect(rebx, name);
     effect->force = custom_force;
     struct reb_simulation* sim = rebx->sim;
@@ -468,10 +566,12 @@ struct rebx_effect* rebx_add_custom_force(struct rebx_extras* rebx, const char* 
     return effect;
 }
 
-struct rebx_effect* rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, const char* name, void (*custom_ptm)(struct reb_simulation* const sim, struct rebx_effect* const effect)){
+struct rebx_effect* rebx_add_custom_operator(struct rebx_extras* rebx, const char* name, void (*custom_operator)(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing)){
     struct rebx_effect* effect = rebx_add_effect(rebx, name);
-    effect->ptm = custom_ptm;
+    effect->operator = custom_operator;
+    rebx->sim->pre_timestep_modifications = rebx_pre_timestep_modifications;
     rebx->sim->post_timestep_modifications = rebx_post_timestep_modifications;
+
     return effect;
 }
     
