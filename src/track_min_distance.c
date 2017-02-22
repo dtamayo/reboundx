@@ -63,7 +63,7 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_effect* const effect){
+void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing){
     const int _N_real = sim->N - sim->N_var;	
 	for(int i=0; i<_N_real; i++){
 		struct reb_particle* const p = &sim->particles[i];

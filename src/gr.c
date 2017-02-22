@@ -69,24 +69,23 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-static void rebx_calculate_gr(struct reb_simulation* const sim, const double C2, const int max_iterations){
-    const int N_real = sim->N - sim->N_var;
+static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double C2, const int max_iterations){
     const double G = sim->G;
 
-    struct reb_particle* const ps = malloc(N_real*sizeof(*ps));
-    struct reb_particle* const ps_j = malloc(N_real*sizeof(*ps_j));
-    memcpy(ps, sim->particles, N_real*sizeof(*ps));
+    struct reb_particle* const ps = malloc(N*sizeof(*ps));
+    struct reb_particle* const ps_j = malloc(N*sizeof(*ps_j));
+    memcpy(ps, particles, N*sizeof(*ps));
     
     // Calculate Newtonian accelerations 
-    for(int i=0; i<N_real; i++){
+    for(int i=0; i<N; i++){
         ps[i].ax = 0.;
         ps[i].ay = 0.;
         ps[i].az = 0.;
     }
 
-    for(int i=0; i<N_real; i++){
+    for(int i=0; i<N; i++){
         const struct reb_particle pi = ps[i];
-        for(int j=i+1; j<N_real; j++){
+        for(int j=i+1; j<N; j++){
             const struct reb_particle pj = ps[j];
             const double dx = pi.x - pj.x;
             const double dy = pi.y - pj.y;
@@ -107,16 +106,12 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, const double C2,
     // Transform to Jacobi coordinates
     const struct reb_particle source = ps[0];
 	const double mu = G*source.m;
-    double* const eta = malloc(N_real*sizeof(*eta));
-    eta[0] = ps[0].m;
-    for (unsigned int i=1;i<N_real;i++){
-        eta[i] = eta[i-1] + ps[i].m;
-    }
-  
-    to_jacobi_posvel(ps, ps_j, eta, ps, N_real);
-    to_jacobi_acc(ps, ps_j, eta, ps, N_real);
+    double* const eta = malloc(N*sizeof(*eta));
+    reb_transformations_calculate_jacobi_eta(ps, eta, N);
+    reb_transformations_inertial_to_jacobi_posvelacc(ps, ps_j, eta, ps, N);
+    //reb_transformations_inertial_to_jacobi_acc(ps, ps_j, eta, ps, N);
 
-    for (int i=1; i<N_real; i++){
+    for (int i=1; i<N; i++){
         struct reb_particle p = ps_j[i];
         struct reb_vec3d vi;
         vi.x = p.vx;
@@ -158,10 +153,11 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, const double C2,
         
         const double vdotvdot = vi.x*vidot.x + vi.y*vidot.y + vi.z*vidot.z;
         const double D = (vdotvdot - 3.*mu/(ri*ri*ri)*rdotrdot)/C2;
+        const double E = vi2*vi2/C2/C2*sqrt(mu/ri/ri/ri);//vdotvdot*rdotrdot/C2/C2;
         
-        ps_j[i].ax = B*(1.-A)*p.x - A*p.ax - D*vi.x;
-        ps_j[i].ay = B*(1.-A)*p.y - A*p.ay - D*vi.y;
-        ps_j[i].az = B*(1.-A)*p.z - A*p.az - D*vi.z;
+        ps_j[i].ax = B*(1.-A)*p.x - A*p.ax - D*vi.x + E*p.vx;
+        ps_j[i].ay = B*(1.-A)*p.y - A*p.ay - D*vi.y + E*p.vy;
+        ps_j[i].az = B*(1.-A)*p.z - A*p.az - D*vi.z + E*p.vz;
         
         /*
         const double Cprimev = 0.;//3.*mu*vi2/(ri*ri*ri*C2);
@@ -175,48 +171,46 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, const double C2,
     ps_j[0].ay = 0.;
     ps_j[0].az = 0.;
 
-    to_inertial_acc(ps, ps_j, eta, ps, N_real);
-    for (int i=0; i<N_real; i++){
-        sim->particles[i].ax += ps[i].ax;
-        sim->particles[i].ay += ps[i].ay;
-        sim->particles[i].az += ps[i].az;
+    reb_transformations_jacobi_to_inertial_acc(ps, ps_j, eta, ps, N);
+    for (int i=0; i<N; i++){
+        particles[i].ax += ps[i].ax;
+        particles[i].ay += ps[i].ay;
+        particles[i].az += ps[i].az;
     }
     free(ps);
     free(ps_j);
     free(eta);
 }
 
-void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const gr){ // First find gr sources
+void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const gr, struct reb_particle* const particles, const int N){
     double* c = rebx_get_param_check(gr, "c", REBX_TYPE_DOUBLE);
     if (c == NULL){
         reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
         return;
     }
     const double C2 = (*c)*(*c);
-    const int N_real = sim->N - sim->N_var;
-    struct reb_particle* const particles = sim->particles;
     int* max_iterations = rebx_get_param_check(gr, "max_iterations", REBX_TYPE_INT);
     if(max_iterations != NULL){
-        rebx_calculate_gr(sim, C2, *max_iterations);
+        rebx_calculate_gr(sim, particles, N, C2, *max_iterations);
     }
     else{
         const int default_max_iterations = 10;
-        rebx_calculate_gr(sim, C2, default_max_iterations);
+        rebx_calculate_gr(sim, particles, N, C2, default_max_iterations);
     }
 }
 
-static double rebx_calculate_gr_hamiltonian(struct reb_simulation* const sim, const double C2, const int source_index){
-    const int N_real = sim->N - sim->N_var;
+static double rebx_calculate_gr_hamiltonian(struct reb_simulation* const sim, const double C2){
+    const int N = sim->N - sim->N_var;
     const double G = sim->G;
 
-    struct reb_particle* const ps_j = malloc(N_real*sizeof(*ps_j));
+    struct reb_particle* const ps_j = malloc(N*sizeof(*ps_j));
     struct reb_particle* const ps = sim->particles; 
     // Calculate Newtonian potentials
 
     double V_newt = 0.;
-    for(int i=0; i<N_real; i++){
+    for(int i=0; i<N; i++){
         const struct reb_particle pi = ps[i];
-        for(int j=i+1; j<N_real; j++){
+        for(int j=i+1; j<N; j++){
             const struct reb_particle pj = ps[j];
             const double dx = pi.x - pj.x;
             const double dy = pi.y - pj.y;
@@ -230,20 +224,14 @@ static double rebx_calculate_gr_hamiltonian(struct reb_simulation* const sim, co
     // Transform to Jacobi coordinates
     const struct reb_particle source = ps[0];
 	const double mu = G*source.m;
-    double* const eta = malloc(N_real*sizeof(*eta));
-    double* const m_j = malloc(N_real*sizeof(*m_j));
-    eta[0] = ps[0].m;
-    for (unsigned int i=1;i<N_real;i++){
-        eta[i] = eta[i-1] + ps[i].m;
-        m_j[i] = ps[i].m*eta[i-1]/eta[i];
-    }
-    m_j[0] = eta[N_real-1];
-
-    to_jacobi_posvel(ps, ps_j, eta, ps, N_real);
+    double* const eta = malloc(N*sizeof(*eta));
+    double* const m_j = malloc(N*sizeof(*m_j));
+    reb_transformations_calculate_jacobi_masses(ps, m_j, eta, N);
+    reb_transformations_inertial_to_jacobi_posvel(ps, ps_j, eta, ps, N);
 
     double T = 0.5*m_j[0]*(ps_j[0].vx*ps_j[0].vx + ps_j[0].vy*ps_j[0].vy + ps_j[0].vz*ps_j[0].vz);
     double V_PN = 0.;
-    for (int i=1; i<N_real; i++){
+    for (int i=1; i<N; i++){
         struct reb_particle p = ps_j[i];
         const double rdoti2 = p.vx*p.vx + p.vy*p.vy + p.vz*p.vz;
         double vtildei2 = rdoti2;
@@ -278,13 +266,6 @@ double rebx_gr_hamiltonian(struct reb_simulation* const sim, const struct rebx_e
         return 0;
     }
     const double C2 = (*c)*(*c);
-    const int N_real = sim->N - sim->N_var;
-    struct reb_particle* const particles = sim->particles;
-    for (int i=0; i<N_real; i++){
-        if (rebx_get_param_check(&particles[i], "gr_source", REBX_TYPE_INT) != NULL){
-            return rebx_calculate_gr_hamiltonian(sim, C2, i);
-        }
-    }
-    return rebx_calculate_gr_hamiltonian(sim, C2, 0);
+    return rebx_calculate_gr_hamiltonian(sim, C2);
 }
 
