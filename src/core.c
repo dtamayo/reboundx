@@ -406,23 +406,25 @@ void rebx_forces(struct reb_simulation* sim){
 }
 
 void rebx_pre_timestep_modifications(struct reb_simulation* sim){
-    if(sim->integrator==REB_INTEGRATOR_IAS15 && sim->ri_ias15.epsilon != 0){
-        reb_warning(sim, "REBOUNDx: Can't use second order scheme with adaptive timesteps (IAS15). Must use operator_order = 1 or apply as force to get sensible results.");
-    }
     struct rebx_extras* rebx = sim->extras;
     struct rebx_effect* current = rebx->effects;
     const double dt2 = sim->dt/2.;    // pre_timestep only executes order=2 effects, so always use a half timestep
     
     const double N = sim->N - sim->N_var;
     rebx_reset_accelerations(sim->particles, N);
-                             
     while(current != NULL){
         if(current->operator_order == 2){                // if order = 1, only apply post_timestep
             if(current->operator != NULL){      // Always apply operator if set
+                if(sim->integrator==REB_INTEGRATOR_IAS15 && sim->ri_ias15.epsilon != 0){
+                    reb_warning(sim, "REBOUNDx: Can't use second order scheme with adaptive timesteps (IAS15). Must use operator_order = 1 or apply as force to get sensible results.");
+                }
                 current->operator(sim, current, dt2, REBX_TIMING_PRE_TIMESTEP);
             }
             else{                               // It's a force: numerically integrate as operator if flag set
                 if(current->force_as_operator == 1){
+                    if(sim->integrator==REB_INTEGRATOR_IAS15 && sim->ri_ias15.epsilon != 0){
+                        reb_warning(sim, "REBOUNDx: Can't use second order scheme with adaptive timesteps (IAS15). Must use operator_order = 1 or apply as force to get sensible results.");
+                    }
                     rebx_integrate(sim, dt2, current);
                 }
             }
@@ -436,8 +438,11 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
 	struct rebx_effect* current = rebx->effects;
     struct rebx_effect* prev = NULL;
     
+    const double N = sim->N - sim->N_var;
+    rebx_reset_accelerations(sim->particles, N);
     // first do the 2nd order operators for half a timestep, in reverse order
     const double dt2 = sim->dt_last_done/2.;
+    
 	while(current != NULL){
         prev = current;
 		current = current->next;

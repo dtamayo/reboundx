@@ -109,8 +109,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
     double* const eta = malloc(N*sizeof(*eta));
     reb_transformations_calculate_jacobi_eta(ps, eta, N);
     reb_transformations_inertial_to_jacobi_posvelacc(ps, ps_j, eta, ps, N);
-    //reb_transformations_inertial_to_jacobi_acc(ps, ps_j, eta, ps, N);
-
+    
     for (int i=1; i<N; i++){
         struct reb_particle p = ps_j[i];
         struct reb_vec3d vi;
@@ -155,9 +154,9 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
         const double D = (vdotvdot - 3.*mu/(ri*ri*ri)*rdotrdot)/C2;
         const double E = vi2*vi2/C2/C2*sqrt(mu/ri/ri/ri);//vdotvdot*rdotrdot/C2/C2;
         
-        ps_j[i].ax = B*(1.-A)*p.x - A*p.ax - D*vi.x + E*p.vx;
-        ps_j[i].ay = B*(1.-A)*p.y - A*p.ay - D*vi.y + E*p.vy;
-        ps_j[i].az = B*(1.-A)*p.z - A*p.az - D*vi.z + E*p.vz;
+        ps_j[i].ax = B*(1.-A)*p.x - A*p.ax - D*vi.x;// + E*p.vx;
+        ps_j[i].ay = B*(1.-A)*p.y - A*p.ay - D*vi.y;// + E*p.vy;
+        ps_j[i].az = B*(1.-A)*p.z - A*p.az - D*vi.z;// + E*p.vz;
         
         /*
         const double Cprimev = 0.;//3.*mu*vi2/(ri*ri*ri*C2);
@@ -177,6 +176,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
         particles[i].ay += ps[i].ay;
         particles[i].az += ps[i].az;
     }
+    //fprintf(stderr, "%.16e\n", ps[1].ax);
     free(ps);
     free(ps_j);
     free(eta);
