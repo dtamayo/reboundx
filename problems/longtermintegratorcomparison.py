@@ -18,7 +18,7 @@ def run(name, rebintegrator, rebxintegrator, order, force_as_operator, ID):
     #sim.add(m=1.e-3, a=2., e=0.1)
     sim.move_to_com()
     sim.integrator=rebintegrator
-    sim.dt = dt
+    sim.dt = dt*sim.particles[1].P
     rebx = reboundx.Extras(sim)
     rebx.integrator = rebxintegrator
     gr = rebx.add("gr")
