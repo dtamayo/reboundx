@@ -29,7 +29,7 @@ def run(name, rebintegrator, rebxintegrator, order, force_as_operator, ID):
     E0 = rebx.gr_hamiltonian(sim, gr)
     times = np.logspace(0,np.log10(maxorb*sim.particles[1].P),Nout)
 
-    with open(name+str(ID)+".txt", "w") as f:
+    with open("longtermdata/"+name+str(ID)+".txt", "w") as f:
         for i, time in enumerate(times):
             sim.integrate(time, exact_finish_time=0)
             E = rebx.gr_hamiltonian(sim, gr)
