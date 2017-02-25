@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <float.h>
 #include "rebound.h"
 #include "reboundx.h"
 #include "integrator_implicit_midpoint.h"
@@ -47,52 +48,56 @@ static void avg_particles(struct reb_particle* const ps_avg, struct reb_particle
 }
 
 static int compare(struct reb_particle* ps1, struct reb_particle* ps2, int N){
-    //fprintf(stderr, "ps = %.16f\t ps_old = %.16f\t%.4e\n", ps1[1].vy, ps2[1].vy, fabs((ps1[1].vy - ps2[1].vy)/ps1[1].vy));
+    double tot2 = 0.;
+    double deltatot2 = 0.;
     for(int i=0; i<N; i++){
-        if (ps1[i].vx != ps2[i].vx || ps1[i].vy != ps2[i].vy || ps1[i].vz != ps2[i].vz){
-            return 0;
-        }
+        const double dvx = ps1[i].vx - ps2[i].vx;
+        const double dvy = ps1[i].vy - ps2[i].vy;
+        const double dvz = ps1[i].vz - ps2[i].vz;
+        deltatot2 += dvx*dvx + dvy*dvy + dvz*dvz;
+        tot2 += ps1[i].vx*ps1[i].vx + ps1[i].vy*ps1[i].vy + ps1[i].vz*ps1[i].vz;
     }
-    return 1;
+    if (deltatot2/tot2 < DBL_EPSILON*DBL_EPSILON){
+        return 1;
+    }
+    else{
+        return 0;
+    }
 }
 
 void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect){
     const int N = sim->N - sim->N_var;
-    struct reb_particle* const ps = malloc(N*sizeof(*ps));
-    memcpy(ps, sim->particles, N*sizeof(*ps));
-    struct reb_particle* ps_orig = malloc(N*sizeof(*ps_orig));
-    struct reb_particle* ps_old = malloc(N*sizeof(*ps_orig));
-    struct reb_particle* ps_avg = malloc(N*sizeof(*ps_avg));
-    memcpy(ps_orig, sim->particles, N*sizeof(*ps_orig));
-    
+    struct reb_particle* const ps_orig = sim->particles;
+    struct reb_particle* const ps_final = malloc(N*sizeof(*ps_final));
+    struct reb_particle* const ps_prev = malloc(N*sizeof(*ps_prev));
+    struct reb_particle* const ps_avg = malloc(N*sizeof(*ps_avg));
+    memcpy(ps_final, sim->particles, N*sizeof(*ps_final));
+    memcpy(ps_avg, sim->particles, N*sizeof(*ps_orig));
     int n, converged;
-    for(n=1;n<10;n++){
-        //memcpy(ps_old, ps, r->N*sizeof(*ps_old));
-        avg_particles(ps_avg, ps_orig, ps, N);
+    for(n=0;n<10;n++){
+        memcpy(ps_prev, ps_final, N*sizeof(*ps_prev));
         effect->force(sim, effect, ps_avg, N);
-        //fprintf(stderr, "ps_orig = %.16f\n", ps_avg[1].ay);
         for(int i=0; i<N; i++){
-            ps[i].vx = ps_orig[i].vx + dt*ps_avg[i].ax;
-            ps[i].vy = ps_orig[i].vy + dt*ps_avg[i].ay;
-            ps[i].vz = ps_orig[i].vz + dt*ps_avg[i].az;
+            ps_final[i].vx = ps_orig[i].vx + dt*ps_avg[i].ax;
+            ps_final[i].vy = ps_orig[i].vy + dt*ps_avg[i].ay;
+            ps_final[i].vz = ps_orig[i].vz + dt*ps_avg[i].az;
         }
-        //converged = compare(ps, ps_old, N);
-        //if (converged){
-        //    break;
-        //}
+        converged = compare(ps_final, ps_prev, N);
+        if (converged){
+            break;
+        }
+        avg_particles(ps_avg, ps_orig, ps_final, N);
     }
-    //fprintf(stderr, "%d\n", n);
-    //fprintf(stderr, "%e\n", fabs((ps[1].vy-ps_orig[1].vy)/ps_orig[1].vy));
-    //double v = sqrt(ps[1].vx*ps[1].vx + ps[1].vy*ps[1].vy);
-    //double v_orig = sqrt(ps_orig[1].vx*ps_orig[1].vx + ps_orig[1].vy*ps_orig[1].vy);
-    //fprintf(stderr, "%e\n", fabs((v-v_orig)/v_orig));
+    const int default_max_iterations = 10;
+    if(n==default_max_iterations){
+        reb_warning(sim, "REBOUNDx: 10 iterations in integrator_implicit_midpoint.c failed to converge. This is typically because the perturbation is too strong for the current implementation.");
+    }
     for(int i=0; i<N; i++){
-        sim->particles[i].vx = ps[i].vx;
-        sim->particles[i].vy = ps[i].vy;
-        sim->particles[i].vz = ps[i].vz;
+        sim->particles[i].vx = ps_final[i].vx;
+        sim->particles[i].vy = ps_final[i].vy;
+        sim->particles[i].vz = ps_final[i].vz;
     }
-    free(ps);
-    free(ps_orig);
-    free(ps_old);
+    free(ps_final);
+    free(ps_prev);
     free(ps_avg);
 }
