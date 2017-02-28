@@ -129,7 +129,7 @@ class Extras(Structure):
         :type c: bool
         :rtype: Effect structure
         """
-        REBX_FORCE = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect))
+        REBX_FORCE = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect), POINTER(rebound.Particle), c_int)
         self.custom_effects[function.__name__] = REBX_FORCE(function) # store a ref so it doesn't get garbage collected
         clibreboundx.rebx_add_custom_force.restype = POINTER(Effect)
         ptr = clibreboundx.rebx_add_custom_force(byref(self), c_char_p(function.__name__.encode('ascii')), self.custom_effects[function.__name__], force_is_velocity_dependent)
