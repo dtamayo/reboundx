@@ -117,7 +117,7 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
     return a;
 }
 
-void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect){
+void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
     int* ptr = rebx_get_param_check(effect, "coordinates", REBX_TYPE_INT);
     enum REBX_COORDINATES coordinates = REBX_COORDINATES_JACOBI; // Default
     if (ptr != NULL){
@@ -126,5 +126,5 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_eff
     
     const int back_reactions_inclusive = 1;
     const char* reference_name = "primary";
-    rebx_com_force(sim, effect, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_forces);
+    rebx_com_force(sim, effect, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_forces, particles, N);
 }

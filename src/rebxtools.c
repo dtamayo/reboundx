@@ -9,8 +9,7 @@
  * (could happen e.g. with barycentric coordinates with test particles and single massive body)
  */
 
-void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const effect, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_vec3d (*calculate_effect) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source)){
-    const int N_real = sim->N - sim->N_var;
+void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const effect, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_vec3d (*calculate_effect) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source), struct reb_particle* const particles, const int N){
     struct reb_particle com = reb_get_com(sim); // Start with full com for jacobi and barycentric coordinates.
   
     int refindex = -1;
@@ -18,15 +17,15 @@ void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const 
         refindex = 0;                           // There is no jacobi coordinate for the 0th particle, so set refindex to skip it in loop below.
     }
     else if(coordinates == REBX_COORDINATES_PARTICLE){
-        for (int i=0; i < N_real; i++){
-			struct reb_particle* p = &sim->particles[i];
+        for (int i=0; i < N; i++){
+			struct reb_particle* p = &particles[i];
             const int* const reference = rebx_get_param_check(p, reference_name, REBX_TYPE_INT);
             if (reference){
-                com = sim->particles[i];
+                com = particles[i];
                 refindex = i;
                 break;
             }
-            if (i == N_real-1){                 
+            if (i == N-1){
                 char str[200];
                 sprintf(str, "Coordinates set to REBX_COORDINATES_PARTICLE, but %s param was not found in any particle.  Need to set parameter.\n", reference_name);
                 reb_error(sim, str);
@@ -35,11 +34,11 @@ void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const 
     }
 
     
-    for(int i=N_real-1; i>=0; i--){ // Run through backwards so each iteration does not depend on previous ones in Jacobi coordinates.
+    for(int i=N-1; i>=0; i--){ // Run through backwards so each iteration does not depend on previous ones in Jacobi coordinates.
         if (i==refindex){
             continue;
         }
-        struct reb_particle* p = &sim->particles[i];
+        struct reb_particle* p = &particles[i];
         if (coordinates == REBX_COORDINATES_JACOBI){
             com = reb_get_com_without_particle(com, *p);
         }
@@ -53,10 +52,10 @@ void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const 
         switch(coordinates){
             case REBX_COORDINATES_BARYCENTRIC:
                 massratio = p->m/com.m;
-                for(int j=0; j < N_real; j++){
-                    sim->particles[j].ax -= massratio*a.x;
-                    sim->particles[j].ay -= massratio*a.y;
-                    sim->particles[j].az -= massratio*a.z;
+                for(int j=0; j < N; j++){
+                    particles[j].ax -= massratio*a.x;
+                    particles[j].ay -= massratio*a.y;
+                    particles[j].az -= massratio*a.z;
                 }
                 break;
             case REBX_COORDINATES_JACOBI:
@@ -67,9 +66,9 @@ void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const 
                     massratio = p->m/com.m;
                 }
                 for(int j=0; j < i + back_reactions_inclusive; j++){    // stop at j=i if inclusive, at i-1 if not
-                    sim->particles[j].ax -= massratio*a.x;
-                    sim->particles[j].ay -= massratio*a.y;
-                    sim->particles[j].az -= massratio*a.z;
+                    particles[j].ax -= massratio*a.x;
+                    particles[j].ay -= massratio*a.y;
+                    particles[j].az -= massratio*a.z;
                 }
                 break;
             case REBX_COORDINATES_PARTICLE:
@@ -82,9 +81,9 @@ void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const 
                 else{
                     massratio = p->m/com.m;
                 }
-                sim->particles[refindex].ax -= massratio*a.x;
-                sim->particles[refindex].ay -= massratio*a.y;
-                sim->particles[refindex].az -= massratio*a.z;
+                particles[refindex].ax -= massratio*a.x;
+                particles[refindex].ay -= massratio*a.y;
+                particles[refindex].az -= massratio*a.z;
                 break;
             default:
                 reb_error(sim, "Coordinates not supported in REBOUNDx.\n");

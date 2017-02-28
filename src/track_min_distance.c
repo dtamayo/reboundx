@@ -64,31 +64,33 @@
 #include "reboundx.h"
 
 void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing){
-    const int _N_real = sim->N - sim->N_var;	
-	for(int i=0; i<_N_real; i++){
-		struct reb_particle* const p = &sim->particles[i];
-        double* min_distance = rebx_get_param_check(p, "min_distance", REBX_TYPE_DOUBLE);
-        if (min_distance != NULL){
-		    const uint32_t* const target = rebx_get_param_check(p, "min_distance_from", REBX_TYPE_UINT32);
-            struct reb_particle* source;
-            if (target == NULL){
-                source = &sim->particles[0];
-            }
-            else{
-                source = reb_get_particle_by_hash(sim, *target);
-            }
-            const double dx = p->x-source->x;
-            const double dy = p->y-source->y;
-            const double dz = p->z-source->z;
-            const double r2 = dx*dx + dy*dy + dz*dz;
-            if (r2 < *min_distance*(*min_distance)){
-                *min_distance = sqrt(r2);
-                struct reb_orbit* const orbit = rebx_get_param_check(p, "min_distance_orbit", REBX_TYPE_ORBIT);
-                if (orbit){
-                    *orbit = reb_tools_particle_to_orbit(sim->G, *p, *source);
+    if(timing == REBX_TIMING_POST_TIMESTEP){    // only run once per timestep
+        const int _N_real = sim->N - sim->N_var;
+        for(int i=0; i<_N_real; i++){
+            struct reb_particle* const p = &sim->particles[i];
+            double* min_distance = rebx_get_param_check(p, "min_distance", REBX_TYPE_DOUBLE);
+            if (min_distance != NULL){
+                const uint32_t* const target = rebx_get_param_check(p, "min_distance_from", REBX_TYPE_UINT32);
+                struct reb_particle* source;
+                if (target == NULL){
+                    source = &sim->particles[0];
+                }
+                else{
+                    source = reb_get_particle_by_hash(sim, *target);
+                }
+                const double dx = p->x-source->x;
+                const double dy = p->y-source->y;
+                const double dz = p->z-source->z;
+                const double r2 = dx*dx + dy*dy + dz*dz;
+                if (r2 < *min_distance*(*min_distance)){
+                    *min_distance = sqrt(r2);
+                    struct reb_orbit* const orbit = rebx_get_param_check(p, "min_distance_orbit", REBX_TYPE_ORBIT);
+                    if (orbit){
+                        *orbit = reb_tools_particle_to_orbit(sim->G, *p, *source);
+                    }
                 }
             }
         }
-	}
+    }
 }
 
