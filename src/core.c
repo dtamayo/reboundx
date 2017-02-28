@@ -332,9 +332,11 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
 	rebx->params_to_be_freed = NULL;
 	rebx->effects = NULL;
     
-    if(sim->additional_forces || sim->post_timestep_modifications){
-        reb_warning(sim, "REBOUNDx overwrites sim->additional_forces, sim->pre_timestep_modifications and sim->post_timestep_modifications.  If you want to use REBOUNDx together with your own custom functions that use these callbacks, you should add them through REBOUNDx.  See http://reboundx.readthedocs.org/en/latest/c_examples.html#adding-custom-post-timestep-modifications-and-forces for a tutorial.");
+    if(sim->additional_forces || sim->pre_timestep_modifications || sim->post_timestep_modifications){
+        reb_warning(sim, "REBOUNDx overwrites sim->additional_forces, sim->pre_timestep_modifications and sim->post_timestep_modifications.  If you want to use REBOUNDx together with your own custom functions that use these callbacks, you should add them through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.");
     }
+    // Have to set all the following at initialization since we can't know
+    // which will be needed from added effects. User could set force_as_operator after the fact.
     sim->additional_forces = rebx_forces;
     sim->pre_timestep_modifications = rebx_pre_timestep_modifications;
     sim->post_timestep_modifications = rebx_post_timestep_modifications;
@@ -567,16 +569,12 @@ struct rebx_effect* rebx_add_custom_force(struct rebx_extras* rebx, const char* 
     if(force_is_velocity_dependent){
         sim->force_is_velocity_dependent = 1;
     }
-    rebx->sim->additional_forces = rebx_forces;
     return effect;
 }
 
 struct rebx_effect* rebx_add_custom_operator(struct rebx_extras* rebx, const char* name, void (*custom_operator)(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing)){
     struct rebx_effect* effect = rebx_add_effect(rebx, name);
     effect->operator = custom_operator;
-    rebx->sim->pre_timestep_modifications = rebx_pre_timestep_modifications;
-    rebx->sim->post_timestep_modifications = rebx_post_timestep_modifications;
-
     return effect;
 }
     
