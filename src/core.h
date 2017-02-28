@@ -77,13 +77,13 @@ double install_test(void);  // Function for testing whether REBOUNDx can load li
 /****************************************
 Force prototypes
 *****************************************/
-void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const gr, struct reb_particle* const particles, const int N);
-void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const effect);
-void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* const effect);
-void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const effect);
-void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect);
-void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_effect* const effect);
-void rebx_central_force(struct reb_simulation* const sim, struct rebx_effect* const effect);
+void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
+void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
+void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
+void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
+void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
+void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
+void rebx_central_force(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
 
 /****************************************
  Operator prototypes

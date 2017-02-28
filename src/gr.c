@@ -69,9 +69,8 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double C2, const int max_iterations){
-    const double G = sim->G;
-
+static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double C2, const double G, const int max_iterations){
+    
     struct reb_particle* const ps = malloc(N*sizeof(*ps));
     struct reb_particle* const ps_j = malloc(N*sizeof(*ps_j));
     memcpy(ps, particles, N*sizeof(*ps));
@@ -90,8 +89,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
             const double dx = pi.x - pj.x;
             const double dy = pi.y - pj.y;
             const double dz = pi.z - pj.z;
-            const double softening2 = sim->softening*sim->softening;
-            const double r2 = dx*dx + dy*dy + dz*dz + softening2;
+            const double r2 = dx*dx + dy*dy + dz*dz;
             const double r = sqrt(r2);
             const double prefac = G/(r2*r);
             ps[i].ax -= prefac*pj.m*dx;
@@ -139,7 +137,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
         }
         const int default_max_iterations = 10;
         if(q==default_max_iterations){
-            reb_warning(sim, "REBOUNDx: 10 iterations in gr.c failed to converge. This is typically because the perturbation is too strong for the current implementation.");
+            reb_warning(sim, "REBOUNDx Warning: 10 iterations in gr.c failed to converge. This is typically because the perturbation is too strong for the current implementation.");
         }
   
         const double B = (mu/ri - 1.5*vi2)*mu/(ri*ri*ri)/C2;
@@ -152,20 +150,12 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
         
         const double vdotvdot = vi.x*vidot.x + vi.y*vidot.y + vi.z*vidot.z;
         const double D = (vdotvdot - 3.*mu/(ri*ri*ri)*rdotrdot)/C2;
-        const double E = vi2*vi2/C2/C2*sqrt(mu/ri/ri/ri);//vdotvdot*rdotrdot/C2/C2;
         
-        ps_j[i].ax = B*(1.-A)*p.x - A*p.ax - D*vi.x;// + E*p.vx;
-        ps_j[i].ay = B*(1.-A)*p.y - A*p.ay - D*vi.y;// + E*p.vy;
-        ps_j[i].az = B*(1.-A)*p.z - A*p.az - D*vi.z;// + E*p.vz;
-        
-        /*
-        const double Cprimev = 0.;//3.*mu*vi2/(ri*ri*ri*C2);
-        const double Aprimev = 0.;//vi2/C2;
-        //ps_j[i].ax -= A*(Cprimev*p.x + Aprimev*p.ax);// + Adotprimev*vi.x);
-        //ps_j[i].ay -= A*(Cprimev*p.y + Aprimev*p.ay);// + Adotprimev*vi.y);
-        //ps_j[i].az -= A*(Cprimev*p.z + Aprimev*p.az);// + Adotprimev*vi.z);
-        */
+        ps_j[i].ax = B*(1.-A)*p.x - A*p.ax - D*vi.x;
+        ps_j[i].ay = B*(1.-A)*p.y - A*p.ay - D*vi.y;
+        ps_j[i].az = B*(1.-A)*p.z - A*p.az - D*vi.z;
     }
+    
     ps_j[0].ax = 0.;
     ps_j[0].ay = 0.;
     ps_j[0].az = 0.;
@@ -176,26 +166,26 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
         particles[i].ay += ps[i].ay;
         particles[i].az += ps[i].az;
     }
-    //fprintf(stderr, "%.16e\n", ps[1].ax);
+    
     free(ps);
     free(ps_j);
     free(eta);
 }
 
-void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const gr, struct reb_particle* const particles, const int N){
-    double* c = rebx_get_param_check(gr, "c", REBX_TYPE_DOUBLE);
+void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
+    double* c = rebx_get_param_check(effect, "c", REBX_TYPE_DOUBLE);
     if (c == NULL){
-        reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
+        reb_error(sim, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
         return;
     }
     const double C2 = (*c)*(*c);
-    int* max_iterations = rebx_get_param_check(gr, "max_iterations", REBX_TYPE_INT);
+    int* max_iterations = rebx_get_param_check(effect, "max_iterations", REBX_TYPE_INT);
     if(max_iterations != NULL){
-        rebx_calculate_gr(sim, particles, N, C2, *max_iterations);
+        rebx_calculate_gr(sim, particles, N, C2, sim->G, *max_iterations);
     }
     else{
         const int default_max_iterations = 10;
-        rebx_calculate_gr(sim, particles, N, C2, default_max_iterations);
+        rebx_calculate_gr(sim, particles, N, C2, sim->G, default_max_iterations);
     }
 }
 

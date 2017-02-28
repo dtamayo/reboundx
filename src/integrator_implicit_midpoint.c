@@ -44,7 +44,6 @@ static void avg_particles(struct reb_particle* const ps_avg, struct reb_particle
         ps_avg[i].az = 0.;
         ps_avg[i].m = 0.5*(ps1[i].m + ps2[i].m);
     }
-    //fprintf(stderr, "ps = %.16f\t ps_old = %.16f\t Avg = %.16f\n", ps1[1].vy, ps2[1].vy, ps_avg[1].vy);
 }
 
 static int compare(struct reb_particle* ps1, struct reb_particle* ps2, int N){
