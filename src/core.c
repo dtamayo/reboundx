@@ -553,6 +553,10 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
     else if (effect->hash == reb_hash("track_min_distance")){
         effect->operator = rebx_track_min_distance;
     }
+    else if (effect->hash == reb_hash("tides_synchronous_ecc_damping")){
+        sim->force_is_velocity_dependent = 1;
+        effect->force = rebx_tides_synchronous_ecc_damping;
+    }
     else{
         char str[100]; 
         sprintf(str, "Effect '%s' passed to rebx_add not found.\n", name);
