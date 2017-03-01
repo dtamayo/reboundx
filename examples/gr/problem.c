@@ -40,14 +40,6 @@ int main(int argc, char* argv[]){
     double* c = rebx_add_param(gr_params, "c", REBX_TYPE_DOUBLE);  
     *c = REBX_C;
 
-    /* By default, the 'gr' and 'gr_potential' effects assume the massive particle is at index 0.  
-     * If it has a different index, or you think the particle might move in the array (e.g. with a custom merger routine)
-     * you can add a gr_source flag to the massive particle (for "gr_full" all particles act as sources so this is not necessary):
-     */
-
-    int* source = rebx_add_param(&sim->particles[0], "gr_source", REBX_TYPE_INT);
-    *source = 1;
-
     double tmax = 5.e-2;
     reb_integrate(sim, tmax); 
     rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 

@@ -118,13 +118,13 @@ static void rebx_calculate_tides_precession(struct reb_simulation* const sim, st
 void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_effect* effect, struct reb_particle* const particles, const int N){
     int source_found=0;
     for (int i=0; i<N; i++){
-        if (rebx_get_param_check(&particles[i], "primary", REBX_TYPE_INT) != NULL){
+        if (rebx_get_param_check(&particles[i], "tides_primary", REBX_TYPE_INT) != NULL){
             source_found = 1;
             rebx_calculate_tides_precession(sim, particles, N, i);
         }
     }
     if (!source_found){
-        rebx_calculate_tides_precession(sim, particles, N, 0);    // default source to index 0 if "primary" not found on any particle
+        rebx_calculate_tides_precession(sim, particles, N, 0);    // default source to index 0 if "tides_primary" not found on any particle
     }
 }
 
