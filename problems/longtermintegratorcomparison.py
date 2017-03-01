@@ -7,7 +7,7 @@ import numpy as np
 ID = sys.argv[1]
 
 Nout = 1000
-maxorb = 1.e4
+maxorb = 1.e3
 C2 = 1.e6
 dt = 7.e-2
 
@@ -29,10 +29,10 @@ def run(name, rebintegrator, rebxintegrator, order, force_as_operator, ID):
     E0 = rebx.gr_hamiltonian(sim, gr)
     times = np.logspace(0,np.log10(maxorb*sim.particles[1].P),Nout)
 
-    with open("longtermdata/"+name+str(ID)+".txt", "w") as f:
-        for i, time in enumerate(times):
-            sim.integrate(time, exact_finish_time=0)
-            E = rebx.gr_hamiltonian(sim, gr)
+    for i, time in enumerate(times):
+        sim.integrate(time, exact_finish_time=0)
+        E = rebx.gr_hamiltonian(sim, gr)
+        with open("longtermdata/"+name+str(ID)+".txt", "w") as f:
             f.write("{0:e}\t{1:e}\t{2:.16f}\t{3:.16f}\n".format(sim.t, abs((E-E0)/E0), sim.particles[1].a, sim.particles[1].e))
 
 run("euler", "whfast", "euler", 2, 1, ID)
