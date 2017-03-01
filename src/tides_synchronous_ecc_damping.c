@@ -65,7 +65,7 @@ static void rebx_calculate_tides_synchronous_ecc_damping(struct reb_simulation* 
         if(i==source_index){
             continue;
         }
-        const double* const tau_e_ptr = rebx_get_param_check(&particles[i], "tau_e", REBX_TYPE_DOUBLE);
+        const double* const tau_e_ptr = rebx_get_param_check(&particles[i], "tides_synchronous_tau_e", REBX_TYPE_DOUBLE);
         if(tau_e_ptr != NULL){
             const double tau_e = *tau_e_ptr;
             const struct reb_particle p = particles[i];
@@ -78,13 +78,19 @@ static void rebx_calculate_tides_synchronous_ecc_damping(struct reb_simulation* 
             const double dz = p.z-source.z;
             const double r2 = dx*dx + dy*dy + dz*dz;
             const double vdotr = dx*dvx + dy*dvy + dz*dvz;
-            const double prefac = 2.*vdotr/r2;
-            particles[i].ax += prefac*dx/tau_e;
-            particles[i].ay += prefac*dy/tau_e;
-            particles[i].az += prefac*dz/tau_e;
+            const double prefac = 2.*vdotr/r2/tau_e;
+            const double prefacp = prefac*source.m/(p.m+source.m);
+            const double prefacprimary = prefac*p.m/(p.m+source.m);
+
+            particles[i].ax += prefacp*dx;
+            particles[i].ay += prefacp*dy;
+            particles[i].az += prefacp*dz;
+            
+            particles[0].ax -= prefacprimary*dx;
+            particles[0].ay -= prefacprimary*dy;
+            particles[0].az -= prefacprimary*dz;
         }
     }
-
 }
 
 void rebx_tides_synchronous_ecc_damping(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
