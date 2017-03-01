@@ -46,11 +46,10 @@ int main(int argc, char* argv[]){
     *k1 = 0.3;
 
     /* By default, implementation assumes particles[0] is the primary.
-     * You can also set the primary flag explicitly:
+     * You can also set the tides_primary flag explicitly (don't have to set it to a value):
      */
 
-    int* primary = rebx_add_param(&sim->particles[0], "primary", REBX_TYPE_INT);
-    *primary = 1;
+    int* tides_primary = rebx_add_param(&sim->particles[0], "tides_primary", REBX_TYPE_INT);
 
     double tmax = 1000.;
     reb_integrate(sim, tmax); 

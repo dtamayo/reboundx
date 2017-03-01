@@ -70,15 +70,14 @@ int main(int argc, char* argv[]){
      *
      * Additionally, the damping by default is done in Jacobi coordinates.  If you'd prefer to use barycentric 
      * coordinates, or coordinates referenced to a particular particle, set a coordinates parameter in the effect
-     * parameters returned by rebx_add to REBX_COORDINATES_BARYCENTRIC or REBX_COORDINATES_PARTICLE.  If the latter, add a 'primary' flag
-     * to the reference particle (not neccesary for barycentric):
+     * parameters returned by rebx_add to REBX_COORDINATES_BARYCENTRIC or REBX_COORDINATES_PARTICLE.  
+     * If the latter, add a 'primary' flag to the reference particle (not neccesary for barycentric):
      */
 
 	int* coordinates = rebx_add_param(params, "coordinates", REBX_TYPE_INT);
 	*coordinates = REBX_COORDINATES_PARTICLE;
 
 	int* primary = rebx_add_param(&sim->particles[0], "primary", REBX_TYPE_INT);
-	*primary = 1;
 
     reb_integrate(sim, tmax);
     rebx_free(rebx);    // Free all the memory allocated by rebx

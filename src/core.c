@@ -410,7 +410,7 @@ void rebx_forces(struct reb_simulation* sim){
 void rebx_pre_timestep_modifications(struct reb_simulation* sim){
     struct rebx_extras* rebx = sim->extras;
     struct rebx_effect* current = rebx->effects;
-    const double dt2 = sim->dt/2.;    // pre_timestep only executes order=2 effects, so always use a half timestep
+    const double dt2 = sim->dt/2.;    // pre_timestep only executes order=2 effects, so always use a half timestep and no need to worry about adaptive timestep with IAS15
     
     const double N = sim->N - sim->N_var;
     rebx_reset_accelerations(sim->particles, N);

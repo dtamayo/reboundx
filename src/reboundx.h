@@ -139,7 +139,7 @@ struct rebx_effect{
     uint32_t hash;                                  ///< Hash for the effect's name.
     char* name;                                     ///< String for the effect's name.
     struct rebx_param* ap;                          ///< Linked list of parameters for the effect.
-    int force_as_operator;
+    int force_as_operator;                          ///< whether to apply a force as an operator (1) or not (0).
     void (*force) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N); ///< Pointer to function to call during forces evaluation.
     void (*operator) (struct reb_simulation* sim, struct rebx_effect* effect, const double dt, enum rebx_timing timing);   ///< Pointer to function to call before and/or after each timestep.
     int operator_order;                             ///< order of operator scheme (1 = after each timestep, 2=half step before and after each timestep)
