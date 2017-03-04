@@ -37,6 +37,7 @@ void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const 
 
 void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_effect* const effect, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_particle (*calculate_effect) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source, const double dt), const double dt);
 
+double rebx_Edot(struct reb_particle* const ps, const int N);
 /*
 struct reb_orbit rebxtools_particle_to_orbit_err(double G, struct reb_particle* p, struct reb_particle* primary, int* err);
 

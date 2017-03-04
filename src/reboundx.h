@@ -166,8 +166,9 @@ struct rebx_extras {
 	struct rebx_param_to_be_freed* params_to_be_freed; 	///< Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
     enum {
         REBX_INTEGRATOR_IMPLICIT_MIDPOINT = 0,
-        REBX_INTEGRATOR_EULER = 1,
-        REBX_INTEGRATOR_NONE = 2,
+        REBX_INTEGRATOR_RK4 = 1,
+        REBX_INTEGRATOR_EULER = 2,
+        REBX_INTEGRATOR_NONE = 3,
     } integrator;
 };
 

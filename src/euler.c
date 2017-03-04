@@ -28,12 +28,20 @@
 #include <stdio.h>
 #include "rebound.h"
 #include "reboundx.h"
+#include "rebxtools.h"
 #include "euler.h"
 
 void rebx_integrator_euler_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect){
     const int N = sim->N - sim->N_var;
     effect->force(sim, effect, sim->particles, N);
+    double* Edissipated = rebx_get_param_check(effect, "Edissipated", REBX_TYPE_DOUBLE);
+    if(Edissipated != NULL){
+        const double Edot = rebx_Edot(sim->particles, N);
+        *Edissipated += dt*Edot;
+        
+    }
     //fprintf(stderr, "%.16e\t%f\n", sim->particles[1].ax, dt);
+    //fprintf(stderr, "%.16e\t%f\n", sim->particles[1].ay, dt);
     for(int i=0; i<N; i++){
         sim->particles[i].vx += dt*sim->particles[i].ax;
         sim->particles[i].vy += dt*sim->particles[i].ay;
