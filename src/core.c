@@ -34,6 +34,7 @@
 #include "rebound.h"
 #include "integrator_implicit_midpoint.h"
 #include "euler.h"
+#include "rk4.h"
 
 #define STRINGIFY(s) str(s)
 #define str(s) #s
@@ -305,6 +306,9 @@ void rebx_integrate(struct reb_simulation* const sim, const double dt, struct re
     switch(rebx->integrator){
         case REBX_INTEGRATOR_IMPLICIT_MIDPOINT:
             rebx_integrator_implicit_midpoint_integrate(sim, dt, effect);
+            break;
+        case REBX_INTEGRATOR_RK4:
+            rebx_integrator_rk4_integrate(sim, dt, effect);
             break;
         case REBX_INTEGRATOR_EULER:
             rebx_integrator_euler_integrate(sim, dt, effect);
