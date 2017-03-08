@@ -60,11 +60,9 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-static void rebx_calculate_central_force(struct reb_simulation* const sim, const double A, const double gamma, const int source_index){
-    const int _N_real = sim->N - sim->N_var;
-    struct reb_particle* const particles = sim->particles;
+static void rebx_calculate_central_force(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double A, const double gamma, const int source_index){
     const struct reb_particle source = sim->particles[source_index];
-    for (int i=0; i<_N_real; i++){
+    for (int i=0; i<N; i++){
         if(i == source_index){
             continue;
         }
@@ -84,15 +82,13 @@ static void rebx_calculate_central_force(struct reb_simulation* const sim, const
     }
 }
 
-void rebx_central_force(struct reb_simulation* const sim, struct rebx_effect* const effect){ 
-    const int N_real = sim->N - sim->N_var;
-    struct reb_particle* const particles = sim->particles;
-    for (int i=0; i<N_real; i++){
+void rebx_central_force(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
+    for (int i=0; i<N; i++){
         const double* const Acentral = rebx_get_param_check(&particles[i], "Acentral", REBX_TYPE_DOUBLE);
         if (Acentral != NULL){
             const double* const gammacentral = rebx_get_param_check(&particles[i], "gammacentral", REBX_TYPE_DOUBLE);
             if (gammacentral != NULL){
-                rebx_calculate_central_force(sim, *Acentral, *gammacentral, i); // only calculates force if a particle has both Acentral and gammacentral parameters set.
+                rebx_calculate_central_force(sim, particles, N, *Acentral, *gammacentral, i); // only calculates force if a particle has both Acentral and gammacentral parameters set.
             }
         }
     }

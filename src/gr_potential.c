@@ -66,17 +66,10 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-static void rebx_calculate_gr_potential(struct reb_simulation* const sim, const double C2, const int source_index){
-    const int _N_real = sim->N - sim->N_var;
-    const double G = sim->G;
-    struct reb_particle* const particles = sim->particles;
-    const struct reb_particle source = sim->particles[source_index];
-    
+static void rebx_calculate_gr_potential(struct reb_particle* const particles, const int N, const double C2, const double G){
+    const struct reb_particle source = particles[0];
     const double prefac1 = 6.*(G*source.m)*(G*source.m)/C2;
-    for (int i=0; i<_N_real; i++){
-        if(i == source_index){
-            continue;
-        }
+    for (int i=1; i<N; i++){
         const struct reb_particle p = particles[i];
         const double dx = p.x - source.x;
         const double dy = p.y - source.y;
@@ -87,43 +80,32 @@ static void rebx_calculate_gr_potential(struct reb_simulation* const sim, const 
         particles[i].ax -= prefac*dx;
         particles[i].ay -= prefac*dy;
         particles[i].az -= prefac*dz;
-        particles[source_index].ax += p.m/source.m*prefac*dx;
-        particles[source_index].ay += p.m/source.m*prefac*dy;
-        particles[source_index].az += p.m/source.m*prefac*dz;
+        particles[0].ax += p.m/source.m*prefac*dx;
+        particles[0].ay += p.m/source.m*prefac*dy;
+        particles[0].az += p.m/source.m*prefac*dz;
     }
 }
 
-void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* const gr_potential){ 
+void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* const gr_potential, struct reb_particle* const particles, const int N){
     double* c = rebx_get_param_check(gr_potential, "c", REBX_TYPE_DOUBLE);
     if (c == NULL){
-        reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
+        reb_error(sim, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
     }
     const double C2 = (*c)*(*c);
-    const int N_real = sim->N - sim->N_var;
-    struct reb_particle* const particles = sim->particles;
-    for (int i=0; i<N_real; i++){
-        if (rebx_get_param_check(&particles[i], "gr_source", REBX_TYPE_INT) != NULL){
-            rebx_calculate_gr_potential(sim, C2, i);
-            return;                             // only apply effect to first gr_source found.  For multiple sources, need gr_full
-        }
-    }
-    rebx_calculate_gr_potential(sim, C2, 0);    // gr_source not found, default to index=0
+    rebx_calculate_gr_potential(particles, N, C2, sim->G);
 }
 
-static double rebx_calculate_gr_potential_hamiltonian(struct reb_simulation* const sim, const double C2, const int source_index){
+static double rebx_calculate_gr_potential_hamiltonian(struct reb_simulation* const sim, const double C2){
     const struct reb_particle* const particles = sim->particles;
 	const int _N_real = sim->N - sim->N_var;
 	const double G = sim->G;
-    const struct reb_particle source = particles[source_index];
+    const struct reb_particle source = particles[0];
 	const double mu = G*source.m;
     const double prefac = 3.*mu*mu/C2;
     double H = reb_tools_energy(sim);
 
-	for (int i=0;i<_N_real;i++){
-		if(i == source_index){
-            continue;
-        }
-        struct reb_particle pi = particles[i];
+	for (int i=1;i<_N_real;i++){
+		struct reb_particle pi = particles[i];
         double dx = pi.x - source.x;
         double dy = pi.y - source.y;
         double dz = pi.z - source.z;
@@ -140,12 +122,5 @@ double rebx_gr_potential_hamiltonian(struct reb_simulation* const sim, const str
         reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
     }
     const double C2 = (*c)*(*c);
-    const int N_real = sim->N - sim->N_var;
-    struct reb_particle* const particles = sim->particles;
-    for (int i=0; i<N_real; i++){
-        if (rebx_get_param_check(&particles[i], "gr_source", REBX_TYPE_INT) != NULL){
-            return rebx_calculate_gr_potential_hamiltonian(sim, C2, i);
-        }
-    }
-    return rebx_calculate_gr_potential_hamiltonian(sim, C2, 0);
+    return rebx_calculate_gr_potential_hamiltonian(sim, C2);
 }
