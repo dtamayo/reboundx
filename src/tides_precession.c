@@ -62,8 +62,7 @@
 #include <float.h>
 #include "reboundx.h"
 
-static void rebx_calculate_tides_precession(struct reb_simulation* const sim, const int source_index){
-    struct reb_particle* const particles = sim->particles;
+static void rebx_calculate_tides_precession(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const int source_index){
     struct reb_particle* const source = &particles[source_index];
     const double m0 = source->m;
     double R0 = 0.;
@@ -116,18 +115,16 @@ static void rebx_calculate_tides_precession(struct reb_simulation* const sim, co
 	}
 }
 
-void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_effect* effect){
-    const int N_real = sim->N - sim->N_var;
-    struct reb_particle* const particles = sim->particles;
+void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_effect* effect, struct reb_particle* const particles, const int N){
     int source_found=0;
-    for (int i=0; i<N_real; i++){
-        if (rebx_get_param_check(&particles[i], "primary", REBX_TYPE_INT) != NULL){
+    for (int i=0; i<N; i++){
+        if (rebx_get_param_check(&particles[i], "tides_primary", REBX_TYPE_INT) != NULL){
             source_found = 1;
-            rebx_calculate_tides_precession(sim, i);
+            rebx_calculate_tides_precession(sim, particles, N, i);
         }
     }
     if (!source_found){
-        rebx_calculate_tides_precession(sim, 0);    // default source to index 0 if "primary" not found on any particle
+        rebx_calculate_tides_precession(sim, particles, N, 0);    // default source to index 0 if "tides_primary" not found on any particle
     }
 }
 

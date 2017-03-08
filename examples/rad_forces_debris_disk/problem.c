@@ -37,9 +37,8 @@ int main(int argc, char* argv[]){
 
     /* The effect assumes the radiation source is particles[0].  You can set it to another one by adding a radiation_source flag to it:
      * int* source = rebx_add_param(&sim->particles[3], "radiation_source", REBX_TYPE_INT);
-     * *source = 1;*/
 
-    /* Initialize dust particles
+     * Initialize dust particles
      * We idealize a perfectly coplanar debris disk with particles that have semimajor axes between 100 and 120 AU.
      * We initialize particles with 0.01 eccentricity, random pericenters and azimuths, and uniformly distributed
      * semimajor axes in the above range.  We take all particles to have a beta parameter (ratio of radiation 

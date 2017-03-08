@@ -37,8 +37,8 @@ int main(int argc, char* argv[]){
     struct rebx_effect* rad_params = rebx_add(rebx, "radiation_forces");
     double* c = rebx_add_param(rad_params, "c", REBX_TYPE_DOUBLE);
     *c = 3.e8;                          // speed of light in SI units 
+    // Will assume particles[0] is the radiation source by default. You can also add a flag to a particle explicitly
     int* source = rebx_add_param(&sim->particles[0], "radiation_source", REBX_TYPE_INT);
-    *source = 1;
 
     // Saturn (simulation set up in Saturn's orbital plane, i.e., inc=0, so only need 4 orbital elements 
     double mass_sat = 5.68e26;          // Mass of Saturn 

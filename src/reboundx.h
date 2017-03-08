@@ -22,8 +22,8 @@
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef REBX_REBOUNDX_H
-#define REBX_REBOUNDX_H
+#ifndef _REBX_REBOUNDX_H
+#define _REBX_REBOUNDX_H
 
 #ifndef M_PI 
 #define M_PI 3.1415926535879323846
@@ -106,6 +106,10 @@ enum rebx_input_binary_messages {
     REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN = 64,
 };
 
+enum rebx_timing {
+    REBX_TIMING_PRE_TIMESTEP = -1,
+    REBX_TIMING_POST_TIMESTEP = 1,
+};
 
 /****************************************
 Basic types in REBOUNDx
@@ -135,10 +139,13 @@ struct rebx_effect{
     uint32_t hash;                                  ///< Hash for the effect's name.
     char* name;                                     ///< String for the effect's name.
     struct rebx_param* ap;                          ///< Linked list of parameters for the effect.
-    void (*force) (struct reb_simulation* sim, struct rebx_effect* effect); ///< Pointer to function to call during forces evaluation.
-    void (*ptm) (struct reb_simulation* sim, struct rebx_effect* effect);   ///< Pointer to function to call after each timestep.
+    int force_as_operator;                          ///< whether to apply a force as an operator (1) or not (0).
+    void (*force) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N); ///< Pointer to function to call during forces evaluation.
+    void (*operator) (struct reb_simulation* sim, struct rebx_effect* effect, const double dt, enum rebx_timing timing);   ///< Pointer to function to call before and/or after each timestep.
+    int operator_order;                             ///< order of operator scheme (1 = after each timestep, 2=half step before and after each timestep)
     struct rebx_extras* rebx;                       ///< Pointer to the rebx_extras instance effect is in.
 	struct rebx_effect* next;			            ///< Pointer to the next effect in the linked list.
+    struct rebx_effect* prev;                       ///< Pointer to the previous effect in the linked list.
     char pad[100];                                  ///< Pad to be able to cast to reb_particle for get_object_type function.
 };
 
@@ -157,6 +164,12 @@ struct rebx_extras {
 	struct reb_simulation* sim;					    ///< Pointer to the simulation REBOUNDx is linked to.
 	struct rebx_effect* effects;		            ///< Linked list with pointers to all the effects added to the simulation.
 	struct rebx_param_to_be_freed* params_to_be_freed; 	///< Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
+    enum {
+        REBX_INTEGRATOR_IMPLICIT_MIDPOINT = 0,
+        REBX_INTEGRATOR_RK4 = 1,
+        REBX_INTEGRATOR_EULER = 2,
+        REBX_INTEGRATOR_NONE = 3,
+    } integrator;
 };
 
 /****************************************
@@ -248,7 +261,7 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name);
  * @param force_is_velocity_dependent Should be set to 1 if the custom force uses particle velocities, 0 otherwise.
  * @return Returns a pointer to a rebx_effect structure for the effect.
  */
-struct rebx_effect* rebx_add_custom_force(struct rebx_extras* rebx, const char* name, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* const effect), const int force_is_velocity_dependent);
+struct rebx_effect* rebx_add_custom_force(struct rebx_extras* rebx, const char* name, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N), const int force_is_velocity_dependent);
 
 /**
  * @brief Function for adding a custom post_timestep_modification in REBOUNDx.
@@ -257,8 +270,7 @@ struct rebx_effect* rebx_add_custom_force(struct rebx_extras* rebx, const char* 
  * @param custom_ptm User-implemented function that updates particles.
  * @return Returns a pointer to a rebx_effect structure for the effect.
  */
-struct rebx_effect* rebx_add_custom_post_timestep_modification(struct rebx_extras* rebx, const char* name, void (*custom_ptm)(struct reb_simulation* const sim, struct rebx_effect* const effect));
-
+struct rebx_effect* rebx_add_custom_operator(struct rebx_extras* rebx, const char* name, void (*custom_operator)(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing));
 /**
  * @brief Get a pointer to an effect by name.
  * @param rebx Pointer to the rebx_extras instance returned by rebx_init.
@@ -447,5 +459,8 @@ struct rebx_param* rebx_get_param_node(const void* const object, const char* con
  * @return Void pointer to the parameter. NULL if not found or type does not match (will write error to stderr).
  */
 void* rebx_get_param_check(const void* const object, const char* const param_name, enum rebx_param_type param_type);
+
+void rebx_gr_acc(struct rebx_extras* const rebx, double* acc, const double C2);
+double rebx_calculate_energy(struct reb_simulation* const sim);
 
 #endif
