@@ -21,4 +21,4 @@ for filename in os.listdir('data/'):
 sim.collision = "direct"
 sim.collision_resolve = collision
 
-sim.integrate(tmax)
+sim.integrate(tmax, exact_finish_time=0)

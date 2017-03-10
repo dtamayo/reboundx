@@ -1,16 +1,16 @@
 from subprocess import call
 import numpy as np
 
-tmax = 1.e4 
+tmax = 1.e7
 Nruns = 64 
 
 for i in range(Nruns):
     with open("sunnyvale.sh", "w") as of:
-        of.write("#!/bin/bash\n")
+        of.write("#!/bin/bash -l\n")
         of.write("#PBS -l nodes=1:ppn=1\n")
         of.write("#PBS -q greenq\n")
         of.write("#PBS -r n\n")
-        of.write("#PBS -l walltime=24:00:00\n")
+        of.write("#PBS -l walltime=48:00:00\n")
         of.write("#PBS -N tides\n")
         of.write("# EVERYTHING ABOVE THIS COMMENT IS NECESSARY, SHOULD ONLY CHANGE nodes,ppn,walltime and my_job_name VALUES\n")
         of.write("cd $PBS_O_WORKDIR\n")
@@ -18,5 +18,5 @@ for i in range(Nruns):
         of.write("source /mnt/raid-cita/dtamayo/p3/bin/activate\n")
         of.write("python run.py {0} {1}".format(i, tmax))
 
-    call("chmod u=rwx sunnyvale.sh", shell=True)
-    call("qsub -W x=FLAGS:ADVRES:dtamayo.0 sunnyvale.sh", shell=True)
+    #call("chmod u=rwx sunnyvale.sh", shell=True)
+    #call("qsub -W x=FLAGS:ADVRES:dtamayo.0 sunnyvale.sh", shell=True)

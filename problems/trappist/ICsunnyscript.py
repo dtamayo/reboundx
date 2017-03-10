@@ -5,7 +5,7 @@ Nruns=64
 
 for i in range(Nruns):
     with open("sunnyvale.sh", "w") as of:
-        of.write("#!/bin/bash\n")
+        of.write("#!/bin/bash -l\n")
         of.write("#PBS -l nodes=1:ppn=1\n")
         of.write("#PBS -q greenq\n")
         of.write("#PBS -r n\n")

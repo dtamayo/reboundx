@@ -154,12 +154,29 @@ for i, time in enumerate(times):
     sim.integrate(time)
 
 mag =10**uniform(-3,0)
+'''
 for p in planets: 
     theta = uniform(0,2*np.pi)
     ps[p].vx += mag*np.cos(theta)*ps[p].e*ps[p].v
     ps[p].vy += mag*np.sin(theta)*ps[p].e*ps[p].v
 
 sim.move_to_com()
+'''
+sim2 = rebound.Simulation()
+sim2.G = 4*np.pi**2
+sim2.add(m=Mstar)
+
+ps = sim.particles
+for p in planets: 
+    r = uniform(-1,1)
+    sign = abs(r)/r # get +/- 1 randomly
+    sim2.add(m=ps[p].m, P=ps[p].P, e=ps[p].e*(1. + sign*mag), inc=ps[p].inc, pomega=ps[p].pomega, Omega=ps[p].Omega, theta=ps[p].theta, hash=p)
+
+sim2.move_to_com()
+sim = sim2
+ps = sim.particles
+sim.integrator="whfast"
+sim.dt=ps[1].P*0.07
 
 minmass = 1.e10
 for p in ps[1:]:
@@ -171,4 +188,4 @@ for p in ps[1:]:
 
 filename='data/IC{0}K{1:.4e}mag{2:.4e}.bin'.format(simID, K, mag)
 sim.initSimulationArchive(filename, interval=1.e3)
-sim.integrate(0.)
+sim.integrate(3.e3, exact_finish_time=0)
