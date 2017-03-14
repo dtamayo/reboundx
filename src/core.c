@@ -388,7 +388,7 @@ void rebx_free_effects(struct rebx_extras* rebx){
  Functions executing forces & ptm each timestep
  *********************************************/
 
-static void rebx_reset_accelerations(struct reb_particle* const ps, const int N){
+void rebx_reset_accelerations(struct reb_particle* const ps, const int N){
     for(int i=0; i<N; i++){
         ps[i].ax = 0.;
         ps[i].ay = 0.;

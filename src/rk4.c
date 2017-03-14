@@ -50,8 +50,48 @@ void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const doubl
     struct reb_particle* const k3 = malloc(N*sizeof(*k3));
     memcpy(k2, sim->particles, N*sizeof(*k2));
     memcpy(k3, sim->particles, N*sizeof(*k3));
+    /*double E0 = 0.;
+    double* Edissipated = rebx_get_param_check(effect, "Edissipated", REBX_TYPE_DOUBLE);
+    if(Edissipated != NULL){
+        E0 = reb_tools_energy(sim);
+    }
+    const double dt2 = dt/2.;
+    effect->force(sim, effect, sim->particles, N);  // k1 = sim.particles.a
+    
+    for(int i=0; i<N; i++){
+        k2[i].vx = sim->particles[i].vx + dt2*sim->particles[i].ax;
+        k2[i].vy = sim->particles[i].vy + dt2*sim->particles[i].ay;
+        k2[i].vz = sim->particles[i].vz + dt2*sim->particles[i].az;
+    }
+    effect->force(sim, effect, k2, N);
+    for(int i=0; i<N; i++){
+        k3[i].vx = sim->particles[i].vx + dt2*k2[i].ax;
+        k3[i].vy = sim->particles[i].vy + dt2*k2[i].ay;
+        k3[i].vz = sim->particles[i].vz + dt2*k2[i].az;
+    }
+    effect->force(sim, effect, k3, N);
+    for(int i=0; i<N; i++){     // store k2+k3 in k3 and reuse k2 for k4 to avoid a memcpy
+        k2[i].vx = sim->particles[i].vx + dt*k3[i].ax;
+        k2[i].vy = sim->particles[i].vy + dt*k3[i].ay;
+        k2[i].vz = sim->particles[i].vz + dt*k3[i].az;
+        k3[i].ax += k2[i].ax;
+        k3[i].ay += k2[i].ay;
+        k3[i].az += k2[i].az;
+    }
+    rebx_reset_acc(k2, N);
+    effect->force(sim, effect, k2, N);
+    const double dt6 = dt/6.;
+    for(int i=0; i<N; i++){
+        sim->particles[i].vx += dt6*(sim->particles[i].ax + k2[i].ax + 2.*k3[i].ax);
+        sim->particles[i].vy += dt6*(sim->particles[i].ay + k2[i].ay + 2.*k3[i].ay);
+        sim->particles[i].vz += dt6*(sim->particles[i].az + k2[i].az + 2.*k3[i].az);
+    }
+    if(Edissipated != NULL){
+        const double Ef = reb_tools_energy(sim);
+        *Edissipated += Ef-E0;
+    }*/
     double* const Edissipated = rebx_get_param_check(effect, "Edissipated",REBX_TYPE_DOUBLE);
-
+    
     const double dt2 = dt/2.;
     effect->force(sim, effect, sim->particles, N);  // k1 = sim.particles.a
     
@@ -99,4 +139,6 @@ void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const doubl
     if(Edissipated != NULL){
         *Edissipated += dt6*(Edot1 + 2.*(Edot2 + Edot3) + Edot4);
     }
+    free(k2);
+    free(k3);
 }

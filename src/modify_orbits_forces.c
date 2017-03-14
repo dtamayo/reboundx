@@ -70,9 +70,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include "rebound.h"
 #include "reboundx.h"
 #include "rebxtools.h"
+#include "core.h"
 
 static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source){
     double tau_a = INFINITY;
@@ -145,5 +147,24 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_eff
     
     const int back_reactions_inclusive = 1;
     const char* reference_name = "primary";
+    
+    double* Edissipated_WHFAST = rebx_get_param_check(effect, "Edissipated_WHFAST", REBX_TYPE_DOUBLE);
+    if(Edissipated_WHFAST != NULL){
+        const double E0 = reb_tools_energy(sim);
+        struct reb_particle* const ps = malloc(N*sizeof(*ps));
+        memcpy(ps, particles, N*sizeof(*ps));
+        rebx_reset_accelerations(sim->particles, N);
+        rebx_com_force(sim, effect, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_forces, particles, N);
+        for(int i=0; i<N; i++){
+            particles[i].vx += sim->dt*particles[i].ax;
+            particles[i].vy += sim->dt*particles[i].ay;
+            particles[i].vz += sim->dt*particles[i].az;
+        }
+        const double Ef = reb_tools_energy(sim);
+        memcpy(particles, ps, N*sizeof(*ps));
+        *Edissipated_WHFAST += Ef-E0;
+        free(ps);
+    }
+    
     rebx_com_force(sim, effect, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_forces, particles, N);
 }

@@ -93,4 +93,5 @@ void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* cons
 void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing);
 void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing);
 
+void rebx_reset_accelerations(struct reb_particle* const ps, const int N);
 #endif
