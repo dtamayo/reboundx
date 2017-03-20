@@ -115,6 +115,22 @@ static int rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_input
                 effect = rebx_add(rebx, name);
                 break;
             }
+            case REBX_BINARY_FIELD_TYPE_FORCE_AS_OPERATOR:
+            {
+                if(!effect){
+                    return 0;
+                }
+                fread(&effect->force_as_operator, sizeof(effect->force_as_operator), 1, inf);
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_OPERATOR_ORDER:
+            {
+                if(!effect){
+                    return 0;
+                }
+                fread(&effect->operator_order, sizeof(effect->operator_order), 1, inf);
+                break;
+            }
             case REBX_BINARY_FIELD_TYPE_PARAM:
             {
                 if(!effect){
@@ -185,6 +201,34 @@ static int rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_inp
     return 1;
 }
 
+static int rebx_load_rebx(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
+    struct rebx_binary_field field;
+    int reading_fields = 1;
+    while (reading_fields){
+        if (!fread(&field, sizeof(field), 1, inf)){
+            *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+            break;
+        }
+        switch (field.type){
+            case REBX_BINARY_FIELD_TYPE_REBX_INTEGRATOR:
+            {
+                fread(&rebx->integrator, sizeof(rebx->integrator), 1, inf);
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_END:
+            {
+                reading_fields=0;
+                break;
+            }
+            default:
+                *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN;
+                fseek(inf,field.size,SEEK_CUR);
+                break;
+        }
+    }
+    return 1;
+}
+
 
 void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings){
     FILE* inf = fopen(filename,"rb");
@@ -216,6 +260,11 @@ void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, cons
             break;
         }
         switch (field.type){
+            case REBX_BINARY_FIELD_TYPE_REBX_STRUCTURE:
+            {
+                rebx_load_rebx(rebx, inf, warnings);
+                break;
+            }
             case REBX_BINARY_FIELD_TYPE_EFFECT:
             {
                 long field_start = ftell(inf);
