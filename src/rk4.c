@@ -99,4 +99,6 @@ void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const doubl
     if(Edissipated != NULL){
         *Edissipated += dt6*(Edot1 + 2.*(Edot2 + Edot3) + Edot4);
     }
+    free(k2);
+    free(k3);
 }
