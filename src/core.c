@@ -335,6 +335,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     rebx->sim = sim;
 	rebx->params_to_be_freed = NULL;
 	rebx->effects = NULL;
+    rebx->integrator = REBX_INTEGRATOR_IMPLICIT_MIDPOINT;
     
     if(sim->additional_forces || sim->pre_timestep_modifications || sim->post_timestep_modifications){
         reb_warning(sim, "REBOUNDx overwrites sim->additional_forces, sim->pre_timestep_modifications and sim->post_timestep_modifications.  If you want to use REBOUNDx together with your own custom functions that use these callbacks, you should add them through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.");
