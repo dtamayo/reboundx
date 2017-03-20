@@ -90,6 +90,8 @@ static void rebx_write_effect(struct rebx_effect* effect, FILE* of){
     long pos_start_effect = ftell(of);
     
     REBX_WRITE_FIELD(NAME,          effect->name,           strlen(effect->name) + 1,       1); // +1 for \0 at end
+    REBX_WRITE_FIELD(FORCE_AS_OPERATOR,          &effect->force_as_operator,           sizeof(effect->force_as_operator),            1);
+    REBX_WRITE_FIELD(OPERATOR_ORDER,          &effect->operator_order,           sizeof(effect->operator_order),            1);
     rebx_write_params(effect->ap, of); // Write all parameters
     // Write end marker for effect
     REBX_WRITE_FIELD(END,           NULL,                   0,                              0);
@@ -121,6 +123,23 @@ static void rebx_write_particle(struct reb_particle* particle, int index, FILE* 
     fseek(of, 0, SEEK_END);
 }
 
+static void rebx_write_rebx(struct rebx_extras* rebx, FILE* of){
+    long pos_rebx_rewrite = ftell(of);
+    struct rebx_binary_field rebx_field = {.type = REBX_BINARY_FIELD_TYPE_REBX_STRUCTURE, .size=0};
+    fwrite(&rebx_field, sizeof(rebx_field), 1, of);
+    long pos_start_rebx = ftell(of);
+    
+    REBX_WRITE_FIELD(REBX_INTEGRATOR,          &rebx->integrator,           sizeof(rebx->integrator),            1);
+    REBX_WRITE_FIELD(END,           NULL,                   0,                              0);
+    
+    // Go back and write size of entire parameter and reset file position to end of file
+    long pos_end_rebx = ftell(of);
+    rebx_field.size = pos_end_rebx - pos_start_rebx;
+    fseek(of, pos_rebx_rewrite, SEEK_SET);
+    fwrite(&rebx_field, sizeof(rebx_field), 1, of);
+    fseek(of, 0, SEEK_END);
+}
+
 void rebx_output_binary(struct rebx_extras* rebx, char* filename){
     struct reb_simulation* sim = rebx->sim;
 
@@ -139,6 +158,8 @@ void rebx_output_binary(struct rebx_extras* rebx, char* filename){
     fwrite(rebx_githash_str,sizeof(char),62-lenheader,of);
     fwrite(&zero,sizeof(char),1,of);
 
+    rebx_write_rebx(rebx, of);
+    
     int neffects=0;
     struct rebx_effect* current = rebx->effects;
     while (current != NULL){

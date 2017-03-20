@@ -39,7 +39,15 @@ int main(int argc, char* argv[]){
     int* integers = rebx_add_param_array(planet, "integers", REBX_TYPE_INT, ndim, shape3D);
     int ints[24] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24};
     memcpy(integers, ints, sizeof(*integers)*24);
- 
+
+    rebx->integrator = REBX_INTEGRATOR_RK4;
+    gr->force_as_operator = 1;
+    gr->operator_order = 2;
+
+    printf("rebx->integrator: Original = %d\n", rebx->integrator);
+    printf("gr->force_as_operator: Original = %d\n", gr->force_as_operator);
+    printf("gr->operator_order: Original = %d\n", gr->operator_order);
+    
     // We now have to save both a REBOUND binary (for the simulation) and a REBOUNDx one (for parameters and effects)
     reb_output_binary(sim, "reb.bin");
     rebx_output_binary(rebx, "rebx.bin");
@@ -55,6 +63,10 @@ int main(int argc, char* argv[]){
     a = rebx_get_param(gr, "a");
     b = rebx_get_param(gr, "b");
     c = rebx_get_param(gr, "c");
+    
+    printf("rebx->integrator: Loaded = %d\n", rebx->integrator);
+    printf("gr->force_as_operator: Loaded = %d\n", gr->force_as_operator);
+    printf("gr->operator_order: Loaded = %d\n", gr->operator_order);
     
     planet = &sim->particles[1];
     integers = rebx_get_param(planet, "integers");
