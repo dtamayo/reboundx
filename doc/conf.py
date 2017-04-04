@@ -18,6 +18,7 @@ import os
 import shlex
 import subprocess
 import glob
+import re
 
 # Doxygen trigger
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
@@ -59,26 +60,99 @@ with open("c_examples.rst","w") as fd:
             fd.write("\n\nThis example is located in the directory `examples/"+problemc.split("/")[2]+"`\n\n")
             if did_output==0:
                 print "Warning: Did not find description in "+problemc
-'''
-# iPython examples:
-import shutil
-if os.path.exists("ipython"):
-    shutil.rmtree('./ipython')
-os.makedirs("./ipython")
-if 1:
-    try:
-        os.chdir("ipython")
-        for example in glob.glob("../../ipython_examples/*.ipynb"):
-            subprocess.check_output(["ipython", "nbconvert", example, "--to", "rst"])
-    except:
-        with open("ipython.rst","w") as fd:
-            fd.write("Examples can be found on github\n")
-            fd.write("-------------------------------\n\n")
-            fd.write("Due to a bug in the readthedocs system, the iPython notebooks are currently not included here. To view them, head over to github: \n")
-            fd.write("https://github.com/dtamayo/reboundx/tree/master/ipython_examples\n")
-    finally:
-        os.chdir("../")
-'''        
+
+# Update effects.rst
+def cleanline(line):
+    if line[3:] == "":
+        return "\n"
+    else:
+        return line[3:]
+
+sources = [each for each in os.listdir('../src') if each.endswith('.c')]
+sources = [source[:-2] for source in sources] # all filenames ending with .c with the .c removed
+
+with open("effects.rst", "w") as f:
+    with open("effect_headers.txt", "r") as fh:
+        lines = fh.readlines()
+        i=0
+        while i < len(lines):
+            if lines[i].startswith(".. #"):
+                i += 1    # skip comment line
+            else:
+                if "$$$" in lines[i]: # New category
+                    i += 1
+                    while lines[i].strip() == "": # skip white lines
+                        i += 1
+                    category = lines[i] # store category
+                    while i < len(lines) and "$$$" not in lines[i]: # print category description
+                        f.writelines(lines[i])
+                        i += 1
+                       
+                    for source in sources:
+                        with open("../src/" + source + ".c", "r") as fs: # search sources that match category
+                            sourcelines = fs.readlines()
+                            j=0
+                            while "#include" not in sourcelines[j]:
+                                if "$$$" in sourcelines[j]: # start of documentation block
+                                    j += 1
+                                    while sourcelines[j].strip() == "*": # skip empty lines
+                                        j += 1
+                                    res = re.search(r'\$(.*)\$', cleanline(sourcelines[j])) # search for category between dollar signs
+                                    if res is not None:
+                                        cat = res.group(1)
+                                        if cat.strip().lower() == category.strip().lower(): # source is in category, need to document
+                                            j += 1
+                                            f.write(".. _"+source+":\n\n") # write tag
+                                            f.write(source+"\n") # write implementation heading
+                                            for k in range(len(source)):
+                                                f.write("*")
+                                            f.write("\n")
+                                            while " */" not in sourcelines[j]:
+                                                f.write(cleanline(sourcelines[j]))
+                                                j += 1
+                                            f.write("\n")
+                                        else: # category doesn't match
+                                           break
+                                    else: # first non-empty line doesn't have category
+                                        break
+                                else:
+                                    j += 1
+                                
+                else:
+                    f.writelines(lines[i])
+                    i += 1
+
+        # Now document sources that had no category included separately
+        for source in sources:
+            with open("../src/" + source + ".c", "r") as fs: # search sources that match category
+                sourcelines = fs.readlines()
+                j=0
+                while "#include" not in sourcelines[j]:
+                    if "$$$" in sourcelines[j]: # start of documentation block
+                        j += 1
+                        while sourcelines[j].strip() == "*": # skip empty lines
+                            j += 1
+                        res = re.search(r'\$(.*)\$', cleanline(sourcelines[j])) # search for category between dollar signs
+                        if res is None: # only document if no category present
+                            f.write(source+"\n") # write section heading
+                            for k in range(len(source)):
+                                f.write("^")
+                            f.write("\n\n")
+                            f.write(".. _"+source+":\n\n") # write tag
+                            f.write(source+"\n") # write implementation heading
+                            for k in range(len(source)):
+                                f.write("*")
+                            f.write("\n\n")
+                            while " */" not in sourcelines[j]:
+                                f.write(cleanline(sourcelines[j]))
+                                j += 1
+                            break
+                            f.write("\n")
+                        else: # had category, don't document
+                            break
+                    else:
+                        j += 1
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -129,9 +203,9 @@ author = 'Dan Tamayo, Hanno Rein'
 # built documents.
 #
 # The short X.Y version.
-version = '2.8'
+version = '2.17'
 # The full version, including alpha/beta/rc tags.
-release = '2.8.4'
+release = '2.17.2'
 
 # The language for content autogenerated by Sphinx. Refer to documentation
 # for a list of supported languages.

@@ -1,7 +1,7 @@
 from . import clibreboundx
 from ctypes import c_double
 
-coordinates = {"JACOBI":0, "BARYCENTRIC":1, "HELIOCENTRIC":2} # to use C version's REBX_COORDINATES enum
+coordinates = {"JACOBI":0, "BARYCENTRIC":1, "PARTICLE":2} # to use C version's REBX_COORDINATES enum
 
 #function to test whether REBOUND shared library can be located and called correctly
 def install_test():

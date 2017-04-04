@@ -10,7 +10,6 @@ Probably the quickest way to get up and running is to edit one of the linked exa
 
 Orbit Modifications
 ^^^^^^^^^^^^^^^^^^^
-
 REBOUNDx offers two ways of modifying orbital elements (semimajor axis/eccentricity/inclination damping, precession, etc.)
 In both cases, each particle is assigned evolution timescales for each orbital element.  
 Positive timescales correspond to growth / progression, negative timescales correspond to damping / regression.  
@@ -36,32 +35,35 @@ This nicely isolates changes to particular osculating elements, making it easier
 One can also adjust the coupling parameter `p` between eccentricity and semimajor axis evolution, as well as whether the damping is done on Jacobi, barycentric or heliocentric elements.
 Since this method changes osculating (i.e., two-body) elements, it can give unphysical results in highly perturbed systems.
 
-**Effect Structure**: *rebx_params_modify_orbits_direct*
+**Effect Parameters**
 
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-p (double)                  Coupling parameter between eccentricity and semimajor axis evolution
-                            (see Deck & Batygin 2015). `p=0` corresponds to no coupling, `p=1` to
-                            eccentricity evolution at constant angular momentum.
-coordinates (enum)          Type of elements to use for modification (Jacobi, barycentric or heliocentric).
-                            See the examples for usage.
-=========================== ==================================================================
+If p is not set, it defaults to 1.  If coordinates not set, defaults to using Jacobi coordinates.
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+p (double)                   No          Coupling parameter between eccentricity and semimajor axis evolution
+                                         (see Deck & Batygin 2015). `p=0` corresponds to no coupling, `p=1` to
+                                         eccentricity evolution at constant angular momentum.
+coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
+                                         See the examples for usage.
+============================ =========== ==================================================================
 
 **Particle Parameters**
 
 One can pick and choose which particles have which parameters set.  
 For each particle, any unset parameter is ignored.
 
-=========================== ======================================================
-Name (C type)               Description
-=========================== ======================================================
-tau_a (double)              Semimajor axis exponential growth/damping timescale
-tau_e (double)              Eccentricity exponential growth/damping timescale
-tau_inc (double)            Inclination axis exponential growth/damping timescale
-tau_Omega (double)          Period of linear nodal precession/regression
-tau_omega (double)          Period of linear apsidal precession/regression
-=========================== ======================================================
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+tau_a (double)               No          Semimajor axis exponential growth/damping timescale
+tau_e (double)               No          Eccentricity exponential growth/damping timescale
+tau_inc (double)             No          Inclination axis exponential growth/damping timescale
+tau_Omega (double)           No          Period of linear nodal precession/regression
+tau_omega (double)           No          Period of linear apsidal precession/regression
+============================ =========== ==================================================================
+
 
 .. _modify_orbits_forces:
 
@@ -82,32 +84,34 @@ The eccentricity damping keeps the angular momentum constant (corresponding to `
 Additionally, eccentricity/inclination damping will induce pericenter/nodal precession.
 Both these effects are physical, and the method is more robust for strongly perturbed systems.
 
-**Effect Structure**: *rebx_params_modify_orbits_forces*
+**Effect Parameters**
 
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-coordinates (enum)          Type of elements to use for modification (Jacobi, barycentric or heliocentric).
-                            See the examples for usage.
-=========================== ==================================================================
+If coordinates not, defaults to using Jacobi coordinates.
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
+                                         See the examples for usage.
+============================ =========== ==================================================================
 
 **Particle Parameters**
 
 One can pick and choose which particles have which parameters set.  
 For each particle, any unset parameter is ignored.
 
-=========================== ======================================================
-Name (C type)               Description
-=========================== ======================================================
-tau_a (double)              Semimajor axis exponential growth/damping timescale
-tau_e (double)              Eccentricity exponential growth/damping timescale
-tau_inc (double)            Inclination axis exponential growth/damping timescale
-tau_Omega (double)          Period of linear nodal precession/regression
-tau_omega (double)          Period of linear apsidal precession/regression
-=========================== ======================================================
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+tau_a (double)               No          Semimajor axis exponential growth/damping timescale
+tau_e (double)               No          Eccentricity exponential growth/damping timescale
+tau_inc (double)             No          Inclination axis exponential growth/damping timescale
+============================ =========== ==================================================================
+
 
 General Relativity
 ^^^^^^^^^^^^^^^^^^
+
 .. _gr:
 
 gr
@@ -124,15 +128,49 @@ Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reb
 This assumes that the masses are dominated by a single central body, and should be good enough for most applications with planets orbiting single stars.
 It ignores terms that are smaller by of order the mass ratio with the central body.
 It gets both the mean motion and precession correct, and will be significantly faster than :ref:`gr_full`, particularly with several bodies.
+Adding this effect to several bodies is NOT equivalent to using gr_full.
 
-**Effect Structure**: *rebx_params_gr*
+**Effect Parameters**
 
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-c (double)                  Speed of light in the units used for the simulation.
-source_index (int)          Index in the `particles` array for the massive central body.
-=========================== ==================================================================
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+c (double)                   Yes         Speed of light in the units used for the simulation.
+============================ =========== ==================================================================
+
+**Particle Parameters**
+
+If no particles have gr_source set, effect will assume the particle at index 0 in the particles array is the source.
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+gr_source (int)              No          Flag identifying the particle as the source of perturbations.
+============================ =========== ==================================================================
+
+
+.. _gr_full:
+
+gr_full
+*******
+
+======================= ===============================================
+Authors                 P. Shi, H. Rein, D. Tamayo
+Implementation Paper    *In progress*
+Based on                `Newhall et al. 1983 <http://labs.adsabs.harvard.edu/adsabs/abs/1983A%26A...125..150N/>`_.
+C Example               :ref:`c_example_gr`
+Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+======================= ===============================================
+
+This algorithm incorporates the first-order post-newtonian effects from all bodies in the system, and is necessary for multiple massive bodies like stellar binaries.
+
+**Effect Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+c (double)                   Yes         Speed of light in the units used for the simulation.
+============================ =========== ==================================================================
 
 **Particle Parameters**
 
@@ -157,45 +195,24 @@ It gets the precession right, but gets the mean motion wrong by :math:`\mathcal{
 It's the fastest option, and because it's not velocity-dependent, it automatically keeps WHFast symplectic.  
 Nice if you have a single-star system, don't need to get GR exactly right, and want speed.
 
-**Effect Structure**: *rebx_params_gr_potential*
+**Effect Parameters**
 
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-c (double)                  Speed of light in the units used for the simulation.
-source_index (int)          Index in the `particles` array for the massive central body.
-=========================== ==================================================================
-
-**Particle Parameters**
-
-*None*
-
-.. _gr_full:
-
-gr_full
-*******
-
-======================= ===============================================
-Authors                 P. Shi, H. Rein, D. Tamayo
-Implementation Paper    *In progress*
-Based on                `Newhall et al. 1983 <http://labs.adsabs.harvard.edu/adsabs/abs/1983A%26A...125..150N/>`_.
-C Example               :ref:`c_example_gr`
-Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
-======================= ===============================================
-
-This algorithm incorporates GR effects from all bodies in the system, and is necessary for multiple massive bodies like stellar binaries.
-
-**Effect Structure**: *rebx_params_gr_full*
-
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-c (double)                  Speed of light in the units used for the simulation.
-=========================== ==================================================================
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+c (double)                   Yes         Speed of light in the units used for the simulation.
+============================ =========== ==================================================================
 
 **Particle Parameters**
 
-*None*
+If no particles have gr_source set, effect will assume the particle at index 0 in the particles array is the source.
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+gr_source (int)              No          Flag identifying the particle as the source of perturbations.
+============================ =========== ==================================================================
+
 
 Radiation Forces
 ^^^^^^^^^^^^^^^^
@@ -218,35 +235,33 @@ This applies radiation forces to particles in the simulation.
 It incorporates both radiation pressure and Poynting-Robertson drag.
 Only particles whose `beta` parameter is set will feel the radiation.  
 
-**Effect Structure**: *rebx_params_radiation_forces*
+**Effect Parameters**
 
-=========================== ==================================================================
-Field (C type)              Description
-=========================== ==================================================================
-c (double)                  Speed of light in the units used for the simulation.
-source_index (int)          Index in the `particles` array for the radiation source.
-=========================== ==================================================================
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+c (double)                   Yes         Speed of light in the units used for the simulation.
+============================ =========== ==================================================================
 
 **Particle Parameters**
 
-Only particles with their ``beta`` parameter set will feel radiation forces.
+If no particles have radiation_source set, effect will assume the particle at index 0 in the particles array is the source.
 
-=========================== ======================================================
-Name (C type)               Description
-=========================== ======================================================
-beta (double)               Ratio of the radiation force to the gravitational force
-                            from the radiation source.
-=========================== ======================================================
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+radiation_source (int)       No          Flag identifying the particle as the source of radiation.
+beta (float)                 Yes         Ratio of radiation pressure force to gravitational force. Particles without beta set feel no radiation forces.
+============================ =========== ==================================================================
 
-Mass modifications
+
+Mass Modifications
 ^^^^^^^^^^^^^^^^^^
 
 .. _modify_mass:
 
 modify_mass
 ***********
-
-Set particles' ``tau_mass`` parameter to a negative value for mass loss, positive for mass growth.
 
 ======================= ===============================================
 Authors                 D. Tamayo
@@ -257,8 +272,9 @@ Python Example          `ModifyMass.ipynb <https://github.com/dtamayo/reboundx/b
 ======================= ===============================================
 
 This adds exponential mass growth/loss to individual particles every timestep.
+Set particles' ``tau_mass`` parameter to a negative value for mass loss, positive for mass growth.
 
-**Effect Structure**:
+**Effect Parameters**
 
 *None*
 
@@ -266,26 +282,119 @@ This adds exponential mass growth/loss to individual particles every timestep.
 
 Only particles with their ``tau_mass`` parameter set will have their masses affected.
 
-=========================== ======================================================
-Name (C type)               Description
-=========================== ======================================================
-tau_mass (double)           e-folding mass loss (<0) or growth (>0) timescale    
-=========================== ======================================================
+============================ =========== =======================================================
+Name (C type)                Required    Description
+============================ =========== =======================================================
+tau_mass (double)            Yes         e-folding mass loss (<0) or growth (>0) timescale    
+============================ =========== =======================================================
 
-.. _custom:
 
-custom_force, custom_post_timestep_modification
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Tides
+^^^^^^^^^^^^^^^^^^
+
+.. _tides_precession:
+
+tides_precession
+****************
 
 ======================= ===============================================
-Authors                 H. Rein, D. Tamayo
-Implementation Paper    N/A
-Based on                N/A
-C Example               :ref:`c_example_custom_ptm`.
-Python Example          N/A
+Authors                 D. Tamayo
+Implementation Paper    *In progress*
+Based on                `Hut 1981 <https://ui.adsabs.harvard.edu/#abs/1981A&A....99..126H/abstract>`_.
+C Example               :ref:`c_example_tides_precession`.
+Python Example          `TidesPrecession.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesPrecession.ipynb>`_.
 ======================= ===============================================
 
-This is in case you want to use your own quick-and-dirty force or post-timestep modification function in your ``problem.c`` file (i.e. with the C version).
-If you want to use it in Python, you might as well set up a new effect in the REBOUNDx framework (see the add an effect section).
-You can also write your own quick-and-dirty Python function, but this will switch between C and Python every timestep and will be slower than implementing the effect in C by a factor of a few.
-See `Forces.ipynb <https://github.com/hannorein/rebound/blob/master/ipython_examples/Forces.ipynb>`_ for how to do this.
+This adds precession from the tidal interactions between the particles in the simulation and the central body, both from tides raised on the primary and on the other bodies.
+In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' R_tides (physical radius) and k1 (apsidal motion constant, half the tidal Love number).
+You can specify the primary with a "primary" flag.
+If not set, the primary will default to the particle at the 0 index in the particles array.
+
+**Effect Parameters**
+
+None
+
+**Particle Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+R_tides (float)              Yes         Physical radius (required for contribution from tides raised on the body).
+k1 (float)                   Yes         Apsidal motion constant (half the tidal Love number k2).
+primary (int)                No          Set to 1 to specify the primary.  Defaults to treating particles[0] as primary if not set.
+============================ =========== ==================================================================
+
+
+Central Force
+^^^^^^^^^^^^^^^^^^
+
+.. _central_force:
+
+central_force
+*************
+
+======================= ===============================================
+Authors                 D. Tamayo
+Implementation Paper    *In progress*
+Based on                None
+C Example               :ref:`c_example_central_force`
+Python Example          `CentralForce.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/CentralForce.ipynb>`_.
+======================= ===============================================
+
+Adds a general central acceleration of the form a=Aradial*r^gammaradial, outward along the direction from a central particle to the body.
+Effect is turned on by adding Aradial and gammaradial parameters to a particle, which will act as the central body for the effect,
+and will act on all other particles.
+
+**Effect Parameters**
+
+None
+
+**Particle Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+Aradial (double)             Yes         Normalization for central acceleration.
+gammaradial (double)         Yes         Power index for central acceleration.
+============================ =========== ==================================================================
+
+
+Miscellaneous Utilities
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _track_min_distance:
+
+track_min_distance
+******************
+
+======================= ===============================================
+Authors                 D. Tamayo
+Implementation Paper    *In progress*
+Based on                None
+C Example               :ref:`c_example_track_min_distance`
+Python Example          `TrackMinDistance.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TrackMinDistance.ipynb>`_.
+======================= ===============================================
+
+For a given particle, this keeps track of that particle's minimum distance from another body in the simulation.  User
+should add parameters to the particular particle whose distance should be tracked.
+
+**Effect Parameters**
+
+*None*
+
+**Particle Parameters**
+
+Only particles with their ``min_distance`` parameter set initially will track their minimum distance. The effect will
+update this parameter when the particle gets closer than the value of ``min_distance``, so the user has to set it
+initially.  By default distance is measured from sim->particles[0], but you can specify a different particle by setting
+the ``min_distance_from`` parameter to the hash of the target particle.
+
+================================ =========== =======================================================
+Name (C type)                    Required    Description
+================================ =========== =======================================================
+min_distance (double)            Yes         Particle's miminimum distance.
+min_distance_from (uint32)       No          Hash for particle from which to measure distance
+min_distance_orbit (reb_orbit)   No          Parameter to store orbital elements at moment corresponding to min_distance (heliocentric)
+================================ =========== =======================================================
+
+

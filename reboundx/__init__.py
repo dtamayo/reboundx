@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-#Make changes for python 2 and 3 compatibility
-try:
-    import builtins     # if this success it's python 3.x
-    builtins.xrange = range
-    builtins.basestring = (str,bytes)
-except ImportError:
-    pass                # python 2.x
 
 #Find suffix
 import sysconfig
@@ -19,42 +12,35 @@ pymodulespath = os.path.dirname(__file__)
 from ctypes import *
 clibreboundx = cdll.LoadLibrary(pymodulespath + '/../libreboundx' + suffix)
 
-# Get string for build in libreboundx.so
-def build_date():
-    return c_char_p.in_dll(clibreboundx, "rebx_build_str").value.decode("ascii")
-def build_version():
-    return c_char_p.in_dll(clibreboundx, "rebx_version_str").value.decode("ascii")
-#Check for version
+# Version
+__version__ = c_char_p.in_dll(clibreboundx, "rebx_version_str").value.decode('ascii')
+
+# Build
+__build__ = c_char_p.in_dll(clibreboundx, "rebx_build_str").value.decode('ascii')
+# Check for version
+
+# Githash
+__githash__ = c_char_p.in_dll(clibreboundx, "rebx_githash_str").value.decode('ascii')
+
 try:
     moduleversion = pkg_resources.require("reboundx")[0].version
-    libreboundxversion = build_version()
+    libreboundxversion = __version__
     if moduleversion != libreboundxversion:
         print("WARNING: python module and libreboundx have different version numbers: '%s' vs '%s'.\n".format(moduleversion, libreboundxversion))
 except:
     pass    # this check fails in python 3. Problem with setuptools
 
-# When reboundx is imported, first monkey patch rebound.Particle so that we can add new parameters to the particles:
-
+# Monkeypatch rebound.Particle to have a params property
 import rebound
-def monkeyset(self, name, value):
-    if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
-        # create new param in c
-        clibreboundx.rebx_set_param_double(byref(self), c_char_p(name.encode('utf-8')), c_double(value))
-    else:
-        rebound.Particle.default_set(self, name, value)
-        
-def monkeyget(self, name):
-    if (name not in rebound.Particle.__dict__) and (not hasattr(super(rebound.Particle, self), name)):
-        # check param in c
-        clibreboundx.rebx_get_param_double.restype = c_double
-        return clibreboundx.rebx_get_param_double(byref(self), c_char_p(name.encode('utf-8')))
-    else:
-        return super(rebound.Particle, self).__getattr__(name)
 
-rebound.Particle.default_set = rebound.Particle.__setattr__
-rebound.Particle.__setattr__ = monkeyset
-rebound.Particle.__getattr__ = monkeyget
+@property
+def params(self):
+    params = Params(self)
+    return params
 
-from .extras import Extras
+rebound.Particle.params = params
+
+from .extras import Extras, Param, Effect
 from .tools import coordinates, install_test
-__all__ = ["Extras", "coordinates", "install_test"]
+from .params import Params
+__all__ = ["__version__", "__build__", "__githash__", "Extras", "Param", "Effect", "Params", "coordinates", "install_test"]

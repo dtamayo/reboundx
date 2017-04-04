@@ -21,30 +21,53 @@
  * You should have received a copy of the GNU General Public License
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * The section after the dollar signs gets built into the documentation by a script.  All lines must start with space * space like below.
+ * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
+ * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ *
+ * $Mass Modifications$     // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script). 
+ * 
+ * ======================= ===============================================
+ * Authors                 D. Tamayo
+ * Implementation Paper    *In progress*
+ * Based on                None
+ * C Example               :ref:`c_example_modify_mass`
+ * Python Example          `ModifyMass.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ModifyMass.ipynb>`_.
+ * ======================= ===============================================
+ * 
+ * This adds exponential mass growth/loss to individual particles every timestep.
+ * Set particles' ``tau_mass`` parameter to a negative value for mass loss, positive for mass growth.
+ * 
+ * **Effect Parameters**
+ * 
+ * *None*
+ * 
+ * **Particle Parameters**
+ * 
+ * Only particles with their ``tau_mass`` parameter set will have their masses affected.
+ * 
+ * ============================ =========== =======================================================
+ * Name (C type)                Required    Description
+ * ============================ =========== =======================================================
+ * tau_mass (double)            Yes         e-folding mass loss (<0) or growth (>0) timescale    
+ * ============================ =========== =======================================================
+ *
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "modify_mass.h"
 #include "rebound.h"
 #include "reboundx.h"
 
-#define TWOPI 6.2831853071795862
-
-void rebx_add_modify_mass(struct rebx_extras* rebx){
-    rebx_add_post_timestep_modification(rebx, NULL, "modify_mass", rebx_modify_mass);
-}
-
-void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* const effect){
-    const int _N_real = sim->N - sim->N_var;	
-	const double dt = sim->dt_last_done;
+void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing){
+    const int _N_real = sim->N - sim->N_var;
 	for(int i=0; i<_N_real; i++){
 		struct reb_particle* const p = &sim->particles[i];
-        const double tau_mass = rebx_get_param_double(p, "tau_mass");
-	    if(isnan(tau_mass)) continue; // only particles with tau_mass set experience mass loss/growth
-
-		p->m += p->m*dt/tau_mass;
+        const double* const tau_mass = rebx_get_param_check(p, "tau_mass", REBX_TYPE_DOUBLE);
+        if (tau_mass != NULL){
+		    p->m += p->m*dt/(*tau_mass);
+        }
 	}
     reb_move_to_com(sim);
 }

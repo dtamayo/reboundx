@@ -1,10 +1,12 @@
 #!/usr/bin/python
 # This script automatically creates a list of examples by reading the header in all problem.c files.
 import glob
+import subprocess
+ghash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii").strip()
 
 with open("version.txt") as f:
     reboundxversion = f.readlines()[0].strip()
-    print "Updating version to "+reboundxversion
+    print("Updating version to "+reboundxversion)
 
 with open("doc/index.rst") as f:
     index = f.readlines()
@@ -43,6 +45,8 @@ with open("setup.py") as f:
     for i,l in enumerate(setuplines):
         if "version='" in l:
             setuplines[i] = "    version='"+reboundxversion+"',\n"
+        if "GITHASHAUTOUPDATE" in l:
+            setuplines[i] = "    ghash_arg = \"-DREBXGITHASH="+ghash+"\" #GITHASHAUTOUPDATE\n"
 
     with open("setup.py", "w") as f:
         f.writelines(setuplines)

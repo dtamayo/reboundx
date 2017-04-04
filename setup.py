@@ -2,7 +2,7 @@ from codecs import open
 import os
 import inspect
 import sys 
-import sysconfig
+from distutils import sysconfig
 
 try:
     from setuptools import setup, Extension
@@ -14,6 +14,14 @@ except ImportError:
 suffix = sysconfig.get_config_var('EXT_SUFFIX')
 if suffix is None:
     suffix = ".so"
+
+# Try to get git hash
+try:
+    import subprocess
+    ghash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii")
+    ghash_arg = "-DREBXGITHASH="+ghash
+except:
+    ghash_arg = "-DREBXGITHASH=4f902b0934d6ca77d7100f2559d5366179a2406e" #GITHASHAUTOUPDATE
 
 class build_ext(_build_ext):
     def finalize_options(self):
@@ -47,13 +55,13 @@ if sys.platform == 'darwin':
     extra_link_args.append('-Wl,-install_name,@rpath/libreboundx'+suffix)
 
 libreboundxmodule = Extension('libreboundx',
-                    sources = [ 'src/core.c', 'src/gr.c', 'src/gr_full.c', 'src/gr_potential.c', 'src/modify_mass.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/radiation_forces.c', 'src/rebxtools.c'],
+                    sources = [ 'src/central_force.c', 'src/core.c', 'src/euler.c', 'src/gr.c', 'src/gr_full.c', 'src/gr_potential.c', 'src/input.c', 'src/integrator_implicit_midpoint.c', 'src/modify_mass.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/output.c', 'src/radiation_forces.c', 'src/rebxtools.c', 'src/rk4.c', 'src/tides_precession.c', 'src/tides_synchronous_ecc_damping.c', 'src/track_min_distance.c'],
                     include_dirs = ['src'],
                     library_dirs = [],
                     runtime_library_dirs = ["."],
                     libraries=['rebound'+suffix[:-3]], #take off .so from the suffix
                     define_macros=[ ('LIBREBOUNDX', None) ],
-                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', '-fPIC', '-Wpointer-arith'],
+                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-march=native', ghash_arg, '-fPIC', '-Wpointer-arith'],
                     extra_link_args=extra_link_args,
                     )
 
@@ -62,7 +70,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='reboundx',
-    version='2.8.4',
+    version='2.17.2',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
     url='http://github.com/dtamayo/reboundx',
@@ -93,8 +101,8 @@ setup(name='reboundx',
     keywords='astronomy astrophysics nbody integrator',
     packages=['reboundx'],
     cmdclass={'build_ext':build_ext},
-    setup_requires=['rebound>=2.13.6'],
-    install_requires=['rebound>=2.13.6'],
+    setup_requires=['rebound>=3.2.3', 'numpy'],
+    install_requires=['rebound>=3.2.3', 'numpy'],
     tests_require=["numpy","matplotlib"],
     test_suite="reboundx.test",
     ext_modules = [libreboundxmodule],
