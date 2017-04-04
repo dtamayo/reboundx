@@ -1,0 +1,43 @@
+.. _effects:
+
+REBx Effects & Parameters
+=========================
+
+Below are descriptions for each of the effects included in REBOUNDx.
+Different implementations for the same effect are grouped together.
+All effects follow the same recipes for usage, see the Python quick-start guide (:ref:`python_qs`) or C quick-start guide (:ref:`c_qs`).
+Probably the quickest way to get up and running is to edit one of the linked examples for the effect you're interested in.
+
+$$$$$$$$$$$$
+Orbit Modifications
+^^^^^^^^^^^^^^^^^^^
+REBOUNDx offers two ways of modifying orbital elements (semimajor axis/eccentricity/inclination damping, precession, etc.)
+In both cases, each particle is assigned evolution timescales for each orbital element.  
+Positive timescales correspond to growth / progression, negative timescales correspond to damping / regression.  
+Semimajor axes, eccentricities and inclinations grow / damp exponentially.  
+Pericenters and nodes progress/regress linearly.
+
+$$$$$$$$$$$$
+General Relativity
+^^^^^^^^^^^^^^^^^^
+
+$$$$$$$$$$$$
+Radiation Forces
+^^^^^^^^^^^^^^^^
+
+$$$$$$$$$$$$
+Mass Modifications
+^^^^^^^^^^^^^^^^^^
+
+$$$$$$$$$$$$
+Tides
+^^^^^^^^^^^^^^^^^^
+
+$$$$$$$$$$$$
+Central Force
+^^^^^^^^^^^^^^^^^^
+
+$$$$$$$$$$$$
+Miscellaneous Utilities
+^^^^^^^^^^^^^^^^^^^^^^^
+

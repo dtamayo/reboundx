@@ -1,10 +1,10 @@
 /**
- * @file    gr_potential.h
- * @brief   Post-newtonian general relativity corrections using a simple potential that gets the pericenter precession right.
- * @author  Pengshuai (Sam) Shi, Hanno Rein, Dan Tamayo <tamayo.daniel@gmail.com>
- * 
+ * @file    integrator_implicit_midpoint.h
+ * @brief   Interface for symplectic numerical integrator
+ * @author  Dan Tamayo <tamayo.daniel@gmail.com>, Hanno Rein
+ *
  * @section     LICENSE
- * Copyright (c) 2015 Dan Tamayo, Hanno Rein
+ * Copyright (c) 2017 Dan Tamayo, Hanno Rein
  *
  * This file is part of reboundx.
  *
@@ -22,12 +22,8 @@
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef REBX_GR_POTENTIAL_H
-#define REBX_GR_POTENTIAL_H
+#ifndef _REBX_INTEGRATOR_IMPLICIT_MIDPOINT_H
+#define _REBX_INTEGRATOR_IMPLICIT_MIDPOINT_H
 
-struct reb_simulation;
-struct rebx_effect;
-
-void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* effect);
-
+void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
 #endif

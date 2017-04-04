@@ -1,10 +1,10 @@
 /**
- * @file    modify_orbits_forces.h
- * @brief   Update orbital elements with prescribed timescales using forces.
- * @author  Dan Tamayo <tamayo.daniel@gmail.com>
- * 
+ * @file    euler.h
+ * @brief   Interface for Euler method
+ * @author  Dan Tamayo <tamayo.daniel@gmail.com>, Hanno Rein
+ *
  * @section     LICENSE
- * Copyright (c) 2015 Dan Tamayo, Hanno Rein
+ * Copyright (c) 2017 Dan Tamayo, Hanno Rein
  *
  * This file is part of reboundx.
  *
@@ -22,12 +22,8 @@
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef REBX_MODIFY_ORBITS_FORCES_H
-#define REBX_MODIFY_ORBITS_FORCES_H
+#ifndef _REBX_INTEGRATOR_EULER_H
+#define _REBX_INTEGRATOR_EULER_H
 
-struct reb_simulation;
-struct rebx_effect;
-
-void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect);
-
+void rebx_integrator_euler_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
 #endif
