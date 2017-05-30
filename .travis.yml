@@ -31,45 +31,47 @@ addons:
         packages:
             - libglfw3-dev
 
-before_install:
-  - if [[ $TESTPART == "C" ]]; then cd $TRAVIS_BUILD_DIR/../; git clone https://github.com/hannorein/rebound; cd rebound; pip install -e .; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh -O miniconda.sh; fi; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then chmod +x miniconda.sh; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then ./miniconda.sh -b -p /home/travis/mc; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then export PATH=/home/travis/mc/bin:$PATH; fi
+jobs:
+    include:
+        before_install:
+          - if [[ $TESTPART == "C" ]]; then cd $TRAVIS_BUILD_DIR/../; git clone https://github.com/hannorein/rebound; cd rebound; pip install -e .; fi
+          - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh -O miniconda.sh; fi; fi
+          - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then chmod +x miniconda.sh; fi
+          - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then ./miniconda.sh -b -p /home/travis/mc; fi
+          - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then export PATH=/home/travis/mc/bin:$PATH; fi
 
-install:
-  - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then conda update --yes conda; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "2.7" ]]; then conda create -n testenv --yes libgfortran=1.0 numpy=1.9 scipy=0.16 matplotlib=1.4 setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
-  - if [[ $TESTPART == "CCOVERAGE" ]]; then conda create -n testenv --yes numpy=1.9 matplotlib=1.4 setuptools python=$TRAVIS_PYTHON_VERSION; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "3.4" ]]; then conda create -n testenv --yes libgfortran=1.0 numpy=1.9 scipy=0.16 matplotlib=1.4 setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "3.5" ]]; then conda create -n testenv --yes numpy scipy matplotlib setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then source activate testenv; fi
-  - if [[ $TESTPART == *"PYTHON"* ]]; then pip install coveralls; fi
-  - if [[ $TESTPART == "CCOVERAGE" ]]; then pip install cpp-coveralls; fi
-  - if [[ $TESTPART == "CCOVERAGE" ]]; then CFLAGS="-fprofile-arcs -ftest-coverage" pip install -e .; fi
-  - if [[ $TESTPART == *"PYTHON"* ]]; then python setup.py install; fi
+        install:
+          - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then conda update --yes conda; fi
+          - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "2.7" ]]; then conda create -n testenv --yes libgfortran=1.0 numpy=1.9 scipy=0.16 matplotlib=1.4 setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
+          - if [[ $TESTPART == "CCOVERAGE" ]]; then conda create -n testenv --yes numpy=1.9 matplotlib=1.4 setuptools python=$TRAVIS_PYTHON_VERSION; fi
+          - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "3.4" ]]; then conda create -n testenv --yes libgfortran=1.0 numpy=1.9 scipy=0.16 matplotlib=1.4 setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
+          - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "3.5" ]]; then conda create -n testenv --yes numpy scipy matplotlib setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
+          - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then source activate testenv; fi
+          - if [[ $TESTPART == *"PYTHON"* ]]; then pip install coveralls; fi
+          - if [[ $TESTPART == "CCOVERAGE" ]]; then pip install cpp-coveralls; fi
+          - if [[ $TESTPART == "CCOVERAGE" ]]; then CFLAGS="-fprofile-arcs -ftest-coverage" pip install -e .; fi
+          - if [[ $TESTPART == *"PYTHON"* ]]; then python setup.py install; fi
 
-script:
-    - if [[ $TESTPART == "CCOVERAGE" ]]; then cd $TRAVIS_BUILD_DIR/ && python setup.py test; fi
-    - if [[ $TESTPART == "C" ]]; then cd $TRAVIS_BUILD_DIR/examples/ && make; fi
-    - if [[ $TESTPART == "PYTHON" ]]; then cd $TRAVIS_BUILD_DIR && coverage run --source=reboundx setup.py test; fi
-    - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py EccAndIncDamping.ipynb; fi
-    - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py GeneralRelativity.ipynb; fi
-    - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Migration.ipynb; fi
-    - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Radiation_Forces_Circumplanetary_Dust.ipynb; fi
-    - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Radiation_Forces_Debris_Disk.ipynb; fi
-    - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Custom_Effects.ipynb; fi
-    - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py ModifyMass.ipynb; fi
-    - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py TidesPrecession.ipynb; fi
-    - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py SimulationArchive.ipynb; fi
-    - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py ArrayParameters.ipynb; fi
-    - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py SavingAndLoadingSimulations.ipynb; fi
+        script:
+            - if [[ $TESTPART == "CCOVERAGE" ]]; then cd $TRAVIS_BUILD_DIR/ && python setup.py test; fi
+            - if [[ $TESTPART == "C" ]]; then cd $TRAVIS_BUILD_DIR/examples/ && make; fi
+            - if [[ $TESTPART == "PYTHON" ]]; then cd $TRAVIS_BUILD_DIR && coverage run --source=reboundx setup.py test; fi
+            - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py EccAndIncDamping.ipynb; fi
+            - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py GeneralRelativity.ipynb; fi
+            - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Migration.ipynb; fi
+            - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Radiation_Forces_Circumplanetary_Dust.ipynb; fi
+            - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Radiation_Forces_Debris_Disk.ipynb; fi
+            - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Custom_Effects.ipynb; fi
+            - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py ModifyMass.ipynb; fi
+            - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py TidesPrecession.ipynb; fi
+            - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py SimulationArchive.ipynb; fi
+            - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py ArrayParameters.ipynb; fi
+            - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py SavingAndLoadingSimulations.ipynb; fi
 
-after_success:
-    - if [[ $TESTPART == "PYTHON" ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "2.7" ]]; then coveralls; fi
-    - if [[ $TESTPART == "CCOVERAGE" ]]; then cp -r src build/*/src/ ; fi
-    - if [[ $TESTPART == "CCOVERAGE" ]]; then coveralls ; fi
-    - if [[ $TESTPART == "PYTHON" ]]; then bash <(curl -s https://codecov.io/bash); fi
-    - if [[ $TESTPART == "CCOVERAGE" ]]; then bash <(curl -s https://codecov.io/bash); fi
+        after_success:
+            - if [[ $TESTPART == "PYTHON" ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "2.7" ]]; then coveralls; fi
+            - if [[ $TESTPART == "CCOVERAGE" ]]; then cp -r src build/*/src/ ; fi
+            - if [[ $TESTPART == "CCOVERAGE" ]]; then coveralls ; fi
+            - if [[ $TESTPART == "PYTHON" ]]; then bash <(curl -s https://codecov.io/bash); fi
+            - if [[ $TESTPART == "CCOVERAGE" ]]; then bash <(curl -s https://codecov.io/bash); fi
 
