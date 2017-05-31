@@ -72,6 +72,6 @@ after_success:
     - if [[ $TESTPART == "CCOVERAGE" ]]; then coveralls ; fi
     - if [[ $TESTPART == "PYTHON" ]]; then bash <(curl -s https://codecov.io/bash); fi
     - if [[ $TESTPART == "CCOVERAGE" ]]; then bash <(curl -s https://codecov.io/bash); fi
-
+#comment
 stage: triggerdependencies
     - echo triggering
