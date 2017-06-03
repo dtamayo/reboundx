@@ -1,7 +1,7 @@
 /**
- * Post-Newtonian correction from general relativity
+ * Adding gravitational harmonics (J2, J4) to particles
  * 
- * This example shows how to add post-newtonian corrections to REBOUND simulations with reboundx.
+ * This example shows how to add a J2 and J4 harmonic to particles.
  * If you have GLUT installed for the visualization, press 'w' and/or 'c' for a clearer view of
  * the whole orbit.
  */
