@@ -325,6 +325,39 @@ primary (int)                No          Set to 1 to specify the primary.  Defau
 ============================ =========== ==================================================================
 
 
+.. _tides_synchronous_ecc_damping:
+
+tides_synchronous_ecc_damping
+*****************************
+
+======================= ===============================================
+Authors                 D. Tamayo
+Implementation Paper    *In progress*
+Based on                `Hut 1981 <https://ui.adsabs.harvard.edu/#abs/1981A&A....99..126H/abstract>`_.
+C Example               :ref:``.
+Python Example          ` <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesPrecession.ipynb>`_.
+======================= ===============================================
+
+This adds precession from the tidal interactions between the particles in the simulation and the central body, both from tides raised on the primary and on the other bodies.
+In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' R_tides (physical radius) and k1 (apsidal motion constant, half the tidal Love number).
+You can specify the primary with a "primary" flag.
+If not set, the primary will default to the particle at the 0 index in the particles array.
+
+**Effect Parameters**
+
+None
+
+**Particle Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+R_tides (float)              Yes         Physical radius (required for contribution from tides raised on the body).
+k1 (float)                   Yes         Apsidal motion constant (half the tidal Love number k2).
+primary (int)                No          Set to 1 to specify the primary.  Defaults to treating particles[0] as primary if not set.
+============================ =========== ==================================================================
+
+
 Central Force
 ^^^^^^^^^^^^^^^^^^
 
@@ -356,6 +389,38 @@ Field (C type)               Required    Description
 ============================ =========== ==================================================================
 Aradial (double)             Yes         Normalization for central acceleration.
 gammaradial (double)         Yes         Power index for central acceleration.
+============================ =========== ==================================================================
+
+
+Gravity Fields
+^^^^^^^^^^^^^^^^^^
+
+.. _gravitational_harmonics:
+
+gravitational_harmonics
+***********************
+
+======================= ===============================================
+Authors                 D. Tamayo
+Implementation Paper    *In progress*
+Based on                None
+C Example               :ref:`c_example_J2`
+Python Example          `J2.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/J2.ipynb>`_.
+======================= ===============================================
+
+
+**Effect Parameters**
+
+None
+
+**Particle Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+J2 (double)                  No          J2 coefficient
+J4 (double)                  No          J4 coefficient
+R_eq (double)                Yes         Equatorial radius of nonspherical body used for calculating Jn harmonics
 ============================ =========== ==================================================================
 
 
