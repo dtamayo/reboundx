@@ -562,6 +562,9 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
         sim->force_is_velocity_dependent = 1;
         effect->force = rebx_tides_synchronous_ecc_damping;
     }
+    else if (effect->hash == reb_hash("gravity_fields")){
+        effect->force = rebx_gravity_fields;
+    }
     else{
         char str[100]; 
         sprintf(str, "Effect '%s' passed to rebx_add not found.\n", name);

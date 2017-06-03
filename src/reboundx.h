@@ -427,6 +427,13 @@ double rebx_tides_precession_hamiltonian(struct reb_simulation* const sim);
  */
 double rebx_central_force_hamiltonian(struct reb_simulation* const sim);
 
+/**
+ * @brief Calculates the hamiltonian contribution for all particles with additional gravity field harmonics beyond the monopole (i.e., J2, J4).
+ * @param sim pointer to the REBOUND simulation.
+ * @return Potential corresponding to the effect from all particles of their additional gravity field harmonics
+ */
+double rebx_gravity_fields_hamiltonian(struct reb_simulation* const sim);
+
 /** @} */
 /** @} */
 

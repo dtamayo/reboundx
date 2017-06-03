@@ -215,6 +215,10 @@ class Extras(Structure):
         clibreboundx.rebx_central_force_hamiltonian.restype = c_double
         return clibreboundx.rebx_central_force_hamiltonian(byref(sim))
     
+    def gravity_fields_hamiltonian(self, sim):
+        clibreboundx.rebx_gravity_fields_hamiltonian.restype = c_double
+        return clibreboundx.rebx_gravity_fields_hamiltonian(byref(sim))
+    
 #################################################
 # Generic REBOUNDx definitions
 #################################################
