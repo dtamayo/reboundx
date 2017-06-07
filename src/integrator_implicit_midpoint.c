@@ -29,7 +29,6 @@
 #include <float.h>
 #include "rebound.h"
 #include "reboundx.h"
-#include "integrator_implicit_midpoint.h"
 
 static void avg_particles(struct reb_particle* const ps_avg, struct reb_particle* const ps1, struct reb_particle* const ps2, int N){
     for(int i=0; i<N; i++){
