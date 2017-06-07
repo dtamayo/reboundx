@@ -68,6 +68,7 @@
 #include <limits.h>
 #include "rebound.h"
 #include "reboundx.h"
+#include "rebxtools.h"
 
 static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double C2, const double G, const int max_iterations){
     
@@ -212,7 +213,7 @@ static double rebx_calculate_gr_hamiltonian(struct reb_simulation* const sim, co
     const struct reb_particle source = ps[0];
 	const double mu = G*source.m;
     double* const m_j = malloc(N*sizeof(*m_j));
-    reb_transformations_calculate_jacobi_masses(ps, m_j, N);
+    rebx_calculate_jacobi_masses(ps, m_j, N);
     reb_transformations_inertial_to_jacobi_posvel(ps, ps_j, ps, N);
 
     double T = 0.5*m_j[0]*(ps_j[0].vx*ps_j[0].vx + ps_j[0].vy*ps_j[0].vy + ps_j[0].vz*ps_j[0].vz);

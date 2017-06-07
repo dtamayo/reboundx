@@ -22,7 +22,7 @@ int main(int argc, char* argv[]){
     star.hash  = reb_hash("star");
     reb_add(sim, star);
 
-    double m = 0.;
+    double m = 1.e-5;
     double a = 1.e-4; // put planet close to enhance precession so it's visible in visualization (this would put planet inside the Sun!)
     double e = 0.2;
     double omega = 0.;
