@@ -33,8 +33,8 @@
 #include "core.h"
 #include "rebound.h"
 #include "integrator_implicit_midpoint.h"
-#include "euler.h"
-#include "rk4.h"
+#include "integrator_euler.h"
+#include "integrator_rk4.h"
 
 #define STRINGIFY(s) str(s)
 #define str(s) #s
