@@ -4,7 +4,7 @@ import rebound
 import reboundx
 import warnings
 
-INTEGRATORS = {"implicit_midpoint": 0, "euler": 1, "none": 2}
+INTEGRATORS = {"implicit_midpoint": 0, "rk4":1, "euler": 2, "none": 3}
   
 REBX_BINARY_WARNINGS = [
         ("REBOUNDx Error: Cannot read binary file. Check filename and file contents.", 1),
@@ -214,6 +214,10 @@ class Extras(Structure):
     def central_force_hamiltonian(self, sim):
         clibreboundx.rebx_central_force_hamiltonian.restype = c_double
         return clibreboundx.rebx_central_force_hamiltonian(byref(sim))
+    
+    def gravitational_harmonics_hamiltonian(self, sim):
+        clibreboundx.rebx_gravitational_harmonics_hamiltonian.restype = c_double
+        return clibreboundx.rebx_gravitational_harmonics_hamiltonian(byref(sim))
     
 #################################################
 # Generic REBOUNDx definitions

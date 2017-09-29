@@ -1,4 +1,4 @@
-.. image:: http://img.shields.io/badge/REBOUNDx-v2.16.0-green.svg?style=flat
+.. image:: http://img.shields.io/badge/REBOUNDx-v2.18.0-green.svg?style=flat
     :target: http://reboundx.readthedocs.org
 .. image:: https://badge.fury.io/py/reboundx.svg
     :target: https://badge.fury.io/py/reboundx
@@ -25,6 +25,8 @@ For a list of supported effects, installation instructions, tutorials/examples a
 
 Changelog
 =========
+  - 2.18.0 Added support for attaching graviational harmonics (J2/J4) to particles
+  - 2.17.0 Added support for applying forces as leapfrog operators (for velocity-dependent forces)
   - 2.16.0 Added support for binaries and simulationarchive
   - 2.14.0 Added track_min_distance
   - 2.13.0 Fixed collision for long integrations and added support for arrays

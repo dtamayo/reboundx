@@ -68,6 +68,7 @@
 #include <limits.h>
 #include "rebound.h"
 #include "reboundx.h"
+#include "rebxtools.h"
 
 static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double C2, const double G, const int max_iterations){
     
@@ -104,9 +105,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
     // Transform to Jacobi coordinates
     const struct reb_particle source = ps[0];
 	const double mu = G*source.m;
-    double* const eta = malloc(N*sizeof(*eta));
-    reb_transformations_calculate_jacobi_eta(ps, eta, N);
-    reb_transformations_inertial_to_jacobi_posvelacc(ps, ps_j, eta, ps, N);
+    reb_transformations_inertial_to_jacobi_posvelacc(ps, ps_j, ps, N);
     
     for (int i=1; i<N; i++){
         struct reb_particle p = ps_j[i];
@@ -160,7 +159,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
     ps_j[0].ay = 0.;
     ps_j[0].az = 0.;
 
-    reb_transformations_jacobi_to_inertial_acc(ps, ps_j, eta, ps, N);
+    reb_transformations_jacobi_to_inertial_acc(ps, ps_j, ps, N);
     for (int i=0; i<N; i++){
         particles[i].ax += ps[i].ax;
         particles[i].ay += ps[i].ay;
@@ -169,7 +168,6 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
     
     free(ps);
     free(ps_j);
-    free(eta);
 }
 
 void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
@@ -214,10 +212,9 @@ static double rebx_calculate_gr_hamiltonian(struct reb_simulation* const sim, co
     // Transform to Jacobi coordinates
     const struct reb_particle source = ps[0];
 	const double mu = G*source.m;
-    double* const eta = malloc(N*sizeof(*eta));
     double* const m_j = malloc(N*sizeof(*m_j));
-    reb_transformations_calculate_jacobi_masses(ps, m_j, eta, N);
-    reb_transformations_inertial_to_jacobi_posvel(ps, ps_j, eta, ps, N);
+    rebx_calculate_jacobi_masses(ps, m_j, N);
+    reb_transformations_inertial_to_jacobi_posvel(ps, ps_j, ps, N);
 
     double T = 0.5*m_j[0]*(ps_j[0].vx*ps_j[0].vx + ps_j[0].vy*ps_j[0].vy + ps_j[0].vz*ps_j[0].vz);
     double V_PN = 0.;
@@ -243,7 +240,6 @@ static double rebx_calculate_gr_hamiltonian(struct reb_simulation* const sim, co
     V_PN /= C2;
     
     free(ps_j);
-    free(eta);
     free(m_j);
     
 	return T + V_newt + V_PN;

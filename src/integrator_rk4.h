@@ -1,9 +1,9 @@
 /**
- * @file    euler.c
- * @brief   Euler's method
+ * @file    rk4.h
+ * @brief   Interface for 4th order Runge Kutta integrator
  * @author  Dan Tamayo <tamayo.daniel@gmail.com>, Hanno Rein
  *
- * @section LICENSE
+ * @section     LICENSE
  * Copyright (c) 2017 Dan Tamayo, Hanno Rein
  *
  * This file is part of reboundx.
@@ -22,21 +22,9 @@
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#ifndef _REBX_INTEGRATOR_RK4_H
+#define _REBX_INTEGRATOR_RK4_H
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include "rebound.h"
-#include "reboundx.h"
-#include "euler.h"
+void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
+#endif
 
-void rebx_integrator_euler_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect){
-    const int N = sim->N - sim->N_var;
-    effect->force(sim, effect, sim->particles, N);
-    //fprintf(stderr, "%.16e\t%f\n", sim->particles[1].ax, dt);
-    for(int i=0; i<N; i++){
-        sim->particles[i].vx += dt*sim->particles[i].ax;
-        sim->particles[i].vy += dt*sim->particles[i].ay;
-        sim->particles[i].vz += dt*sim->particles[i].az;
-    }
-}

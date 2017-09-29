@@ -9,6 +9,24 @@
  * (could happen e.g. with barycentric coordinates with test particles and single massive body)
  */
 
+void rebx_calculate_jacobi_masses(const struct reb_particle* const ps, double* const m_j, const int N){
+    double eta = ps[0].m;
+    for (unsigned int i=1;i<N;i++){ // jacobi masses are reduced mass of particle with interior masses
+        m_j[i] = ps[i].m*eta;
+        eta += ps[i].m;
+        m_j[i] /= eta;
+    }
+    m_j[0] = eta;
+}
+
+double rebx_Edot(struct reb_particle* const ps, const int N){
+    double Edot = 0.;
+    for(int i=0; i<N; i++){
+        Edot += ps[i].m*(ps[i].ax*ps[i].vx + ps[i].ay*ps[i].vy + ps[i].az*ps[i].vz);
+    }
+    return Edot;
+}
+
 void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const effect, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_vec3d (*calculate_effect) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source), struct reb_particle* const particles, const int N){
     struct reb_particle com = reb_get_com(sim); // Start with full com for jacobi and barycentric coordinates.
   

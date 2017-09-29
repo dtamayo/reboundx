@@ -83,6 +83,14 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
     const double* const tau_e_ptr = rebx_get_param_check(p, "tau_e", REBX_TYPE_DOUBLE);
     const double* const tau_inc_ptr = rebx_get_param_check(p, "tau_inc", REBX_TYPE_DOUBLE);
 
+    const double dvx = p->vx - source->vx;
+    const double dvy = p->vy - source->vy;
+    const double dvz = p->vz - source->vz;
+    const double dx = p->x-source->x;
+    const double dy = p->y-source->y;
+    const double dz = p->z-source->z;
+    const double r2 = dx*dx + dy*dy + dz*dz;
+    
     if(tau_a_ptr != NULL){
         tau_a = *tau_a_ptr;
     }
@@ -92,27 +100,37 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
     if(tau_inc_ptr != NULL){
         tau_inc = *tau_inc_ptr;
     }
-
-    const double dvx = p->vx - source->vx;
-    const double dvy = p->vy - source->vy;
-    const double dvz = p->vz - source->vz;
-
+    
+    /*const int* const timescales_in_orbital_periods = rebx_get_param_check(effect, "timescales_in_orbital_periods", REBX_TYPE_INT);
+    
+    if (timescales_in_orbital_periods != NULL){
+        const double v2 = dvx*dvx + dvy*dvy + dvz*dvz;
+        const double mu = sim->G*source->m;
+        const double vcirc2 = mu/sqrt(r2);
+        const double a = mu/(2.*vcirc2 - v2);
+        if(a > 0){
+            const double P = sqrt(a*a*a/mu);
+            tau_a *= P;
+            tau_e *= P;
+            tau_inc *= P;
+            const double* const dt_in_orbital_periods = rebx_get_param_check(p, "dt_in_orbital_periods", REBX_TYPE_DOUBLE);
+            if(dt_in_orbital_periods != NULL){
+                sim->dt = *dt_in_orbital_periods*P;
+            }
+        }
+    }*/
     struct reb_vec3d a = {0};
 
     a.x =  dvx/(2.*tau_a);
     a.y =  dvy/(2.*tau_a);
     a.z =  dvz/(2.*tau_a);
 
-    if (tau_e < INFINITY || tau_inc < INFINITY){   // need h and e vectors for both types
-        const double dx = p->x-source->x;
-        const double dy = p->y-source->y;
-        const double dz = p->z-source->z;
-        const double r = sqrt ( dx*dx + dy*dy + dz*dz );
-        const double vr = (dx*dvx + dy*dvy + dz*dvz)/r;
-        const double prefac = 2*vr/r;
-        a.x += prefac*dx/tau_e;
-        a.y += prefac*dy/tau_e;
-        a.z += prefac*dz/tau_e + 2.*dvz/tau_inc;
+    if (tau_e < INFINITY || tau_inc < INFINITY){
+        const double vdotr = dx*dvx + dy*dvy + dz*dvz;
+        const double prefac = 2*vdotr/r2/tau_e;
+        a.x += prefac*dx;
+        a.y += prefac*dy;
+        a.z += prefac*dz + 2.*dvz/tau_inc;
     }
     return a;
 }

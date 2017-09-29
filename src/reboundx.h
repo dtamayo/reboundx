@@ -80,8 +80,8 @@ enum rebx_object_type{
 enum rebx_binary_field_type{
     REBX_BINARY_FIELD_TYPE_EFFECT=0,
     REBX_BINARY_FIELD_TYPE_PARTICLE=1,
-    REBX_BINARY_FIELD_TYPE_PARAM=2,
-    REBX_BINARY_FIELD_TYPE_NAMELENGTH=3,
+    REBX_BINARY_FIELD_TYPE_REBX_STRUCTURE=2,
+    REBX_BINARY_FIELD_TYPE_PARAM=3,
     REBX_BINARY_FIELD_TYPE_NAME=4,
     REBX_BINARY_FIELD_TYPE_PARAM_TYPE=5,
     REBX_BINARY_FIELD_TYPE_NDIM=6,
@@ -90,6 +90,9 @@ enum rebx_binary_field_type{
     REBX_BINARY_FIELD_TYPE_END=9,
     REBX_BINARY_FIELD_TYPE_PARTICLE_INDEX=10,
     REBX_BINARY_FIELD_TYPE_PYTHON_TYPE=11,
+    REBX_BINARY_FIELD_TYPE_FORCE_AS_OPERATOR=12,
+    REBX_BINARY_FIELD_TYPE_OPERATOR_ORDER=13,
+    REBX_BINARY_FIELD_TYPE_REBX_INTEGRATOR=14,
 };
 
 /**
@@ -166,8 +169,9 @@ struct rebx_extras {
 	struct rebx_param_to_be_freed* params_to_be_freed; 	///< Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
     enum {
         REBX_INTEGRATOR_IMPLICIT_MIDPOINT = 0,
-        REBX_INTEGRATOR_EULER = 1,
-        REBX_INTEGRATOR_NONE = 2,
+        REBX_INTEGRATOR_RK4 = 1,
+        REBX_INTEGRATOR_EULER = 2,
+        REBX_INTEGRATOR_NONE = 3,
     } integrator;
 };
 
@@ -422,6 +426,13 @@ double rebx_tides_precession_hamiltonian(struct reb_simulation* const sim);
  * @return Potential corresponding to central_force effect.
  */
 double rebx_central_force_hamiltonian(struct reb_simulation* const sim);
+
+/**
+ * @brief Calculates the hamiltonian contribution for all particles with additional gravity field harmonics beyond the monopole (i.e., J2, J4).
+ * @param sim pointer to the REBOUND simulation.
+ * @return Potential corresponding to the effect from all particles of their additional gravity field harmonics
+ */
+double rebx_gravity_fields_hamiltonian(struct reb_simulation* const sim);
 
 /** @} */
 /** @} */

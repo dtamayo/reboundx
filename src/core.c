@@ -33,14 +33,15 @@
 #include "core.h"
 #include "rebound.h"
 #include "integrator_implicit_midpoint.h"
-#include "euler.h"
+#include "integrator_euler.h"
+#include "integrator_rk4.h"
 
 #define STRINGIFY(s) str(s)
 #define str(s) #s
 
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
-const char* rebx_version_str = "2.16.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
-const char* rebx_githash_str = STRINGIFY(GITHASH);             // This line gets updated automatically. Do not edit manually.
+const char* rebx_version_str = "2.18.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
+const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
 
 /*void rebx_gr_acc(struct rebx_extras* const rebx, double* acc, const double C2){
     struct reb_simulation* const sim = rebx->sim;
@@ -306,6 +307,9 @@ void rebx_integrate(struct reb_simulation* const sim, const double dt, struct re
         case REBX_INTEGRATOR_IMPLICIT_MIDPOINT:
             rebx_integrator_implicit_midpoint_integrate(sim, dt, effect);
             break;
+        case REBX_INTEGRATOR_RK4:
+            rebx_integrator_rk4_integrate(sim, dt, effect);
+            break;
         case REBX_INTEGRATOR_EULER:
             rebx_integrator_euler_integrate(sim, dt, effect);
             break;
@@ -331,6 +335,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     rebx->sim = sim;
 	rebx->params_to_be_freed = NULL;
 	rebx->effects = NULL;
+    rebx->integrator = REBX_INTEGRATOR_IMPLICIT_MIDPOINT;
     
     if(sim->additional_forces || sim->pre_timestep_modifications || sim->post_timestep_modifications){
         reb_warning(sim, "REBOUNDx overwrites sim->additional_forces, sim->pre_timestep_modifications and sim->post_timestep_modifications.  If you want to use REBOUNDx together with your own custom functions that use these callbacks, you should add them through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.");
@@ -556,6 +561,9 @@ struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name){
     else if (effect->hash == reb_hash("tides_synchronous_ecc_damping")){
         sim->force_is_velocity_dependent = 1;
         effect->force = rebx_tides_synchronous_ecc_damping;
+    }
+    else if (effect->hash == reb_hash("gravitational_harmonics")){
+        effect->force = rebx_gravitational_harmonics;
     }
     else{
         char str[100]; 
