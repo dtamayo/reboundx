@@ -187,8 +187,6 @@ class TestArrays(unittest.TestCase):
         with self.assertRaises(AttributeError):
             self.sim.particles[0].params["list"] = [1.,2.]
         with self.assertRaises(AttributeError):
-            self.sim.particles[0].params["orbitarray"] = np.array([self.sim.particles[1].orbit])
-        with self.assertRaises(AttributeError):
             self.sim.particles[0].params["orbitlist"] = [self.sim.particles[1].orbit]
         with self.assertRaises(AttributeError):
             self.sim.particles[1].params["scalar"] = [1.,2.]
