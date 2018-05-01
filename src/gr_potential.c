@@ -91,8 +91,10 @@ void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* con
     if (c == NULL){
         reb_error(sim, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
     }
-    const double C2 = (*c)*(*c);
-    rebx_calculate_gr_potential(particles, N, C2, sim->G);
+    else{
+        const double C2 = (*c)*(*c);
+        rebx_calculate_gr_potential(particles, N, C2, sim->G);
+    }
 }
 
 static double rebx_calculate_gr_potential_hamiltonian(struct reb_simulation* const sim, const double C2){
