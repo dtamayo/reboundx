@@ -25,6 +25,7 @@ For a list of supported effects, installation instructions, tutorials/examples a
 
 Changelog
 =========
+  - 2.19.0 Updated for REBOUND version 2 of the simulationarchive
   - 2.18.0 Added support for attaching graviational harmonics (J2/J4) to particles
   - 2.17.0 Added support for applying forces as leapfrog operators (for velocity-dependent forces)
   - 2.16.0 Added support for binaries and simulationarchive
