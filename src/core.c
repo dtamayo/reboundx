@@ -32,9 +32,6 @@
 #include <limits.h>
 #include "core.h"
 #include "rebound.h"
-#include "integrator_implicit_midpoint.h"
-#include "integrator_euler.h"
-#include "integrator_rk4.h"
 
 #define STRINGIFY(s) str(s)
 #define str(s) #s
@@ -43,258 +40,6 @@ const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build strin
 const char* rebx_version_str = "2.19.2";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
 
-/*void rebx_gr_acc(struct rebx_extras* const rebx, double* acc, const double C2){
-    struct reb_simulation* const sim = rebx->sim;
-    struct reb_particle* const particles = sim->particles;
-    const int source_index = 0;
-    const int N_real = sim->N - sim->N_var;
-    const double G = sim->G;
-    const unsigned int _gravity_ignore_10 = sim->gravity_ignore_terms==1;
-    
-    const double mu = G*particles[source_index].m;
-    double aoverm10x, aoverm10y, aoverm10z;
-   
-    for(int i=0; i<N_real;i++){
-        sim->particles[i].ax = 0;
-        sim->particles[i].ay = 0;
-        sim->particles[i].az = 0;
-    }
-    if (_gravity_ignore_10){
-        const double dx = particles[0].x - particles[1].x;
-        const double dy = particles[0].y - particles[1].y;
-        const double dz = particles[0].z - particles[1].z;
-        const double softening2 = sim->softening*sim->softening;
-        const double r2 = dx*dx + dy*dy + dz*dz + softening2;
-        const double r = sqrt(r2);
-        const double prefac = G/(r2*r);
-        
-        aoverm10x = prefac*dx;
-        aoverm10y = prefac*dy;
-        aoverm10z = prefac*dz;
-    }
-    
-    const struct reb_particle source = particles[source_index];
-    for (int i=0; i<N_real; i++){
-        if(i == source_index){
-            continue;
-        }
-        const struct reb_particle pi = particles[i];
-        
-        const double dx = pi.x - source.x;
-        const double dy = pi.y - source.y;
-        const double dz = pi.z - source.z;
-        const double r2 = dx*dx + dy*dy + dz*dz;
-        const double r = sqrt(r2);
-        const double vx = pi.vx;
-        const double vy = pi.vy;
-        const double vz = pi.vz;
-        const double v2 = vx*vx + vy*vy + vz*vz;
-        double ax = pi.ax;
-        double ay = pi.ay;
-        double az = pi.az;
-        if(_gravity_ignore_10 && i==1){
-            ax += particles[0].m*aoverm10x;
-            ay += particles[0].m*aoverm10y;
-            az += particles[0].m*aoverm10z;
-        }
-        if(_gravity_ignore_10 && i==0){
-            ax -= particles[1].m*aoverm10x;
-            ay -= particles[1].m*aoverm10y;
-            az -= particles[1].m*aoverm10z;
-        }
-        
-        const double a1_x = (mu*mu*dx/(r2*r2) - 3.*mu*v2*dx/(2.*r2*r))/C2;
-        const double a1_y = (mu*mu*dy/(r2*r2) - 3.*mu*v2*dy/(2.*r2*r))/C2;
-        const double a1_z = (mu*mu*dz/(r2*r2) - 3.*mu*v2*dz/(2.*r2*r))/C2;
-        
-        const double va = vx*ax + vy*ay + vz*az;
-        const double rv = dx*vx + dy*vy + dz*vz;
-        
-        ax = a1_x-(va*vx + v2*ax/2. + 3.*mu*(ax*r-vx*rv/r)/r2)/C2;
-        ay = a1_y-(va*vy + v2*ay/2. + 3.*mu*(ay*r-vy*rv/r)/r2)/C2;
-        az = a1_z-(va*vz + v2*az/2. + 3.*mu*(az*r-vz*rv/r)/r2)/C2;
-        
-        particles[i].ax += ax;
-        particles[i].ay += ay;
-        particles[i].az += az;
-        particles[source_index].ax -= pi.m/source.m*ax;
-        particles[source_index].ay -= pi.m/source.m*ay; 
-        particles[source_index].az -= pi.m/source.m*az; 
-    }	
-
-    acc[0] = particles[0].ax;
-    acc[1] = particles[0].ay;
-    acc[2] = particles[0].az;
-    acc[3] = particles[1].ax;
-    acc[4] = particles[1].ay;
-    acc[5] = particles[1].az;
-}
-
-
-static void gr(struct reb_simulation* const sim, struct reb_particle* ps, const double C2){
-    const int N_real = sim->N - sim->N_var;
-    const double G = sim->G;
-    
-    struct reb_particle* const ps_j = malloc(N_real*sizeof(*ps_j));
-    
-    // Calculate Newtonian accelerations
-    for(int i=0; i<N_real; i++){
-        ps[i].ax = 0.;
-        ps[i].ay = 0.;
-        ps[i].az = 0.;
-    }
-    
-    for(int i=0; i<N_real; i++){
-        const struct reb_particle pi = ps[i];
-        for(int j=i+1; j<N_real; j++){
-            const struct reb_particle pj = ps[j];
-            const double dx = pi.x - pj.x;
-            const double dy = pi.y - pj.y;
-            const double dz = pi.z - pj.z;
-            const double softening2 = sim->softening*sim->softening;
-            const double r2 = dx*dx + dy*dy + dz*dz + softening2;
-            const double r = sqrt(r2);
-            const double prefac = G/(r2*r);
-            ps[i].ax -= prefac*pj.m*dx;
-            ps[i].ay -= prefac*pj.m*dy;
-            ps[i].az -= prefac*pj.m*dz;
-            ps[j].ax += prefac*pi.m*dx;
-            ps[j].ay += prefac*pi.m*dy;
-            ps[j].az += prefac*pi.m*dz;
-        }
-    }
-    
-    // Transform to Jacobi coordinates
-    const struct reb_particle source = ps[0];
-    const double mu = G*source.m;
-    double* const eta = malloc(N_real*sizeof(*eta));
-    eta[0] = ps[0].m;
-    for (unsigned int i=1;i<N_real;i++){
-        eta[i] = eta[i-1] + ps[i].m;
-    }
-    
-    to_jacobi_posvel(ps, ps_j, eta, ps, N_real);
-    to_jacobi_acc(ps, ps_j, eta, ps, N_real);
-    
-    for (int i=1; i<N_real; i++){
-        struct reb_particle p = ps_j[i];
-        struct reb_vec3d vi;
-        vi.x = p.vx;
-        vi.y = p.vy;
-        vi.z = p.vz;
-        double vi2, A;
-        const double ri = sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
-        for(int q=0; q<10; q++){
-            vi2 = vi.x*vi.x + vi.y*vi.y + vi.z*vi.z;
-            A = (0.5*vi2 + 3.*mu/ri)/C2;
-            vi.x = p.vx/(1.-A);
-            vi.y = p.vy/(1.-A);
-            vi.z = p.vz/(1.-A);
-        }
-        
-        const double B = (mu/ri - 1.5*vi2)*mu/(ri*ri*ri)/C2;
-        const double vdotr = vi.x*p.x + vi.y*p.x + vi.z*p.z;
-        const double rdotrdot = p.x*p.vx + p.y*p.vy + p.z*p.vz;
-        
-        struct reb_vec3d vidot;
-        vidot.x = p.ax + B*p.x;
-        vidot.y = p.ay + B*p.y;
-        vidot.z = p.az + B*p.z;
-        
-        const double vdota = vi.x*vidot.x + vi.y*vidot.y + vi.z*vidot.z;
-        const double D = (vdota - 3.*mu/(ri*ri*ri)*rdotrdot)/C2;
-        ps_j[i].ax = B*(1.-A)*p.x - A*p.ax - D*vi.x;
-        ps_j[i].ay = B*(1.-A)*p.y - A*p.ay - D*vi.y;
-        ps_j[i].az = B*(1.-A)*p.z - A*p.az - D*vi.z;
-    }
-    ps_j[0].ax = 0.;
-    ps_j[0].ay = 0.;
-    ps_j[0].az = 0.;
-    
-    to_inertial_acc(ps, ps_j, eta, ps, N_real);
-}
-
-void drag_force(struct reb_simulation* const r, struct reb_particle* const ps){
-    double tau = 100.;
-    struct reb_particle* source = &ps[0];
-    struct reb_particle* p = &ps[1];
-    const double dvx = p->vx - source->vx;
-    const double dvy = p->vy - source->vy;
-    const double dvz = p->vz - source->vz;
-    p->ax -= dvx/tau;
-    p->ay -= dvy/tau;
-    p->az -= dvz/tau;
-    source->ax += p->m/source->m*dvx/tau;
-    source->ay += p->m/source->m*dvy/tau;
-    source->az += p->m/source->m*dvz/tau;
-}
-
-void avg_particles(struct reb_particle* const ps_avg, struct reb_particle* const ps1, struct reb_particle* const ps2, int N){
-    for(int i=0; i<N; i++){
-        ps_avg[i].x = 0.5*(ps1[i].x + ps2[i].x);
-        ps_avg[i].y = 0.5*(ps1[i].y + ps2[i].y);
-        ps_avg[i].z = 0.5*(ps1[i].z + ps2[i].z); 
-        ps_avg[i].vx = 0.5*(ps1[i].vx + ps2[i].vx);
-        ps_avg[i].vy = 0.5*(ps1[i].vy + ps2[i].vy);
-        ps_avg[i].vz = 0.5*(ps1[i].vz + ps2[i].vz);
-        ps_avg[i].ax = 0.;
-        ps_avg[i].ay = 0.;
-        ps_avg[i].az = 0.;
-        ps_avg[i].m = 0.5*(ps1[i].m + ps2[i].m);
-    }
-    //fprintf(stderr, "ps = %.16f\t ps_old = %.16f\t Avg = %.16f\n", ps1[1].vy, ps2[1].vy, ps_avg[1].vy);
-}
-
-int compare(struct reb_particle* ps1, struct reb_particle* ps2, int N){
-    //fprintf(stderr, "ps = %.16f\t ps_old = %.16f\t%.4e\n", ps1[1].vy, ps2[1].vy, fabs((ps1[1].vy - ps2[1].vy)/ps1[1].vy));
-    for(int i=0; i<N; i++){
-        if (ps1[i].vx != ps2[i].vx || ps1[i].vy != ps2[i].vy || ps1[i].vz != ps2[i].vz){
-            return 0;
-        }
-    }
-    return 1;
-}
-
-void integrate(struct reb_simulation* const r, const double dt){
-    const int N = r->N - r->N_var;
-    r->ri_whfast.recalculate_jacobi_this_timestep = 1;
-    struct reb_particle* const ps = malloc(N*sizeof(*ps));
-    memcpy(ps, r->particles, r->N*sizeof(*ps));
-    struct reb_particle* ps_orig = malloc(r->N*sizeof(*ps_orig));
-    struct reb_particle* ps_old = malloc(r->N*sizeof(*ps_orig));
-    struct reb_particle* ps_avg = malloc(r->N*sizeof(*ps_avg));
-    memcpy(ps_orig, r->particles, r->N*sizeof(*ps_orig));
-
-    const double C2 = 1.e6;
-    int n, converged;
-    for(n=1;n<10;n++){
-        //memcpy(ps_old, ps, r->N*sizeof(*ps_old));
-        avg_particles(ps_avg, ps_orig, ps, N);
-        gr(r, ps_avg, C2);//drag_force(r, ps_avg);
-        //fprintf(stderr, "ps_orig = %.16f\n", ps_avg[1].ay);
-        for(int i=0; i<N; i++){
-            ps[i].vx = ps_orig[i].vx + dt*ps_avg[i].ax;
-            ps[i].vy = ps_orig[i].vy + dt*ps_avg[i].ay;
-            ps[i].vz = ps_orig[i].vz + dt*ps_avg[i].az;
-        }
-        //converged = compare(ps, ps_old, N);
-        //if (converged){
-        //    break;
-        //}
-    }
-    //fprintf(stderr, "%d\n", n);
-    //fprintf(stderr, "%e\n", fabs((ps[1].vy-ps_orig[1].vy)/ps_orig[1].vy));
-    //double v = sqrt(ps[1].vx*ps[1].vx + ps[1].vy*ps[1].vy);
-    //double v_orig = sqrt(ps_orig[1].vx*ps_orig[1].vx + ps_orig[1].vy*ps_orig[1].vy);
-    //fprintf(stderr, "%e\n", fabs((v-v_orig)/v_orig));
-    for(int i=0; i<N; i++){
-        r->particles[i].vx = ps[i].vx;
-        r->particles[i].vy = ps[i].vy;
-        r->particles[i].vz = ps[i].vz;
-    }
-}
-*/
-
 void rebx_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect){
     if (effect->force == NULL){
         char str[300];
@@ -302,10 +47,14 @@ void rebx_integrate(struct reb_simulation* const sim, const double dt, struct re
         reb_error(sim, str);
     }
     struct rebx_extras* rebx = sim->extras;
+    rebx_reset_accelerations(sim->particles, sim->N);
     
     switch(rebx->integrator){
         case REBX_INTEGRATOR_IMPLICIT_MIDPOINT:
             rebx_integrator_implicit_midpoint_integrate(sim, dt, effect);
+            break;
+        case REBX_INTEGRATOR_RK2:
+            rebx_integrator_rk2_integrate(sim, dt, effect);
             break;
         case REBX_INTEGRATOR_RK4:
             rebx_integrator_rk4_integrate(sim, dt, effect);
@@ -389,7 +138,7 @@ void rebx_free_effects(struct rebx_extras* rebx){
  Functions executing forces & ptm each timestep
  *********************************************/
 
-static void rebx_reset_accelerations(struct reb_particle* const ps, const int N){
+void rebx_reset_accelerations(struct reb_particle* const ps, const int N){
     for(int i=0; i<N; i++){
         ps[i].ax = 0.;
         ps[i].ay = 0.;
@@ -417,10 +166,8 @@ void rebx_pre_timestep_modifications(struct reb_simulation* sim){
     struct rebx_effect* current = rebx->effects;
     const double dt2 = sim->dt/2.;    // pre_timestep only executes order=2 effects, so always use a half timestep and no need to worry about adaptive timestep with IAS15
     
-    const double N = sim->N - sim->N_var;
-    rebx_reset_accelerations(sim->particles, N);
     while(current != NULL){
-        if(current->operator_order == 2){                // if order = 1, only apply post_timestep
+        if(current->operator_order == 2){       // if order = 1, only apply post_timestep
             if(current->operator != NULL){      // Always apply operator if set
                 if(sim->integrator==REB_INTEGRATOR_IAS15 && sim->ri_ias15.epsilon != 0){
                     reb_warning(sim, "REBOUNDx: Can't use second order scheme with adaptive timesteps (IAS15). Must use operator_order = 1 or apply as force to get sensible results.");
@@ -445,8 +192,6 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
 	struct rebx_effect* current = rebx->effects;
     struct rebx_effect* prev = NULL;
     
-    const double N = sim->N - sim->N_var;
-    rebx_reset_accelerations(sim->particles, N);
     // first do the 2nd order operators for half a timestep, in reverse order
     const double dt2 = sim->dt_last_done/2.;
     

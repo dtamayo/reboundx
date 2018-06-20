@@ -171,7 +171,8 @@ struct rebx_extras {
         REBX_INTEGRATOR_IMPLICIT_MIDPOINT = 0,
         REBX_INTEGRATOR_RK4 = 1,
         REBX_INTEGRATOR_EULER = 2,
-        REBX_INTEGRATOR_NONE = 3,
+        REBX_INTEGRATOR_RK2 = 3,
+        REBX_INTEGRATOR_NONE = -1,
     } integrator;
 };
 

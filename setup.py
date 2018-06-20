@@ -55,13 +55,13 @@ if sys.platform == 'darwin':
     extra_link_args.append('-Wl,-install_name,@rpath/libreboundx'+suffix)
 
 libreboundxmodule = Extension('libreboundx',
-                    sources = [ 'src/central_force.c', 'src/core.c', 'src/gr.c', 'src/gr_full.c', 'src/gr_potential.c', 'src/gravitational_harmonics.c', 'src/input.c', 'src/integrator_euler.c', 'src/integrator_implicit_midpoint.c', 'src/integrator_rk4.c', 'src/modify_mass.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/output.c', 'src/radiation_forces.c', 'src/rebxtools.c', 'src/tides_precession.c', 'src/tides_synchronous_ecc_damping.c', 'src/track_min_distance.c'],
+                    sources = [ 'src/modify_mass.c', 'src/integrator_euler.c', 'src/modify_orbits_forces.c', 'src/integrator_rk2.c', 'src/track_min_distance.c', 'src/tides_precession.c', 'src/rebxtools.c', 'src/tides_synchronous_ecc_damping.c', 'src/gravitational_harmonics.c', 'src/gr_potential.c', 'src/core.c', 'src/integrator_rk4.c', 'src/input.c', 'src/central_force.c', 'src/gr.c', 'src/modify_orbits_direct.c', 'src/gr_full.c', 'src/output.c', 'src/radiation_forces.c', 'src/integrator_implicit_midpoint.c'],
                     include_dirs = ['src'],
                     library_dirs = [],
                     runtime_library_dirs = ["."],
                     libraries=['rebound'+suffix[:-3]], #take off .so from the suffix
                     define_macros=[ ('LIBREBOUNDX', None) ],
-                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99', ghash_arg, '-fPIC', '-Wpointer-arith'],
+                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99', '-fPIC', '-Wpointer-arith', ghash_arg],
                     extra_link_args=extra_link_args,
                     )
 

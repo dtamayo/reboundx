@@ -4,7 +4,7 @@ import rebound
 import reboundx
 import warnings
 
-INTEGRATORS = {"implicit_midpoint": 0, "rk4":1, "euler": 2, "none": 3}
+INTEGRATORS = {"implicit_midpoint": 0, "rk4":1, "euler": 2, "rk2": 3, "none": -1}
   
 REBX_BINARY_WARNINGS = [
         ("REBOUNDx Error: Cannot read binary file. Check filename and file contents.", 1),
