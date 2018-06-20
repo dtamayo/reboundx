@@ -67,12 +67,12 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
 /***********************************************************************************
  * Miscellaneous Functions
 ***********************************************************************************/
-struct rebx_param* rebx_create_param();
+struct rebx_param* rebx_create_param(void);
 struct rebx_param* rebx_attach_param_node(void* const object, struct rebx_param* param);
 struct rebx_param* rebx_add_param_node(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape);
 size_t rebx_sizeof(enum rebx_param_type param_type); // Returns size in bytes of the corresponding rebx_param_type type
-
 double install_test(void);  // Function for testing whether REBOUNDx can load librebound.so and call REBOUND functions.
+void rebx_reset_accelerations(struct reb_particle* const ps, const int N);
 
 /****************************************
 Force prototypes
@@ -93,5 +93,14 @@ void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_
 void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing);
 void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing);
 void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing);
+
+/****************************************
+ Integrator prototypes
+ *****************************************/
+
+void rebx_integrator_euler_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
+void rebx_integrator_rk2_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
+void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
+void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
 
 #endif
