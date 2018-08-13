@@ -53,7 +53,7 @@ void rebx_free_effects(struct rebx_extras* rebx);           // Frees all effects
  Functions executing forces & ptm each timestep
  *********************************************/
 
-void rebx_forces(struct reb_simulation* sim);                       // Calls all the forces that have been added to the simulation.
+void rebx_additional_forces(struct reb_simulation* sim);                       // Calls all the forces that have been added to the simulation.
 void rebx_pre_timestep_modifications(struct reb_simulation* sim);   // Calls all the pre-timestep modifications that have been added to the simulation.
 void rebx_post_timestep_modifications(struct reb_simulation* sim);  // Calls all the post-timestep modifications that have been added to the simulation.
 
