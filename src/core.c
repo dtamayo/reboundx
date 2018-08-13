@@ -91,7 +91,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     }
     // Have to set all the following at initialization since we can't know
     // which will be needed from added effects. User could set force_as_operator after the fact.
-    sim->additional_forces = rebx_forces;
+    sim->additional_forces = rebx_additional_forces;
     sim->pre_timestep_modifications = rebx_pre_timestep_modifications;
     sim->post_timestep_modifications = rebx_post_timestep_modifications;
 }
@@ -146,7 +146,7 @@ void rebx_reset_accelerations(struct reb_particle* const ps, const int N){
     }
 }
 
-void rebx_forces(struct reb_simulation* sim){
+void rebx_additional_forces(struct reb_simulation* sim){
 	struct rebx_extras* rebx = sim->extras;
 	struct rebx_effect* current = rebx->effects;
 	while(current != NULL){
