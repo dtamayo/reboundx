@@ -37,10 +37,7 @@ void rebx_integrator_euler_integrate(struct reb_simulation* const sim, const dou
     if(Edissipated != NULL){
         const double Edot = rebx_Edot(sim->particles, N);
         *Edissipated += dt*Edot;
-        
     }
-    //fprintf(stderr, "%.16e\t%f\n", sim->particles[1].ax, dt);
-    //fprintf(stderr, "%.16e\t%f\n", sim->particles[1].ay, dt);
     for(int i=0; i<N; i++){
         sim->particles[i].vx += dt*sim->particles[i].ax;
         sim->particles[i].vy += dt*sim->particles[i].ay;

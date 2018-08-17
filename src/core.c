@@ -30,6 +30,7 @@
 #include <math.h>
 #include <string.h>
 #include <limits.h>
+#include <float.h>
 #include "core.h"
 #include "rebound.h"
 
@@ -164,7 +165,11 @@ void rebx_forces(struct reb_simulation* sim){
 void rebx_pre_timestep_modifications(struct reb_simulation* sim){
     struct rebx_extras* rebx = sim->extras;
     struct rebx_effect* current = rebx->effects;
-    const double dt2 = sim->dt/2.;    // pre_timestep only executes order=2 effects, so always use a half timestep and no need to worry about adaptive timestep with IAS15
+    double dt = sim->dt_last_done;
+    if (dt < DBL_MIN){
+        dt = sim->dt;
+    }
+    const double dt2 = dt/2.;    
     
     while(current != NULL){
         if(current->operator_order == 2){       // if order = 1, only apply post_timestep
@@ -191,9 +196,14 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
 	struct rebx_extras* rebx = sim->extras;
 	struct rebx_effect* current = rebx->effects;
     struct rebx_effect* prev = NULL;
-    
+   
+    double dt = sim->dt_last_done;
+    if (dt < DBL_MIN){
+        dt = sim->dt;
+    }
+
     // first do the 2nd order operators for half a timestep, in reverse order
-    const double dt2 = sim->dt_last_done/2.;
+    const double dt2 = dt/2.;
     
 	while(current != NULL){
         prev = current;
@@ -216,7 +226,6 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
     }
     
     // now do the 1st order operators
-    const double dt = sim->dt_last_done;
     current = rebx->effects;
     while(current != NULL){
         if(current->operator_order == 1){
