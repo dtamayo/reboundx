@@ -165,11 +165,7 @@ void rebx_additional_forces(struct reb_simulation* sim){
 void rebx_pre_timestep_modifications(struct reb_simulation* sim){
     struct rebx_extras* rebx = sim->extras;
     struct rebx_effect* current = rebx->effects;
-    double dt = sim->dt_last_done;
-    if (dt < DBL_MIN){
-        dt = sim->dt;
-    }
-    const double dt2 = dt/2.;    
+    const double dt2 = sim->dt/2.;
     
     while(current != NULL){
         if(current->operator_order == 2){       // if order = 1, only apply post_timestep
@@ -197,13 +193,8 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
 	struct rebx_effect* current = rebx->effects;
     struct rebx_effect* prev = NULL;
    
-    double dt = sim->dt_last_done;
-    if (dt < DBL_MIN){
-        dt = sim->dt;
-    }
-
+    const double dt = sim->dt_last_done;
     // first do the 2nd order operators for half a timestep, in reverse order
-    const double dt2 = dt/2.;
     
 	while(current != NULL){
         prev = current;
@@ -214,11 +205,11 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
     while(current != NULL){
         if(current->operator_order == 2){
             if(current->operator != NULL){      // Always apply operator if set
-                current->operator(sim, current, dt2, REBX_TIMING_POST_TIMESTEP);
+                current->operator(sim, current, dt/2., REBX_TIMING_POST_TIMESTEP);
             }
             else{                               // It's a force: numerically integrate as operator if flag set
                 if(current->force_as_operator == 1){
-                    rebx_integrate(sim, dt2, current);
+                    rebx_integrate(sim, dt/2., current);
                 }
             }
         }
