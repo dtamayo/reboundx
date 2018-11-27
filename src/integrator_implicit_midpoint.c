@@ -64,7 +64,7 @@ static int compare(struct reb_particle* ps1, struct reb_particle* ps2, int N){
 }
 
 void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect){
-    const int N = sim->N - sim->N_var;
+    /*const int N = sim->N - sim->N_var;
     double* Edissipated = rebx_get_param_check(effect, "Edissipated", REBX_TYPE_DOUBLE);
     struct reb_particle* const ps_orig = sim->particles;
     struct reb_particle* const ps_final = malloc(N*sizeof(*ps_final));
@@ -102,5 +102,5 @@ void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const si
     }
     free(ps_final);
     free(ps_prev);
-    free(ps_avg);
+    free(ps_avg);*/
 }
