@@ -90,8 +90,8 @@ static void rebx_write_effect(struct rebx_effect* effect, FILE* of){
     long pos_start_effect = ftell(of);
     
     REBX_WRITE_FIELD(NAME,          effect->name,           strlen(effect->name) + 1,       1); // +1 for \0 at end
-    REBX_WRITE_FIELD(FORCE_AS_OPERATOR,          &effect->force_as_operator,           sizeof(effect->force_as_operator),            1);
-    REBX_WRITE_FIELD(OPERATOR_ORDER,          &effect->operator_order,           sizeof(effect->operator_order),            1);
+    //REBX_WRITE_FIELD(FORCE_AS_OPERATOR,          &effect->force_as_operator,           sizeof(effect->force_as_operator),            1);
+    //REBX_WRITE_FIELD(OPERATOR_ORDER,          &effect->operator_order,           sizeof(effect->operator_order),            1);
     rebx_write_params(effect->ap, of); // Write all parameters
     // Write end marker for effect
     REBX_WRITE_FIELD(END,           NULL,                   0,                              0);
@@ -141,7 +141,7 @@ static void rebx_write_rebx(struct rebx_extras* rebx, FILE* of){
 }
 
 void rebx_output_binary(struct rebx_extras* rebx, char* filename){
-    struct reb_simulation* sim = rebx->sim;
+    /*struct reb_simulation* sim = rebx->sim;
 
     FILE* of = fopen(filename,"wb"); 
     if (of==NULL){
@@ -182,5 +182,5 @@ void rebx_output_binary(struct rebx_extras* rebx, char* filename){
     
     // Write end marker for binary
     REBX_WRITE_FIELD(END,           NULL,                   0,                              0);
-    fclose(of);
+    fclose(of);*/
 }

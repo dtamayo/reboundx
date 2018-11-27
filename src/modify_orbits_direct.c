@@ -119,7 +119,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
     return reb_tools_orbit_to_particle(sim->G, *primary, p->m, o.a, o.e, o.inc, o.Omega, o.omega, o.f);
 }
 
-void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing){
+void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt){
     const int* const ptr = rebx_get_param_check(effect, "coordinates", REBX_TYPE_INT);
    	enum REBX_COORDINATES coordinates = REBX_COORDINATES_JACOBI;
 	if (ptr != NULL){

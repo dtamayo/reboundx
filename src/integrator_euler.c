@@ -30,14 +30,9 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
-void rebx_integrator_euler_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect){
+void rebx_integrator_euler_integrate(struct reb_simulation* const sim, const double dt, struct rebx_force* const force){
     const int N = sim->N - sim->N_var;
-    effect->force(sim, effect, sim->particles, N);
-    double* Edissipated = rebx_get_param_check(effect, "Edissipated", REBX_TYPE_DOUBLE);
-    if(Edissipated != NULL){
-        const double Edot = rebx_Edot(sim->particles, N);
-        *Edissipated += dt*Edot;
-    }
+    force->update_accelerations(sim, force->effect, sim->particles, N);
     for(int i=0; i<N; i++){
         sim->particles[i].vx += dt*sim->particles[i].ax;
         sim->particles[i].vy += dt*sim->particles[i].ay;

@@ -142,14 +142,31 @@ struct rebx_effect{
     uint32_t hash;                                  ///< Hash for the effect's name.
     char* name;                                     ///< String for the effect's name.
     struct rebx_param* ap;                          ///< Linked list of parameters for the effect.
-    int force_as_operator;                          ///< whether to apply a force as an operator (1) or not (0).
-    void (*force) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N); ///< Pointer to function to call during forces evaluation.
-    void (*operator) (struct reb_simulation* sim, struct rebx_effect* effect, const double dt, enum rebx_timing timing);   ///< Pointer to function to call before and/or after each timestep.
-    int operator_order;                             ///< order of operator scheme (1 = after each timestep, 2=half step before and after each timestep)
+    //int force_as_operator;                          ///< whether to apply a force as an operator (1) or not (0).
+    //void (*force) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N); ///< Pointer to function to call during forces evaluation.
+    //int operator_order;                             ///< order of operator scheme (1 = after each timestep, 2=half step before and after each timestep)
     struct rebx_extras* rebx;                       ///< Pointer to the rebx_extras instance effect is in.
-	struct rebx_effect* next;			            ///< Pointer to the next effect in the linked list.
-    struct rebx_effect* prev;                       ///< Pointer to the previous effect in the linked list.
     char pad[100];                                  ///< Pad to be able to cast to reb_particle for get_object_type function.
+};
+
+// force = effect, fp
+// operator = effect, dtfactor, fp
+// force_node, effect_node
+// integrate operator has force pointer as effect->ap.
+
+struct rebx_operator{
+    struct rebx_effect* effect;
+    double dt;
+    void (*step) (struct reb_simulation* sim, struct rebx_effect* effect, const double dt);   ///< Pointer to function to call before and/or after each timestep.
+	struct rebx_operator* next;			            ///< Pointer to the next effect in the linked list.
+    struct rebx_operator* prev;                       ///< Pointer to the previous effect in the linked list.
+};
+
+struct rebx_force{
+    struct rebx_effect* effect;
+    void (*update_accelerations) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N); ///< Pointer to function to call during forces evaluation.
+	struct rebx_force* next;			            ///< Pointer to the next effect in the linked list.
+    struct rebx_force* prev;                       ///< Pointer to the previous effect in the linked list.
 };
 
 /**
@@ -165,7 +182,9 @@ struct rebx_binary_field{
  */
 struct rebx_extras {	
 	struct reb_simulation* sim;					    ///< Pointer to the simulation REBOUNDx is linked to.
-	struct rebx_effect* effects;		            ///< Linked list with pointers to all the effects added to the simulation.
+    struct rebx_force* forces;
+	struct rebx_operator* pre_timestep_operators;		            ///< Linked list with pointers to all the effects added to the simulation.
+	struct rebx_operator* post_timestep_operators;		            ///< Linked list with pointers to all the effects added to the simulation.
 	struct rebx_param_to_be_freed* params_to_be_freed; 	///< Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
     enum {
         REBX_INTEGRATOR_IMPLICIT_MIDPOINT = 0,
@@ -256,6 +275,10 @@ void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, cons
  * @return Returns a pointer to a rebx_effect structure for the effect.
  */
 struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name);
+struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name);
+void rebx_add_force(struct rebx_extras* rebx, struct rebx_effect* effect);
+void rebx_add_pre_timestep_operator(struct rebx_extras* rebx, struct rebx_effect* effect, const double dt);
+void rebx_add_post_timestep_operator(struct rebx_extras* rebx, struct rebx_effect* effect, const double dt);
 
 /**
  * @brief Function for adding a custom force in REBOUNDx.

@@ -31,7 +31,7 @@
 #include "core.h"
 
 void rebx_integrator_rk2_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect){
-    
+    /*    
     const int N = sim->N - sim->N_var;
     struct reb_particle* const k2 = malloc(N*sizeof(*k2));
     memcpy(k2, sim->particles, N*sizeof(*k2));
@@ -54,5 +54,5 @@ void rebx_integrator_rk2_integrate(struct reb_simulation* const sim, const doubl
         sim->particles[i].vy += b1*sim->particles[i].ay + b2*k2[i].ay;
         sim->particles[i].vz += b1*sim->particles[i].az + b2*k2[i].az;
     }
-    free(k2);
+    free(k2);*/
 }

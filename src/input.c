@@ -120,7 +120,7 @@ static int rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_input
                 if(!effect){
                     return 0;
                 }
-                fread(&effect->force_as_operator, sizeof(effect->force_as_operator), 1, inf);
+                //fread(&effect->force_as_operator, sizeof(effect->force_as_operator), 1, inf);
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_OPERATOR_ORDER:
@@ -128,7 +128,7 @@ static int rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_input
                 if(!effect){
                     return 0;
                 }
-                fread(&effect->operator_order, sizeof(effect->operator_order), 1, inf);
+                //fread(&effect->operator_order, sizeof(effect->operator_order), 1, inf);
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_PARAM:
