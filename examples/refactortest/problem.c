@@ -34,12 +34,16 @@ int main(int argc, char* argv[]){
     reb_move_to_com(sim);
     
     // Could also add "gr" or "gr_full" here.  See documentation for details.
-    struct rebx_effect* gr_params = rebx_add_force(rebx, "gr");
-   
+    //struct rebx_effect* gr_params = rebx_add_effect(rebx, "gr");
+    //rebx_add_force(rebx, gr_params);
+    struct rebx_effect* gr_params = rebx_add(rebx, "gr");
+    if(gr_params->ap == NULL){
+        printf("NULL\n");
+    }
     // Have to set speed of light in right units (set by G & initial conditions).  Here we use default units of AU/(yr/2pi)
-    double* c = rebx_add_param(gr_params, "c", REBX_TYPE_DOUBLE);  
+    double* c = rebx_add_param(sim, &gr_params->ap, "c", REBX_TYPE_DOUBLE);  
     *c = REBX_C;
-
+    
     double tmax = 5.e-2;
     reb_integrate(sim, tmax); 
     rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 

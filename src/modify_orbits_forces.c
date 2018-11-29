@@ -79,9 +79,9 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
     double tau_e = INFINITY;
     double tau_inc = INFINITY;
     
-    const double* const tau_a_ptr = rebx_get_param_check(p, "tau_a", REBX_TYPE_DOUBLE);
-    const double* const tau_e_ptr = rebx_get_param_check(p, "tau_e", REBX_TYPE_DOUBLE);
-    const double* const tau_inc_ptr = rebx_get_param_check(p, "tau_inc", REBX_TYPE_DOUBLE);
+    const double* const tau_a_ptr = rebx_get_param_check(sim, p->ap, "tau_a", REBX_TYPE_DOUBLE);
+    const double* const tau_e_ptr = rebx_get_param_check(sim, p->ap, "tau_e", REBX_TYPE_DOUBLE);
+    const double* const tau_inc_ptr = rebx_get_param_check(sim, p->ap, "tau_inc", REBX_TYPE_DOUBLE);
 
     const double dvx = p->vx - source->vx;
     const double dvy = p->vy - source->vy;
@@ -101,25 +101,6 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
         tau_inc = *tau_inc_ptr;
     }
     
-    /*const int* const timescales_in_orbital_periods = rebx_get_param_check(effect, "timescales_in_orbital_periods", REBX_TYPE_INT);
-    
-    if (timescales_in_orbital_periods != NULL){
-        const double v2 = dvx*dvx + dvy*dvy + dvz*dvz;
-        const double mu = sim->G*source->m;
-        const double vcirc2 = mu/sqrt(r2);
-        const double a = mu/(2.*vcirc2 - v2);
-        if(a > 0){
-            const double P = sqrt(a*a*a/mu);
-            tau_a *= P;
-            tau_e *= P;
-            tau_inc *= P;
-            const double* const dt_in_orbital_periods = rebx_get_param_check(p, "dt_in_orbital_periods", REBX_TYPE_DOUBLE);
-            if(dt_in_orbital_periods != NULL){
-                sim->dt = *dt_in_orbital_periods*P;
-            }
-        }
-    }*/
-    
     struct reb_vec3d a = {0};
 
     a.x =  dvx/(2.*tau_a);
@@ -137,7 +118,7 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
 }
 
 void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
-    int* ptr = rebx_get_param_check(effect, "coordinates", REBX_TYPE_INT);
+    int* ptr = rebx_get_param_check(sim, effect->ap, "coordinates", REBX_TYPE_INT);
     enum REBX_COORDINATES coordinates = REBX_COORDINATES_JACOBI; // Default
     if (ptr != NULL){
         coordinates = *ptr;

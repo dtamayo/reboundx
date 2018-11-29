@@ -10,6 +10,7 @@ class Params(MutableMapping):
     def __init__(self, parent):
         self.verbose = 0 # set to 1 to diagnose problems
         self.parent = parent
+        print(type(parent))
 
         # Check rebx instance is attached, otherwise memory isn't allocated.
         if parent.__class__ == rebound.particle.Particle: 
@@ -49,8 +50,9 @@ class Params(MutableMapping):
 
     def __getitem__(self, key):
         if self.verbose: print("*****")
+        #ap = cast(self.parent.ap, POINTER(Param))
         clibreboundx.rebx_get_param_node.restype = POINTER(Param)
-        node = clibreboundx.rebx_get_param_node(byref(self.parent), c_char_p(key.encode('ascii')))
+        node = clibreboundx.rebx_get_param_node(self.parent.ap, c_char_p(key.encode('ascii')))
        
         if node: 
             if self.verbose: print("Parameter {0} found".format(key))
@@ -122,9 +124,14 @@ class Params(MutableMapping):
         except KeyError:
             raise AttributeError("REBOUNDx Error: Data type {0} for param '{1}' "
             "not supported.".format(pythontype, key))
-        
+       
+        #from ctypes import addressof
+        #print(addressof(self.parent.ap))
+        #ap = cast(self.parent.ap, POINTER(Param))
+        #print(addressof(ap))
+        #ap = self.parent.ap
         clibreboundx.rebx_get_param_node.restype = POINTER(Param)
-        nodeptr = clibreboundx.rebx_get_param_node(byref(self.parent), c_char_p(key.encode('ascii')))
+        nodeptr = clibreboundx.rebx_get_param_node(self.parent.ap, c_char_p(key.encode('ascii')))
 
         if nodeptr:
             if self.verbose: print("Parameter {0} found.".format(key))
@@ -156,13 +163,13 @@ class Params(MutableMapping):
                 if self.verbose: print("Param is an array of dimension {0}".format(value.ndim))
                 clibreboundx.rebx_add_param_node.restype = POINTER(Param)
                 nodeptr = clibreboundx.rebx_add_param_node(
-                        byref(self.parent), c_char_p(key.encode('ascii')), rebxtype, 
+                        self.parent._sim, byref(self.parent.ap), c_char_p(key.encode('ascii')), rebxtype, 
                         value.ndim, value.ctypes.shape_as(c_int))
             else: # single value
                 if self.verbose: print("Param is a scalar")
                 clibreboundx.rebx_add_param_node.restype = POINTER(Param)
                 nodeptr = clibreboundx.rebx_add_param_node(
-                        byref(self.parent), c_char_p(key.encode('ascii')), rebxtype, 
+                        self.parent._sim, byref(self.parent.ap), c_char_p(key.encode('ascii')), rebxtype, 
                         0, None)
             nodeptr.contents.python_type = c_int(self.penum[pythontype])
             if self.verbose:
@@ -179,7 +186,8 @@ class Params(MutableMapping):
             val[0] = value
         
     def __delitem__(self, key):
-        success = clibreboundx.rebx_remove_param(byref(self.parent), c_char_p(key.encode('ascii')))
+        ap = cast(self.parent.ap, POINTER(Param))
+        success = clibreboundx.rebx_remove_param(self.parent._sim, byref(ap), c_char_p(key.encode('ascii')))
         if not success:
             raise AttributeError("REBOUNDx Error: Parameter '{0}' to delete not found.".format(key))
 

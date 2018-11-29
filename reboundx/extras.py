@@ -244,14 +244,9 @@ class Effect(Structure):
 
 Effect._fields_ = [ ("hash", c_uint32),
                     ("name", c_char_p),
-                    ("ap", POINTER(Param)),
-                    ("force_as_operator", c_int),
-                    ("force", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect), POINTER(rebound.Particle), c_int)),
-                    ("operator", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect), c_double, c_int)),
-                    ("operator_order", c_int),
+                    ("ap", c_void_p),
+                    ("_sim", POINTER(rebound.Simulation)),
                     ("rebx", POINTER(Extras)),
-                    ("next", POINTER(Effect)),
-                    ("prev", POINTER(Effect)),
                     ("pad", c_char*100)]
 
 class Param_to_be_freed(Structure):
