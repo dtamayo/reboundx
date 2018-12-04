@@ -33,6 +33,7 @@
 #include <float.h>
 #include "core.h"
 #include "rebound.h"
+#include "linkedlist.h"
 
 #define STRINGIFY(s) str(s)
 #define str(s) #s
@@ -448,70 +449,11 @@ void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* par
  Internal functions for dealing with parameters
  ********************************************************************************/
 
-struct rebx_param* rebx_create_param(){
-    struct rebx_param* newparam = malloc(sizeof(*newparam));
-    int collision=0;
-    for(int j=REBX_OBJECT_TYPE_EFFECT; j<=REBX_OBJECT_TYPE_PARTICLE; j++){
-        /* need this cast to avoid warnings (we are converting 32 bit int enum to 64 bit pointer). I think behavior
-         * is implemetation defined, but this is OK because we are always checking the ap pointer in this way, so 
-         * just need that whatever implementation defined result we get from this comparison is false for the address
-         * of newparam, which will be the head node in the linked list at object->ap*/
-        if(newparam == (void*)(intptr_t)j){ 
-            collision=1;
-        }
-    }
-    
-    if (collision){
-        free(newparam);
-        struct rebx_param* address[5] = {NULL};
-        int i;
-        for(i=0; i<=5; i++){
-            address[i] = malloc(sizeof(*newparam));
-            collision = 0;
-            for(int j=REBX_OBJECT_TYPE_EFFECT; j<=REBX_OBJECT_TYPE_PARTICLE; j++){
-                if(address[i] == (void*)(intptr_t)j){
-                    collision=1;
-                }
-            }
-            if (collision == 0){
-                newparam = address[i];
-                break;
-            }
-        }
 
-        if (i==5){
-            fprintf(stderr, "REBOUNDx Error:  Can't allocate valid memory for parameter.\n");
-            return NULL;
-        }
-        for(int j=0;j<i;j++){
-            free(address[j]);
-        }
-    }
-    return newparam;
-}
 
 /*********************************************************************************
  User interface for parameters
  ********************************************************************************/
-int rebx_remove_param(struct reb_simulation* const sim, struct rebx_param** head, const char* const param_name){
-    // TODO free memory for deleted node
-    uint32_t hash = reb_hash(param_name);
-    struct rebx_param* current = *head;
-    
-    if(current->hash == hash){
-        *head = current->next;
-        return 1;
-    }
-  
-    while(current->next != NULL){
-        if(current->next->hash == hash){
-            current->next = current->next->next;
-            return 1;
-        }
-        current = current->next;
-    }
-    return 0;
-}
 
 size_t rebx_sizeof(enum rebx_param_type param_type){
     switch(param_type){
@@ -539,48 +481,27 @@ size_t rebx_sizeof(enum rebx_param_type param_type){
     return 0; // type not found
 }
 
-struct rebx_param* rebx_attach_param_node(struct reb_simulation* const sim, struct rebx_param** head, struct rebx_param* param){
+struct rebx_param* rebx_add_param_node(struct reb_simulation* const sim, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
     
-    param->next = *head;
-    *head = param;
-    
-    return param;
-}
-
-struct rebx_param* rebx_add_param_node(struct reb_simulation* const sim, struct rebx_param** head, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
-    void* ptr = rebx_get_param(*head, param_name);
-    
-    if (ptr != NULL){
-        char str[300];
-        sprintf(str, "REBOUNDx Error: Parameter '%s' passed to rebx_add_param already exists.\n", param_name);
-        reb_error(sim, str);
-        return NULL;
-    }
-    
-    struct rebx_param* newparam = rebx_create_param();
-    newparam->name = malloc(strlen(param_name) + 1); // +1 for \0 at end
-    if (newparam->name != NULL){
-        strcpy(newparam->name, param_name);
-    }
-    newparam->hash = reb_hash(param_name);
-    newparam->param_type = param_type;
-    newparam->python_type = -1; // not used by C
-    newparam->ndim = ndim;
-    newparam->shape = NULL;
-    newparam->size = 1;
+    struct rebx_param* p = malloc(sizeof(*p));
+    p->param_type = param_type;
+    p->python_type = -1; // not used by C
+    p->ndim = ndim;
+    p->shape = NULL;
+    p->size = 1;
     if (ndim > 0){
 	    size_t shapesize = sizeof(int)*ndim;
-	    newparam->shape = malloc(shapesize);
-        newparam->strides = malloc(shapesize);
-	    memcpy(newparam->shape, shape, shapesize);
+	    p->shape = malloc(shapesize);
+        p->strides = malloc(shapesize);
+	    memcpy(p->shape, shape, shapesize);
 	    for(int i=ndim-1;i>=0;i--){ // going backward allows us to calculate strides at the same time
-            newparam->strides[i] = newparam->size;  // stride[i] is equal to the product of the shapes for all indices > i
-		    newparam->size *= shape[i];
+            p->strides[i] = p->size;  // stride[i] is equal to the product of the shapes for all indices > i
+		    p->size *= shape[i];
 	    }
     }
     size_t element_size = rebx_sizeof(param_type);
     if (element_size){
-        newparam->contents = malloc(element_size*newparam->size); // newparam->size = number of elements in array (1 if scalar)
+        p->contents = malloc(element_size*p->size); // newparam->size = number of elements in array (1 if scalar)
     }
 
     else{
@@ -588,60 +509,45 @@ struct rebx_param* rebx_add_param_node(struct reb_simulation* const sim, struct 
         sprintf(str, "REBOUNDx Error: Parameter type '%d' passed to rebx_add_param_node not supported.\n", param_type);
         reb_error(sim, str);
     }
-
-    newparam = rebx_attach_param_node(sim, head, newparam);
-    return newparam;
-}
-
-void* rebx_add_param_array(struct reb_simulation* const sim, struct rebx_param** head, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
-    return rebx_add_param_node(sim, head, param_name, param_type, ndim, shape)->contents;
-}
-
-void* rebx_add_param(struct reb_simulation* const sim, struct rebx_param** head, const char* const param_name, enum rebx_param_type param_type){
-	int ndim=0;
-	return rebx_add_param_array(sim, head, param_name, param_type, ndim, NULL);
-}
-
-void* rebx_get_param(struct rebx_param* head, const char* const param_name){
-    struct rebx_param* node = rebx_get_param_node(head, param_name);
-    if (node == NULL){
-        return NULL;
-    }
-    return node->contents;
-}
-
-
-struct rebx_param* rebx_get_param_node(struct rebx_param* head, const char* const param_name){
-    uint32_t hash = reb_hash(param_name);
-    struct rebx_param* current = head;
-    while(current != NULL){
-        if(current->hash == hash){
-            return current; 
-        }
-        current = current->next;
-    }
-   
-    if (current == NULL){   // param_name not found.  Return immediately.
-        return NULL;
-    }
-
-    return current;
-}
-
-void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_param* ap, const char* const param_name, enum rebx_param_type param_type){
-    struct rebx_param* node = rebx_get_param_node(ap, param_name);
-    if (node == NULL){
-        return NULL;
-    }
     
-    if (node->param_type != param_type){
+    struct rebx_node* node = rebx_add_node(sim, apptr, param_name);
+    node->object = p;
+    return p;
+}
+
+void* rebx_add_param_array(struct reb_simulation* const sim, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
+    return rebx_add_param_node(sim, apptr, param_name, param_type, ndim, shape)->contents;
+}
+
+void* rebx_add_param(struct reb_simulation* const sim, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type){
+	int ndim=0;
+	return rebx_add_param_array(sim, apptr, param_name, param_type, ndim, NULL);
+}
+
+void* rebx_get_param(struct rebx_node* ap, const char* const param_name){
+    struct rebx_node* node = (struct rebx_node*)rebx_get_node(ap, reb_hash(param_name));
+    if (node == NULL){
+        return NULL;
+    }
+    struct rebx_param* param = node->object;
+    return param->contents;
+}
+
+void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type){
+    struct rebx_node* node = rebx_get_node(ap, reb_hash(param_name));
+    if (node == NULL){
+        return NULL;
+    }
+    struct rebx_param* param = node->object;
+    
+    if (param->param_type != param_type){
         char str[300];
         sprintf(str, "REBOUNDx Error: Parameter '%s' passed to rebx_get_param_check was found but was of wrong type.  See documentation for your particular effect.  In python, you might need to add a dot at the end of the number when assigning a parameter that REBOUNDx expects as a float.\n", param_name);
         reb_error(sim, str);
         return NULL;
     }
 
-    return node->contents;
+    return param->contents;
 }
 
 struct rebx_effect* rebx_get_effect(struct rebx_extras* const rebx, const char* const effect_name){

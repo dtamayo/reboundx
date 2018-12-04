@@ -124,30 +124,26 @@ enum rebx_node_type {
 Basic types in REBOUNDx
 *****************************************/
 
-struct rebx_basenode{
-    struct rebx_basenode* next;
-    struct rebx_basenode* prev;
+struct rebx_node{
+    struct rebx_node* next;
+    struct rebx_node* prev;
     enum rebx_node_type type;
+    void* object;
+    uint32_t hash;                                  ///< Hash for the parameter name.
+    char* name;                                     ///< String for the parameter's name.
 };
 /**
  * @brief Main structure used for all parameters added to particles.
  */
-struct rebx_param_node{
-    struct rebx_basenode node;
-    struct rebx_param* param;
-};
 
 struct rebx_param{
     void* contents;                                 ///< Pointer to the parameter (void* so it can point to different types).
-    uint32_t hash;                                  ///< Hash for the parameter name.
-    char* name;                                     ///< String for the parameter's name.
     enum rebx_param_type param_type;                ///< Enum for the parameter type.
     int python_type;                                ///< Used by python side to store python type
 	int ndim;                                       ///< Number of dimensions (to support array parameters)
 	int* shape;                                     ///< Array of length ndim for the array shape (NULL for scalars).
     int* strides;                                   ///< Strides along the different dimensions for array indexing (NULL for scalars).
 	int size;                                       ///< Total number of values in array (1 for scalars).
-    struct rebx_param* next;
 };
 
 /**
@@ -170,6 +166,17 @@ struct rebx_effect{
 // operator = effect, dtfactor, fp
 // force_node, effect_node
 // integrate operator has force pointer as effect->ap.
+
+struct rebx_operator_node_test{
+    struct rebx_node node;
+    struct rebx_operator_test* operator;
+};
+struct rebx_operator_test{
+    double dt;
+    void (*step) (struct reb_simulation* sim, struct rebx_effect* effect, const double dt);   ///< Pointer to function to call before and/or after each timestep.
+    struct rebx_param* ap;                          ///< Linked list of parameters for the effect.
+    struct reb_simulation* sim;
+};
 
 struct rebx_operator{
     struct rebx_effect* effect;
@@ -356,7 +363,7 @@ int rebx_remove_param(struct reb_simulation* const sim, struct rebx_param** head
  * @param param_type Variable type from rebx_param_type enumeration.
  * @return A void pointer to the parameter, i.e., the contents member of the new rebx_param structure. 
  */
-void* rebx_add_param(struct reb_simulation* const sim, struct rebx_param** head, const char* const param_name, enum rebx_param_type param_type);
+void* rebx_add_param(struct reb_simulation* const sim, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type);
 
 /**
  * @brief Adds an array parameter to a particle or effect.
@@ -366,7 +373,8 @@ void* rebx_add_param(struct reb_simulation* const sim, struct rebx_param** head,
  * @param ndim Number of dimensions in the array.
  * @param shape Pointer to an integer array specifying the length of the array in each dimension.
  * @return A void pointer to the parameter, i.e., the contents member of the new rebx_param structure.
- */void* rebx_add_param_array(struct reb_simulation* const sim, struct rebx_param** head, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape);
+ */
+void* rebx_add_param_array(struct reb_simulation* const sim, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape);
 
 
 /**
@@ -375,7 +383,7 @@ void* rebx_add_param(struct reb_simulation* const sim, struct rebx_param** head,
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  * @return A void pointer to the parameter. NULL if not found.
  */
-void* rebx_get_param(struct rebx_param* head, const char* const param_name);
+void* rebx_get_param(struct rebx_node* ap, const char* const param_name);
 
 /** @} */
 /** @} */
@@ -500,7 +508,7 @@ double rebx_gravity_fields_hamiltonian(struct reb_simulation* const sim);
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  * @return Pointer to the rebx_param structure that holds the parameter. NULL if not found.
  */
-struct rebx_param* rebx_get_param_node(struct rebx_param* head, const char* const param_name);
+struct rebx_param* rebx_get_param_node(struct rebx_node* ap, const char* const param_name);
 
 /**
  * @brief Returns a void pointer to the parameter just like rebx_get_param, but additionally checks that the param_type matches what is expected.
@@ -509,7 +517,7 @@ struct rebx_param* rebx_get_param_node(struct rebx_param* head, const char* cons
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  * @return Void pointer to the parameter. NULL if not found or type does not match (will write error to stderr).
  */
-void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_param* head, const char* const param_name, enum rebx_param_type param_type);
+void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
 
 void rebx_gr_acc(struct rebx_extras* const rebx, double* acc, const double C2);
 double rebx_calculate_energy(struct reb_simulation* const sim);
