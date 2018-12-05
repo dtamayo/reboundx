@@ -72,7 +72,7 @@ struct rebx_node* rebx_add_node(struct reb_simulation* const sim, struct rebx_no
     return node;
 }
 
-int rebx_remove_node(struct reb_simulation* const sim, struct rebx_node** head, uint32_t hash){
+int rebx_remove_node(struct rebx_node** head, uint32_t hash){
     // TODO free memory for deleted node
     struct rebx_node* current = *head;
     
@@ -89,4 +89,15 @@ int rebx_remove_node(struct reb_simulation* const sim, struct rebx_node** head, 
         current = current->next;
     }
     return 0;
+}
+
+int rebx_len(struct rebx_node* head){
+    int len = 0;
+    struct rebx_node* current = head;
+    while(current != NULL){
+        len++;
+        current = current->next;
+    }
+    
+    return len;
 }

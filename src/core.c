@@ -84,7 +84,7 @@ struct rebx_extras* rebx_init(struct reb_simulation* sim){  // reboundx.h
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     sim->extras = rebx;
     rebx->sim = sim;
-	rebx->params_to_be_freed = NULL;
+	//rebx->params_to_be_freed = NULL;
 	rebx->forces = NULL;
     rebx->pre_timestep_operators=NULL;
     rebx->post_timestep_operators=NULL;
@@ -110,13 +110,13 @@ void rebx_remove_from_simulation(struct reb_simulation* sim){
 }
 
 void rebx_free(struct rebx_extras* rebx){                   // reboundx.h
-    rebx_free_params(rebx);
+    //rebx_free_params(rebx);
     rebx_free_effects(rebx);
     free(rebx);
 }
 
-void rebx_free_params(struct rebx_extras* rebx){
-    struct rebx_param_to_be_freed* current = rebx->params_to_be_freed;
+/*void rebx_free_params(struct rebx_extras* rebx){
+    struct rebx_param__to_be_freed* current = rebx->params_to_be_freed;
     struct rebx_param_to_be_freed* temp_next;
     while(current != NULL){
         temp_next = current->next;
@@ -125,7 +125,7 @@ void rebx_free_params(struct rebx_extras* rebx){
         free(current);
         current = temp_next;
     }
-}
+}*/
 
 void rebx_free_effects(struct rebx_extras* rebx){
     /*struct rebx_effect* current = rebx->effects;
@@ -437,13 +437,13 @@ struct rebx_effect* rebx_add_custom_operator(struct rebx_extras* rebx, const cha
     return effect;
 }
     
-void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param){
+/*void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param){
     struct rebx_param_to_be_freed* newparam = malloc(sizeof(*newparam));
     newparam->param = param;
 
     newparam->next = rebx->params_to_be_freed;
     rebx->params_to_be_freed = newparam;
-}
+}*/
 
 /*********************************************************************************
  Internal functions for dealing with parameters
@@ -481,27 +481,19 @@ size_t rebx_sizeof(enum rebx_param_type param_type){
     return 0; // type not found
 }
 
-struct rebx_param* rebx_add_param_node(struct reb_simulation* const sim, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
+int rebx_remove_param(struct rebx_node** apptr, const char* const param_name){
+    return rebx_remove_node(apptr, reb_hash(param_name));
+}
+
+void* rebx_add_param(struct reb_simulation* const sim, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type){
     
-    struct rebx_param* p = malloc(sizeof(*p));
-    p->param_type = param_type;
-    p->python_type = -1; // not used by C
-    p->ndim = ndim;
-    p->shape = NULL;
-    p->size = 1;
-    if (ndim > 0){
-	    size_t shapesize = sizeof(int)*ndim;
-	    p->shape = malloc(shapesize);
-        p->strides = malloc(shapesize);
-	    memcpy(p->shape, shape, shapesize);
-	    for(int i=ndim-1;i>=0;i--){ // going backward allows us to calculate strides at the same time
-            p->strides[i] = p->size;  // stride[i] is equal to the product of the shapes for all indices > i
-		    p->size *= shape[i];
-	    }
-    }
+    struct rebx_param* param = malloc(sizeof(*param));
+    param->param_type = param_type;
+    param->python_type = -1; // not used by C
+    
     size_t element_size = rebx_sizeof(param_type);
     if (element_size){
-        p->contents = malloc(element_size*p->size); // newparam->size = number of elements in array (1 if scalar)
+        param->value = malloc(element_size);
     }
 
     else{
@@ -511,35 +503,32 @@ struct rebx_param* rebx_add_param_node(struct reb_simulation* const sim, struct 
     }
     
     struct rebx_node* node = rebx_add_node(sim, apptr, param_name);
-    node->object = p;
-    return p;
+    node->object = param;
+    return param->value;
 }
 
-void* rebx_add_param_array(struct reb_simulation* const sim, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape){
-    return rebx_add_param_node(sim, apptr, param_name, param_type, ndim, shape)->contents;
-}
-
-void* rebx_add_param(struct reb_simulation* const sim, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type){
-	int ndim=0;
-	return rebx_add_param_array(sim, apptr, param_name, param_type, ndim, NULL);
-}
-
-void* rebx_get_param(struct rebx_node* ap, const char* const param_name){
+struct rebx_param* rebx_get_param_struct(struct rebx_node* ap, const char* const param_name){
     struct rebx_node* node = (struct rebx_node*)rebx_get_node(ap, reb_hash(param_name));
     if (node == NULL){
         return NULL;
     }
     struct rebx_param* param = node->object;
-    return param->contents;
+    return param;
+}
+
+void* rebx_get_param(struct rebx_node* ap, const char* const param_name){
+    struct rebx_param* param = rebx_get_param_struct(ap, param_name);
+    if (param == NULL){
+        return NULL;
+    }
+    return param->value;
 }
 
 void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type){
-    struct rebx_node* node = rebx_get_node(ap, reb_hash(param_name));
-    if (node == NULL){
+    struct rebx_param* param = rebx_get_param_struct(ap, param_name);
+    if (param == NULL){
         return NULL;
     }
-    struct rebx_param* param = node->object;
-    
     if (param->param_type != param_type){
         char str[300];
         sprintf(str, "REBOUNDx Error: Parameter '%s' passed to rebx_get_param_check was found but was of wrong type.  See documentation for your particular effect.  In python, you might need to add a dot at the end of the number when assigning a parameter that REBOUNDx expects as a float.\n", param_name);
@@ -547,7 +536,7 @@ void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, con
         return NULL;
     }
 
-    return param->contents;
+    return param->value;
 }
 
 struct rebx_effect* rebx_get_effect(struct rebx_extras* const rebx, const char* const effect_name){

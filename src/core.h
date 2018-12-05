@@ -31,10 +31,10 @@
 #include "reboundx.h"
 
 // Nodes for a linked list to all the parameters that have been allocated by REBOUNDx (so it can later free them).
-struct rebx_param_to_be_freed{
+/*struct rebx_param_to_be_freed{
     struct rebx_param* param;           // Pointer to a parameter node allocated by REBOUNDx.
     struct rebx_param_to_be_freed* next;// Pointer to the next node in the linked list rebx_extras.params_to_be_freed.
-};
+};*/
 
 enum rebx_effect_type{
     REBX_EFFECT_NONE,
@@ -70,7 +70,7 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim);  // Calls all
  *********************************************/
 
 // Add a parameter to the params_to_be_freed linked list for later freeing.
-void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
+//void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
 
 /***********************************************************************************
  * Miscellaneous Functions
