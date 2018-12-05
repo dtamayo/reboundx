@@ -137,13 +137,9 @@ struct rebx_node{
  */
 
 struct rebx_param{
-    void* contents;                                 ///< Pointer to the parameter (void* so it can point to different types).
+    void* value;                                    ///< Pointer to the parameter (void* so it can point to different types).
     enum rebx_param_type param_type;                ///< Enum for the parameter type.
     int python_type;                                ///< Used by python side to store python type
-	int ndim;                                       ///< Number of dimensions (to support array parameters)
-	int* shape;                                     ///< Array of length ndim for the array shape (NULL for scalars).
-    int* strides;                                   ///< Strides along the different dimensions for array indexing (NULL for scalars).
-	int size;                                       ///< Total number of values in array (1 for scalars).
 };
 
 /**
@@ -153,7 +149,7 @@ struct rebx_param{
 struct rebx_effect{
     uint32_t hash;                                  ///< Hash for the effect's name.
     char* name;                                     ///< String for the effect's name.
-    struct rebx_param* ap;                          ///< Linked list of parameters for the effect.
+    struct rebx_param_wrapper* ap;                          ///< Linked list of parameters for the effect.
     struct reb_simulation* sim;
     //int force_as_operator;                          ///< whether to apply a force as an operator (1) or not (0).
     //void (*force) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N); ///< Pointer to function to call during forces evaluation.
@@ -174,7 +170,7 @@ struct rebx_operator_node_test{
 struct rebx_operator_test{
     double dt;
     void (*step) (struct reb_simulation* sim, struct rebx_effect* effect, const double dt);   ///< Pointer to function to call before and/or after each timestep.
-    struct rebx_param* ap;                          ///< Linked list of parameters for the effect.
+    struct rebx_param_wrapper* ap;                          ///< Linked list of parameters for the effect.
     struct reb_simulation* sim;
 };
 
@@ -209,7 +205,7 @@ struct rebx_extras {
     struct rebx_force* forces;
 	struct rebx_operator* pre_timestep_operators;		            ///< Linked list with pointers to all the effects added to the simulation.
 	struct rebx_operator* post_timestep_operators;		            ///< Linked list with pointers to all the effects added to the simulation.
-	struct rebx_param_to_be_freed* params_to_be_freed; 	///< Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
+	//struct rebx_param_to_be_freed* params_to_be_freed; 	///< Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
     enum {
         REBX_INTEGRATOR_IMPLICIT_MIDPOINT = 0,
         REBX_INTEGRATOR_RK4 = 1,
@@ -354,7 +350,7 @@ struct rebx_effect* rebx_get_effect(struct rebx_extras* const rebx, const char* 
  * @param param_name Name of the parameter we want to remove.
  * @return 1 if parameter found and successfully removed, 0 otherwise.
  */
-int rebx_remove_param(struct reb_simulation* const sim, struct rebx_param** head, const char* const param_name);
+int rebx_remove_param(struct rebx_node** apptr, const char* const param_name);
 
 /**
  * @brief Adds a parameter to a particle or effect.
@@ -508,8 +504,6 @@ double rebx_gravity_fields_hamiltonian(struct reb_simulation* const sim);
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  * @return Pointer to the rebx_param structure that holds the parameter. NULL if not found.
  */
-struct rebx_param* rebx_get_param_node(struct rebx_node* ap, const char* const param_name);
-
 /**
  * @brief Returns a void pointer to the parameter just like rebx_get_param, but additionally checks that the param_type matches what is expected.
  * @detail Effects should use this function rather than rebx_get_param to ensure that the user appropriately set parameters if working from Python.
@@ -521,5 +515,7 @@ void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, con
 
 void rebx_gr_acc(struct rebx_extras* const rebx, double* acc, const double C2);
 double rebx_calculate_energy(struct reb_simulation* const sim);
+int rebx_len(struct rebx_node* head);
+struct rebx_param_wrapper* rebx_get_param_wrapper(struct rebx_node* ap, const char* const param_name);
 
 #endif

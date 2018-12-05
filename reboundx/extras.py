@@ -225,16 +225,23 @@ class Extras(Structure):
 
 class Param(Structure): # need to define fields afterward because of circular ref in linked list
     pass    
-Param._fields_ =  [("contents", c_void_p),
-                        ("hash", c_uint32),
-                        ("name", c_char_p),
-                        ("param_type", c_int),
-                        ("python_type", c_int),
-                        ("ndim", c_int),
-                        ("shape", POINTER(c_int)),
-                        ("strides", POINTER(c_int)),
-                        ("size", c_int),
-                        ("next", POINTER(Param))]
+Param._fields_ =  [ ("value", c_void_p),
+                    ("param_type", c_int),
+                    ("python_type", c_int),
+                    ("ndim", c_int),
+                    ("shape", POINTER(c_int)),
+                    ("strides", POINTER(c_int)),
+                    ("size", c_int)]
+
+class Node(Structure): # need to define fields afterward because of circular ref in linked list
+    pass    
+Node._fields_ =  [  ("next", POINTER(Node)),
+                    ("prev", POINTER(Node)),
+                    ("type", c_int),
+                    ("object", c_void_p),
+                    ("hash", c_uint32),
+                    ("name", c_char_p)]
+
 
 class Effect(Structure):
     @property 
