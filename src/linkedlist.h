@@ -26,8 +26,7 @@
 #ifndef _REBX_LINKEDLIST_H
 #define _REBX_LINKEDLIST_H
 
-void rebx_push_node(struct rebx_node** head, struct rebx_node* node);
+struct rebx_node* rebx_add_node(struct reb_simulation* const sim, struct rebx_node** head, void* object, const char* name);
 struct rebx_node* rebx_get_node(struct rebx_node* head, uint32_t hash);
-struct rebx_node* rebx_add_node(struct reb_simulation* const sim, struct rebx_node** apptr, const char* name);
-int rebx_remove_node(struct rebx_node** head, uint32_t hash);
+int rebx_remove_node(struct reb_simulation* const sim, struct rebx_node** head, uint32_t hash);
 #endif

@@ -25,12 +25,33 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include "core.h"
 #include "rebound.h"
 #include "reboundx.h"
 
-void rebx_push_node(struct rebx_node** head, struct rebx_node* node){
+static void rebx_push_node(struct rebx_node** head, struct rebx_node* node){
     node->next = *head;
     *head = node;
+}
+
+struct rebx_node* rebx_add_node(struct reb_simulation* const sim, struct rebx_node** head, void* object, const char* name){
+    struct rebx_node* node = rebx_malloc(sim, sizeof(*node));
+    if (node == NULL){
+        return NULL;
+    }
+    node->name = rebx_malloc(sim, strlen(name) + 1); // +1 for \0 at end
+    if (node->name == NULL){
+        free(node);
+        return NULL;
+    }
+    else{
+        strcpy(node->name, name);
+    }
+    
+    node->hash = reb_hash(name);
+    node->object = object;
+    rebx_push_node(head, node);
+    return node;
 }
 
 struct rebx_node* rebx_get_node(struct rebx_node* head, uint32_t hash){
@@ -49,31 +70,8 @@ struct rebx_node* rebx_get_node(struct rebx_node* head, uint32_t hash){
     return current;
 }
 
-struct rebx_node* rebx_add_node(struct reb_simulation* const sim, struct rebx_node** apptr, const char* name){
-    
-    // Check it doesn't already exist in linked list
-    void* ptr = rebx_get_node(*apptr, reb_hash(name));
-    if (ptr != NULL){
-        char str[300];
-        sprintf(str, "REBOUNDx Error: Parameter '%s' passed to rebx_add_param already exists.\n", name);
-        reb_error(sim, str);
-        return NULL;
-    }
-    
-    // Doesn't exist, allocate and add new one
-    struct rebx_node* node = malloc(sizeof(*node));
-    node->name = malloc(strlen(name) + 1); // +1 for \0 at end
-    if (node->name != NULL){
-        strcpy(node->name, name);
-    }
-    node->hash = reb_hash(name);
-    rebx_push_node(apptr, node);
-    
-    return node;
-}
-
-int rebx_remove_node(struct rebx_node** head, uint32_t hash){
-    // TODO free memory for deleted node
+int rebx_remove_node(struct reb_simulation* const sim, struct rebx_node** head, uint32_t hash){
+    // TODO free memory for deleted node (will need sim)
     struct rebx_node* current = *head;
     
     if(current->hash == hash){
