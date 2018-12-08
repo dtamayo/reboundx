@@ -36,14 +36,6 @@
     struct rebx_param_to_be_freed* next;// Pointer to the next node in the linked list rebx_extras.params_to_be_freed.
 };*/
 
-enum rebx_effect_type{
-    REBX_EFFECT_NONE,
-    REBX_EFFECT_FORCE_POS,         // only position dependent force
-    REBX_EFFECT_FORCE_VEL,         // velocity (or pos and vel) dependent force
-    REBX_EFFECT_OPERATOR_UPDATER,  // operator that modifies x,v or m,
-    REBX_EFFECT_OPERATOR_RECORDER, // operator that leaves state unchanged. Just records
-};
-
 /*****************************
  Internal initialization routine.
  ****************************/
@@ -108,5 +100,7 @@ void rebx_integrator_euler_integrate(struct reb_simulation* const sim, const dou
 void rebx_integrator_rk2_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
 void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
 void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
+
+void* rebx_malloc(struct reb_simulation* const sim, size_t memsize);
 
 #endif
