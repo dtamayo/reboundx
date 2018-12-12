@@ -231,7 +231,7 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
         fprintf(d, "number %d: %.30e \n", k, maxdev);
         fclose(d);
         */
-        //fprintf(stderr, "%d\tmaxdev = %e\n", k, maxdev);
+        //fprintf(stdercr, "%d\tmaxdev = %e\n", k, maxdev);
         //fprintf(stderr, "%d\t%e\t%e\t%.16e\n", k, a_new[1][0], a_old[1][0], a_new[1][0] - a_old[1][0]);
         if (maxdev < 1.e-30){
             break;
@@ -250,13 +250,14 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
 }
 
 void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
-    double* c = rebx_get_param_check(effect, "c", REBX_TYPE_DOUBLE);
+    double* c = rebx_get_param_check(sim, effect->ap, "c", REBX_TYPE_DOUBLE);
     if (c == NULL){
         reb_error(sim, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
+        return;
     }
     const double C2 = (*c)*(*c);
     const unsigned int gravity_ignore_10 = sim->gravity_ignore_terms==1;
-    int* max_iterations = rebx_get_param_check(effect, "max_iterations", REBX_TYPE_INT);
+    int* max_iterations = rebx_get_param_check(sim, effect->ap, "max_iterations", REBX_TYPE_INT);
     if(max_iterations != NULL){
         rebx_calculate_gr_full(sim, particles, N, C2, sim->G, *max_iterations, gravity_ignore_10);
     }
@@ -267,7 +268,7 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const ef
 }
 
 double rebx_gr_full_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const effect){
-    double* c = rebx_get_param_check(effect, "c", REBX_TYPE_DOUBLE);
+    double* c = rebx_get_param_check(sim, effect->ap, "c", REBX_TYPE_DOUBLE);
     if (c == NULL){
         reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
     }

@@ -65,8 +65,9 @@ class Extras(Structure):
 
     def __del__(self):
         if self._b_needsfree_ == 1:
-            clibreboundx.rebx_free_effects(byref(self))
-            clibreboundx.rebx_free_params(byref(self))
+            pass
+            #clibreboundx.rebx_free_effects(byref(self))
+            #clibreboundx.rebx_free_params(byref(self))
 
     def remove_from_simulation(self, sim):
         """
@@ -117,6 +118,22 @@ class Extras(Structure):
         ptr = clibreboundx.rebx_add(byref(self), c_char_p(name.encode('ascii')))
         self.sim.contents.process_messages()
         return ptr.contents
+
+    def add_force(self, name, effect):
+        clibreboundx.rebx_add_force(byref(self), c_char_p(name.encode('ascii')), byref(effect))
+        self.sim.contents.process_messages()
+
+    def add_pre_timestep_operator(self, name, dtfactor, effect=None):
+        if effect:
+            effect = byref(effect)
+        clibreboundx.rebx_add_pre_timestep_operator(byref(self), c_char_p(name.encode('ascii')), c_double(dtfactor), effect)
+        self.sim.contents.process_messages()
+
+    def add_post_timestep_operator(self, name, dtfactor, effect=None):
+        if effect:
+            effect = byref(effect)
+        clibreboundx.rebx_add_post_timestep_operator(byref(self), c_char_p(name.encode('ascii')), c_double(dtfactor), effect)
+        self.sim.contents.process_messages()
 
     def add_custom_force(self, function, force_is_velocity_dependent):
         """
@@ -227,11 +244,7 @@ class Param(Structure): # need to define fields afterward because of circular re
     pass    
 Param._fields_ =  [ ("value", c_void_p),
                     ("param_type", c_int),
-                    ("python_type", c_int),
-                    ("ndim", c_int),
-                    ("shape", POINTER(c_int)),
-                    ("strides", POINTER(c_int)),
-                    ("size", c_int)]
+                    ("python_type", c_int)]
 
 class Node(Structure): # need to define fields afterward because of circular ref in linked list
     pass    
@@ -242,19 +255,26 @@ Node._fields_ =  [  ("next", POINTER(Node)),
                     ("hash", c_uint32),
                     ("name", c_char_p)]
 
-
 class Effect(Structure):
     @property 
     def params(self):
         params = Params(self)
         return params
+Effect._fields_ = [ ("ap", c_void_p),
+                    ("_sim", POINTER(rebound.Simulation))]
 
-Effect._fields_ = [ ("hash", c_uint32),
-                    ("name", c_char_p),
-                    ("ap", c_void_p),
-                    ("_sim", POINTER(rebound.Simulation)),
-                    ("rebx", POINTER(Extras)),
-                    ("pad", c_char*100)]
+class Operator(Structure):
+    pass
+Operator._fields_ = [   ("effect", POINTER(Effect)),
+                        ("operator_type", c_int),
+                        ("dtfactor", c_double),
+                        ("step", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect), c_double))]
+
+class Force(Structure):
+    pass
+Force._fields_ = [  ("effect", POINTER(Effect)),
+                    ("force_type", c_int),
+                    ("update_accelerations", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect), POINTER(rebound.Particle), c_int))]
 
 class Param_to_be_freed(Structure):
     pass
@@ -264,8 +284,9 @@ Param_to_be_freed._fields_ =  [("param", POINTER(Param)),
 
 # Need to put fields after class definition because of self-referencing
 Extras._fields_ =  [("sim", POINTER(rebound.Simulation)),
-                    ("effects", POINTER(Effect)),
-                    ("params_to_be_freed", POINTER(Param_to_be_freed)),
+                    ("forces", POINTER(Node)),
+                    ("pre_timestep_operators", POINTER(Node)),
+                    ("post_timestep_operators", POINTER(Node)),
                     ("_integrator", c_int),]
 
 from .params import Params

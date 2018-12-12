@@ -40,6 +40,7 @@ class build_ext(_build_ext):
 
         rebdir = os.path.dirname(inspect.getfile(rebound))
         self.include_dirs.append(rebdir)
+        self.include_dirs.append(rebdir+'/../src/')
         self.library_dirs.append(rebdir+'/../')
         for ext in self.extensions:
             ext.runtime_library_dirs.append(rebdir+'/../')
@@ -55,7 +56,7 @@ if sys.platform == 'darwin':
     extra_link_args.append('-Wl,-install_name,@rpath/libreboundx'+suffix)
 
 libreboundxmodule = Extension('libreboundx',
-                    sources = [ 'src/linkedlist.c', 'src/modify_mass.c', 'src/modify_orbits_forces.c', 'src/rebxtools.c', 'src/core.c', 'src/gr.c', 'src/modify_orbits_direct.c',], 
+                    sources = [ 'src/steppers.c', 'src/linkedlist.c', 'src/gravitational_harmonics.c', 'src/modify_mass.c', 'src/modify_orbits_forces.c', 'src/rebxtools.c', 'src/core.c', 'src/gr.c', 'src/gr_full.c', 'src/modify_orbits_direct.c',], 
                     include_dirs = ['src'],
                     library_dirs = [],
                     runtime_library_dirs = ["."],
