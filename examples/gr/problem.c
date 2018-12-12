@@ -37,7 +37,7 @@ int main(int argc, char* argv[]){
     struct rebx_effect* gr_params = rebx_add(rebx, "gr");
    
     // Have to set speed of light in right units (set by G & initial conditions).  Here we use default units of AU/(yr/2pi)
-    double* c = rebx_add_param(gr_params, "c", REBX_TYPE_DOUBLE);  
+    double* c = rebx_add_param(sim, &gr_params->ap, "c", REBX_TYPE_DOUBLE);  
     *c = REBX_C;
 
     double tmax = 5.e-2;
