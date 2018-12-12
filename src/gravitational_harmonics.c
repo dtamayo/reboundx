@@ -86,9 +86,9 @@ static void rebx_calculate_J2_force(struct reb_simulation* const sim, struct reb
 
 static void rebx_J2(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
     for (int i=0; i<N; i++){
-        const double* const J2 = rebx_get_param_check(&particles[i], "J2", REBX_TYPE_DOUBLE);
+        const double* const J2 = rebx_get_param_check(sim, &particles[i].ap, "J2", REBX_TYPE_DOUBLE);
         if (J2 != NULL){
-            const double* const R_eq = rebx_get_param_check(&particles[i], "R_eq", REBX_TYPE_DOUBLE);
+            const double* const R_eq = rebx_get_param_check(sim, &particles[i].ap, "R_eq", REBX_TYPE_DOUBLE);
             if (R_eq != NULL){
                 rebx_calculate_J2_force(sim, particles, N, *J2, *R_eq,i); 
             }
@@ -124,9 +124,9 @@ static void rebx_calculate_J4_force(struct reb_simulation* const sim, struct reb
 
 static void rebx_J4(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
     for (int i=0; i<N; i++){
-        const double* const J4 = rebx_get_param_check(&particles[i], "J4", REBX_TYPE_DOUBLE);
+        const double* const J4 = rebx_get_param_check(sim, &particles[i].ap, "J4", REBX_TYPE_DOUBLE);
         if (J4 != NULL){
-            const double* const R_eq = rebx_get_param_check(&particles[i], "R_eq", REBX_TYPE_DOUBLE);
+            const double* const R_eq = rebx_get_param_check(sim, &particles[i].ap, "R_eq", REBX_TYPE_DOUBLE);
             if (R_eq != NULL){
                 rebx_calculate_J4_force(sim, particles, N, *J4, *R_eq,i); 
             }
@@ -168,9 +168,9 @@ static double rebx_J2_hamiltonian(struct reb_simulation* const sim){
     struct reb_particle* const particles = sim->particles;
     double Htot = 0.;
     for (int i=0; i<N_real; i++){
-        const double* const J2 = rebx_get_param_check(&particles[i], "J2", REBX_TYPE_DOUBLE);
+        const double* const J2 = rebx_get_param_check(sim, &particles[i].ap, "J2", REBX_TYPE_DOUBLE);
         if (J2 != NULL){
-            const double* const R_eq = rebx_get_param_check(&particles[i], "R_eq", REBX_TYPE_DOUBLE);
+            const double* const R_eq = rebx_get_param_check(sim, &particles[i].ap, "R_eq", REBX_TYPE_DOUBLE);
             if (R_eq != NULL){
                 Htot += rebx_calculate_J2_hamiltonian(sim, *J2, *R_eq, i); 
             }
@@ -209,9 +209,9 @@ static double rebx_J4_hamiltonian(struct reb_simulation* const sim){
     struct reb_particle* const particles = sim->particles;
     double Htot = 0.;
     for (int i=0; i<N_real; i++){
-        const double* const J4 = rebx_get_param_check(&particles[i], "J4", REBX_TYPE_DOUBLE);
+        const double* const J4 = rebx_get_param_check(sim, &particles[i].ap, "J4", REBX_TYPE_DOUBLE);
         if (J4 != NULL){
-            const double* const R_eq = rebx_get_param_check(&particles[i], "R_eq", REBX_TYPE_DOUBLE);
+            const double* const R_eq = rebx_get_param_check(sim, &particles[i].ap, "R_eq", REBX_TYPE_DOUBLE);
             if (R_eq != NULL){
                 Htot += rebx_calculate_J4_hamiltonian(sim, *J4, *R_eq, i); 
             }

@@ -42,7 +42,7 @@ rebx_types = {item[0]:(item[1], item[2], item[3]) for item in type_tuples} # (dt
 
 class Params(MutableMapping):
     def __init__(self, parent):
-        self.verbose = 1 # set to 1 to diagnose problems
+        self.verbose = 0 # set to 1 to diagnose problems
         self.parent = parent
 
         # Check rebx instance is attached, otherwise memory isn't allocated.

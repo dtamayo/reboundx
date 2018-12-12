@@ -111,7 +111,7 @@ void rebx_remove_from_simulation(struct reb_simulation* sim){
 
 void rebx_free(struct rebx_extras* rebx){                   // reboundx.h
     //rebx_free_params(rebx);
-    rebx_free_effects(rebx);
+    //rebx_free_effects(rebx);
     free(rebx);
 }
 
@@ -212,6 +212,7 @@ static struct rebx_force* rebx_create_force_silent(struct reb_simulation* const 
         return NULL;
     }
     force->effect = effect;
+    // loop over all names. precompiler list
     if (strcmp(name, "modify_orbits_forces") == 0){
         force->update_accelerations = rebx_modify_orbits_forces;
         force->force_type = REBX_FORCE_VEL;
@@ -220,10 +221,15 @@ static struct rebx_force* rebx_create_force_silent(struct reb_simulation* const 
         force->update_accelerations = rebx_gr;
         force->force_type = REBX_FORCE_VEL;
     }
-    /*else if (hash == reb_hash("gr_full")){
-     sim->force_is_velocity_dependent = 1;
-     update_accelerations = rebx_gr_full;
-     }
+    else if (strcmp(name, "gr_full") == 0){
+        force->update_accelerations = rebx_gr_full;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "gravitational_harmonics") == 0){
+        force->update_accelerations = rebx_gravitational_harmonics;
+        force->force_type = REBX_FORCE_POS;
+    }
+    /*
      else if (hash == reb_hash("gr_potential")){
      update_accelerations = rebx_gr_potential;
      }
@@ -241,9 +247,7 @@ static struct rebx_force* rebx_create_force_silent(struct reb_simulation* const 
      sim->force_is_velocity_dependent = 1;
      update_accelerations = rebx_tides_synchronous_ecc_damping;
      }
-     else if (hash == reb_hash("gravitational_harmonics")){
-     update_accelerations = rebx_gravitational_harmonics;
-     }*/
+     */
     else{
         free(force);
         return NULL;
@@ -275,6 +279,22 @@ static struct rebx_operator* rebx_create_operator_silent(struct reb_simulation* 
     }
     else if (strcmp(name, "modify_mass") == 0){
         operator->step = rebx_modify_mass;
+        operator->operator_type = REBX_OPERATOR_UPDATER;
+    }
+    else if (strcmp(name, "kepler") == 0){
+        operator->step = rebx_kepler_step;
+        operator->operator_type = REBX_OPERATOR_UPDATER;
+    }
+    else if (strcmp(name, "jump") == 0){
+        operator->step = rebx_jump_step;
+        operator->operator_type = REBX_OPERATOR_UPDATER;
+    }
+    else if (strcmp(name, "interaction") == 0){
+        operator->step = rebx_interaction_step;
+        operator->operator_type = REBX_OPERATOR_UPDATER;
+    }
+    else if (strcmp(name, "ias15") == 0){
+        operator->step = rebx_ias15_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     /*else if (hash == reb_hash("track_min_distance")){
