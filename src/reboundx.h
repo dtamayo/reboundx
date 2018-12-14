@@ -55,7 +55,6 @@ enum rebx_param_type{
     REBX_TYPE_UINT32,                               ///< C type uint32_t
     REBX_TYPE_ORBIT,                                ///< reb_orbit structure
     REBX_TYPE_LONGLONG,                             ///< To hold python 64 bit int
-    REBX_TYPE_EFFECT,
     REBX_TYPE_OPERATOR,
     REBX_TYPE_FORCE,
 };
@@ -110,9 +109,9 @@ enum rebx_timing {
 };
 
 enum rebx_node_type {
-    REBX_NODE_TYPE_PARAM = 0,
-    REBX_NODE_TYPE_FORCE = 1,
-    REBX_NODE_TYPE_OPERATOR = 2,
+    REBX_NODE_PARAM = 0,
+    REBX_NODE_FORCE = 1,
+    REBX_NODE_STEP = 2,
 };
 
 enum rebx_force_type{
@@ -142,45 +141,39 @@ Basic types in REBOUNDx
  * @brief Structure for all REBOUNDx effects.
  * @detail These get added as nodes to the effects linked list in the rebx_extras structure.
  */
-struct rebx_effect{
-    struct rebx_node* ap;                          ///< Linked list of parameters for the effect.
-    struct reb_simulation* sim;
-    //int force_as_operator;                          ///< whether to apply a force as an operator (1) or not (0).
-    //void (*force) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N); ///< Pointer to function to call during forces evaluation.
-    //int operator_order;                             ///< order of operator scheme (1 = after each timestep, 2=half step before and after each timestep)
-};
-
-// force = effect, fp
-// operator = effect, dtfactor, fp
-// force_node, effect_node
-// integrate operator has force pointer as effect->ap.
 
 struct rebx_node{
     struct rebx_node* next;
-    struct rebx_node* prev;
     enum rebx_node_type type;
     void* object;
-    uint32_t hash;                                  ///< Hash for the parameter name.
-    char* name;                                     ///< String for the parameter's name.
 };
 
 struct rebx_param{
+    char* name;
     void* value;                                    ///< Pointer to the parameter (void* so it can point to different types).
     enum rebx_param_type param_type;                ///< Enum for the parameter type.
     int python_type;                                ///< Used by python side to store python type
 };
 
 struct rebx_operator{
-    struct rebx_effect* effect;
+    char* name;
+    struct rebx_node* ap;
+    struct rebx_extras* rebx;
     enum rebx_operator_type operator_type;
-    double dtfactor;
-    void (*step) (struct reb_simulation* sim, struct rebx_effect* effect, const double dt);   ///< Pointer to function to call before and/or after each timestep.
+    void (*step) (struct reb_simulation* sim, struct rebx_operator* operator, const double dt);   ///< Pointer to function to call before and/or after each timestep.
 };
 
 struct rebx_force{
-    struct rebx_effect* effect;
+    char* name;
+    struct rebx_node* ap;
+    struct rebx_extras* rebx;
     enum rebx_force_type force_type;
-    void (*update_accelerations) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N); ///< Pointer to function to call during forces evaluation.
+    void (*update_accelerations) (struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N); ///< Pointer to function to call during forces evaluation.
+};
+
+struct rebx_step{
+    struct rebx_operator* operator;
+    double dt_fraction;
 };
 
 /**
@@ -288,14 +281,12 @@ void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, cons
  * @param name Name of the effect we want to add.
  * @return Returns a pointer to a rebx_effect structure for the effect.
  */
-struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name);
-struct rebx_effect* rebx_add_effect(struct rebx_extras* rebx, const char* name);
-void rebx_add_force(struct rebx_extras* rebx, const char* name, struct rebx_effect* effect);
-void rebx_add_pre_timestep_operator(struct rebx_extras* rebx, const char* name, const double dtfactor, struct rebx_effect* effect);
-void rebx_add_post_timestep_operator(struct rebx_extras* rebx, const char* name, const double dtfactor, struct rebx_effect* effect);
-struct rebx_operator* rebx_create_operator(struct reb_simulation* const sim, const char* name, const double dtfactor, struct rebx_effect* effect);
-struct rebx_effect* rebx_create_effect(struct reb_simulation* const sim);
-struct rebx_force* rebx_create_force(struct reb_simulation* const sim, const char* name, struct rebx_effect* effect);
+//struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name);
+int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator);
+int rebx_add_operator_manual(struct rebx_extras* rebx, struct rebx_operator* operator, struct rebx_node** head, const double dt_fraction);
+int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force);
+struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const char* name);
+struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char* name);
 /**
  * @brief Function for adding a custom force in REBOUNDx.
  * @param rebx Pointer to the rebx_extras instance returned by rebx_init.
@@ -355,8 +346,8 @@ int rebx_remove_param(struct rebx_node** apptr, const char* const param_name);
  * @param param_type Variable type from rebx_param_type enumeration.
  * @return A void pointer to the parameter, i.e., the contents member of the new rebx_param structure. 
  */
-void* rebx_add_param(struct reb_simulation* const sim, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type);
-
+void* rebx_attach_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type);
+int rebx_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, struct rebx_param* param);
 /**
  * @brief Adds an array parameter to a particle or effect.
  * @param object Pointer to the particle or effect to which to add the parameter.
@@ -375,7 +366,7 @@ void* rebx_add_param_array(struct reb_simulation* const sim, struct rebx_node** 
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  * @return A void pointer to the parameter. NULL if not found.
  */
-void* rebx_get_param(struct rebx_node* ap, const char* const param_name);
+void* rebx_get_param(struct rebx_extras* const rebx, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
 
 /** @} */
 /** @} */
@@ -444,7 +435,7 @@ double rebx_gr_potential_hamiltonian(struct reb_simulation* const sim, const str
  * @param gr Effect structure returned by rebx_add("gr").
  * @return Total Hamiltonian, including classical Hamiltonian (double).
  */
-double rebx_gr_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr);
+double rebx_gr_hamiltonian(struct reb_simulation* const sim, const struct rebx_force* const gr);
 
 /**
  * @brief Calculates the hamiltonian for gr_full, including the classical Hamiltonian.
@@ -514,8 +505,8 @@ double rebx_calculate_energy(struct reb_simulation* const sim);
 int rebx_len(struct rebx_node* head);
 struct rebx_param_wrapper* rebx_get_param_wrapper(struct rebx_node* ap, const char* const param_name);
 
-void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt);
-void rebx_kepler_step(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt);
-void rebx_jump_step(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt);
-void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt);
+void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+void rebx_kepler_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+void rebx_jump_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 #endif

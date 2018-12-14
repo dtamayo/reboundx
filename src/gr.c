@@ -170,14 +170,14 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
     free(ps_j);
 }
 
-void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
-    double* c = rebx_get_param_check(sim, effect->ap, "c", REBX_TYPE_DOUBLE);
+void rebx_gr(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
+    double* c = rebx_get_param(sim->extras, force->ap, "c", REBX_TYPE_DOUBLE);
     if (c == NULL){
         reb_error(sim, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
         return;
     }
     const double C2 = (*c)*(*c);
-    int* max_iterations = rebx_get_param_check(sim, effect->ap, "max_iterations", REBX_TYPE_INT);
+    int* max_iterations = rebx_get_param(sim->extras, force->ap, "max_iterations", REBX_TYPE_INT);
     if(max_iterations != NULL){
         rebx_calculate_gr(sim, particles, N, C2, sim->G, *max_iterations);
     }
@@ -245,8 +245,8 @@ static double rebx_calculate_gr_hamiltonian(struct reb_simulation* const sim, co
 	return T + V_newt + V_PN;
 }
 
-double rebx_gr_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr){ 
-    double* c = rebx_get_param_check(sim, gr->ap, "c", REBX_TYPE_DOUBLE);
+double rebx_gr_hamiltonian(struct reb_simulation* const sim, const struct rebx_force* const gr){
+    double* c = rebx_get_param(sim->extras, gr->ap, "c", REBX_TYPE_DOUBLE);
     if (c == NULL){
         reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
         return 0;

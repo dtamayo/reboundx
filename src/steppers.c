@@ -69,7 +69,7 @@
 
 // will do IAS with gravity + any additional_forces
 
-void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt){
+void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
     const double old_t = sim->t;
     const double t_needed = old_t + dt;
     const double old_dt = sim->dt;
@@ -89,7 +89,7 @@ void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_effect* const
     sim->dt = old_dt; // reset in case this is part of a chain of steps
 }
 
-void rebx_kepler_step(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt){
+void rebx_kepler_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
     reb_integrator_whfast_reset(sim);
     reb_integrator_whfast_init(sim);
     reb_integrator_whfast_from_inertial(sim);
@@ -98,14 +98,14 @@ void rebx_kepler_step(struct reb_simulation* const sim, struct rebx_effect* cons
     reb_integrator_whfast_to_inertial(sim);
 }
 
-void rebx_jump_step(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt){
+void rebx_jump_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
     reb_integrator_whfast_init(sim);
     reb_integrator_whfast_from_inertial(sim);
     reb_whfast_jump_step(sim, dt);
     reb_integrator_whfast_to_inertial(sim);
 }
 
-void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt){
+void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
     reb_integrator_whfast_init(sim);
     reb_integrator_whfast_from_inertial(sim);
     reb_update_acceleration(sim);

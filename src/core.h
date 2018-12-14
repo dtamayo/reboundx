@@ -75,22 +75,22 @@ void rebx_reset_accelerations(struct reb_particle* const ps, const int N);
 /****************************************
 Force prototypes
 *****************************************/
-void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_central_force(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_tides_synchronous_ecc_damping(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
+void rebx_gr(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_gr_full(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_central_force(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_tides_synchronous_ecc_damping(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 
 /****************************************
  Operator prototypes
  *****************************************/
-void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt);
-void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt);
-void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt);
+void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 
 /****************************************
  Integrator prototypes
@@ -101,6 +101,6 @@ void rebx_integrator_rk2_integrate(struct reb_simulation* const sim, const doubl
 void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
 void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
 
-void* rebx_malloc(struct reb_simulation* const sim, size_t memsize);
+void* rebx_malloc(struct rebx_extras* const rebx, size_t memsize);
 
 #endif
