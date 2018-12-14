@@ -29,58 +29,64 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-static void rebx_push_node(struct rebx_node** head, struct rebx_node* node){
-    node->next = *head;
-    *head = node;
-}
-
-struct rebx_node* rebx_add_node(struct reb_simulation* const sim, struct rebx_node** head, void* object, const char* name){
-    struct rebx_node* node = rebx_malloc(sim, sizeof(*node));
+struct rebx_node* rebx_attach_node(struct rebx_extras* const rebx, struct rebx_node** head, enum rebx_node_type node_type){
+    struct rebx_node* node = rebx_malloc(rebx, sizeof(*node));
     if (node == NULL){
         return NULL;
     }
-    node->name = rebx_malloc(sim, strlen(name) + 1); // +1 for \0 at end
-    if (node->name == NULL){
-        free(node);
-        return NULL;
-    }
-    else{
-        strcpy(node->name, name);
-    }
-    
-    node->hash = reb_hash(name);
-    node->object = object;
-    rebx_push_node(head, node);
+    node->type = node_type;
+    node->next = *head;
+    *head = node;
     return node;
 }
 
-struct rebx_node* rebx_get_node(struct rebx_node* head, uint32_t hash){
+char* rebx_name_from_node(struct rebx_node* node){
+    switch(node->type){
+        case REBX_NODE_FORCE:
+        {
+            struct rebx_force* force = node->object;
+            return force->name;
+        }
+        case REBX_NODE_STEP:
+        {
+            struct rebx_step* step = node->object;
+            return step->operator->name;
+        }
+        case REBX_NODE_PARAM:
+        {
+            struct rebx_param* param = node->object;
+            return param->name;
+        }
+    }
+    return NULL;
+}
+
+struct rebx_node* rebx_get_node(struct rebx_node* head, const char* name){
     struct rebx_node* current = head;
+    char* nodename;
     while(current != NULL){
-        if(current->hash == hash){
+        nodename = rebx_name_from_node(current);
+        if(strcmp(nodename, name) == 0){
             return current;
         }
         current = current->next;
     }
     
-    if (current == NULL){   // param_name not found.
-        return NULL;
-    }
-    
-    return current;
+    return NULL;   // name not found.
 }
 
-int rebx_remove_node(struct reb_simulation* const sim, struct rebx_node** head, uint32_t hash){
+int rebx_remove_node(struct rebx_extras* const rebx, struct rebx_node** head, const char* name){
     // TODO free memory for deleted node (will need sim)
     struct rebx_node* current = *head;
-    
-    if(current->hash == hash){
+    char* nodename = rebx_name_from_node(current);
+    if(strcmp(nodename, name) == 0){
         *head = current->next;
         return 1;
     }
     
     while(current->next != NULL){
-        if(current->next->hash == hash){
+        nodename = rebx_name_from_node(current->next);
+        if(strcmp(nodename, name) == 0){
             current->next = current->next->next;
             return 1;
         }

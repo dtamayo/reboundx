@@ -30,7 +30,8 @@ struct reb_simulation;
 struct reb_particle;
 struct reb_orbit;
 struct reb_vec3d;
-struct rebx_effect;
+struct rebx_force;
+struct rebx_operator;
 enum REBX_COORDINATES;
 
 void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const effect, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_vec3d (*calculate_effect) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source), struct reb_particle* const particles, const int N);
