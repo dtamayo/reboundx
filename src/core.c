@@ -464,7 +464,7 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
     return rebx_remove_node(apptr, reb_hash(param_name));
 }*/
 
-void* rebx_alloc_param_value(struct rebx_extras* const rebx, enum rebx_param_type param_type){
+static void* rebx_alloc_param_value(struct rebx_extras* const rebx, enum rebx_param_type param_type){
     void* value = NULL;
     switch(param_type){
         case REBX_TYPE_DOUBLE:
@@ -492,6 +492,11 @@ void* rebx_alloc_param_value(struct rebx_extras* const rebx, enum rebx_param_typ
             value = rebx_malloc(rebx, sizeof(long long));
             break;
         }
+        case REBX_TYPE_POINTER:
+        {
+            value = rebx_malloc(rebx, sizeof(void*));
+            break;
+        }
         default:
         {
             char str[300];
@@ -504,9 +509,7 @@ void* rebx_alloc_param_value(struct rebx_extras* const rebx, enum rebx_param_typ
     return value;
 }
 
-// Must allocate memory for value first. Necessary for complicated nested parameters
-// create allocates and initializes
-struct rebx_param* rebx_create_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type param_type){
+static struct rebx_param* rebx_create_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type param_type){
     struct rebx_param* param = rebx_malloc(rebx, sizeof(*param));
     if (param == NULL){
         return NULL;
@@ -527,29 +530,7 @@ struct rebx_param* rebx_create_param(struct rebx_extras* const rebx, const char*
     return param;
 }
 
-int rebx_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, struct rebx_param* param){
-    if(param == NULL || param->name == NULL){
-        return 0;
-    }
-    // Check it doesn't already exist in linked list
-    struct rebx_node* node = rebx_get_node(*apptr, param->name);
-    if (node != NULL){
-        char str[300];
-        sprintf(str, "REBOUNDx Error: Parameter with name '%s' passed to rebx_add_param already exists.\n", param->name);
-        reb_error(rebx->sim, str);
-        return 0;
-    }
-    
-    node = rebx_attach_node(rebx, apptr, REBX_NODE_PARAM);
-    if (node == NULL){
-        return 0;
-    }
-    
-    node->object = param;
-    return 1;
-}
-
-void* rebx_attach_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type){
+void* rebx_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type){
     if (apptr == NULL){
         reb_error(rebx->sim, "REBOUNDx Error: Passed NULL apptr to rebx_add_param. See examples.\n");
         return NULL;
@@ -560,19 +541,31 @@ void* rebx_attach_param(struct rebx_extras* const rebx, struct rebx_node** apptr
         return NULL;
     }
     
-    // TODO deal with case where you don't want to alloc. Just do manually?
     param->value = rebx_alloc_param_value(rebx, param_type);
     if (param->value == NULL){
         free(param);
         return NULL;
     }
     
-    int success = rebx_add_param(rebx, apptr, param);
-    if (!success){
+    // Check it doesn't already exist in linked list
+    struct rebx_node* node = rebx_get_node(*apptr, param->name);
+    if (node != NULL){
+        char str[300];
+        sprintf(str, "REBOUNDx Error: Parameter with name '%s' passed to rebx_add_param already exists.\n", param->name);
+        reb_error(rebx->sim, str);
         free(param);
         free(param->value);
         return NULL;
     }
+    
+    node = rebx_attach_node(rebx, apptr, REBX_NODE_PARAM);
+    if (node == NULL){
+        free(param);
+        free(param->value);
+        return NULL;
+    }
+    
+    node->object = param;
     return param->value;
 }
 
