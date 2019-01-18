@@ -57,6 +57,7 @@ enum rebx_param_type{
     REBX_TYPE_LONGLONG,                             ///< To hold python 64 bit int
     REBX_TYPE_OPERATOR,
     REBX_TYPE_FORCE,
+    REBX_TYPE_POINTER,
 };
 
 /**
@@ -166,7 +167,7 @@ struct rebx_operator{
 struct rebx_force{
     char* name;
     struct rebx_node* ap;
-    struct rebx_extras* rebx;
+    struct rebx_extras* rebx; // need in python so object can call C funcs needing rebx
     enum rebx_force_type force_type;
     void (*update_accelerations) (struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N); ///< Pointer to function to call during forces evaluation.
 };
@@ -346,8 +347,7 @@ int rebx_remove_param(struct rebx_node** apptr, const char* const param_name);
  * @param param_type Variable type from rebx_param_type enumeration.
  * @return A void pointer to the parameter, i.e., the contents member of the new rebx_param structure. 
  */
-void* rebx_attach_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type);
-int rebx_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, struct rebx_param* param);
+void* rebx_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type);
 /**
  * @brief Adds an array parameter to a particle or effect.
  * @param object Pointer to the particle or effect to which to add the parameter.
