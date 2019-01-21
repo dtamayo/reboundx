@@ -50,15 +50,18 @@ extern const char* rebx_githash_str;    ///< Current git hash.
  * @brief Enumeration for the different data types available in REBOUNDx for parameters.
  */
 enum rebx_param_type{
+    REBX_TYPE_NONE,
     REBX_TYPE_DOUBLE,                               ///< C type double
     REBX_TYPE_INT,                                  ///< C type int
-    REBX_TYPE_UINT32,                               ///< C type uint32_t
+    REBX_TYPE_POINTER,
+};
+/*REBX_TYPE_UINT32,                               ///< C type uint32_t
     REBX_TYPE_ORBIT,                                ///< reb_orbit structure
     REBX_TYPE_LONGLONG,                             ///< To hold python 64 bit int
     REBX_TYPE_OPERATOR,
     REBX_TYPE_FORCE,
-    REBX_TYPE_POINTER,
-};
+    
+};*/
 
 /**
  * @brief Enumeration for different coordinate systems.
@@ -366,8 +369,16 @@ void* rebx_add_param_array(struct reb_simulation* const sim, struct rebx_node** 
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  * @return A void pointer to the parameter. NULL if not found.
  */
-void* rebx_get_param(struct rebx_extras* const rebx, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
-
+struct rebx_param* rebx_get_param(struct rebx_extras* const rebx, struct rebx_node* ap, const char* const param_name);
+//void* rebx_get_param_old(struct rebx_extras* const rebx, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
+void rebx_set_param_copy(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* valptr);
+void rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
+void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val);
+void rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* val);
+double rebx_get_param_double(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name);
+int rebx_get_param_int(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name);
+void* rebx_get_param_pointer(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name);
+enum rebx_param_type rebx_get_type(const char* name);
 /** @} */
 /** @} */
 
