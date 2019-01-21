@@ -50,12 +50,21 @@ class Params(MutableMapping):
             if not parent._sim.contents.extras:
                 raise AttributeError("Need to attach reboundx.Extras instance to simulation before setting"
                         " particle params.")
+            else:
+                self.rebx = parent._sim.contents.extras
+        else:
+            self.rebx = parent._rebx
 
     def __getitem__(self, key):
         clibreboundx.rebx_get_param_struct.restype = POINTER(Param)
         paramptr = clibreboundx.rebx_get_param_struct(self.get_ap(), c_char_p(key.encode('ascii')))
        
-        if paramptr: 
+        if paramptr == 0:
+            raise AttributeError("REBOUNDx Error: Parameter '{0}' not found in REBOUNDx. Need to register it first.".format(key))
+        if paramptr == 3:
+            raise AttributeError("REBOUNDx Error: Parameter '{0}' is a pointer. Need to manually set pointers with rebx.add_pointer_param.".format(key))
+        
+        clibreboundx.set_param_copy(
             param = paramptr.contents
         else:
             raise AttributeError("REBOUNDx Error: Parameter '{0}' not found.".format(key))
@@ -81,6 +90,10 @@ class Params(MutableMapping):
         return val
 
     def __setitem__(self, key, value):
+        param_type = clibreboundx.rebx_get_type(c_char_p(key.encode('ascii')))
+        if param_type == 
+        clibreboundx.rebx_set_param(self._rebx, self.get_ap(), c_char_p(key.encode('ascii')), value)
+
         pythontype = type(value)
         try:
             dtype, ctype, rebxtype = rebx_types[pythontype]
@@ -93,7 +106,7 @@ class Params(MutableMapping):
         paramptr = clibreboundx.rebx_get_param_struct(self.get_ap(), c_char_p(key.encode('ascii')))
 
         if paramptr:
-            if self.verbose: print("Parameter {0} found.".format(key))
+            if self.verbose: print("GParameter {0} found.".format(key))
             if paramptr.contents.param_type != rebxtype:
                 raise AttributeError("REBOUNDx Error: Can't update param '{0}' with "
                 "new type {1}".format(key, pythontype))
@@ -124,4 +137,4 @@ class Params(MutableMapping):
         offset = type(self.parent).ap.offset
         return (c_void_p).from_buffer(self.parent, offset)
 
-
+    def get_rebx(self):
