@@ -152,7 +152,7 @@ struct rebx_node{
     void* object;
 };
 
-struct rebx_param{
+struct rebx_param{ // REMOVE now name can and value can just be in the node!
     char* name;
     void* value;                                    ///< Pointer to the parameter (void* so it can point to different types).
     enum rebx_param_type param_type;                ///< Enum for the parameter type.
@@ -162,7 +162,7 @@ struct rebx_param{
 struct rebx_operator{
     char* name;
     struct rebx_node* ap;
-    struct rebx_extras* rebx;
+    struct reb_simulation* _sim;
     enum rebx_operator_type operator_type;
     void (*step) (struct reb_simulation* sim, struct rebx_operator* operator, const double dt);   ///< Pointer to function to call before and/or after each timestep.
 };
@@ -170,7 +170,7 @@ struct rebx_operator{
 struct rebx_force{
     char* name;
     struct rebx_node* ap;
-    struct rebx_extras* rebx; // need in python so object can call C funcs needing rebx
+    struct reb_simulation* _sim; // need in python to match particles struct
     enum rebx_force_type force_type;
     void (*update_accelerations) (struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N); ///< Pointer to function to call during forces evaluation.
 };
@@ -192,7 +192,7 @@ struct rebx_binary_field{
  * @brief Main REBOUNDx structure.
  */
 struct rebx_extras {	
-	struct reb_simulation* sim;					    ///< Pointer to the simulation REBOUNDx is linked to.
+	struct reb_simulation* sim;					    ///< Pointer to the simulation REBOUNDx is linked to. Is this needed?
     struct rebx_node* forces;
 	struct rebx_node* pre_timestep_operators;		            ///< Linked list with pointers to all the effects added to the simulation.
 	struct rebx_node* post_timestep_operators;		            ///< Linked list with pointers to all the effects added to the simulation.

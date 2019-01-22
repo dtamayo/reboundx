@@ -37,7 +37,11 @@
 
 #define STRINGIFY(s) str(s)
 #define str(s) #s
+#define PRINT_MSG_2SX(ARG0, ARG1) fprintf(stderr, "%s : 0x%016llX\n", ARG0, (unsigned long long)ARG1)
+void print_ptraddress(void** ptraddress){
+    PRINT_MSG_2SX("Address of Pointer:", ptraddress);
 
+}
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
 const char* rebx_version_str = "2.19.3";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
@@ -215,7 +219,7 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
         return NULL;
     }
     force->ap = NULL;
-    force->rebx = rebx;
+    force->_sim = rebx->sim;
     force->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
     if (force->name == NULL){
         free(force);
@@ -278,7 +282,7 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
         return NULL;
     }
     operator->ap = NULL;
-    operator->rebx = rebx;
+    operator->_sim = rebx->sim;
     operator->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
     if (operator->name == NULL){
         free(operator);
@@ -512,7 +516,7 @@ static void* rebx_alloc_param_value(struct rebx_extras* const rebx, enum rebx_pa
         */
         default:
         {
-            char str[300];
+            //char str[300];
             //sprintf(str, "REBOUNDx Error: Parameter name '%s' passed to rebx_alloc_param_value not supported.\n", param_name);
             //reb_error(rebx->sim, str);
             return NULL;

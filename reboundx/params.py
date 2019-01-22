@@ -1,6 +1,6 @@
 import rebound
 from collections import MutableMapping
-from .extras import Param, Effect
+from .extras import Param, Node, Force, Operator, Extras
 from . import clibreboundx
 from ctypes import byref, c_double, c_int, c_int32, c_int64, c_uint, c_uint32, c_longlong, c_char_p, POINTER, cast
 from ctypes import c_void_p, memmove, sizeof, addressof
@@ -14,57 +14,37 @@ from rebound.tools import hash as rebhash
 #### ADD ONLY TO THE END OF EACH LIST 
         
 
-rebx_param_types = [("REBX_TYPE_DOUBLE", float),
-                    ("REBX_TYPE_INT", np.int32),
-                    ("REBX_TYPE_UINT32", c_uint),
-                    ("REBX_TYPE_ORBIT", rebound.Orbit),
-                    ("REBX_TYPE_LONGLONG", np.int64),
-                   ] # In same order as C enum, with default python types for each
-val = {param_type[0]:value for (value, param_type) in enumerate(rebx_param_types)}
-
-# tuples of corresponding (python type, dtype, ctype, rebxtype enum value). ONLY ADD TO THE END OF THIS LIST
-# dtype should be same as python type for 'primitive' types, and object for any ctypes structure
-type_tuples = [(int, int, c_int, val["REBX_TYPE_INT"]), 
-               (np.int32, np.int32, c_int, val["REBX_TYPE_INT"]), 
-               (float, float, c_double, val["REBX_TYPE_DOUBLE"]), 
-               (np.float64, np.float64, c_double, val["REBX_TYPE_DOUBLE"]),
-               (c_uint, object, c_uint, val["REBX_TYPE_UINT32"]),
-               (c_uint32, object, c_uint32, val["REBX_TYPE_UINT32"]),
-               (rebound.Orbit, object, rebound.Orbit, val["REBX_TYPE_ORBIT"]),
-               (np.int64, np.int64, c_longlong, val["REBX_TYPE_LONGLONG"]),
-              ]
-
-python_types = [item[0] for item in type_tuples]
-rebx_ptype = {enum:ptype for (enum, ptype) in enumerate(python_types)} # get python type from enum value
-rebx_defaultptype = {val[rebxtype]:ptype for (rebxtype, ptype) in rebx_param_types} # get default python type from C rebx type
-rebx_penum = {ptype:enum for (enum, ptype) in enumerate(python_types)} # get enum from python type
-rebx_types = {item[0]:(item[1], item[2], item[3]) for item in type_tuples} # (dtype, ctype, rebxtype)from ptype
+rebx_ctypes = { 0: None,
+                1: c_double,
+                2: c_int,
+                3: c_void_p}
 
 class Params(MutableMapping):
     def __init__(self, parent):
-        self.verbose = 0 # set to 1 to diagnose problems
-        self.parent = parent
+        self.verbose = 0        # set to 1 to diagnose problems
+        self.parent = parent    # Particle, Force, Effect. Will work with any ctypes.Structure with appropriate ._sim and .ap fields
 
-        # Check rebx instance is attached, otherwise memory isn't allocated.
-        if parent.__class__ == rebound.particle.Particle: 
-            if not parent._sim.contents.extras:
-                raise AttributeError("Need to attach reboundx.Extras instance to simulation before setting"
-                        " particle params.")
-            else:
-                self.rebx = parent._sim.contents.extras
+        offset = type(parent).ap.offset # Need this hack to get address of initially NULL ap ptr. See my stackoverflow
+        self.ap = (c_void_p).from_buffer(parent, offset)
+       
+        extrasvp = parent._sim.contents.extras
+        if not extrasvp: # .extras = None
+            raise AttributeError("Need to attach reboundx.Extras instance to simulation before setting params.")
         else:
-            self.rebx = parent._rebx
+            self.rebx = cast(extrasvp, POINTER(Extras))
 
     def __getitem__(self, key):
-        clibreboundx.rebx_get_param_struct.restype = POINTER(Param)
-        paramptr = clibreboundx.rebx_get_param_struct(self.get_ap(), c_char_p(key.encode('ascii')))
-       
-        if paramptr == 0:
+        param_type = clibreboundx.rebx_get_type(c_char_p(key.encode('ascii')))
+        if param_type == 0:
             raise AttributeError("REBOUNDx Error: Parameter '{0}' not found in REBOUNDx. Need to register it first.".format(key))
-        if paramptr == 3:
+        if param_type == 3:
             raise AttributeError("REBOUNDx Error: Parameter '{0}' is a pointer. Need to manually set pointers with rebx.add_pointer_param.".format(key))
-        
-        clibreboundx.set_param_copy(
+        clibreboundx.rebx_get_param.restype = POINTER(Param)
+        paramptr = clibreboundx.rebx_get_param(self.rebx, self.ap, c_char_p(key.encode('ascii')))
+        ctype = rebx_ctypes[param_type]
+        valptr = cast(paramptr.contents.value, POINTER(ctype))
+        return valptr.contents.value
+        '''    
             param = paramptr.contents
         else:
             raise AttributeError("REBOUNDx Error: Parameter '{0}' not found.".format(key))
@@ -88,12 +68,20 @@ class Params(MutableMapping):
             val = valptr.contents # cases where scalar is a Structure, e.g., rebound.Orbit
     
         return val
+        '''
 
     def __setitem__(self, key, value):
         param_type = clibreboundx.rebx_get_type(c_char_p(key.encode('ascii')))
-        if param_type == 
-        clibreboundx.rebx_set_param(self._rebx, self.get_ap(), c_char_p(key.encode('ascii')), value)
-
+        if param_type == 0:
+            raise AttributeError("REBOUNDx Error: Parameter '{0}' not found in REBOUNDx. Need to register it first.".format(key))
+        if param_type == 3:
+            raise AttributeError("REBOUNDx Error: Parameter '{0}' is a pointer. Need to manually set pointers with rebx.add_pointer_param.".format(key))
+        if param_type == 1:
+            valptr = byref(c_double(value))
+        if param_type == 2:
+            valptr = byref(c_int(value))
+        clibreboundx.rebx_set_param_copy(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), valptr)
+        '''
         pythontype = type(value)
         try:
             dtype, ctype, rebxtype = rebx_types[pythontype]
@@ -120,7 +108,7 @@ class Params(MutableMapping):
 
         val = cast(paramptr.contents.value, POINTER(ctype))
         val[0] = value
-
+        '''
     def __delitem__(self, key):
         success = clibreboundx.rebx_remove_param(byref(self.get_ap()), c_char_p(key.encode('ascii')))
         if not success:
@@ -133,8 +121,3 @@ class Params(MutableMapping):
         clibreboundx.rebx_len.restype = c_int
         return clibreboundx.rebx_len(self.get_ap())
 
-    def get_ap(self):
-        offset = type(self.parent).ap.offset
-        return (c_void_p).from_buffer(self.parent, offset)
-
-    def get_rebx(self):
