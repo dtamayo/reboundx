@@ -242,39 +242,38 @@ class Extras(Structure):
 
 class Param(Structure): # need to define fields afterward because of circular ref in linked list
     pass    
-Param._fields_ =  [ ("value", c_void_p),
+Param._fields_ =  [ ("name", c_void_p),
+                    ("value", c_void_p),
                     ("param_type", c_int),
                     ("python_type", c_int)]
 
 class Node(Structure): # need to define fields afterward because of circular ref in linked list
     pass    
 Node._fields_ =  [  ("next", POINTER(Node)),
-                    ("prev", POINTER(Node)),
                     ("type", c_int),
-                    ("object", c_void_p),
-                    ("hash", c_uint32),
-                    ("name", c_char_p)]
+                    ("object", c_void_p)]
 
-class Effect(Structure):
+class Operator(Structure):
     @property 
     def params(self):
         params = Params(self)
         return params
-Effect._fields_ = [ ("ap", c_void_p),
-                    ("_sim", POINTER(rebound.Simulation))]
-
-class Operator(Structure):
-    pass
-Operator._fields_ = [   ("effect", POINTER(Effect)),
+Operator._fields_ = [   ("name", c_char_p),
+                        ("_ap", POINTER(Node)),
+                        ("_sim", POINTER(rebound.Simulation)),
                         ("operator_type", c_int),
-                        ("dtfactor", c_double),
-                        ("step", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect), c_double))]
+                        ("step", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Operator), c_double))]
 
 class Force(Structure):
-    pass
-Force._fields_ = [  ("effect", POINTER(Effect)),
+    @property 
+    def params(self):
+        params = Params(self)
+        return params
+Force._fields_ = [  ("name", c_char_p),
+                    ("_ap", POINTER(Node)),
+                    ("_sim", POINTER(rebound.Simulation)),
                     ("force_type", c_int),
-                    ("update_accelerations", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect), POINTER(rebound.Particle), c_int))]
+                    ("update_accelerations", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Force), POINTER(rebound.Particle), c_int))]
 
 class Param_to_be_freed(Structure):
     pass
@@ -283,10 +282,10 @@ Param_to_be_freed._fields_ =  [("param", POINTER(Param)),
 
 
 # Need to put fields after class definition because of self-referencing
-Extras._fields_ =  [("sim", POINTER(rebound.Simulation)),
+Extras._fields_ =  [("_sim", POINTER(rebound.Simulation)),
                     ("forces", POINTER(Node)),
                     ("pre_timestep_operators", POINTER(Node)),
                     ("post_timestep_operators", POINTER(Node)),
-                    ("_integrator", c_int),]
+                    ("_integrator", c_int)]
 
 from .params import Params
