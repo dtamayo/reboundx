@@ -118,6 +118,21 @@ static inline void rebx_subtract_posvel(struct reb_particle* p, struct reb_parti
     p->vz -= massratio*diff->vz;
 }
 
+static inline struct reb_particle rebx_particle_minus(struct reb_particle p1, struct reb_particle p2){
+    struct reb_particle p = {0};
+    p.m = p1.m-p2.m;
+    p.x = p1.x-p2.x;
+    p.y = p1.y-p2.y;
+    p.z = p1.z-p2.z;
+    p.vx = p1.vx-p2.vx;
+    p.vy = p1.vy-p2.vy;
+    p.vz = p1.vz-p2.vz;
+    p.ax = p1.ax-p2.ax;
+    p.ay = p1.ay-p2.ay;
+    p.az = p1.az-p2.az;
+    return p;
+}
+
 void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_effect* const effect, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_particle (*calculate_effect) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source, const double dt), const double dt){
     const int N_real = sim->N - sim->N_var;
     struct reb_particle com = reb_get_com(sim); // Start with full com for jacobi and barycentric coordinates.
@@ -154,7 +169,7 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_effect* con
         }
         
         struct reb_particle modified_particle = calculate_effect(sim, effect, p, &com, dt);
-        struct reb_particle diff = reb_particle_minus(modified_particle, *p);
+        struct reb_particle diff = rebx_particle_minus(modified_particle, *p);
         p->x = modified_particle.x;
         p->y = modified_particle.y;
         p->z = modified_particle.z;
