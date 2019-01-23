@@ -111,6 +111,9 @@ enum rebx_param_type rebx_get_type(const char* name){
     if(strcmp(name, "index") == 0){
         return REBX_TYPE_INT;
     }
+    if(strcmp(name, "max_iterations") == 0){
+        return REBX_TYPE_INT;
+    }
     if(strcmp(name, "particle") == 0){
         return REBX_TYPE_POINTER;
     }
@@ -526,12 +529,21 @@ static void* rebx_alloc_param_value(struct rebx_extras* const rebx, enum rebx_pa
     return value;
 }
 
-static struct rebx_param* rebx_create_param(struct rebx_extras* const rebx, const char* name){
+static struct rebx_param* rebx_new_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* name){
+    enum rebx_param_type type = rebx_get_type(name);
+    if (type == REBX_TYPE_NONE){
+        char str[300];
+        sprintf(str, "REBOUNDx Error: Need to register parameter name '%s' before using it. See examples.\n", name);
+        reb_error(rebx->sim, str);
+        return NULL;
+    }
+    
     struct rebx_param* param = rebx_malloc(rebx, sizeof(*param));
     if (param == NULL){
         return NULL;
     }
     
+    param->value = NULL;
     param->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
     if (param->name == NULL){
         free(param);
@@ -541,16 +553,21 @@ static struct rebx_param* rebx_create_param(struct rebx_extras* const rebx, cons
         strcpy(param->name, name);
     }
     
-    param->python_type = -1; // not used by C
-    param->value = NULL;
+    struct rebx_node* node = rebx_attach_node(rebx, apptr, REBX_NODE_PARAM);
+    if (node == NULL){
+        free(param);
+        return NULL;
+    }
+    
+    node->object = param;
     return param;
 }
 
 
-void rebx_set_param_copy(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* valptr){
+int rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* valptr){
     if (apptr == NULL){
         reb_error(rebx->sim, "REBOUNDx Error: Passed NULL apptr to rebx_add_param. See examples.\n");
-        return;
+        return 0;
     }
     
     // Check whether it already exist in linked list
@@ -561,66 +578,31 @@ void rebx_set_param_copy(struct rebx_extras* const rebx, struct rebx_node** appt
         param = node->object;
     }
     else{               // make new one
-        param = rebx_create_param(rebx, param_name);
+        param = rebx_new_param(rebx, apptr, param_name);
         if (param == NULL){
-            return;
+            return 0;
         }
     }
     
-    enum rebx_param_type type = rebx_get_type(param_name);
-    switch(type){
-        case REBX_TYPE_DOUBLE:
-        {
-            param->value = rebx_malloc(rebx, sizeof(double));
-            memcpy(param->value, valptr, sizeof(double));
-            break;
-        }
-        case REBX_TYPE_INT:
-        {
-            param->value = rebx_malloc(rebx, sizeof(int));
-            memcpy(param->value, valptr, sizeof(int));
-            break;
-        }
-        case REBX_TYPE_POINTER: // don't allocate
-        {
-            param->value = valptr;
-            break;
-        }
-        case REBX_TYPE_NONE:
-        {
-            char str[300];
-            sprintf(str, "REBOUNDx Error: Need to register parameter name '%s' before using it. See examples.\n", param_name);
-            reb_error(rebx->sim, str);
-            free(param);
-            return;
-        }
-    }
-    
-    node = rebx_attach_node(rebx, apptr, REBX_NODE_PARAM);
-    if (node == NULL){
-        free(param);
-        if (type != REBX_TYPE_POINTER){
-            free(param->value);
-        }
-        return;
-    }
-    
-    node->object = param;
+    param->value = valptr;
+    return 1;
 }
 
-void rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val){
-    rebx_set_param_copy(rebx, apptr, param_name, &val);
+int rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val){
+    double* valptr = rebx_malloc(rebx, sizeof(double));
+    *valptr = val;
+    int success = rebx_set_param_pointer(rebx, apptr, param_name, valptr);
+    return success;
 }
 
-void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val){
-    rebx_set_param_copy(rebx, apptr, param_name, &val);
+int rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val){
+    int* valptr = rebx_malloc(rebx, sizeof(int));
+    *valptr = val;
+    int success = rebx_set_param_pointer(rebx, apptr, param_name, valptr);
+    return success;
 }
 
-void rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* val){
-    rebx_set_param_copy(rebx, apptr, param_name, val);
-}
-
-struct rebx_param* rebx_get_param(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name){
+struct rebx_param* rebx_get_param_node(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name){
     struct rebx_node* node = rebx_get_node(ap, param_name);
     if (node == NULL){
         return NULL;
@@ -629,36 +611,8 @@ struct rebx_param* rebx_get_param(struct rebx_extras* rebx, struct rebx_node* ap
     return param;
 }
 
-double rebx_get_param_double(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name){
-    struct rebx_param* param = rebx_get_param(rebx, ap, param_name);
-    if (param == NULL){
-        char str[300];
-        sprintf(str, "REBOUNDx Error: Parameter name '%s' not found.\n", param_name);
-        reb_error(rebx->sim, str);
-        return 0.;
-    }
-    else{
-        double* valptr = param->value;
-        return *valptr;
-    }
-}
-
-int rebx_get_param_int(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name){
-    struct rebx_param* param = rebx_get_param(rebx, ap, param_name);
-    if (param == NULL){
-        char str[300];
-        sprintf(str, "REBOUNDx Error: Parameter name '%s' not found.\n", param_name);
-        reb_error(rebx->sim, str);
-        return 0;
-    }
-    else{
-        int* valptr = param->value;
-        return *valptr;
-    }
-}
-
-void* rebx_get_param_pointer(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name){
-    struct rebx_param* param = rebx_get_param(rebx, ap, param_name);
+void* rebx_get_param(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name){
+    struct rebx_param* param = rebx_get_param_node(rebx, ap, param_name);
     if (param == NULL){
         char str[300];
         sprintf(str, "REBOUNDx Error: Parameter name '%s' not found.\n", param_name);
