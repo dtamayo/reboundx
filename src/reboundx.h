@@ -146,15 +146,11 @@ Basic types in REBOUNDx
  * @detail These get added as nodes to the effects linked list in the rebx_extras structure.
  */
 
-struct rebx_node{
-    struct rebx_node* next;
-    enum rebx_node_type type;
-    void* object;
-};
-
-struct rebx_param{ // REMOVE now name can and value can just be in the node!
-    char* name;
-    void* value;                                    ///< Pointer to the parameter (void* so it can point to different types).
+struct rebx_param_node{
+    char* name;                     ///< Used to search linked lists
+    enum rebx_param_type type;       ///< Needed to cast dataptr
+    void* param;                    ///< Pointer to param
+    struct rebx_param_node* next;   ///< Pointer to next node in list
 };
 
 struct rebx_operator{
@@ -367,7 +363,7 @@ void* rebx_add_param_array(struct reb_simulation* const sim, struct rebx_node** 
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  * @return A void pointer to the parameter. NULL if not found.
  */
-struct rebx_param* rebx_get_param_node(struct rebx_extras* const rebx, struct rebx_node* ap, const char* const param_name);
+
 void* rebx_get_param(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name);
 //void* rebx_get_param_old(struct rebx_extras* const rebx, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
 int rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* valptr);
@@ -509,7 +505,7 @@ void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, con
 
 void rebx_gr_acc(struct rebx_extras* const rebx, double* acc, const double C2);
 double rebx_calculate_energy(struct reb_simulation* const sim);
-int rebx_len(struct rebx_node* head);
+int rebx_len(struct rebx_param_node* head);
 struct rebx_param_wrapper* rebx_get_param_wrapper(struct rebx_node* ap, const char* const param_name);
 
 void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);

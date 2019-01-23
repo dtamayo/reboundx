@@ -29,44 +29,16 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-struct rebx_node* rebx_attach_node(struct rebx_extras* const rebx, struct rebx_node** head, enum rebx_node_type node_type){
-    struct rebx_node* node = rebx_malloc(rebx, sizeof(*node));
-    if (node == NULL){
-        return NULL;
-    }
-    node->type = node_type;
+void rebx_add_param_node(struct rebx_param_node** head, struct rebx_param_node* node){
     node->next = *head;
     *head = node;
-    return node;
+    return;
 }
 
-char* rebx_name_from_node(struct rebx_node* node){
-    switch(node->type){
-        case REBX_NODE_FORCE:
-        {
-            struct rebx_force* force = node->object;
-            return force->name;
-        }
-        case REBX_NODE_STEP:
-        {
-            struct rebx_step* step = node->object;
-            return step->operator->name;
-        }
-        case REBX_NODE_PARAM:
-        {
-            struct rebx_param* param = node->object;
-            return param->name;
-        }
-    }
-    return NULL;
-}
-
-struct rebx_node* rebx_get_node(struct rebx_node* head, const char* name){
-    struct rebx_node* current = head;
-    char* nodename;
+struct rebx_param_node* rebx_get_param_node(struct rebx_param_node* head, const char* name){
+    struct rebx_param_node* current = head;
     while(current != NULL){
-        nodename = rebx_name_from_node(current);
-        if(strcmp(nodename, name) == 0){
+        if(strcmp(current->name, name) == 0){
             return current;
         }
         current = current->next;
@@ -75,18 +47,16 @@ struct rebx_node* rebx_get_node(struct rebx_node* head, const char* name){
     return NULL;   // name not found.
 }
 
-int rebx_remove_node(struct rebx_extras* const rebx, struct rebx_node** head, const char* name){
-    // TODO free memory for deleted node (will need sim)
-    struct rebx_node* current = *head;
-    char* nodename = rebx_name_from_node(current);
-    if(strcmp(nodename, name) == 0){
+int rebx_remove_param_node(struct rebx_param_node** head, const char* name){
+    struct rebx_param_node* current = *head;
+    // Treat edge case where head node is the one to be removed
+    if(strcmp(current->name, name) == 0){
         *head = current->next;
         return 1;
     }
     
     while(current->next != NULL){
-        nodename = rebx_name_from_node(current->next);
-        if(strcmp(nodename, name) == 0){
+        if(strcmp(current->next->name, name) == 0){
             current->next = current->next->next;
             return 1;
         }
@@ -95,9 +65,9 @@ int rebx_remove_node(struct rebx_extras* const rebx, struct rebx_node** head, co
     return 0;
 }
 
-int rebx_len(struct rebx_node* head){
+int rebx_len(struct rebx_param_node* head){
     int len = 0;
-    struct rebx_node* current = head;
+    struct rebx_param_node* current = head;
     while(current != NULL){
         len++;
         current = current->next;
