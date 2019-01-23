@@ -553,6 +553,12 @@ static struct rebx_param* rebx_new_param(struct rebx_extras* const rebx, struct 
         strcpy(param->name, name);
     }
     
+    struct rebx_param_node* node = rebx_malloc(rebx, sizeof(*node));
+    if (node == NULL){
+        return NULL;
+    }
+    node->type = type;
+    
     struct rebx_node* node = rebx_attach_node(rebx, apptr, REBX_NODE_PARAM);
     if (node == NULL){
         free(param);
@@ -572,10 +578,10 @@ int rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** ap
     
     // Check whether it already exist in linked list
     struct rebx_param* param;
-    struct rebx_node* node = rebx_get_node(*apptr, param_name);
+    struct rebx_param_node* node = rebx_get_param_node(*apptr, param_name);
     
     if (node != NULL){  // update existing
-        param = node->object;
+        param = node->param;
     }
     else{               // make new one
         param = rebx_new_param(rebx, apptr, param_name);
@@ -600,15 +606,6 @@ int rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr,
     *valptr = val;
     int success = rebx_set_param_pointer(rebx, apptr, param_name, valptr);
     return success;
-}
-
-struct rebx_param* rebx_get_param_node(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name){
-    struct rebx_node* node = rebx_get_node(ap, param_name);
-    if (node == NULL){
-        return NULL;
-    }
-    struct rebx_param* param = node->object;
-    return param;
 }
 
 void* rebx_get_param(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name){

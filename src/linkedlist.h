@@ -26,8 +26,26 @@
 #ifndef _REBX_LINKEDLIST_H
 #define _REBX_LINKEDLIST_H
 
-struct rebx_node* rebx_attach_node(struct rebx_extras* const rebx, struct rebx_node** head, enum rebx_node_type node_type);
-char* rebx_name_from_node(struct rebx_node* node);
-struct rebx_node* rebx_get_node(struct rebx_node* head, const char* name);
-int rebx_remove_node(struct rebx_extras* const rebx, struct rebx_node** head, const char* name);
+/**
+ * @brief Adds param node to linked list
+ * @details Caller is responsible for ensuring that the node passed is correctly initialized with name and type
+ * @param head Pointer to the head of the linked list to be modified, e.g. &ps[1]->ap
+ * @param node Pointer to an initialized rebx_param_node
+ */
+void rebx_add_param_node(struct rebx_param_node** head, struct rebx_param_node* node);
+/**
+ * @brief Gets param node from linked list by name
+ * @param head Head of linked list, e.g. ps[1]->ap
+ * @param name Name of the node to retrieve
+ * @return Pointer to the first node found with passed name, or NULL if none is found
+ */
+struct rebx_param_node* rebx_get_param_node(struct rebx_param_node* head, const char* name);
+
+/**
+ * @brief Removes param node from linked list by name
+ * @param head Pointer to the head of the linked list to be modified, e.g. &ps[1]->ap
+ * @param name Name of the node to remove
+ * @return 1 if node found and removed, 0 if not found
+ */
+int rebx_remove_param_node(struct rebx_param_node** head, const char* name);
 #endif
