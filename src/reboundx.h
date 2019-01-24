@@ -54,6 +54,7 @@ enum rebx_param_type{
     REBX_TYPE_DOUBLE,                               ///< C type double
     REBX_TYPE_INT,                                  ///< C type int
     REBX_TYPE_POINTER,
+    REBX_TYPE_FORCE,
 };
 /*REBX_TYPE_UINT32,                               ///< C type uint32_t
     REBX_TYPE_ORBIT,                                ///< reb_orbit structure
@@ -108,14 +109,8 @@ enum rebx_input_binary_messages {
 };
 
 enum rebx_timing {
-    REBX_TIMING_PRE_TIMESTEP = -1,
-    REBX_TIMING_POST_TIMESTEP = 1,
-};
-
-enum rebx_node_type {
-    REBX_NODE_PARAM = 0,
-    REBX_NODE_FORCE = 1,
-    REBX_NODE_STEP = 2,
+    REBX_TIMING_PRE = -1,
+    REBX_TIMING_POST = 1,
 };
 
 enum rebx_force_type{
@@ -135,24 +130,33 @@ Basic types in REBOUNDx
 *****************************************/
 
 
+
+/**
+ * @brief Node structure for all REBOUNDx linked lists.
+ * @param name Name used for searching the linked list
+ * @param object Data held by the node. Could be param, force, step etc
+ * @param next Pointer to the next node in the linked list
+ */
+
+struct rebx_node{
+    char* name;                     ///< Pointer to name in object
+    void* object;                   ///< Pointer to param
+    struct rebx_node* next;   ///< Pointer to next node in list
+};
+
 /**
  * @brief Main structure used for all parameters added to particles.
  */
 
-
-
-/**
- * @brief Structure for all REBOUNDx effects.
- * @detail These get added as nodes to the effects linked list in the rebx_extras structure.
- */
-
-struct rebx_param_node{
-    char* name;                     ///< Used to search linked lists
-    enum rebx_param_type type;       ///< Needed to cast dataptr
-    void* param;                    ///< Pointer to param
-    struct rebx_param_node* next;   ///< Pointer to next node in list
+struct rebx_param{
+    char* name;                     ///< Used to search linked lists and informative errors
+    enum rebx_param_type type;      ///< Needed to cast value
+    void* value;                    ///< Pointer to value
 };
 
+/**
+ * @brief Structure for REBOUNDx operators.
+ */
 struct rebx_operator{
     char* name;
     struct rebx_node* ap;
@@ -161,6 +165,9 @@ struct rebx_operator{
     void (*step) (struct reb_simulation* sim, struct rebx_operator* operator, const double dt);   ///< Pointer to function to call before and/or after each timestep.
 };
 
+/**
+ * @brief Structure for REBOUNDx forces.
+ */
 struct rebx_force{
     char* name;
     struct rebx_node* ap;
@@ -170,6 +177,7 @@ struct rebx_force{
 };
 
 struct rebx_step{
+    char* name;
     struct rebx_operator* operator;
     double dt_fraction;
 };
@@ -190,7 +198,8 @@ struct rebx_extras {
     struct rebx_node* forces;
 	struct rebx_node* pre_timestep_operators;		            ///< Linked list with pointers to all the effects added to the simulation.
 	struct rebx_node* post_timestep_operators;		            ///< Linked list with pointers to all the effects added to the simulation.
-	//struct rebx_param_to_be_freed* params_to_be_freed; 	///< Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
+	struct rebx_node* allocated_pointers; 	///< Linked list with pointers to all memory allocated by REBOUNDx (for later freeing).
+    struct rebx_node* registered_params;    ///< Linked list of all the names registered for parameters, along with their type
     enum {
         REBX_INTEGRATOR_IMPLICIT_MIDPOINT = 0,
         REBX_INTEGRATOR_RK4 = 1,
@@ -281,7 +290,7 @@ void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, cons
  */
 //struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name);
 int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator);
-int rebx_add_operator_manual(struct rebx_extras* rebx, struct rebx_operator* operator, struct rebx_node** head, const double dt_fraction);
+int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* operator, const double dt_fraction, enum rebx_timing timing, char* name);
 int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force);
 struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const char* name);
 struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char* name);
@@ -365,12 +374,12 @@ void* rebx_add_param_array(struct reb_simulation* const sim, struct rebx_node** 
  */
 
 void* rebx_get_param(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name);
-//void* rebx_get_param_old(struct rebx_extras* const rebx, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
-int rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* valptr);
+struct rebx_param* rebx_get_param_struct(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name);
+int rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* val);
 int rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
 int rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val);
-int rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* val);
-enum rebx_param_type rebx_get_type(const char* name);
+enum rebx_param_type rebx_get_type(struct rebx_extras* rebx, const char* name);
+void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type);
 /** @} */
 /** @} */
 
@@ -505,7 +514,7 @@ void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, con
 
 void rebx_gr_acc(struct rebx_extras* const rebx, double* acc, const double C2);
 double rebx_calculate_energy(struct reb_simulation* const sim);
-int rebx_len(struct rebx_param_node* head);
+int rebx_len(struct rebx_node* head);
 struct rebx_param_wrapper* rebx_get_param_wrapper(struct rebx_node* ap, const char* const param_name);
 
 void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
