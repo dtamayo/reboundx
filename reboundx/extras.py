@@ -13,8 +13,7 @@ REBX_BINARY_WARNINGS = [
         ("REBOUNDx Warning: At least one parameter in the binary file was not loaded. Check simulation.", 8),
         ("REBOUNDx Warning: At least one particle's parameters in the binary file were not loaded. Check simulation.", 16),
         ("REBOUNDx Warning: At least one effect and its parameters were not loaded from the binary file. Check simulation.", 32),
-        ("REBOUNDx Warning: At least one field in the binary field was not recognized, and not loaded. Probably binary was created with more recent REBOUNDx version than you are using.", 64),
-]
+        ("REBOUNDx Warning: At least one field in the binary field was not recognized, and not loaded. Probably binary was created with more recent REBOUNDx version than you are using.", 64)]
 
 class Extras(Structure):
     """
@@ -106,6 +105,11 @@ class Extras(Structure):
     #######################################
     # Functions for manipulating REBOUNDx effects
     #######################################
+
+    def register_param(self, name, param_type):
+        type_enum = REBX_C_PARAM_TYPES[param_type] 
+        clibreboundx.rebx_register_param(byref(self), c_char_p(name.encode('ascii')), c_int(type_enum))
+        self._sim.contents.process_messages()
 
     def create_force(self, name):
         clibreboundx.rebx_create_force.restype = POINTER(Force)
@@ -282,17 +286,20 @@ Force._fields_ = [  ("name", c_char_p),
                     ("force_type", c_int),
                     ("update_accelerations", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Force), POINTER(rebound.Particle), c_int))]
 
-class Param_to_be_freed(Structure):
-    pass
-Param_to_be_freed._fields_ =  [("param", POINTER(Param)),
-                                    ("next", POINTER(Param_to_be_freed))]
-
-
 # Need to put fields after class definition because of self-referencing
 Extras._fields_ =  [("_sim", POINTER(rebound.Simulation)),
                     ("forces", POINTER(Node)),
                     ("pre_timestep_operators", POINTER(Node)),
                     ("post_timestep_operators", POINTER(Node)),
                     ("_integrator", c_int)]
+
+# This list keeps pairing from C rebx_param_type enum to ctypes type 1-to-1. Derive the required mappings from it
+REBX_C_TO_CTYPES = [["REBX_TYPE_NONE", None], ["REBX_TYPE_DOUBLE", c_double], ["REBX_TYPE_INT",c_int], ["REBX_TYPE_POINTER", c_void_p], ["REBX_TYPE_FORCE", Force]]
+REBX_CTYPES = {} # maps int value of rebx_param_type enum to ctypes type
+REBX_C_PARAM_TYPES = {} # maps string of rebx_param_type enum to int
+for i, pair in enumerate(REBX_C_TO_CTYPES):
+    REBX_CTYPES[i] = pair[1]
+    REBX_C_PARAM_TYPES[pair[0]] = i
+
 
 from .params import Params

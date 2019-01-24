@@ -481,6 +481,7 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
 /* Checks whether name is registered, and if so creates new param struct and adds it to apptr linked list.
    Returns pointer to new param, caller must allocate and set param->value.
  */
+                                                   
 static struct rebx_param* rebx_new_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* name){
     enum rebx_param_type type = rebx_get_type(rebx, name);
     if (type == REBX_TYPE_NONE){
@@ -516,15 +517,13 @@ static struct rebx_param* rebx_new_param(struct rebx_extras* const rebx, struct 
     return param;
 }
 
-
 int rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* val){
     if (apptr == NULL){
         reb_error(rebx->sim, "REBOUNDx Error: Passed NULL apptr to rebx_add_param. See examples.\n");
         return 0;
     }
-    
     // Check whether it already exists in linked list
-    struct rebx_param* param = rebx_get_param(rebx, *apptr, param_name);
+    struct rebx_param* param = rebx_get_param_struct(rebx, *apptr, param_name);
     
     if(param == NULL){
         param = rebx_new_param(rebx, apptr, param_name);
@@ -538,17 +537,53 @@ int rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** ap
 }
 
 int rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val){
-    double* valptr = rebx_malloc(rebx, sizeof(*valptr));
-    *valptr = val;
-    int success = rebx_set_param_pointer(rebx, apptr, param_name, valptr);
-    return success;
+    if (apptr == NULL){
+        reb_error(rebx->sim, "REBOUNDx Error: Passed NULL apptr to rebx_add_param. See examples.\n");
+        return 0;
+    }
+    // Check whether it already exists in linked list
+    struct rebx_param* param = rebx_get_param_struct(rebx, *apptr, param_name);
+    
+    if(param == NULL){      // Make new param and allocate memory
+        param = rebx_new_param(rebx, apptr, param_name);
+        if (param == NULL){ // adding new param failed
+            return 0;
+        }
+        param->value = rebx_malloc(rebx, sizeof(double));
+        double* valptr = param->value;
+        *valptr = val;
+    }
+    else{                   // Update existing. Don't allocate
+        double* valptr = param->value;
+        *valptr = val;
+    }
+    
+    return 1;
 }
 
 int rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val){
-    int* valptr = rebx_malloc(rebx, sizeof(*valptr));
-    *valptr = val;
-    int success = rebx_set_param_pointer(rebx, apptr, param_name, valptr);
-    return success;
+    if (apptr == NULL){
+        reb_error(rebx->sim, "REBOUNDx Error: Passed NULL apptr to rebx_add_param. See examples.\n");
+        return 0;
+    }
+    // Check whether it already exists in linked list
+    struct rebx_param* param = rebx_get_param_struct(rebx, *apptr, param_name);
+    
+    if(param == NULL){      // Make new param and allocate memory
+        param = rebx_new_param(rebx, apptr, param_name);
+        if (param == NULL){ // adding new param failed
+            return 0;
+        }
+        param->value = rebx_malloc(rebx, sizeof(int));
+        int* valptr = param->value;
+        *valptr = val;
+    }
+    else{                   // Update existing. Don't allocate
+        int* valptr = param->value;
+        *valptr = val;
+    }
+    
+    return 1;
 }
 
 struct rebx_param* rebx_get_param_struct(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name){
