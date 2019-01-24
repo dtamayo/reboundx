@@ -7,17 +7,11 @@ from ctypes import c_void_p, memmove, sizeof, addressof
 import numpy as np
 from rebound.tools import hash as rebhash
 
-# TODO: Trim this down to what's needed now that we don't support arrays
-
-#### Update here to add new types. Update only rebx_param_types with new C rebx_types
-#### and self.types for new python types.
-#### ADD ONLY TO THE END OF EACH LIST 
-        
-
 rebx_ctypes = { 0: None,
                 1: c_double,
                 2: c_int,
-                3: c_void_p}
+                3: c_void_p,
+                4: Force}
 
 class Params(MutableMapping):
     def __init__(self, parent):
@@ -39,11 +33,16 @@ class Params(MutableMapping):
             raise AttributeError("REBOUNDx Error: Parameter '{0}' not found in REBOUNDx. Need to register it first.".format(key))
         if param_type == 3:
             raise AttributeError("REBOUNDx Error: Parameter '{0}' is a pointer. Need to manually set pointers with rebx.add_pointer_param.".format(key))
-        clibreboundx.rebx_get_param.restype = POINTER(Param)
-        paramptr = clibreboundx.rebx_get_param(self.rebx, self.ap, c_char_p(key.encode('ascii')))
+        clibreboundx.rebx_get_param.restype = c_void_p
+        valptr = clibreboundx.rebx_get_param(self.rebx, self.ap, c_char_p(key.encode('ascii')))
         ctype = rebx_ctypes[param_type]
-        valptr = cast(paramptr.contents.value, POINTER(ctype))
-        return valptr.contents.value
+        valptr = cast(valptr, POINTER(ctype))
+        if param_type == 1 or param_type == 2: # simple double and int types, return value
+            val = valptr.contents.value
+        else:
+            val = valptr.contents # Structure, return ctypes object
+
+        return val
         '''    
             param = paramptr.contents
         else:
@@ -74,13 +73,14 @@ class Params(MutableMapping):
         param_type = clibreboundx.rebx_get_type(c_char_p(key.encode('ascii')))
         if param_type == 0:
             raise AttributeError("REBOUNDx Error: Parameter '{0}' not found in REBOUNDx. Need to register it first.".format(key))
-        if param_type == 3:
-            raise AttributeError("REBOUNDx Error: Parameter '{0}' is a pointer. Need to manually set pointers with rebx.add_pointer_param.".format(key))
         if param_type == 1:
-            valptr = byref(c_double(value))
+            clibreboundx.rebx_set_param_double(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), c_double(value))
         if param_type == 2:
-            valptr = byref(c_int(value))
-        clibreboundx.rebx_set_param_copy(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), valptr)
+            clibreboundx.rebx_set_param_int(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), c_int(value))
+        if param_type == 3:
+            clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))
+        if param_type == 4:
+            clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))
         '''
         pythontype = type(value)
         try:
@@ -110,7 +110,7 @@ class Params(MutableMapping):
         val[0] = value
         '''
     def __delitem__(self, key):
-        success = clibreboundx.rebx_remove_param(byref(self.get_ap()), c_char_p(key.encode('ascii')))
+        success = clibreboundx.rebx_remove_param(byref(self.ap), c_char_p(key.encode('ascii')))
         if not success:
             raise AttributeError("REBOUNDx Error: Parameter '{0}' to delete not found.".format(key))
 

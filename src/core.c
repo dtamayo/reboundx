@@ -79,6 +79,14 @@ void rebx_integrate(struct reb_simulation* const sim, const double dt, struct re
  Initialization routines.
  ****************************/
 
+static void rebx_register_params(struct rebx_extras* rebx){
+    rebx_register_param(rebx, "c", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "max_iterations", REBX_TYPE_INT);
+    rebx_register_param(rebx, "index", REBX_TYPE_INT);
+    rebx_register_param(rebx, "force", REBX_TYPE_FORCE);
+    rebx_register_param(rebx, "particle", REBX_TYPE_POINTER);
+}
+
 struct rebx_extras* rebx_init(struct reb_simulation* sim){  // reboundx.h
     struct rebx_extras* rebx = malloc(sizeof(*rebx));
     rebx_initialize(sim, rebx);
@@ -92,6 +100,8 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
 	rebx->forces = NULL;
     rebx->pre_timestep_operators=NULL;
     rebx->post_timestep_operators=NULL;
+    rebx->allocated_pointers=NULL;
+    rebx->registered_params=NULL;
     rebx->integrator = REBX_INTEGRATOR_IMPLICIT_MIDPOINT;
     
     if(sim->additional_forces || sim->pre_timestep_modifications || sim->post_timestep_modifications){
@@ -102,23 +112,10 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     sim->additional_forces = rebx_additional_forces;
     sim->pre_timestep_modifications = rebx_pre_timestep_modifications;
     sim->post_timestep_modifications = rebx_post_timestep_modifications;
+    
+    rebx_register_params(rebx);
 }
 
-enum rebx_param_type rebx_get_type(const char* name){
-    if(strcmp(name, "c") == 0){
-        return REBX_TYPE_DOUBLE;
-    }
-    if(strcmp(name, "index") == 0){
-        return REBX_TYPE_INT;
-    }
-    if(strcmp(name, "max_iterations") == 0){
-        return REBX_TYPE_INT;
-    }
-    if(strcmp(name, "particle") == 0){
-        return REBX_TYPE_POINTER;
-    }
-    return REBX_TYPE_NONE;
-}
 /*****************************
  Garbage Collection Routines
  ****************************/
@@ -127,24 +124,6 @@ void rebx_remove_from_simulation(struct reb_simulation* sim){
     sim->additional_forces = NULL;
     sim->post_timestep_modifications = NULL;
 }
-
-void rebx_free(struct rebx_extras* rebx){                   // reboundx.h
-    //rebx_free_params(rebx);
-    //rebx_free_effects(rebx);
-    free(rebx);
-}
-
-/*void rebx_free_params(struct rebx_extras* rebx){
-    struct rebx_param__to_be_freed* current = rebx->params_to_be_freed;
-    struct rebx_param_to_be_freed* temp_next;
-    while(current != NULL){
-        temp_next = current->next;
-        free(current->param->contents);
-        free(current->param);
-        free(current);
-        current = temp_next;
-    }
-}*/
 
 void rebx_free_effects(struct rebx_extras* rebx){
     /*struct rebx_effect* current = rebx->effects;
@@ -216,6 +195,17 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
  Adders for linked lists in extras structure
  *********************************************/
 
+static struct rebx_node* rebx_create_node(struct rebx_extras* rebx){
+    struct rebx_node* node = rebx_malloc(rebx, sizeof(*node));
+    if (node == NULL){
+        return NULL;
+    }
+    node->object = NULL;
+    node->name = NULL;
+    node->next = NULL;
+    return node;
+}
+
 struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char* name){
     struct rebx_force* force = rebx_malloc(rebx, sizeof(*force));
     if (force == NULL){
@@ -225,7 +215,6 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
     force->_sim = rebx->sim;
     force->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
     if (force->name == NULL){
-        free(force);
         return NULL;
     }
     else{
@@ -270,7 +259,6 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
      }
      */
     else{
-        free(force);
         char str[100];
         sprintf(str, "REBOUNDx error: Force '%s' not found in rebx_create_force.\n", name);
         reb_error(rebx->sim, str);
@@ -288,7 +276,6 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
     operator->_sim = rebx->sim;
     operator->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
     if (operator->name == NULL){
-        free(operator);
         return NULL;
     }
     else{
@@ -325,7 +312,6 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
      operator->step = rebx_track_min_distance;
      }*/
     else{
-        free(operator);
         char str[100];
         sprintf(str, "REBOUNDx error: Operator '%s' not found in rebx_create_operator.\n", name);
         reb_error(rebx->sim, str);
@@ -344,32 +330,41 @@ int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force){
     }
     
     // Could add logic based on different integrators
-    struct rebx_node* node = rebx_attach_node(rebx, &rebx->forces, REBX_NODE_FORCE);
+    struct rebx_node* node = rebx_create_node(rebx);
     if (node == NULL){
         return 0;
     }
-    
     node->object = force;
+    node->name = force->name;
+    rebx_add_node(&rebx->forces, node);
+    
     return 1;
 }
 
-int rebx_add_operator_manual(struct rebx_extras* rebx, struct rebx_operator* operator, struct rebx_node** head, const double dt_fraction){
-    struct rebx_step* step = rebx_malloc(rebx, sizeof(struct rebx_step));
+int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* operator, const double dt_fraction, enum rebx_timing timing, char* name){
+    struct rebx_step* step = rebx_malloc(rebx, sizeof(*step));
     if(step == NULL){
         return 0;
     }
-    
+    step->name = name;
     step->operator = operator;
     step->dt_fraction = dt_fraction;
     
-    struct rebx_node* node = rebx_attach_node(rebx, head, REBX_NODE_STEP);
-    if(node == NULL){
-        free(step);
+    struct rebx_node* node = rebx_create_node(rebx);
+    if (node == NULL){
         return 0;
     }
-    
     node->object = step;
-    return 1;
+    node->name = step->name;
+    if (timing == REBX_TIMING_PRE){
+        rebx_add_node(&rebx->pre_timestep_operators, node);
+        return 1;
+    }
+    if (timing == REBX_TIMING_POST){
+        rebx_add_node(&rebx->post_timestep_operators, node);
+        return 1;
+    }
+    return 0;
 }
     
 int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
@@ -382,7 +377,7 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
     if (operator->operator_type == REBX_OPERATOR_RECORDER){
         // Doesn't alter state. Add once after timestep.
         dt_fraction = 1.;
-        int success = rebx_add_operator_manual(rebx, operator, &rebx->post_timestep_operators, dt_fraction);
+        int success = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST, operator->name);
         return success;
     }
     
@@ -391,14 +386,14 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
         // don't add pre-timestep b/c don't know what IAS will choose as dt
         {
             dt_fraction = 1.;
-            int success = rebx_add_operator_manual(rebx, operator, &rebx->post_timestep_operators, dt_fraction);
+            int success = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST, operator->name);
             return success;
         }
         case REB_INTEGRATOR_WHFAST: // half step pre and post
         {
             dt_fraction = 1./2.;
-            int success1 = rebx_add_operator_manual(rebx, operator, &rebx->pre_timestep_operators, dt_fraction);
-            int success2 = rebx_add_operator_manual(rebx, operator, &rebx->post_timestep_operators, dt_fraction);
+            int success1 = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_PRE, operator->name);
+            int success2 = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST, operator->name);
             return (success1 && success2);
         }
         case REB_INTEGRATOR_MERCURIUS: // half step pre and post
@@ -483,54 +478,11 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
     return rebx_remove_node(apptr, reb_hash(param_name));
 }*/
 
-static void* rebx_alloc_param_value(struct rebx_extras* const rebx, enum rebx_param_type type){
-    void* value = NULL;
-    switch(type){
-        case REBX_TYPE_DOUBLE:
-        {
-            value = rebx_malloc(rebx, sizeof(double));
-            break;
-        }
-        case REBX_TYPE_INT:
-        {
-            value = rebx_malloc(rebx, sizeof(int));
-            break;
-        }
-        case REBX_TYPE_POINTER:
-        {
-            value = rebx_malloc(rebx, sizeof(void*));
-            break;
-        }
-        /*case REBX_TYPE_UINT32:
-        {
-            value = rebx_malloc(rebx, sizeof(uint32_t));
-            break;
-        }
-        case REBX_TYPE_ORBIT:
-        {
-            value = rebx_malloc(rebx, sizeof(struct reb_orbit));
-            break;
-        }
-        case REBX_TYPE_LONGLONG:
-        {
-            value = rebx_malloc(rebx, sizeof(long long));
-            break;
-        }
-        */
-        default:
-        {
-            //char str[300];
-            //sprintf(str, "REBOUNDx Error: Parameter name '%s' passed to rebx_alloc_param_value not supported.\n", param_name);
-            //reb_error(rebx->sim, str);
-            return NULL;
-        }
-    }
-    
-    return value;
-}
-
+/* Checks whether name is registered, and if so creates new param struct and adds it to apptr linked list.
+   Returns pointer to new param, caller must allocate and set param->value.
+ */
 static struct rebx_param* rebx_new_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* name){
-    enum rebx_param_type type = rebx_get_type(name);
+    enum rebx_param_type type = rebx_get_type(rebx, name);
     if (type == REBX_TYPE_NONE){
         char str[300];
         sprintf(str, "REBOUNDx Error: Need to register parameter name '%s' before using it. See examples.\n", name);
@@ -538,82 +490,80 @@ static struct rebx_param* rebx_new_param(struct rebx_extras* const rebx, struct 
         return NULL;
     }
     
+    // Allocate and initialize new param struct
     struct rebx_param* param = rebx_malloc(rebx, sizeof(*param));
     if (param == NULL){
         return NULL;
     }
-    
-    param->value = NULL;
+    param->type = type;
     param->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
     if (param->name == NULL){
-        free(param);
         return NULL;
     }
     else{
         strcpy(param->name, name);
     }
     
-    struct rebx_param_node* node = rebx_malloc(rebx, sizeof(*node));
+    // Wrap in node and add it to linked list
+    struct rebx_node* node = rebx_create_node(rebx);
     if (node == NULL){
         return NULL;
     }
-    node->type = type;
-    
-    struct rebx_node* node = rebx_attach_node(rebx, apptr, REBX_NODE_PARAM);
-    if (node == NULL){
-        free(param);
-        return NULL;
-    }
-    
     node->object = param;
+    node->name = param->name;
+    rebx_add_node(apptr, node);
+    
     return param;
 }
 
 
-int rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* valptr){
+int rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* val){
     if (apptr == NULL){
         reb_error(rebx->sim, "REBOUNDx Error: Passed NULL apptr to rebx_add_param. See examples.\n");
         return 0;
     }
     
-    // Check whether it already exist in linked list
-    struct rebx_param* param;
-    struct rebx_param_node* node = rebx_get_param_node(*apptr, param_name);
+    // Check whether it already exists in linked list
+    struct rebx_param* param = rebx_get_param(rebx, *apptr, param_name);
     
-    if (node != NULL){  // update existing
-        param = node->param;
-    }
-    else{               // make new one
+    if(param == NULL){
         param = rebx_new_param(rebx, apptr, param_name);
-        if (param == NULL){
+        if (param == NULL){  // adding new param failed
             return 0;
         }
     }
     
-    param->value = valptr;
+    param->value = val;
     return 1;
 }
 
 int rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val){
-    double* valptr = rebx_malloc(rebx, sizeof(double));
+    double* valptr = rebx_malloc(rebx, sizeof(*valptr));
     *valptr = val;
     int success = rebx_set_param_pointer(rebx, apptr, param_name, valptr);
     return success;
 }
 
 int rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val){
-    int* valptr = rebx_malloc(rebx, sizeof(int));
+    int* valptr = rebx_malloc(rebx, sizeof(*valptr));
     *valptr = val;
     int success = rebx_set_param_pointer(rebx, apptr, param_name, valptr);
     return success;
 }
 
+struct rebx_param* rebx_get_param_struct(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name){
+    struct rebx_node* node = rebx_get_node(ap, param_name);
+    if (node == NULL){ // don't want warnings for optional parameters so don't reb_error
+        return NULL;
+    }
+    else{
+        return node->object;
+    }
+}
+
 void* rebx_get_param(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name){
-    struct rebx_param* param = rebx_get_param_node(rebx, ap, param_name);
+    struct rebx_param* param = rebx_get_param_struct(rebx, ap, param_name);
     if (param == NULL){
-        char str[300];
-        sprintf(str, "REBOUNDx Error: Parameter name '%s' not found.\n", param_name);
-        reb_error(rebx->sim, str);
         return NULL;
     }
     else{
@@ -675,11 +625,78 @@ double install_test(void){
     return sim->particles[1].x;
 }
 
+enum rebx_param_type rebx_get_type(struct rebx_extras* rebx, const char* name){
+    struct rebx_node* node = rebx_get_node(rebx->registered_params, name);
+    
+    if (node == NULL){ // param not found
+        return REBX_TYPE_NONE;
+    }
+    
+    enum rebx_param_type* type = node->object;
+    
+    return *type;
+}
+
+void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
+    
+    struct rebx_node* node = rebx_get_node(rebx->registered_params, name);
+    
+    if (node != NULL){
+        char str[300];
+        sprintf(str, "REBOUNDx Error: Parameter name '%s' already in registered list. Cannot add duplicates.\n", name);
+        reb_error(rebx->sim, str);
+        return;
+    }
+    else{
+        node = rebx_create_node(rebx);
+    }
+    
+    if (node == NULL){
+        return;
+    }
+    
+    node->object = rebx_malloc(rebx, sizeof(type));
+    memcpy(node->object, &type, sizeof(type));
+    node->next = NULL;
+    node->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
+    if (node->name == NULL){
+        return;
+    }
+    else{
+        strcpy(node->name, name);
+    }
+    
+    rebx_add_node(&rebx->registered_params, node);
+    return;
+}
+
 void* rebx_malloc(struct rebx_extras* const rebx, size_t memsize){
     void* ptr = malloc(memsize);
     if (ptr == NULL && memsize>0){
         reb_error(rebx->sim, "REBOUNDx Error: Could not allocate memory.\n");
         return NULL;
     }
+    
+    struct rebx_node* node = malloc(sizeof(*node));
+    if (node == NULL){
+        reb_error(rebx->sim, "REBOUNDx Error: Could not allocate memory.\n");
+        return NULL;
+    }
+    node->object = ptr;
+    node->next = NULL;
+    
+    rebx_add_node(&rebx->allocated_pointers, node);
     return ptr;
+}
+
+void rebx_free(struct rebx_extras* rebx){
+    struct rebx_node* current = rebx->allocated_pointers;
+    struct rebx_node* next;
+    while (current != NULL){
+        next = current->next;
+        free(current->object);
+        free(current);
+        current = next;
+    }
+    free(rebx);
 }

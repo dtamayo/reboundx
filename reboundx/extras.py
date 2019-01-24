@@ -107,6 +107,18 @@ class Extras(Structure):
     # Functions for manipulating REBOUNDx effects
     #######################################
 
+    def create_force(self, name):
+        clibreboundx.rebx_create_force.restype = POINTER(Force)
+        ptr = clibreboundx.rebx_create_force(byref(self), c_char_p(name.encode('ascii')))
+        self._sim.contents.process_messages()
+        return ptr.contents
+
+    def create_operator(self, name):
+        clibreboundx.rebx_create_operator.restype = POINTER(Operator)
+        ptr = clibreboundx.rebx_create_operator(byref(self), c_char_p(name.encode('ascii')))
+        self._sim.contents.process_messages()
+        return ptr.contents
+
     def add(self, name):
         """
         This is the main function for adding effects to simulations.
@@ -116,24 +128,20 @@ class Extras(Structure):
         """
         clibreboundx.rebx_add.restype = POINTER(Effect)
         ptr = clibreboundx.rebx_add(byref(self), c_char_p(name.encode('ascii')))
-        self.sim.contents.process_messages()
+        self._sim.contents.process_messages()
         return ptr.contents
 
-    def add_force(self, name, effect):
-        clibreboundx.rebx_add_force(byref(self), c_char_p(name.encode('ascii')), byref(effect))
-        self.sim.contents.process_messages()
+    def add_force(self, force):
+        clibreboundx.rebx_add_force(byref(self), byref(force))
+        self._sim.contents.process_messages()
 
-    def add_pre_timestep_operator(self, name, dtfactor, effect=None):
-        if effect:
-            effect = byref(effect)
-        clibreboundx.rebx_add_pre_timestep_operator(byref(self), c_char_p(name.encode('ascii')), c_double(dtfactor), effect)
-        self.sim.contents.process_messages()
+    def add_operator(self, operator):
+        clibreboundx.rebx_add_operator(byref(self), byref(operator))
+        self._sim.contents.process_messages()
 
-    def add_post_timestep_operator(self, name, dtfactor, effect=None):
-        if effect:
-            effect = byref(effect)
-        clibreboundx.rebx_add_post_timestep_operator(byref(self), c_char_p(name.encode('ascii')), c_double(dtfactor), effect)
-        self.sim.contents.process_messages()
+    def add_operator_step(self, operator, dt_fraction, timing, name=""):
+        clibreboundx.rebx_add_operator_step(byref(self), byref(operator), cdouble(dt_fraction), c_int(timing), c_char_p(name.encode('ascii')))
+        self._sim.contents.process_messages()
 
     def add_custom_force(self, function, force_is_velocity_dependent):
         """
@@ -183,7 +191,7 @@ class Extras(Structure):
         clibreboundx.rebx_gr_acc(byref(self), acc, c_double(C2))
     def calculate_energy(self):
         clibreboundx.rebx_calculate_energy.restype = c_double
-        return clibreboundx.rebx_calculate_energy(self.sim)
+        return clibreboundx.rebx_calculate_energy(self._sim)
     #######################################
     # Input/Output Routines
     #######################################
@@ -208,7 +216,7 @@ class Extras(Structure):
     def central_force_Acentral(self, p, primary, pomegadot, gamma):
         clibreboundx.rebx_central_force_Acentral.restype = c_double
         Acentral = clibreboundx.rebx_central_force_Acentral(p, primary, c_double(pomegadot), c_double(gamma))
-        self.sim.contents.process_messages()
+        self._sim.contents.process_messages()
         return Acentral
 
     # Hamiltonian calculation functions
@@ -242,16 +250,15 @@ class Extras(Structure):
 
 class Param(Structure): # need to define fields afterward because of circular ref in linked list
     pass    
-Param._fields_ =  [ ("name", c_void_p),
-                    ("value", c_void_p),
-                    ("param_type", c_int),
-                    ("python_type", c_int)]
+Param._fields_ =  [ ("name", c_char_p),
+                    ("type", c_int),
+                    ("value", c_void_p)]
 
 class Node(Structure): # need to define fields afterward because of circular ref in linked list
     pass    
-Node._fields_ =  [  ("next", POINTER(Node)),
-                    ("type", c_int),
-                    ("object", c_void_p)]
+Node._fields_ =  [  ("name", c_char_p),
+                    ("object", c_void_p),
+                    ("next", POINTER(Node))]
 
 class Operator(Structure):
     @property 
@@ -259,7 +266,7 @@ class Operator(Structure):
         params = Params(self)
         return params
 Operator._fields_ = [   ("name", c_char_p),
-                        ("_ap", POINTER(Node)),
+                        ("ap", POINTER(Node)),
                         ("_sim", POINTER(rebound.Simulation)),
                         ("operator_type", c_int),
                         ("step", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Operator), c_double))]
@@ -270,7 +277,7 @@ class Force(Structure):
         params = Params(self)
         return params
 Force._fields_ = [  ("name", c_char_p),
-                    ("_ap", POINTER(Node)),
+                    ("ap", POINTER(Node)),
                     ("_sim", POINTER(rebound.Simulation)),
                     ("force_type", c_int),
                     ("update_accelerations", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Force), POINTER(rebound.Particle), c_int))]

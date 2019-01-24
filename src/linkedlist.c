@@ -29,14 +29,14 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-void rebx_add_param_node(struct rebx_param_node** head, struct rebx_param_node* node){
+void rebx_add_node(struct rebx_node** head, struct rebx_node* node){
     node->next = *head;
     *head = node;
     return;
 }
 
-struct rebx_param_node* rebx_get_param_node(struct rebx_param_node* head, const char* name){
-    struct rebx_param_node* current = head;
+struct rebx_node* rebx_get_node(struct rebx_node* head, const char* name){
+    struct rebx_node* current = head;
     while(current != NULL){
         if(strcmp(current->name, name) == 0){
             return current;
@@ -47,8 +47,8 @@ struct rebx_param_node* rebx_get_param_node(struct rebx_param_node* head, const 
     return NULL;   // name not found.
 }
 
-int rebx_remove_param_node(struct rebx_param_node** head, const char* name){
-    struct rebx_param_node* current = *head;
+int rebx_remove_node(struct rebx_node** head, const char* name){
+    struct rebx_node* current = *head;
     // Treat edge case where head node is the one to be removed
     if(strcmp(current->name, name) == 0){
         *head = current->next;
@@ -65,9 +65,9 @@ int rebx_remove_param_node(struct rebx_param_node** head, const char* name){
     return 0;
 }
 
-int rebx_len(struct rebx_param_node* head){
+int rebx_len(struct rebx_node* head){
     int len = 0;
-    struct rebx_param_node* current = head;
+    struct rebx_node* current = head;
     while(current != NULL){
         len++;
         current = current->next;
