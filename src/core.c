@@ -725,6 +725,11 @@ void* rebx_malloc(struct rebx_extras* const rebx, size_t memsize){
 }
 
 void rebx_free(struct rebx_extras* rebx){
+    rebx_free_pointers(rebx);
+    free(rebx);
+}
+
+void rebx_free_pointers(struct rebx_extras* rebx){
     struct rebx_node* current = rebx->allocated_pointers;
     struct rebx_node* next;
     while (current != NULL){
@@ -733,5 +738,4 @@ void rebx_free(struct rebx_extras* rebx){
         free(current);
         current = next;
     }
-    free(rebx);
 }

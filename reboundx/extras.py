@@ -5,7 +5,9 @@ import reboundx
 import warnings
 
 INTEGRATORS = {"implicit_midpoint": 0, "rk4":1, "euler": 2, "rk2": 3, "none": -1}
-  
+
+REBX_TIMING = {"pre":-1, "post":1}
+
 REBX_BINARY_WARNINGS = [
         ("REBOUNDx Error: Cannot read binary file. Check filename and file contents.", 1),
         ("REBOUNDx Error: Binary file was corrupt. Could not read.", 2),
@@ -64,7 +66,8 @@ class Extras(Structure):
 
     def __del__(self):
         if self._b_needsfree_ == 1:
-            pass
+            print('freeing REBx')
+            clibreboundx.rebx_free_pointers(byref(self))
             #clibreboundx.rebx_free_effects(byref(self))
             #clibreboundx.rebx_free_params(byref(self))
 
@@ -143,8 +146,9 @@ class Extras(Structure):
         clibreboundx.rebx_add_operator(byref(self), byref(operator))
         self._sim.contents.process_messages()
 
-    def add_operator_step(self, operator, dt_fraction, timing, name=""):
-        clibreboundx.rebx_add_operator_step(byref(self), byref(operator), cdouble(dt_fraction), c_int(timing), c_char_p(name.encode('ascii')))
+    def add_operator_step(self, operator, dt_fraction, timing="post", name=""):
+        timingint = REBX_TIMING[timing]
+        clibreboundx.rebx_add_operator_step(byref(self), byref(operator), c_double(dt_fraction), c_int(timingint), c_char_p(name.encode('ascii')))
         self._sim.contents.process_messages()
 
     def add_custom_force(self, function, force_is_velocity_dependent):
@@ -291,6 +295,8 @@ Extras._fields_ =  [("_sim", POINTER(rebound.Simulation)),
                     ("forces", POINTER(Node)),
                     ("pre_timestep_operators", POINTER(Node)),
                     ("post_timestep_operators", POINTER(Node)),
+                    ("_allocated_pointers", POINTER(Node)),
+                    ("_registered_params", POINTER(Node)),
                     ("_integrator", c_int)]
 
 # This list keeps pairing from C rebx_param_type enum to ctypes type 1-to-1. Derive the required mappings from it
