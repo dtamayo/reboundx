@@ -261,10 +261,9 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
      }
      */
     else{
-        char str[100];
-        sprintf(str, "REBOUNDx error: Force '%s' not found in rebx_create_force.\n", name);
-        reb_error(rebx->sim, str);
-        return NULL;
+        char str[300];
+        sprintf(str, "REBOUNDx warning: Force '%s' not found in REBOUNDx library. Returning custom force. User must initialize force_type enum and update_accelerations function pointer before adding to REBOUNDx\n", name);
+        reb_warning(rebx->sim, str);
     }
     return force;
 }
@@ -315,10 +314,9 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
      operator->step = rebx_track_min_distance;
      }*/
     else{
-        char str[100];
-        sprintf(str, "REBOUNDx error: Operator '%s' not found in rebx_create_operator.\n", name);
-        reb_error(rebx->sim, str);
-        return NULL;
+        char str[300];
+        sprintf(str, "REBOUNDx warning: Operator '%s' not found in REBOUNDx library. Returning custom operator. User must initialize operator_type enum and step function pointer before adding to REBOUNDx\n", name);
+        reb_warning(rebx->sim, str);
     }
     return operator;
 }
