@@ -81,6 +81,7 @@ void rebx_integrate(struct reb_simulation* const sim, const double dt, struct re
 
 static void rebx_register_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "c", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "gr_source", REBX_TYPE_INT);
     rebx_register_param(rebx, "max_iterations", REBX_TYPE_INT);
     rebx_register_param(rebx, "index", REBX_TYPE_INT);
     rebx_register_param(rebx, "force", REBX_TYPE_FORCE);
