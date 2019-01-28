@@ -22,7 +22,7 @@ ifndef REBXGITHASH
 	PREDEF+= -DREBXGITHASH=$(REBXGITHASH)
 endif
 
-SOURCES=linkedlist.c steppers.c rebxtools.c core.c gr.c 
+SOURCES=linkedlist.c steppers.c rebxtools.c core.c gr.c modify_mass.c
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=rebxtools.h reboundx.h linkedlist.h
 
