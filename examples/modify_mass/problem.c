@@ -41,16 +41,17 @@ int main(int argc, char* argv[]){
 	reb_move_to_com(sim);
 	
 	struct rebx_extras* rebx = rebx_init(sim); // initialize reboundx
-	rebx_add(rebx, "modify_mass"); 
+    struct rebx_operator* modify_mass = rebx_create_operator(rebx, "modify_mass");
+	rebx_add_operator(rebx, modify_mass);
 
 	// To set an exponential mass loss rate, we set the e-folding timescale (positive for growth, negative for loss)
-    double* tau_mass0 = rebx_add_param(&sim->particles[0], "tau_mass", REBX_TYPE_DOUBLE);
-    *tau_mass0 = -tmax; // star loses mass with e-damping timescale tmax
+    // Here have the star lose mass with e-damping timescale = tmax
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "tau_mass", -tmax);
 
 	// We can approximate a linear mass loss/growth rate if the rate is small by taking tau_mass = M_initial / mass_loss_rate (or growth)
 	double M_dot = 1.e-12; // mass growth rate for the planet (in simulation units--here Msun/yr)
-    double* tau_mass1 = rebx_add_param(&sim->particles[1], "tau_mass", REBX_TYPE_DOUBLE);
-    *tau_mass1 = sim->particles[1].m / M_dot;   // first planet gains mass at linear rate M_dot
+    double tau_mass = sim->particles[1].m / M_dot; // first planet gains mass at linear rate M_dot
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "tau_mass", tau_mass);
 
 	reb_integrate(sim, tmax); 
 	rebx_free(rebx); 	// this explicitly frees all the memory allocated by REBOUNDx 
