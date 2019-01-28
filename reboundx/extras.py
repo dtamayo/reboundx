@@ -66,7 +66,6 @@ class Extras(Structure):
 
     def __del__(self):
         if self._b_needsfree_ == 1:
-            print('freeing REBx')
             clibreboundx.rebx_free_pointers(byref(self))
             #clibreboundx.rebx_free_effects(byref(self))
             #clibreboundx.rebx_free_params(byref(self))
@@ -142,13 +141,12 @@ class Extras(Structure):
         clibreboundx.rebx_add_force(byref(self), byref(force))
         self._sim.contents.process_messages()
 
-    def add_operator(self, operator):
-        clibreboundx.rebx_add_operator(byref(self), byref(operator))
-        self._sim.contents.process_messages()
-
-    def add_operator_step(self, operator, dt_fraction, timing="post", name=""):
-        timingint = REBX_TIMING[timing]
-        clibreboundx.rebx_add_operator_step(byref(self), byref(operator), c_double(dt_fraction), c_int(timingint), c_char_p(name.encode('ascii')))
+    def add_operator(self, operator, dt_fraction=None, timing="post", name=""):
+        if dt_fraction is None:
+            clibreboundx.rebx_add_operator(byref(self), byref(operator))
+        else:
+            timingint = REBX_TIMING[timing]
+            clibreboundx.rebx_add_operator_step(byref(self), byref(operator), c_double(dt_fraction), c_int(timingint), c_char_p(name.encode('ascii')))
         self._sim.contents.process_messages()
 
     def add_custom_force(self, function, force_is_velocity_dependent):

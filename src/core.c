@@ -83,6 +83,7 @@ static void rebx_register_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "c", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "gr_source", REBX_TYPE_INT);
     rebx_register_param(rebx, "max_iterations", REBX_TYPE_INT);
+    rebx_register_param(rebx, "tau_mass", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "index", REBX_TYPE_INT);
     rebx_register_param(rebx, "force", REBX_TYPE_FORCE);
     rebx_register_param(rebx, "particle", REBX_TYPE_POINTER);
@@ -299,15 +300,16 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
         operator->step = rebx_ias15_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
+    else if (strcmp(name, "modify_mass") == 0){
+        operator->step = rebx_modify_mass;
+        operator->operator_type = REBX_OPERATOR_UPDATER;
+    }
     /*
     else if (strcmp(name, "modify_orbits_direct") == 0){
         operator->step = rebx_modify_orbits_direct;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
-    else if (strcmp(name, "modify_mass") == 0){
-        operator->step = rebx_modify_mass;
-        operator->operator_type = REBX_OPERATOR_UPDATER;
-    }*/
+    */
     
     /*else if (hash == reb_hash("track_min_distance")){
      operator->step = rebx_track_min_distance;
