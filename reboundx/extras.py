@@ -7,6 +7,8 @@ import warnings
 INTEGRATORS = {"implicit_midpoint": 0, "rk4":1, "euler": 2, "rk2": 3, "none": -1}
 
 REBX_TIMING = {"pre":-1, "post":1}
+REBX_FORCE_TYPE = {"none":0, "pos":1, "vel":2}
+REBX_OPERATOR_TYPE = {"none":0, "updater":1, "recorder":2}
 
 REBX_BINARY_WARNINGS = [
         ("REBOUNDx Error: Cannot read binary file. Check filename and file contents.", 1),
@@ -254,6 +256,7 @@ class Extras(Structure):
 # Generic REBOUNDx definitions
 #################################################
 
+
 class Param(Structure): # need to define fields afterward because of circular ref in linked list
     pass    
 Param._fields_ =  [ ("name", c_char_p),
@@ -267,26 +270,65 @@ Node._fields_ =  [  ("name", c_char_p),
                     ("next", POINTER(Node))]
 
 class Operator(Structure):
+    @property
+    def operator_type(self):
+        return self._operator_type
+
+    @operator_type.setter
+    def operator_type(self, value):
+        self._operator_type = REBX_OPERATOR_TYPE[value.lower()]
+
+    @property
+    def step(self):
+        return self._step
+
+    @step.setter
+    def step(self, func):
+        self._sfp = STEPFUNCPTR(func) # keep a reference to func so it doesn't get garbage collected
+        self._step = self._sfp
+
     @property 
     def params(self):
         params = Params(self)
         return params
+
+STEPFUNCPTR = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Operator), c_double)
+
 Operator._fields_ = [   ("name", c_char_p),
                         ("ap", POINTER(Node)),
                         ("_sim", POINTER(rebound.Simulation)),
-                        ("operator_type", c_int),
-                        ("step", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Operator), c_double))]
-
+                        ("_operator_type", c_int),
+                        ("_step", STEPFUNCPTR)]
 class Force(Structure):
+    @property
+    def force_type(self):
+        return self._force_type
+
+    @force_type.setter
+    def force_type(self, value):
+        self._force_type = REBX_FORCE_TYPE[value.lower()]
+
+    @property
+    def update_accelerations(self):
+        return self._update_accelerations
+
+    @update_accelerations.setter
+    def update_accelerations(self, func):
+        self._ffp = FORCEFUNCPTR(func) # keep a reference to func so it doesn't get garbage collected
+        self._update_accelerations = self._ffp
+
     @property 
     def params(self):
         params = Params(self)
         return params
+
+FORCEFUNCPTR = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Force), POINTER(rebound.Particle), c_int)
+
 Force._fields_ = [  ("name", c_char_p),
                     ("ap", POINTER(Node)),
                     ("_sim", POINTER(rebound.Simulation)),
-                    ("force_type", c_int),
-                    ("update_accelerations", CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Force), POINTER(rebound.Particle), c_int))]
+                    ("_force_type", c_int),
+                    ("_update_accelerations", FORCEFUNCPTR)]
 
 # Need to put fields after class definition because of self-referencing
 Extras._fields_ =  [("_sim", POINTER(rebound.Simulation)),
