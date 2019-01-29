@@ -42,7 +42,22 @@ int main(int argc, char* argv[]){
 	
 	struct rebx_extras* rebx = rebx_init(sim); // initialize reboundx
     struct rebx_operator* modify_mass = rebx_create_operator(rebx, "modify_mass");
+
+    /* The function rebx_add_operator will choose how to add the operator to the integration
+     * scheme based on the integrator being used and the properties of the operator.
+     * This is typically a half operator timestep before the main REBOUND timestep, and half afterward.
+     */
+
 	rebx_add_operator(rebx, modify_mass);
+
+    /* If you wanted to make your own choices, you can add individual operator steps.
+     * In this case you would pass additional parameters. Say we wanted to add a full operaator timestep after the main REBOUND timestep;
+     *
+     * dt_fraction = 1. // Fraction of a REBOUND timestep (sim->dt) operator should act
+     * timing = REBX_TIMING_POST; // Should happen POST timestep
+     * name = "modify_mass_post"; // Name identifier
+     * rebx_add_operator_step(rebx, modify_mass, dt_fraction, timing, name);
+     */
 
 	// To set an exponential mass loss rate, we set the e-folding timescale (positive for growth, negative for loss)
     // Here have the star lose mass with e-damping timescale = tmax
