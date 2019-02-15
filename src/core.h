@@ -102,5 +102,9 @@ void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const doubl
 void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
 
 void* rebx_malloc(struct rebx_extras* const rebx, size_t memsize);
+void rebx_free_particle_ap(struct reb_particle* p);
+void rebx_free_force(struct rebx_force* force);
+void rebx_free_operator(struct rebx_operator* operator);
+void rebx_free_step(struct rebx_step* step);
 
 #endif

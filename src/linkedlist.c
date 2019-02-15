@@ -65,7 +65,31 @@ int rebx_remove_node(struct rebx_node** head, const char* name){
     return 0;
 }
 */
-int rebx_remove_node(struct rebx_node** head, const char* name){
+
+// Pass head of linked list and a pointer to the node->object to remove (e.g. force)
+int rebx_remove_node(struct rebx_node** head, void* object){
+    if (*head == NULL){
+        return 0;
+    }
+    
+    struct rebx_node* current = *head;
+    if(current->object == object){ // edge case where force is first in list
+        printf("Found it\n");
+        *head = current->next;
+        free(current);
+        return 1;
+    }
+    
+    struct rebx_node* prev = current;
+    while (current != NULL){
+        if(current->object == object){
+            prev->next = current->next;
+            free(current);
+            return 1;
+        }
+        prev = current;
+        current = current->next;
+    }
     return 0;
 }
 
