@@ -139,7 +139,6 @@ Basic types in REBOUNDx
  */
 
 struct rebx_node{
-    char* name;                     ///< Pointer to name in object
     void* object;                   ///< Pointer to param
     struct rebx_node* next;   ///< Pointer to next node in list
 };
@@ -160,7 +159,7 @@ struct rebx_param{
 struct rebx_operator{
     char* name;
     struct rebx_node* ap;
-    struct reb_simulation* _sim;
+    struct reb_simulation* sim;
     enum rebx_operator_type operator_type;
     void (*step) (struct reb_simulation* sim, struct rebx_operator* operator, const double dt);   ///< Pointer to function to call before and/or after each timestep.
 };
@@ -171,7 +170,7 @@ struct rebx_operator{
 struct rebx_force{
     char* name;
     struct rebx_node* ap;
-    struct reb_simulation* _sim; // need in python to match particles struct
+    struct reb_simulation* sim; // need in python to match particles struct
     enum rebx_force_type force_type;
     void (*update_accelerations) (struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N); ///< Pointer to function to call during forces evaluation.
 };
@@ -194,12 +193,17 @@ struct rebx_binary_field{
  * @brief Main REBOUNDx structure.
  */
 struct rebx_extras {	
-	struct reb_simulation* sim;					    ///< Pointer to the simulation REBOUNDx is linked to. Is this needed?
-    struct rebx_node* forces;
-	struct rebx_node* pre_timestep_operators;		            ///< Linked list with pointers to all the effects added to the simulation.
-	struct rebx_node* post_timestep_operators;		            ///< Linked list with pointers to all the effects added to the simulation.
-	struct rebx_node* allocated_pointers; 	///< Linked list with pointers to all memory allocated by REBOUNDx (for later freeing).
+	struct reb_simulation* sim;					    ///< Pointer to the simulation REBOUNDx is linked to.
+    
+    struct rebx_node* additional_forces;
+    struct rebx_node* pre_timestep_modifications;		            ///< Linked list with pointers to all the effects added to the simulation.
+	struct rebx_node* post_timestep_modifications;		            ///< Linked list with pointers to all the effects added to the simulation.
+	//struct rebx_node* allocated_pointers; 	///< Linked list with pointers to all memory allocated by REBOUNDx (for later freeing).
+    
     struct rebx_node* registered_params;    ///< Linked list of all the names registered for parameters, along with their type
+    struct rebx_node* allocated_forces;
+    struct rebx_node* allocated_operators;
+    
     enum {
         REBX_INTEGRATOR_IMPLICIT_MIDPOINT = 0,
         REBX_INTEGRATOR_RK4 = 1,
@@ -244,7 +248,7 @@ void rebx_remove_from_simulation(struct reb_simulation* sim);
  */
 void rebx_free(struct rebx_extras* rebx);
 void rebx_free_pointers(struct rebx_extras* rebx);
-
+void rebx_free_particle_ap(struct reb_particle* p);
 /**
  * @brief Save a binary file with all the effects in the simulation, as well as all particle and effect parameters.
  * @param rebx The rebx_extras pointer returned from the initial call to rebx_init.
@@ -354,7 +358,7 @@ int rebx_remove_param(struct rebx_node** apptr, const char* const param_name);
  * @param param_type Variable type from rebx_param_type enumeration.
  * @return A void pointer to the parameter, i.e., the contents member of the new rebx_param structure. 
  */
-void* rebx_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type);
+//void* rebx_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type);
 /**
  * @brief Adds an array parameter to a particle or effect.
  * @param object Pointer to the particle or effect to which to add the parameter.

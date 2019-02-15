@@ -34,7 +34,7 @@ void rebx_add_node(struct rebx_node** head, struct rebx_node* node){
     *head = node;
     return;
 }
-
+/*
 struct rebx_node* rebx_get_node(struct rebx_node* head, const char* name){
     struct rebx_node* current = head;
     while(current != NULL){
@@ -62,6 +62,10 @@ int rebx_remove_node(struct rebx_node** head, const char* name){
         }
         current = current->next;
     }
+    return 0;
+}
+*/
+int rebx_remove_node(struct rebx_node** head, const char* name){
     return 0;
 }
 
