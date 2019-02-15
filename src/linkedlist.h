@@ -47,5 +47,6 @@ struct rebx_node* rebx_get_node(struct rebx_node* head, const char* name);
  * @param name Name of the node to remove
  * @return 1 if node found and removed, 0 if not found
  */
-int rebx_remove_node(struct rebx_node** head, const char* name);
+int rebx_remove_node(struct rebx_node** head, void* object);
+
 #endif

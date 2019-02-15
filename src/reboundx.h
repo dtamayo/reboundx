@@ -249,6 +249,10 @@ void rebx_remove_from_simulation(struct reb_simulation* sim);
 void rebx_free(struct rebx_extras* rebx);
 void rebx_free_pointers(struct rebx_extras* rebx);
 void rebx_free_particle_ap(struct reb_particle* p);
+
+int rebx_remove_force(struct rebx_extras* rebx, struct rebx_force* force);
+int rebx_remove_operator(struct rebx_extras* rebx, struct rebx_operator* operator);
+
 /**
  * @brief Save a binary file with all the effects in the simulation, as well as all particle and effect parameters.
  * @param rebx The rebx_extras pointer returned from the initial call to rebx_init.

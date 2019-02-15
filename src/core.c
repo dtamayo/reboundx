@@ -205,7 +205,7 @@ static struct rebx_node* rebx_create_node(struct rebx_extras* rebx){
     return node;
 }
 
-struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char* name){
+struct rebx_force* rebx_create_custom_force(struct rebx_extras* const rebx, const char* name){
     struct rebx_force* force = rebx_malloc(rebx, sizeof(*force));
     if (force == NULL){
         return NULL;
@@ -214,30 +214,45 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
     force->sim = rebx->sim;
     force->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
     if (force->name == NULL){
+        rebx_free_force(force);
         return NULL;
     }
     else{
         strcpy(force->name, name);
     }
     
+    // Add force to allocated_forces list for later freeing
+    struct rebx_node* node = rebx_create_node(rebx);
+    if (node == NULL){
+        rebx_free_force(force);
+        return NULL;
+    }
+    node->object = force;
+    rebx_add_node(&rebx->allocated_forces, node);
+    
+    return force;
+}
+
+struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char* name){
+    struct rebx_force* force = rebx_create_custom_force(rebx, name);
     // loop over all names. precompiler list
     if(strcmp(name, "gr") == 0){
         force->update_accelerations = rebx_gr;
         force->force_type = REBX_FORCE_VEL;
     }
     /*if (strcmp(name, "modify_orbits_forces") == 0){
-        force->update_accelerations = rebx_modify_orbits_forces;
-        force->force_type = REBX_FORCE_VEL;
-    }
-    
-    else if (strcmp(name, "gr_full") == 0){
-        force->update_accelerations = rebx_gr_full;
-        force->force_type = REBX_FORCE_VEL;
-    }
-    else if (strcmp(name, "gravitational_harmonics") == 0){
-        force->update_accelerations = rebx_gravitational_harmonics;
-        force->force_type = REBX_FORCE_POS;
-    }*/
+     force->update_accelerations = rebx_modify_orbits_forces;
+     force->force_type = REBX_FORCE_VEL;
+     }
+     
+     else if (strcmp(name, "gr_full") == 0){
+     force->update_accelerations = rebx_gr_full;
+     force->force_type = REBX_FORCE_VEL;
+     }
+     else if (strcmp(name, "gravitational_harmonics") == 0){
+     force->update_accelerations = rebx_gravitational_harmonics;
+     force->force_type = REBX_FORCE_POS;
+     }*/
     /*
      else if (hash == reb_hash("gr_potential")){
      update_accelerations = rebx_gr_potential;
@@ -259,22 +274,16 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
      */
     else{
         char str[300];
-        sprintf(str, "REBOUNDx warning: Force '%s' not found in REBOUNDx library. Returning custom force. User must initialize force_type enum and update_accelerations function pointer before adding to REBOUNDx\n", name);
-        reb_warning(rebx->sim, str);
+        sprintf(str, "REBOUNDx warning: Force '%s' not found in REBOUNDx library.\n", name);
+        reb_error(rebx->sim, str);
+        rebx_remove_force(rebx, force);
+        return NULL;
     }
-    
-    // Add force to allocated_forces list for later freeing
-    struct rebx_node* node = rebx_create_node(rebx);
-    if (node == NULL){
-        return 0;
-    }
-    node->object = force;
-    rebx_add_node(&rebx->allocated_forces, node);
     
     return force;
 }
 
-struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const char* name){
+struct rebx_operator* rebx_create_custom_operator(struct rebx_extras* const rebx, const char* name){
     struct rebx_operator* operator = rebx_malloc(rebx, sizeof(*operator));
     if (operator == NULL){
         return NULL;
@@ -283,12 +292,27 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
     operator->sim = rebx->sim;
     operator->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
     if (operator->name == NULL){
+        rebx_free_operator(operator);
         return NULL;
     }
     else{
         strcpy(operator->name, name);
     }
     
+    // Add operator to allocated_operators list for later freeing
+    struct rebx_node* node = rebx_create_node(rebx);
+    if (node == NULL){
+        rebx_free_operator(operator);
+        return 0;
+    }
+    node->object = operator;
+    rebx_add_node(&rebx->allocated_operators, node);
+    
+    return operator;
+}
+
+struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const char* name){
+    struct rebx_operator* operator = rebx_create_custom_operator(rebx, name);
     if (strcmp(name, "kepler") == 0){
         operator->step = rebx_kepler_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
@@ -310,29 +334,22 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     /*
-    else if (strcmp(name, "modify_orbits_direct") == 0){
-        operator->step = rebx_modify_orbits_direct;
-        operator->operator_type = REBX_OPERATOR_UPDATER;
-    }
-    */
-    
+     else if (strcmp(name, "modify_orbits_direct") == 0){
+     operator->step = rebx_modify_orbits_direct;
+     operator->operator_type = REBX_OPERATOR_UPDATER;
+     }
+     */
+
     /*else if (hash == reb_hash("track_min_distance")){
      operator->step = rebx_track_min_distance;
      }*/
     else{
         char str[300];
-        sprintf(str, "REBOUNDx warning: Operator '%s' not found in REBOUNDx library. Returning custom operator. User must initialize operator_type enum and step function pointer before adding to REBOUNDx\n", name);
-        reb_warning(rebx->sim, str);
+        sprintf(str, "REBOUNDx warning: Operator '%s' not found in REBOUNDx library.\n", name);
+        reb_error(rebx->sim, str);
+        rebx_remove_operator(rebx, operator);
+        return NULL;
     }
-    
-    // Add operator to allocated_operators list for later freeing
-    struct rebx_node* node = rebx_create_node(rebx);
-    if (node == NULL){
-        return 0;
-    }
-    node->object = operator;
-    rebx_add_node(&rebx->allocated_operators, node);
-    
     return operator;
 }
 
@@ -361,9 +378,15 @@ int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* opera
     if(step == NULL){
         return 0;
     }
-    step->name = name;
     step->operator = operator;
     step->dt_fraction = dt_fraction;
+    step->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
+    if (step->name == NULL){
+        return 0;
+    }
+    else{
+        strcpy(step->name, name);
+    }
     
     struct rebx_node* node = rebx_create_node(rebx);
     if (node == NULL){
@@ -766,20 +789,26 @@ void rebx_free_particle_ap(struct reb_particle* p){
     rebx_free_ap(&p->ap);
 }
 
-static void rebx_free_force(struct rebx_force* force){
-    free(force->name);
+void rebx_free_force(struct rebx_force* force){
+    if(force->name){
+        free(force->name);
+    }
     rebx_free_ap(&force->ap);
     free(force);
 }
 
-static void rebx_free_operator(struct rebx_operator* operator){
-    free(operator->name);
+void rebx_free_operator(struct rebx_operator* operator){
+    if(operator->name){
+        free(operator->name);
+    }
     rebx_free_ap(&operator->ap);
     free(operator);
 }
 
-static void rebx_free_step(struct rebx_step* step){
-    free(step->name);
+void rebx_free_step(struct rebx_step* step){
+    if(step->name){
+        free(step->name);
+    }
     free(step);
 }
 
@@ -832,4 +861,58 @@ void rebx_free_pointers(struct rebx_extras* rebx){
         free(current);
         current = next;
     }
+}
+
+int rebx_remove_force(struct rebx_extras* rebx, struct rebx_force* force){
+    int success = rebx_remove_node(&rebx->allocated_forces, force);
+    if(success){
+        rebx_free_force(force);
+    }
+    success = rebx_remove_node(&rebx->additional_forces, force);
+    return success;
+}
+
+// Remove all steps in head pointer that have the passed operator in them.
+// Success = 1 if at least one removed. Need separate logic since operator
+// is nested inside step
+static int rebx_remove_step_nodes(struct rebx_node** head, struct rebx_operator* operator){
+    if (*head == NULL){
+        return 0;
+    }
+    
+    int success = 0;
+    struct rebx_node* current = *head;
+    struct rebx_step* step = current->object;
+    if(step->operator == operator){ // edge case where step is first in list
+        *head = current->next;
+        rebx_free_step(step);
+        free(current);
+        success = 1;
+    }
+    
+    struct rebx_node* prev = current;
+    while (current != NULL){
+        step = current->object;
+        if(step->operator == operator){
+            prev->next = current->next;
+            rebx_free_step(step);
+            free(current);
+            success = 1;
+        }
+        prev = current;
+        current = current->next;
+    }
+    return success;
+}
+
+int rebx_remove_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
+    int success = rebx_remove_node(&rebx->allocated_operators, operator);
+    if(success){
+        rebx_free_operator(operator);
+    }
+    
+    success = rebx_remove_step_nodes(&rebx->pre_timestep_modifications, operator);
+    success += rebx_remove_step_nodes(&rebx->post_timestep_modifications, operator);
+
+    return success;
 }
