@@ -528,8 +528,9 @@ double rebx_calculate_energy(struct reb_simulation* const sim);
 int rebx_len(struct rebx_node* head);
 struct rebx_param_wrapper* rebx_get_param_wrapper(struct rebx_node* ap, const char* const param_name);
 
-void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+/*void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 void rebx_kepler_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 void rebx_jump_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+*/
 #endif

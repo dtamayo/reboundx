@@ -293,7 +293,11 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
 
 struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const char* name){
     struct rebx_operator* operator = rebx_create_operator(rebx, name);
-    if (strcmp(name, "kepler") == 0){
+    if (strcmp(name, "modify_mass") == 0){
+        operator->step = rebx_modify_mass;
+        operator->operator_type = REBX_OPERATOR_UPDATER;
+    }
+    /*else if (strcmp(name, "kepler") == 0){
         operator->step = rebx_kepler_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
@@ -309,11 +313,7 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
         operator->step = rebx_ias15_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
-    else if (strcmp(name, "modify_mass") == 0){
-        operator->step = rebx_modify_mass;
-        operator->operator_type = REBX_OPERATOR_UPDATER;
-    }
-    /*
+    
      else if (strcmp(name, "modify_orbits_direct") == 0){
      operator->step = rebx_modify_orbits_direct;
      operator->operator_type = REBX_OPERATOR_UPDATER;
