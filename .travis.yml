@@ -24,12 +24,12 @@ matrix:
     - env: TESTPART=CCOVERAGE
       python: "3.5"
 
-#addons:
-#    apt:
-#        sources:
-#            - debian-sid
-#        packages:
-#            - libglfw3-dev
+addons:
+    apt:
+        sources:
+            - debian-sid
+        packages:
+            - libglfw3-dev
 
 before_install:
   - if [[ $TESTPART == "C" ]]; then cd $TRAVIS_BUILD_DIR/../; git clone https://github.com/hannorein/rebound; cd rebound; pip install -e .; fi
