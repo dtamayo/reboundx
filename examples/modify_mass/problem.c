@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
 	reb_move_to_com(sim);
 	
 	struct rebx_extras* rebx = rebx_init(sim); // initialize reboundx
-    struct rebx_operator* modify_mass = rebx_create_operator(rebx, "modify_mass");
+    struct rebx_operator* modify_mass = rebx_load_operator(rebx, "modify_mass");
 
     /* The function rebx_add_operator will choose how to add the operator to the integration
      * scheme based on the integrator being used and the properties of the operator.
