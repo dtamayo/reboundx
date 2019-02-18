@@ -205,7 +205,7 @@ static struct rebx_node* rebx_create_node(struct rebx_extras* rebx){
     return node;
 }
 
-struct rebx_force* rebx_create_custom_force(struct rebx_extras* const rebx, const char* name){
+struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char* name){
     struct rebx_force* force = rebx_malloc(rebx, sizeof(*force));
     if (force == NULL){
         return NULL;
@@ -233,8 +233,8 @@ struct rebx_force* rebx_create_custom_force(struct rebx_extras* const rebx, cons
     return force;
 }
 
-struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char* name){
-    struct rebx_force* force = rebx_create_custom_force(rebx, name);
+struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* name){
+    struct rebx_force* force = rebx_create_force(rebx, name);
     // loop over all names. precompiler list
     if(strcmp(name, "gr") == 0){
         force->update_accelerations = rebx_gr;
@@ -283,7 +283,7 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
     return force;
 }
 
-struct rebx_operator* rebx_create_custom_operator(struct rebx_extras* const rebx, const char* name){
+struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const char* name){
     struct rebx_operator* operator = rebx_malloc(rebx, sizeof(*operator));
     if (operator == NULL){
         return NULL;
@@ -311,8 +311,8 @@ struct rebx_operator* rebx_create_custom_operator(struct rebx_extras* const rebx
     return operator;
 }
 
-struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const char* name){
-    struct rebx_operator* operator = rebx_create_custom_operator(rebx, name);
+struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const char* name){
+    struct rebx_operator* operator = rebx_create_operator(rebx, name);
     if (strcmp(name, "kepler") == 0){
         operator->step = rebx_kepler_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;

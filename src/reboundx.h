@@ -301,6 +301,8 @@ void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, cons
 int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator);
 int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* operator, const double dt_fraction, enum rebx_timing timing, char* name);
 int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force);
+struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const char* name);
+struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* name);
 struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const char* name);
 struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char* name);
 /**
