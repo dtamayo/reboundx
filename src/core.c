@@ -116,26 +116,6 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     rebx_register_params(rebx);
 }
 
-/*****************************
- Garbage Collection Routines
- ****************************/
-
-void rebx_remove_from_simulation(struct reb_simulation* sim){
-    sim->additional_forces = NULL;
-    sim->post_timestep_modifications = NULL;
-}
-
-void rebx_free_effects(struct rebx_extras* rebx){
-    /*struct rebx_effect* current = rebx->effects;
-    struct rebx_effect* temp_next;
-
-    while(current != NULL){
-        temp_next = current->next;
-        free(current);
-        current = temp_next;
-    }*/
-}
-
 /**********************************************
  Functions executing forces & ptm each timestep
  *********************************************/
@@ -763,9 +743,21 @@ void* rebx_malloc(struct rebx_extras* const rebx, size_t memsize){
     return ptr;
 }
 
+/*****************************
+ Garbage Collection Routines
+ ****************************/
+
 void rebx_free(struct rebx_extras* rebx){
     rebx_free_pointers(rebx);
+    rebx_reset_sim(rebx->sim);
     free(rebx);
+}
+
+void rebx_reset_sim(struct reb_simulation* sim){
+    sim->additional_forces = NULL;
+    sim->pre_timestep_modifications = NULL;
+    sim->post_timestep_modifications = NULL;
+    sim->free_particle_ap = NULL;
 }
 
 void rebx_free_ap(struct rebx_node** ap){

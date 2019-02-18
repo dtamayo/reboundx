@@ -69,15 +69,7 @@ class Extras(Structure):
     def __del__(self):
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_pointers(byref(self))
-            #clibreboundx.rebx_free_effects(byref(self))
-            #clibreboundx.rebx_free_params(byref(self))
-
-    def remove_from_simulation(self, sim):
-        """
-        Disattaches reboundx from simulation, removing all effects.
-        """
-        del sim._extras_ref
-        clibreboundx.rebx_remove_from_simulation(byref(sim))
+            clibreboundx.rebx_reset_sim(self._sim)
 
     @property
     def integrator(self):
@@ -115,27 +107,27 @@ class Extras(Structure):
         clibreboundx.rebx_register_param(byref(self), c_char_p(name.encode('ascii')), c_int(type_enum))
         self._sim.contents.process_messages()
 
+    def load_force(self, name):
+        clibreboundx.rebx_load_force.restype = POINTER(Force)
+        ptr = clibreboundx.rebx_load_force(byref(self), c_char_p(name.encode('ascii')))
+        self._sim.contents.process_messages()
+        return ptr.contents
+    
     def create_force(self, name):
         clibreboundx.rebx_create_force.restype = POINTER(Force)
         ptr = clibreboundx.rebx_create_force(byref(self), c_char_p(name.encode('ascii')))
         self._sim.contents.process_messages()
         return ptr.contents
 
-    def create_operator(self, name):
-        clibreboundx.rebx_create_operator.restype = POINTER(Operator)
-        ptr = clibreboundx.rebx_create_operator(byref(self), c_char_p(name.encode('ascii')))
+    def load_operator(self, name):
+        clibreboundx.rebx_load_operator.restype = POINTER(Operator)
+        ptr = clibreboundx.rebx_load_operator(byref(self), c_char_p(name.encode('ascii')))
         self._sim.contents.process_messages()
         return ptr.contents
 
-    def add(self, name):
-        """
-        This is the main function for adding effects to simulations.
-        :param name: Name of the effect you wish to add.  See http://reboundx.readthedocs.io/en/latest/effects.html for a list of effects.
-        :type name: string
-        :rtype: Effect structure
-        """
-        clibreboundx.rebx_add.restype = POINTER(Effect)
-        ptr = clibreboundx.rebx_add(byref(self), c_char_p(name.encode('ascii')))
+    def create_operator(self, name):
+        clibreboundx.rebx_create_operator.restype = POINTER(Operator)
+        ptr = clibreboundx.rebx_create_operator(byref(self), c_char_p(name.encode('ascii')))
         self._sim.contents.process_messages()
         return ptr.contents
 
@@ -151,39 +143,6 @@ class Extras(Structure):
             clibreboundx.rebx_add_operator_step(byref(self), byref(operator), c_double(dt_fraction), c_int(timingint), c_char_p(name.encode('ascii')))
         self._sim.contents.process_messages()
 
-    def add_custom_force(self, function, force_is_velocity_dependent):
-        """
-        This function allows you to add your own custom python function to REBOUNDx that updates particle accelerations.  
-        You need to use this if you want to both use your own custom functions and the built-in REBOUNDx effects.  
-        See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for details and a tutorial on how to use it.
-        :param function: Custom Python function for updating particle accelerations.
-        :param force_is_velocity_dependent: Whether your custom force depends on the particle velocities.
-        :type function: Function
-        :type c: bool
-        :rtype: Effect structure
-        """
-        REBX_FORCE = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect), POINTER(rebound.Particle), c_int)
-        self.custom_effects[function.__name__] = REBX_FORCE(function) # store a ref so it doesn't get garbage collected
-        clibreboundx.rebx_add_custom_force.restype = POINTER(Effect)
-        ptr = clibreboundx.rebx_add_custom_force(byref(self), c_char_p(function.__name__.encode('ascii')), self.custom_effects[function.__name__], force_is_velocity_dependent)
-        return ptr.contents
-
-    def add_custom_operator(self, function):
-        """
-        This function allows you to add your own custom python function to REBOUNDx that is executed between integrator timesteps.
-        You need to use this if you want to both use your own custom functions and the built-in REBOUNDx effects.  
-        See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for details and a tutorial on how to use it.
-        :param function: Custom Python function to be executed between timesteps.
-        :type function: Function
-        :type c: bool
-        :rtype: Effect structure 
-        """
-        REBX_OPERATOR = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Effect), c_double, c_int)
-        self.custom_effects[function.__name__] = REBX_OPERATOR(function) # store a ref so it doesn't get garbage collected
-        clibreboundx.rebx_add_custom_operator.restype = POINTER(Effect)
-        ptr = clibreboundx.rebx_add_custom_operator(byref(self), c_char_p(function.__name__.encode('ascii')), self.custom_effects[function.__name__])
-        return ptr.contents
-    
     def get_effect(self, name):
         clibreboundx.rebx_get_effect.restype = POINTER(Effect)
         ptr = clibreboundx.rebx_get_effect(byref(self), c_char_p(name.encode('ascii')))
@@ -193,13 +152,6 @@ class Extras(Structure):
             warnings.warn("Parameter {0} not found".format(name), RuntimeWarning)
             return
 
-    def gr_acc(self, acc, C2):
-        #sixdoub = c_double*6
-        #clibreboundx.rebx_gr_acc.restype = POINTER(sixdoub)
-        clibreboundx.rebx_gr_acc(byref(self), acc, c_double(C2))
-    def calculate_energy(self):
-        clibreboundx.rebx_calculate_energy.restype = c_double
-        return clibreboundx.rebx_calculate_energy(self._sim)
     #######################################
     # Input/Output Routines
     #######################################
@@ -265,8 +217,7 @@ Param._fields_ =  [ ("name", c_char_p),
 
 class Node(Structure): # need to define fields afterward because of circular ref in linked list
     pass    
-Node._fields_ =  [  ("name", c_char_p),
-                    ("object", c_void_p),
+Node._fields_ =  [  ("object", c_void_p),
                     ("next", POINTER(Node))]
 
 class Operator(Structure):
@@ -295,7 +246,7 @@ class Operator(Structure):
 STEPFUNCPTR = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Operator), c_double)
 
 Operator._fields_ = [   ("name", c_char_p),
-                        ("ap", POINTER(Node)),
+                        ("_ap", POINTER(Node)),
                         ("_sim", POINTER(rebound.Simulation)),
                         ("_operator_type", c_int),
                         ("_step", STEPFUNCPTR)]
@@ -332,11 +283,12 @@ Force._fields_ = [  ("name", c_char_p),
 
 # Need to put fields after class definition because of self-referencing
 Extras._fields_ =  [("_sim", POINTER(rebound.Simulation)),
-                    ("forces", POINTER(Node)),
-                    ("pre_timestep_operators", POINTER(Node)),
-                    ("post_timestep_operators", POINTER(Node)),
-                    ("_allocated_pointers", POINTER(Node)),
+                    ("_additional_forces", POINTER(Node)),
+                    ("_pre_timestep_modifications", POINTER(Node)),
+                    ("_post_timestep_modifications", POINTER(Node)),
                     ("_registered_params", POINTER(Node)),
+                    ("_allocated_forces", POINTER(Node)),
+                    ("_allocated_operators", POINTER(Node)),
                     ("_integrator", c_int)]
 
 # This list keeps pairing from C rebx_param_type enum to ctypes type 1-to-1. Derive the required mappings from it
@@ -346,6 +298,5 @@ REBX_C_PARAM_TYPES = {} # maps string of rebx_param_type enum to int
 for i, pair in enumerate(REBX_C_TO_CTYPES):
     REBX_CTYPES[i] = pair[1]
     REBX_C_PARAM_TYPES[pair[0]] = i
-
 
 from .params import Params
