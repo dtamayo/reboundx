@@ -26,17 +26,38 @@ class Extras(Structure):
     and functions for adding effects implemented as methods of the class.  
     The fastest way to understand it is to follow the examples at :ref:`ipython_examples`.  
     """
-
-    def __init__(self, sim):
-        #first check whether additional_forces or post_timestep_modifications is set on sim.  If so, raise error
-        #if cast(sim._additional_forces, c_void_p).value is not None or cast(sim._post_timestep_modifications, c_void_p).value is not None:
-        #    raise AttributeError("sim.additional_forces or sim.post_timestep_modifications was already set.  If you want to use REBOUNDx, you need to add custom effects through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.")
-        
-        clibreboundx.rebx_initialize(byref(sim), byref(self)) # Use memory address ctypes allocated for rebx Structure in C
+    
+    def __new__(cls, sim, filename=None):
+        # Create simulation
+        if filename==None:
+            # Create a new rebx instance
+            rebx = super(Extras,cls).__new__(cls)
+            clibreboundx.rebx_initialize(byref(sim), byref(rebx))
+        else:
+            pass
+            '''
+            # Recreate exisitng simulation 
+            sa = SimulationArchive(filename,process_warnings=False)
+            sim = super(Simulation,cls).__new__(cls)
+            clibrebound.reb_init_simulation(byref(sim))
+            w = sa.warnings # warnings will be appended to previous warnings (as to not repeat them) 
+            clibrebound.reb_create_simulation_from_simulationarchive_with_messages(byref(sim),byref(sa),c_int(snapshot),byref(w))
+            for majorerror, value, message in BINARY_WARNINGS:
+                if w.value & value:
+                    if majorerror:
+                        raise RuntimeError(message)
+                    else:  
+                        # Just a warning
+                        warnings.warn(message, RuntimeWarning)
+            '''
         if not hasattr(sim, "_extras_ref"): # if REBOUNDx wasn't already attached, check for warnings in case additional_forces or ptm were already set.
             sim.process_messages()
-        sim._extras_ref = self # add a reference to this instance in sim to make sure it's not garbage collected
-        self.custom_effects = {} # dictionary to keep references to custom effects so they don't get garbage collected
+        sim._extras_ref = rebx # add a reference to this instance in sim to make sure it's not garbage collected
+        rebx.custom_effects = {} # dictionary to keep references to custom effects so they don't get garbage collected
+        return rebx 
+
+    def __init__(self, sim, filename=None):
+        pass
 
     @classmethod
     def from_file(cls, sim, filename):
@@ -69,7 +90,7 @@ class Extras(Structure):
     def __del__(self):
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_pointers(byref(self))
-            clibreboundx.rebx_reset_sim(self._sim)
+            clibreboundx.rebx_reset_sim(byref(self))
 
     @property
     def integrator(self):
@@ -151,6 +172,15 @@ class Extras(Structure):
         else:
             warnings.warn("Parameter {0} not found".format(name), RuntimeWarning)
             return
+
+    def remove_force(self, force):
+        if not isinstance(force, reboundx.extras.Force):
+            raise TypeError("REBOUNDx Error: Object passed to rebx.remove_force is not a reboundx.Force instance.")
+        success = clibreboundx.rebx_remove_force(byref(self), byref(force))
+        if success:
+            del force
+        else:
+            raise AttributeError("REBOUNDx Error: Force {0} passed to rebx.remove_force not found in simulation.")
 
     #######################################
     # Input/Output Routines

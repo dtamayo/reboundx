@@ -239,7 +239,7 @@ struct rebx_extras* rebx_init(struct reb_simulation* sim);
  * @brief Disattaches REBOUNDx instance from simulation, resetting simulation's function pointers.
  * @param sim Pointer to the simulation from which to remove REBOUNDx
  */
-void rebx_reset_sim(struct reb_simulation* sim);
+void rebx_reset_sim(struct rebx_extras* rebx);
 
 /**
  * @brief Frees all memory allocated by REBOUNDx instance.
