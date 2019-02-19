@@ -304,6 +304,16 @@ int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force){
         return 0;
     }
     
+    if (force->update_accelerations == NULL){
+        reb_error(rebx->sim, "REBOUNDx error: Need to set update_accelerations function pointer on force before calling rebx_add_force. See custom effects example.\n");
+        return 0;
+    }
+    
+    if (force->force_type == REBX_FORCE_NONE){
+        reb_error(rebx->sim, "REBOUNDx error: Need to set force_type field on force before calling rebx_add_force. See custom effects example.\n");
+        return 0;
+    }
+    
     if (force->force_type == REBX_FORCE_VEL){
         rebx->sim->force_is_velocity_dependent = 1;
     }
