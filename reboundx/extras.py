@@ -90,7 +90,9 @@ class Extras(Structure):
     def __del__(self):
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_pointers(byref(self))
-            clibreboundx.rebx_reset_sim(byref(self))
+
+    def detach(self):
+        clibreboundx.rebx_detach(self._sim)
 
     @property
     def integrator(self):
@@ -164,14 +166,19 @@ class Extras(Structure):
             clibreboundx.rebx_add_operator_step(byref(self), byref(operator), c_double(dt_fraction), c_int(timingint), c_char_p(name.encode('ascii')))
         self._sim.contents.process_messages()
 
-    def get_effect(self, name):
-        clibreboundx.rebx_get_effect.restype = POINTER(Effect)
-        ptr = clibreboundx.rebx_get_effect(byref(self), c_char_p(name.encode('ascii')))
+    def get_force(self, name):
+        clibreboundx.rebx_get_force.restype = POINTER(Force)
+        ptr = clibreboundx.rebx_get_force(byref(self), c_char_p(name.encode('ascii')))
+        self._sim.contents.process_messages()
         if ptr:
             return ptr.contents
-        else:
-            warnings.warn("Parameter {0} not found".format(name), RuntimeWarning)
-            return
+
+    def get_operator(self, name):
+        clibreboundx.rebx_get_operator.restype = POINTER(Operator)
+        ptr = clibreboundx.rebx_get_operator(byref(self), c_char_p(name.encode('ascii')))
+        self._sim.contents.process_messages()
+        if ptr:
+            return ptr.contents
 
     def remove_force(self, force):
         if not isinstance(force, reboundx.extras.Force):

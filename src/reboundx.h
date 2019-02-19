@@ -233,29 +233,27 @@ struct rebx_extras {
  * @param sim reb_simulation pointer to the simulation that you want to add REBOUNDx functionality.
  * @return Returns a pointer to a rebx_extras structure, which holds all the information REBOUNDx needs.
  */
-struct rebx_extras* rebx_init(struct reb_simulation* sim);
+struct rebx_extras* rebx_attach(struct reb_simulation* sim);
 
 /**
- * @brief Disattaches REBOUNDx instance from simulation, resetting simulation's function pointers.
+ * @brief Detaches REBOUNDx instance from simulation, resetting simulation's function pointers.
  * @param sim Pointer to the simulation from which to remove REBOUNDx
  */
-void rebx_reset_sim(struct rebx_extras* rebx);
+void rebx_detach(struct reb_simulation* sim);
 
 /**
  * @brief Frees all memory allocated by REBOUNDx instance.
  * @details Should be called after simulation is done if memory is a concern.
- * @param rebx The rebx_extras pointer returned from the initial call to rebx_init.
+ * @param rebx The rebx_extras pointer returned from the initial call to rebx_attach.
  */
 void rebx_free(struct rebx_extras* rebx);
-void rebx_free_pointers(struct rebx_extras* rebx);
-void rebx_free_particle_ap(struct reb_particle* p);
 
 int rebx_remove_force(struct rebx_extras* rebx, struct rebx_force* force);
 int rebx_remove_operator(struct rebx_extras* rebx, struct rebx_operator* operator);
 
 /**
  * @brief Save a binary file with all the effects in the simulation, as well as all particle and effect parameters.
- * @param rebx The rebx_extras pointer returned from the initial call to rebx_init.
+ * @param rebx Pointer to the rebx_extras instance
  * @param filename Filename to which to save the binary file.
  */
 void rebx_output_binary(struct rebx_extras* rebx, char* filename);
@@ -293,8 +291,8 @@ void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, cons
 
 /**
  * @brief Main function for adding effects in REBOUNDx.
- * @param rebx Pointer to the rebx_extras instance returned by rebx_init.
- * @param name Name of the effect we want to add.
+ * @param rebx Pointer to the rebx_extras instance
+ * @param name Name of the effect we want to add
  * @return Returns a pointer to a rebx_effect structure for the effect.
  */
 //struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name);
@@ -307,30 +305,30 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
 struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char* name);
 /**
  * @brief Function for adding a custom force in REBOUNDx.
- * @param rebx Pointer to the rebx_extras instance returned by rebx_init.
- * @param name String with the name of the custom effect.
+ * @param rebx Pointer to the rebx_extras instance
+ * @param name String with the name of the custom effect
  * @param custom_force User-implemented function that updates the accelerations of particles.
- * @param force_is_velocity_dependent Should be set to 1 if the custom force uses particle velocities, 0 otherwise.
- * @return Returns a pointer to a rebx_effect structure for the effect.
+ * @param force_is_velocity_dependent Should be set to 1 if the custom force uses particle velocities, 0 otherwise
+ * @return Returns a pointer to a rebx_effect structure for the effect
  */
 struct rebx_effect* rebx_add_custom_force(struct rebx_extras* rebx, const char* name, void (*custom_force)(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N), const int force_is_velocity_dependent);
 
 /**
  * @brief Function for adding a custom post_timestep_modification in REBOUNDx.
- * @param rebx Pointer to the rebx_extras instance returned by rebx_init.
- * @param name String with the name of the custom effect.
+ * @param rebx Pointer to the rebx_extras instance
+ * @param name String with the name of the custom effect
  * @param custom_ptm User-implemented function that updates particles.
  * @return Returns a pointer to a rebx_effect structure for the effect.
  */
 struct rebx_effect* rebx_add_custom_operator(struct rebx_extras* rebx, const char* name, void (*custom_operator)(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing));
 /**
  * @brief Get a pointer to an effect by name.
- * @param rebx Pointer to the rebx_extras instance returned by rebx_init.
- * @param effect_name Name of the effect (string).
+ * @param rebx Pointer to the rebx_extras instance
+ * @param effect_name Name of the effect (string)
  * @return Pointer to the corresponding rebx_effect structure, or NULL if not found.
  */
-struct rebx_effect* rebx_get_effect(struct rebx_extras* const rebx, const char* const effect_name);
-
+struct rebx_force* rebx_get_force(struct rebx_extras* const rebx, const char* const name);
+struct rebx_operator* rebx_get_operator(struct rebx_extras* const rebx, const char* const name);
 /** @} */
 /** @} */
 
@@ -389,7 +387,6 @@ struct rebx_param* rebx_get_param_struct(struct rebx_extras* rebx, struct rebx_n
 int rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* val);
 int rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
 int rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val);
-enum rebx_param_type rebx_get_type(struct rebx_extras* rebx, const char* name);
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type);
 /** @} */
 /** @} */

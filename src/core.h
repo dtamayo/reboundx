@@ -102,9 +102,16 @@ void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const doubl
 void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
 
 void* rebx_malloc(struct rebx_extras* const rebx, size_t memsize);
+void rebx_free_ap(struct rebx_node** ap);
 void rebx_free_particle_ap(struct reb_particle* p);
 void rebx_free_force(struct rebx_force* force);
 void rebx_free_operator(struct rebx_operator* operator);
 void rebx_free_step(struct rebx_step* step);
+void rebx_free_pointers(struct rebx_extras* rebx);
 
+enum rebx_param_type rebx_get_type(struct rebx_extras* rebx, const char* name);
+
+struct rebx_param* rebx_create_param(struct rebx_extras* rebx, const char* name, enum rebx_param_type type);
+void rebx_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, struct rebx_param* param);
+struct rebx_node* rebx_create_node(struct rebx_extras* rebx);
 #endif

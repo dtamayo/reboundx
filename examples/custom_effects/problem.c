@@ -64,7 +64,7 @@ int main(int argc, char* argv[]){
     reb_add(sim,p1);
     reb_move_to_com(sim);
 
-    struct rebx_extras* rebx = rebx_init(sim);  // first initialize rebx
+    struct rebx_extras* rebx = rebx_attach(sim);  // first initialize rebx
 
     /* We now add our custom functions. We do this in the same way as we add REBOUNDx forces and operators.
      * We'll still get back a force and operator struct, respectively, with a warning that the name wasn't found 
