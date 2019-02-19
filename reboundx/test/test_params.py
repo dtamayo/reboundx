@@ -1,6 +1,6 @@
 import rebound
-#import reboundx
-#from reboundx import data
+import reboundx
+from reboundx import data
 import unittest
 import math
 import numpy as np
@@ -16,15 +16,11 @@ def mycomp(obj1, obj2):
 
 class TestEffectParams(unittest.TestCase):
     def setUp(self):
-        pass#self.sim = rebound.Simulation()
-        '''
-        data.add_earths(self.sim, ei=1.e-3) 
+        self.sim = rebound.Simulation()
+        self.sim.add(m=1.)
+        self.sim.add(a=1.)
         self.rebx = reboundx.Extras(self.sim)
-        self.gr = self.rebx.add("gr")
-        self.gr.params["a"] = 1.2
-        self.gr.params["b"] = 1.7
-        self.gr.params["N"] = 14
-        '''
+        self.gr = self.rebx.load_force("gr")
 
     def tearDown(self):
         self.sim = None

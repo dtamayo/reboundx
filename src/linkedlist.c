@@ -74,7 +74,6 @@ int rebx_remove_node(struct rebx_node** head, void* object){
     
     struct rebx_node* current = *head;
     if(current->object == object){ // edge case where force is first in list
-        printf("Found it\n");
         *head = current->next;
         free(current);
         return 1;

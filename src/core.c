@@ -749,11 +749,12 @@ void* rebx_malloc(struct rebx_extras* const rebx, size_t memsize){
 
 void rebx_free(struct rebx_extras* rebx){
     rebx_free_pointers(rebx);
-    rebx_reset_sim(rebx->sim);
+    rebx_reset_sim(rebx);
     free(rebx);
 }
 
-void rebx_reset_sim(struct reb_simulation* sim){
+void rebx_reset_sim(struct rebx_extras* rebx){
+    struct reb_simulation* sim = rebx->sim;
     sim->additional_forces = NULL;
     sim->pre_timestep_modifications = NULL;
     sim->post_timestep_modifications = NULL;
@@ -804,9 +805,18 @@ void rebx_free_step(struct rebx_step* step){
     free(step);
 }
 
+void rebx_free_reg_param(struct rebx_param* param){
+    if(param->name){
+        free(param->name);
+    }
+    free(param);
+}
+
 void rebx_free_pointers(struct rebx_extras* rebx){
-    struct rebx_node* current = rebx->allocated_forces;
+    struct rebx_node* current;
     struct rebx_node* next;
+    
+    current = rebx->allocated_forces;
     while (current != NULL){
         next = current->next;
         rebx_free_force(current->object);
@@ -828,6 +838,8 @@ void rebx_free_pointers(struct rebx_extras* rebx){
         free(current);
         current = next;
     }
+    
+    
     current = rebx->pre_timestep_modifications;
     while (current != NULL){
         next = current->next;
@@ -847,20 +859,19 @@ void rebx_free_pointers(struct rebx_extras* rebx){
     current = rebx->registered_params;
     while (current != NULL){
         next = current->next;
-        struct rebx_param* reg_param = current->object;
-        free(reg_param->name);
-        free(reg_param);
+        rebx_free_reg_param(current->object);
         free(current);
         current = next;
     }
 }
 
 int rebx_remove_force(struct rebx_extras* rebx, struct rebx_force* force){
-    int success = rebx_remove_node(&rebx->allocated_forces, force);
-    if(success){
+    int allocated = rebx_remove_node(&rebx->allocated_forces, force);
+    if(allocated){
         rebx_free_force(force);
     }
-    success = rebx_remove_node(&rebx->additional_forces, force);
+    // success only cares about removal from add_forces that affects sim
+    int success = rebx_remove_node(&rebx->additional_forces, force);
     return success;
 }
 
@@ -889,7 +900,7 @@ static int rebx_remove_step_nodes(struct rebx_node** head, struct rebx_operator*
             prev->next = current->next;
             rebx_free_step(step);
             free(current);
-            success = 1;
+            success = 1; // success if AT LEAST 1 step removed
         }
         prev = current;
         current = current->next;
@@ -898,13 +909,15 @@ static int rebx_remove_step_nodes(struct rebx_node** head, struct rebx_operator*
 }
 
 int rebx_remove_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
-    int success = rebx_remove_node(&rebx->allocated_operators, operator);
-    if(success){
+    int allocated = rebx_remove_node(&rebx->allocated_operators, operator);
+    if(allocated){
         rebx_free_operator(operator);
     }
     
-    success = rebx_remove_step_nodes(&rebx->pre_timestep_modifications, operator);
-    success += rebx_remove_step_nodes(&rebx->post_timestep_modifications, operator);
+    // success only cares about removal from lists that actually do
+    // something to sim below. Success if EITHER one successful.
+    int success = rebx_remove_step_nodes(&rebx->pre_timestep_modifications, operator);
+    success |= rebx_remove_step_nodes(&rebx->post_timestep_modifications, operator);
 
     return success;
 }
