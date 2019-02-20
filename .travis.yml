@@ -24,6 +24,8 @@ matrix:
     - env: TESTPART=CCOVERAGE
       python: "3.5"
 
+dist: xenial
+
 addons:
     apt:
         sources:
