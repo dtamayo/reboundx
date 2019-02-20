@@ -73,41 +73,6 @@ enum REBX_COORDINATES{
     REBX_COORDINATES_PARTICLE,                      ///< Coordinates referenced to a particular particle.
 };
 
-/**
- * @brief Enum for identifying different fields for binary files
- */
-enum rebx_binary_field_type{
-    REBX_BINARY_FIELD_TYPE_EFFECT=0,
-    REBX_BINARY_FIELD_TYPE_PARTICLE=1,
-    REBX_BINARY_FIELD_TYPE_REBX_STRUCTURE=2,
-    REBX_BINARY_FIELD_TYPE_PARAM=3,
-    REBX_BINARY_FIELD_TYPE_NAME=4,
-    REBX_BINARY_FIELD_TYPE_PARAM_TYPE=5,
-    REBX_BINARY_FIELD_TYPE_NDIM=6,
-    REBX_BINARY_FIELD_TYPE_SHAPE=7,
-    REBX_BINARY_FIELD_TYPE_CONTENTS=8,
-    REBX_BINARY_FIELD_TYPE_END=9,
-    REBX_BINARY_FIELD_TYPE_PARTICLE_INDEX=10,
-    REBX_BINARY_FIELD_TYPE_PYTHON_TYPE=11,
-    REBX_BINARY_FIELD_TYPE_FORCE_AS_OPERATOR=12,
-    REBX_BINARY_FIELD_TYPE_OPERATOR_ORDER=13,
-    REBX_BINARY_FIELD_TYPE_REBX_INTEGRATOR=14,
-};
-
-/**
- * @brief Enum describing possible errors that might occur during binary file reading.
- */
-enum rebx_input_binary_messages {
-    REBX_INPUT_BINARY_WARNING_NONE = 0,
-    REBX_INPUT_BINARY_ERROR_NOFILE = 1,
-    REBX_INPUT_BINARY_ERROR_CORRUPT = 2,
-    REBX_INPUT_BINARY_WARNING_VERSION = 4,
-    REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED = 8,
-    REBX_INPUT_BINARY_WARNING_PARTICLE_NOT_LOADED = 16,
-    REBX_INPUT_BINARY_WARNING_EFFECT_NOT_LOADED = 32,
-    REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN = 64,
-};
-
 enum rebx_timing {
     REBX_TIMING_PRE = -1,
     REBX_TIMING_POST = 1,
@@ -128,8 +93,6 @@ enum rebx_operator_type{
 /****************************************
 Basic types in REBOUNDx
 *****************************************/
-
-
 
 /**
  * @brief Node structure for all REBOUNDx linked lists.
@@ -198,8 +161,7 @@ struct rebx_extras {
     struct rebx_node* additional_forces;
     struct rebx_node* pre_timestep_modifications;		            ///< Linked list with pointers to all the effects added to the simulation.
 	struct rebx_node* post_timestep_modifications;		            ///< Linked list with pointers to all the effects added to the simulation.
-	//struct rebx_node* allocated_pointers; 	///< Linked list with pointers to all memory allocated by REBOUNDx (for later freeing).
-    
+	
     struct rebx_node* registered_params;    ///< Linked list of all the names registered for parameters, along with their type
     struct rebx_node* allocated_forces;
     struct rebx_node* allocated_operators;
