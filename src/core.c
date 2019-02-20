@@ -160,13 +160,17 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
     force->sim = rebx->sim;
     force->force_type = REBX_FORCE_NONE;
     force->update_accelerations = NULL;
-    force->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
-    if (force->name == NULL){
-        rebx_free_force(force);
-        return NULL;
-    }
-    else{
-        strcpy(force->name, name);
+    force->name = NULL;
+    if(name != NULL)
+    {
+        force->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
+        if (force->name == NULL){
+            rebx_free_force(force);
+            return NULL;
+        }
+        else{
+            strcpy(force->name, name);
+        }
     }
     
     // Add force to allocated_forces list for later freeing
@@ -240,13 +244,16 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
     operator->sim = rebx->sim;
     operator->operator_type = REBX_OPERATOR_NONE;
     operator->step = NULL;
-    operator->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
-    if (operator->name == NULL){
-        rebx_free_operator(operator);
-        return NULL;
-    }
-    else{
-        strcpy(operator->name, name);
+    operator->name = NULL;
+    if(name != NULL){
+        operator->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
+        if (operator->name == NULL){
+            rebx_free_operator(operator);
+            return NULL;
+        }
+        else{
+            strcpy(operator->name, name);
+        }
     }
     
     // Add operator to allocated_operators list for later freeing
@@ -653,18 +660,25 @@ void* rebx_malloc(struct rebx_extras* const rebx, size_t memsize){
     return ptr;
 }
 
+void rebx_free_param(struct rebx_param* param){
+    if(param->name){
+        free(param->name);
+    }
+    // Don't free pointers to structs
+    if(param->type == REBX_TYPE_INT || param->type == REBX_TYPE_DOUBLE){
+        if(param->value){
+            free(param->value);
+        }
+    }
+    free(param);
+}
+
 void rebx_free_ap(struct rebx_node** ap){
     struct rebx_node* current = *ap;
     struct rebx_node* next;
     while (current != NULL){
         next = current->next;
-        struct rebx_param* param = current->object;
-        free(param->name);
-        // Don't free pointers
-        if(param->type == REBX_TYPE_INT || param->type == REBX_TYPE_DOUBLE){
-            free(param->value);
-        }
-        free(param);
+        rebx_free_param(current->object);
         free(current);
         current = next;
     }
@@ -833,6 +847,7 @@ struct rebx_param* rebx_create_param(struct rebx_extras* rebx, const char* name,
         return NULL;
     }
     param->type = type;
+    param->value = NULL;
     param->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
     if (param->name == NULL){
         return NULL;
@@ -862,4 +877,35 @@ enum rebx_param_type rebx_get_type(struct rebx_extras* rebx, const char* name){
     }
     
     return param->type;
+}
+
+size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type){
+    switch(type){
+        case REBX_TYPE_DOUBLE:
+        {
+            return sizeof(double);
+        }
+        case REBX_TYPE_INT:
+        {
+            return sizeof(int);
+        }
+        case REBX_TYPE_FORCE:
+        {
+            return sizeof(struct rebx_force);
+        }
+        case REBX_TYPE_POINTER:
+        {
+            return 0;
+        }
+        case REBX_TYPE_NONE:
+        {
+            reb_error(rebx->sim, "REBOUNDx Error: Parameter name passed to rebx_sizeof was not registered. This should not happen. Please open issue on github.com/dtamayo/reboundx.\n");
+            return 0;
+        }
+        default:
+        {
+            reb_error(rebx->sim, "REBOUNDx Error: Need to add new param type to switch statement in rebx_sizeof. Please open issue on github.com/dtamayo/reboundx.\n");
+            return 0;
+        }
+    }
 }

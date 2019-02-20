@@ -31,55 +31,40 @@
 #include "reboundx.h"
 #include "core.h"
 
-#define CASE(typename, value) case REBX_BINARY_FIELD_TYPE_##typename: \
-    {\
-    fread(value, field.size,1,inf);\
-    }\
-    break;
-
-#define CASE_MALLOC(typename, valueref) case REBX_BINARY_FIELD_TYPE_##typename: \
-    {\
-    valueref = malloc(field.size);\
-    fread(valueref, field.size,1,inf);\
-    }\
-    break;
-
-static int rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* inf, enum rebx_input_binary_messages* warnings){
-    struct rebx_param* param = rebx_create_param();
-    if(!param){
+static int rebx_load_param(struct rebx_extras* rebx, struct rebx_node** ap, FILE* inf, enum rebx_input_binary_messages* warnings){
+    struct rebx_param* param = rebx_malloc(rebx, sizeof(*param));
+    if (param == NULL){
+        *warnings |= REBX_INPUT_BINARY_ERROR_NO_MEMORY;
         return 0;
     }
+    param->value = NULL;
+    param->name = NULL;
+    param->type = REBX_TYPE_NONE;
+    
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
-        if (!fread(&field, sizeof(field), 1, inf)){
+        if (!fread(&field, sizeof(field), 1, inf)){ // means we didn't reach an END field. Corrupt
             *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
-            break;
+            rebx_free_param(param);
+            return 0;
         }
         switch (field.type){
-            CASE(PARAM_TYPE,        &param->param_type);
-            CASE(PYTHON_TYPE,       &param->python_type);
-            CASE(NDIM,              &param->ndim);
-            CASE_MALLOC(CONTENTS,   param->contents);
+            case REBX_BINARY_FIELD_TYPE_PARAM_TYPE:
+            {
+                fread(&param->type, field.size, 1, inf);
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_VALUE:
+            {
+                param->value = rebx_malloc(rebx, field.size);
+                fread(param->value, field.size, 1, inf);
+                break;
+            }
             case REBX_BINARY_FIELD_TYPE_NAME:
             {
                 param->name = malloc(field.size);
-                fread(param->name, field.size,1,inf);
-                param->hash = reb_hash(param->name);
-                break;
-            }
-            case REBX_BINARY_FIELD_TYPE_SHAPE:
-            {
-                param->size = 1;
-                if (param->ndim > 0){
-                    param->shape = malloc(field.size);
-                    param->strides = malloc(field.size);
-                    fread(param->shape, field.size,1,inf);
-                    for(int i=param->ndim-1;i>=0;i--){
-                        param->strides[i] = param->size;
-                        param->size *= param->shape[i];
-                    }
-                }
+                fread(param->name, field.size, 1, inf);
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_END:
@@ -87,59 +72,60 @@ static int rebx_load_param(struct rebx_extras* rebx, void* const object, FILE* i
                 reading_fields=0;
                 break;
             }
-            default:
-                *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN;
-                fseek(inf,field.size,SEEK_CUR);
+            default: // Might have added new fields, saved with new version and loaded with old version
+            {
+                *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN; // not necessarily fatal
+                fseek(inf, field.size, SEEK_CUR);
                 break;
+            }
         }
     }
-    param = rebx_attach_param_node(object, param);
+    
+    // Necessary for valid param. Don't check value since registered_params will have NULL
+    if (param->type == REBX_TYPE_NONE){ // Didn't include type
+        *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+        rebx_free_param(param);
+        return 0;
+    }
+    if (param->name == NULL){ // All params must include name
+        *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+        rebx_free_param(param);
+        return 0;
+    }
+    
+    rebx_add_param(rebx, ap, param);
     return 1;
 }
 
-static int rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
-    char* name = NULL;
-    struct rebx_effect* effect = NULL;
+// NEED TO LOAD_FORCE so that function pointers are set
+static int rebx_load_force_field(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
+    struct rebx_force* force = rebx_create_force(rebx, NULL);
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
         if (!fread(&field, sizeof(field), 1, inf)){
             *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
-            break;
+            rebx_remove_force(rebx, force);
+            return 0;
         }
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_NAME:
             {
-                name = malloc(field.size);
-                fread(name, field.size, 1, inf);
-                effect = rebx_add(rebx, name);
+                force->name = rebx_malloc(rebx, field.size);
+                fread(force->name, field.size, 1, inf);
                 break;
             }
-            case REBX_BINARY_FIELD_TYPE_FORCE_AS_OPERATOR:
+            case REBX_BINARY_FIELD_TYPE_FORCE_TYPE:
             {
-                if(!effect){
-                    return 0;
-                }
-                //fread(&effect->force_as_operator, sizeof(effect->force_as_operator), 1, inf);
-                break;
-            }
-            case REBX_BINARY_FIELD_TYPE_OPERATOR_ORDER:
-            {
-                if(!effect){
-                    return 0;
-                }
-                //fread(&effect->operator_order, sizeof(effect->operator_order), 1, inf);
+                fread(&force->force_type, field.size, 1, inf);
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_PARAM:
             {
-                if(!effect){
-                    return 0;
-                }
                 long field_start = ftell(inf);
-                if (!rebx_load_param(rebx, effect, inf, warnings)){
+                if (!rebx_load_param(rebx, &force->ap, inf, warnings)){
                     *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
-                    fseek(inf,field_start + field.size,SEEK_SET);
+                    fseek(inf, field_start + field.size, SEEK_SET);
                 }
                 break;
             }
@@ -154,8 +140,147 @@ static int rebx_load_effect(struct rebx_extras* rebx, FILE* inf, enum rebx_input
                 break;
         }
     }
-    free(name);
     return 1;
+}
+
+// Force is already loaded in allocated_forces. Need to get from that list and add to sim
+static int rebx_load_additional_force_field(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
+    struct rebx_force* force = NULL;
+    struct rebx_binary_field field;
+    int reading_fields = 1;
+    while (reading_fields){
+        if (!fread(&field, sizeof(field), 1, inf)){
+            *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+            return 0;
+        }
+        switch (field.type){
+            case REBX_BINARY_FIELD_TYPE_NAME:
+            {
+                char* name = malloc(field.size);
+                fread(name, field.size, 1, inf);
+                force = rebx_get_force(rebx, name);
+                free(name);
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_END:
+            {
+                reading_fields=0;
+                break;
+            }
+            default:
+                *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN;
+                fseek(inf, field.size, SEEK_CUR);
+                break;
+        }
+    }
+    if(force != NULL){
+        int success = rebx_add_force(rebx, force);
+        return success;
+    }
+    else{
+        *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+        return 0;
+    }
+}
+
+static int rebx_load_operator_field(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
+    struct rebx_operator* operator = rebx_create_operator(rebx, NULL);
+    struct rebx_binary_field field;
+    int reading_fields = 1;
+    while (reading_fields){
+        if (!fread(&field, sizeof(field), 1, inf)){
+            *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+            rebx_remove_operator(rebx, operator);
+            return 0;
+        }
+        switch (field.type){
+            case REBX_BINARY_FIELD_TYPE_NAME:
+            {
+                operator->name = rebx_malloc(rebx, field.size);
+                fread(operator->name, field.size, 1, inf);
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_OPERATOR_TYPE:
+            {
+                fread(&operator->operator_type, field.size, 1, inf);
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_PARAM:
+            {
+                long field_start = ftell(inf);
+                if (!rebx_load_param(rebx, &operator->ap, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
+                    fseek(inf, field_start + field.size, SEEK_SET);
+                }
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_END:
+            {
+                reading_fields=0;
+                break;
+            }
+            default:
+                *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN;
+                fseek(inf, field.size, SEEK_CUR);
+                break;
+        }
+    }
+    return 1;
+}
+
+// NEED TO LOAD_OPERATOR TO MAKE SURE FUNCTION POINTERS ARE SET
+static int rebx_load_step_field(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings, enum rebx_timing timing){
+    char* stepname = NULL;
+    char* operatorname = NULL;
+    double dt_fraction = 0.;
+    struct rebx_operator* operator = NULL;
+    
+    struct rebx_binary_field field;
+    int reading_fields = 1;
+    while (reading_fields){
+        if (!fread(&field, sizeof(field), 1, inf)){
+            *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+            return 0;
+        }
+        switch (field.type){
+            case REBX_BINARY_FIELD_TYPE_NAME:
+            {
+                stepname = malloc(field.size);
+                fread(stepname, field.size, 1, inf);
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_OPERATOR_NAME:
+            {
+                operatorname = malloc(field.size);
+                fread(operatorname, field.size, 1, inf);
+                operator = rebx_get_operator(rebx, operatorname);
+                free(operatorname);
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_DT_FRACTION:
+            {
+                fread(&dt_fraction, field.size, 1, inf);
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_END:
+            {
+                reading_fields=0;
+                break;
+            }
+            default:
+                *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN;
+                fseek(inf, field.size, SEEK_CUR);
+                break;
+        }
+    }
+    if(operator != NULL){
+        int success = rebx_add_force(rebx, force);
+        return success;
+    }
+    else{
+        *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+        return 0;
+    }
 }
 
 static int rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
@@ -165,25 +290,26 @@ static int rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_inp
     while (reading_fields){
         if (!fread(&field, sizeof(field), 1, inf)){
             *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
-            break;
+            return 0;
         }
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_PARTICLE_INDEX:
             {
                 int index;
-                fread(&index, sizeof(index), 1, inf);
+                fread(&index, field.size, 1, inf);
                 p = &rebx->sim->particles[index];
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_PARAM:
             {
-                if(!p){
+                if(!p){ // PARTICLE_INDEX should always be first in binary
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
                     return 0;
                 }
                 long field_start = ftell(inf);
-                if (!rebx_load_param(rebx, p, inf, warnings)){
+                if (!rebx_load_param(rebx, &p->ap, inf, warnings)){
                     *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
-                    fseek(inf,field_start + field.size,SEEK_SET);
+                    fseek(inf, field_start + field.size, SEEK_SET);
                 }
                 break;
             }
@@ -194,7 +320,7 @@ static int rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_inp
             }
             default:
                 *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKOWN;
-                fseek(inf,field.size,SEEK_CUR);
+                fseek(inf, field.size, SEEK_CUR);
                 break;
         }
     }
