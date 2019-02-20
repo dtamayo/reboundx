@@ -80,6 +80,7 @@ int rebx_remove_node(struct rebx_node** head, void* object){
     }
     
     struct rebx_node* prev = current;
+    current = current->next;
     while (current != NULL){
         if(current->object == object){
             prev->next = current->next;

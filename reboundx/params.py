@@ -50,21 +50,20 @@ class Params(MutableMapping):
             clibreboundx.rebx_set_param_double(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), c_double(value))
         if ctype == c_int:
             clibreboundx.rebx_set_param_int(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), c_int(value))
+
         if ctype == Force:
-            if type(value) != Force:
+            if not isinstance(value, Force):
                 raise AttributeError("REBOUNDx Error: Parameter '{0}' must be assigned a Force object.".format(key))
             clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))
         if ctype == c_void_p:
             clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))
 
     def __delitem__(self, key):
-        success = clibreboundx.rebx_remove_param(byref(self.ap), c_char_p(key.encode('ascii')))
-        if not success:
-            raise AttributeError("REBOUNDx Error: Parameter '{0}' to delete not found.".format(key))
+        raise AttributeError("REBOUNDx Error: Removing particle params not implemented.")
 
     def __iter__(self):
         raise AttributeError("REBOUNDx Error: Iterator for params not implemented.")
 
     def __len__(self):
         clibreboundx.rebx_len.restype = c_int
-        return clibreboundx.rebx_len(self.get_ap())
+        return clibreboundx.rebx_len(self.ap)

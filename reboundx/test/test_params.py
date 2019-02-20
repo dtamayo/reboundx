@@ -14,126 +14,188 @@ def mycomp(obj1, obj2):
             return False
     return True
 
-class TestEffectParams(unittest.TestCase):
+class TestParams(unittest.TestCase):
     def setUp(self):
         self.sim = rebound.Simulation()
         self.sim.add(m=1.)
         self.sim.add(a=1.)
         self.rebx = reboundx.Extras(self.sim)
         self.gr = self.rebx.load_force("gr")
+        self.mm = self.rebx.load_operator("modify_mass")
+        self.p = self.sim.particles[1]
 
     def tearDown(self):
         self.sim = None
 
-'''
-    def test_access(self):
-        self.assertAlmostEqual(self.gr.params["a"], 1.2, delta=1.e-15)
-        self.assertAlmostEqual(self.gr.params["b"], 1.7, delta=1.e-15)
-        self.assertEqual(self.gr.params["N"], 14)
+    def test_adddouble(self):
+        self.gr.params['c'] = 1.2
+        self.mm.params['c'] = 1.4
+        self.p.params['c'] = 1.7
+        self.assertAlmostEqual(self.gr.params["c"], 1.2, delta=1.e-15)
+        self.assertAlmostEqual(self.mm.params["c"], 1.4, delta=1.e-15)
+        self.assertAlmostEqual(self.p.params["c"], 1.7, delta=1.e-15)
 
-    def test_types(self):
-        for t in [int, float, np.int32, np.float64]:
-            var = t(3) # make instance of type
-            self.gr.params[t.__name__] = var
-            self.assertAlmostEqual(self.gr.params[t.__name__], var)
-            self.assertEqual(type(self.gr.params[t.__name__]), type(var))
-        for t in [c_uint, c_uint32]:
-            var = t(3) # make instance of type
-            self.gr.params[t.__name__] = var
-            self.assertAlmostEqual(self.gr.params[t.__name__].value, var.value)
-            self.assertEqual(type(self.gr.params[t.__name__]), type(var))
-        self.gr.params["orbit"] = rebound.Orbit()
-        self.assertEqual(type(self.gr.params["orbit"]), rebound.Orbit)
+    def test_updatedouble(self):
+        self.gr.params['c'] = 1.2
+        self.mm.params['c'] = 1.4
+        self.p.params['c'] = 1.7
+        
+        self.gr.params['c'] = 2.2
+        self.mm.params['c'] = 2.4
+        self.p.params['c'] = 2.7
+        self.assertAlmostEqual(self.gr.params["c"], 2.2, delta=1.e-15)
+        self.assertAlmostEqual(self.mm.params["c"], 2.4, delta=1.e-15)
+        self.assertAlmostEqual(self.p.params["c"], 2.7, delta=1.e-15)
+    
+    def test_updatedoublecopy(self):
+        a = 1.2
+        self.gr.params['c'] = a
+
+        a = 3.7
+        self.assertAlmostEqual(self.gr.params["c"], 1.2, delta=1.e-15) # shouldn't reflect update because copied
+    
+    def test_addint(self):
+        self.gr.params['index'] = 1
+        self.mm.params['index'] = 2
+        self.p.params['index'] = 3
+        self.assertAlmostEqual(self.gr.params["index"], 1, delta=1.e-15)
+        self.assertAlmostEqual(self.mm.params["index"], 2, delta=1.e-15)
+        self.assertAlmostEqual(self.p.params["index"], 3, delta=1.e-15)
+    
+    def test_updateint(self):
+        self.gr.params['index'] = 1
+        self.mm.params['index'] = 2 
+        self.p.params['index'] = 3 
+        
+        self.gr.params['index'] = 11 
+        self.mm.params['index'] = 22
+        self.p.params['index'] = 33
+        self.assertEqual(self.gr.params["index"], 11)
+        self.assertEqual(self.mm.params["index"], 22)
+        self.assertEqual(self.p.params["index"], 33)
+   
+    def test_updateintcopy(self):
+        a = 1
+        self.gr.params['index'] = a
+
+        a = 3
+        self.assertEqual(self.gr.params["index"], 1) # shouldn't reflect update because copied
+    
+    def test_addforce(self):
+        self.gr.params['c'] = 3.5
+        self.p.params['force'] = self.gr
+        newgr = self.p.params['force']
+        self.assertAlmostEqual(newgr.params['c'], 3.5, delta=1.e-15)
+
+    def test_addnonforce(self):
+        with self.assertRaises(AttributeError):
+            self.p.params['force'] = 3.
+
+    def test_updateforceptr(self):
+        self.gr.params['c'] = 3.5
+        self.p.params['force'] = self.gr
+        self.gr.params['c'] = 4.5
+        newgr = self.p.params['force']
+        self.assertAlmostEqual(newgr.params['c'], 4.5, delta=1.e-15)
+    
+    def test_updateforce(self):
+        self.p.params['force'] = self.gr
+        self.gr.params['c'] = 3.5
+
+        newforce = self.rebx.load_force('gr')
+        newforce.params['c'] = -3.5
+        self.p.params['force'] = newforce
+        newgr = self.p.params['force']
+        self.assertAlmostEqual(newgr.params['c'], -3.5, delta=1.e-15)
+    
+    def test_addcustomstruct(self):
+        self.rebx.register_param('my_new_struct', 'REBX_TYPE_POINTER')
+        from ctypes import Structure, c_double, cast, POINTER
+        class Mystruct(Structure):
+            _fields_ = [('dt', c_double),
+                        ('c', c_double)]
+        s = Mystruct()
+        s.dt = 0.1
+        s.c = 3.5
+        self.gr.params['my_new_struct'] = s
+        new_s = self.gr.params['my_new_struct']
+        new_s = cast(new_s, POINTER(Mystruct)).contents
+        self.assertAlmostEqual(new_s.dt, 0.1, delta=1.e-15)
+        self.assertAlmostEqual(new_s.c, 3.5, delta=1.e-15)
+    
+    def test_updatecustomstructptr(self):
+        self.rebx.register_param('my_new_struct', 'REBX_TYPE_POINTER')
+        from ctypes import Structure, c_double, cast, POINTER
+        class Mystruct(Structure):
+            _fields_ = [('dt', c_double),
+                        ('c', c_double)]
+        s = Mystruct()
+        s.dt = 0.1
+        s.c = 3.5
+        self.gr.params['my_new_struct'] = s
+
+        s.dt = 1.1
+        new_s = self.gr.params['my_new_struct']
+        new_s = cast(new_s, POINTER(Mystruct)).contents
+        self.assertAlmostEqual(new_s.dt, 1.1, delta=1.e-15)
+    
+    def test_updatecustomstruct(self):
+        self.rebx.register_param('my_new_struct', 'REBX_TYPE_POINTER')
+        from ctypes import Structure, c_double, cast, POINTER
+        class Mystruct(Structure):
+            _fields_ = [('dt', c_double),
+                        ('c', c_double)]
+        s = Mystruct()
+        s.dt = 0.1
+        s.c = 3.5
+        self.gr.params['my_new_struct'] = s
+
+        s2 = Mystruct()
+        s2.dt = -0.1
+        s2.c = -3.5
+        self.gr.params['my_new_struct'] = s2
+
+        new_s = self.gr.params['my_new_struct']
+        new_s = cast(new_s, POINTER(Mystruct)).contents
+        self.assertAlmostEqual(new_s.dt, -0.1, delta=1.e-15)
+        self.assertAlmostEqual(new_s.c, -3.5, delta=1.e-15)
+
+    def test_getnotregistered(self):
+        with self.assertRaises(AttributeError):
+            b = self.gr.params['asd;flkj']
+
+    def test_notregistered(self):
+        with self.assertRaises(AttributeError):
+            self.gr.params['asldkjf'] = 1.2
+    
+    def test_registerexisting(self):
+        with self.assertRaises(RuntimeError):
+            self.rebx.register_param('c', 'REBX_TYPE_INT')
+    
+    def test_newdouble(self):
+        self.rebx.register_param('my_new_double', 'REBX_TYPE_DOUBLE')
+        self.gr.params['my_new_double'] = 1.2
+        self.assertAlmostEqual(self.gr.params["my_new_double"], 1.2, delta=1.e-15)
+    
+    def test_newint(self):
+        self.rebx.register_param('my_new_int', 'REBX_TYPE_INT')
+        self.gr.params['my_new_int'] = 2
+        self.assertEqual(self.gr.params["my_new_int"], 2)
+
+    def test_length(self):
+        self.gr.params['c'] = 1.3
+        self.gr.params['index'] = 7
+        self.gr.params['tau_mass'] = 3.2
+        self.assertEqual(len(self.gr.params), 3)
 
     def test_iter(self):
         with self.assertRaises(AttributeError):
             for p in self.gr.params:
                 pass
 
-    def test_length(self):
-        self.assertEqual(len(self.gr.params), 3)
-
     def test_del(self):
-        del self.gr.params["b"]
         with self.assertRaises(AttributeError):
-            self.gr.params["b"]
-        self.assertEqual(len(self.gr.params), 2)
-
-        del self.gr.params["a"]
-        with self.assertRaises(AttributeError):
-            self.gr.params["a"]
-        self.assertEqual(len(self.gr.params), 1)
-
-        del self.gr.params["N"]
-        with self.assertRaises(AttributeError):
-            self.gr.params["N"]
-        self.assertEqual(len(self.gr.params), 0)
-'''
-
-class TestParticleParams(unittest.TestCase):
-    def setUp(self):
-        pass#self.sim = rebound.Simulation()
-        '''
-        self.rebx = reboundx.Extras(self.sim)
-        data.add_earths(self.sim, ei=1.e-3) 
-        self.sim.particles[0].params["a"] = 1.2
-        self.sim.particles[0].params["b"] = 1.7
-        self.sim.particles[0].params["N"] = 14
-        '''
-    def tearDown(self):
-        self.sim = None
-'''    
-    def test_access(self):
-        self.assertAlmostEqual(self.sim.particles[0].params["a"], 1.2, delta=1.e-15)
-        self.assertAlmostEqual(self.sim.particles[0].params["b"], 1.7, delta=1.e-15)
-        self.assertEqual(self.sim.particles[0].params["N"], 14)
-
-    def test_iter(self):
-        with self.assertRaises(AttributeError):
-            for p in self.sim.particles[0].params:
-                pass
-
-    def test_update(self):
-        self.sim.particles[0].params["a"] = 42.
-        self.assertAlmostEqual(self.sim.particles[0].params["a"], 42., delta=1.e-15)
-
-    def test_update_with_wrong_type(self):
-        with self.assertRaises(AttributeError):
-            self.sim.particles[0].params["N"] = 37.2
-        with self.assertRaises(AttributeError):
-            self.sim.particles[0].params["a"] = 37
-        with self.assertRaises(AttributeError):
-            self.sim.particles[0].params["a"] = [1., 2., 3.]
-        with self.assertRaises(AttributeError):
-            self.sim.particles[0].params["a"] = np.array([1., 2., 3.])
-
-
-    def test_length(self):
-        self.assertEqual(len(self.sim.particles[0].params), 3)
-
-    def test_del(self):
-        del self.sim.particles[0].params["b"]
-        with self.assertRaises(AttributeError):
-            self.sim.particles[0].params["b"]
-        self.assertEqual(len(self.sim.particles[0].params), 2)
-
-        del self.sim.particles[0].params["a"]
-        with self.assertRaises(AttributeError):
-            self.sim.particles[0].params["a"]
-        self.assertEqual(len(self.sim.particles[0].params), 1)
-
-        del self.sim.particles[0].params["N"]
-        with self.assertRaises(AttributeError):
-            self.sim.particles[0].params["N"]
-        self.assertEqual(len(self.sim.particles[0].params), 0)
-'''
-
-class TestRebxNotAttached(unittest.TestCase):
-    def test_rebx_not_attached(self):
-        self.sim = rebound.Simulation()
-        self.sim.add(m=1.)
-        #with self.assertRaises(AttributeError):
-        #    self.sim.particles[0].params["a"] = 7
+            del self.gr.params["b"]
 
 if __name__ == '__main__':
     unittest.main()

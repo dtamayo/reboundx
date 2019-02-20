@@ -580,46 +580,61 @@ int rebx_remove_force(struct rebx_extras* rebx, struct rebx_force* force){
 // Remove all steps in head pointer that have the passed operator in them.
 // Success = 1 if at least one removed. Need separate logic since operator
 // is nested inside step
-static int rebx_remove_step_nodes(struct rebx_node** head, struct rebx_operator* operator){
+static int rebx_remove_step_node(struct rebx_node** head, struct rebx_operator* operator){
     if (*head == NULL){
         return 0;
     }
     
-    int success = 0;
     struct rebx_node* current = *head;
     struct rebx_step* step = current->object;
     if(step->operator == operator){ // edge case where step is first in list
         *head = current->next;
         rebx_free_step(step);
         free(current);
-        success = 1;
+        return 1;
     }
     
     struct rebx_node* prev = current;
+    current = current->next;
     while (current != NULL){
         step = current->object;
         if(step->operator == operator){
             prev->next = current->next;
             rebx_free_step(step);
             free(current);
-            success = 1; // success if AT LEAST 1 step removed
+            return 1;
         }
         prev = current;
         current = current->next;
     }
-    return success;
+    return 0;
 }
 
 int rebx_remove_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
     int allocated = rebx_remove_node(&rebx->allocated_operators, operator);
     if(allocated){
         rebx_free_operator(operator);
+        
     }
     
     // success only cares about removal from lists that actually do
     // something to sim below. Success if EITHER one successful.
-    int success = rebx_remove_step_nodes(&rebx->pre_timestep_modifications, operator);
-    success |= rebx_remove_step_nodes(&rebx->post_timestep_modifications, operator);
+    int success = 0;
+    int keep_searching = 1;
+    while(keep_searching){ // keep searching while steps are found
+        keep_searching = rebx_remove_step_node(&rebx->pre_timestep_modifications, operator);
+        if (keep_searching == 1){ // success if at least one step found
+            success = 1;
+        }
+    }
+
+    keep_searching = 1;
+    while(keep_searching){ // keep searching while steps are found
+        keep_searching = rebx_remove_step_node(&rebx->post_timestep_modifications, operator);
+        if (keep_searching == 1){ // success if at least one step found
+            success = 1;
+        }
+    }
     
     return success;
 }
