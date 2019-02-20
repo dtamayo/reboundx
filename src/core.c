@@ -158,6 +158,8 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
     }
     force->ap = NULL;
     force->sim = rebx->sim;
+    force->force_type = REBX_FORCE_NONE;
+    force->update_accelerations = NULL;
     force->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
     if (force->name == NULL){
         rebx_free_force(force);
@@ -220,7 +222,7 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
      */
     else{
         char str[300];
-        sprintf(str, "REBOUNDx warning: Force '%s' not found in REBOUNDx library.\n", name);
+        sprintf(str, "REBOUNDx error: Force '%s' not found in REBOUNDx library.\n", name);
         reb_error(rebx->sim, str);
         rebx_remove_force(rebx, force);
         return NULL;
@@ -236,6 +238,8 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
     }
     operator->ap = NULL;
     operator->sim = rebx->sim;
+    operator->operator_type = REBX_OPERATOR_NONE;
+    operator->step = NULL;
     operator->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
     if (operator->name == NULL){
         rebx_free_operator(operator);
@@ -291,7 +295,7 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
      }*/
     else{
         char str[300];
-        sprintf(str, "REBOUNDx warning: Operator '%s' not found in REBOUNDx library.\n", name);
+        sprintf(str, "REBOUNDx error: Operator '%s' not found in REBOUNDx library.\n", name);
         reb_error(rebx->sim, str);
         rebx_remove_operator(rebx, operator);
         return NULL;
@@ -330,6 +334,16 @@ int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force){
 }
 
 int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* operator, const double dt_fraction, enum rebx_timing timing, char* name){
+    if (operator->step == NULL){
+        reb_error(rebx->sim, "REBOUNDx error: Need to set step function pointer on operator before adding to simulation. See custom effects example.\n");
+        return 0;
+    }
+    
+    if (operator->operator_type == REBX_OPERATOR_NONE){
+        reb_error(rebx->sim, "REBOUNDx error: Need to set operator_type field on operator before adding to simulation. See custom effects example.\n");
+        return 0;
+    }
+    
     struct rebx_step* step = rebx_malloc(rebx, sizeof(*step));
     if(step == NULL){
         return 0;
@@ -533,9 +547,6 @@ struct rebx_force* rebx_get_force(struct rebx_extras* const rebx, const char* co
         current = current->next;
     }
     
-    char str[300];
-    sprintf(str, "REBOUNDx Error: Force %s passed to rebx_get_force not found.\n", name);
-    reb_error(rebx->sim, str);
     return NULL;
 }
 
@@ -549,9 +560,6 @@ struct rebx_operator* rebx_get_operator(struct rebx_extras* const rebx, const ch
         current = current->next;
     }
     
-    char str[300];
-    sprintf(str, "REBOUNDx Error: Operator %s passed to rebx_get_operator not found.\n", name);
-    reb_error(rebx->sim, str);
     return NULL;
 }
 

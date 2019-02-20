@@ -169,9 +169,10 @@ class Extras(Structure):
     def get_force(self, name):
         clibreboundx.rebx_get_force.restype = POINTER(Force)
         ptr = clibreboundx.rebx_get_force(byref(self), c_char_p(name.encode('ascii')))
-        self._sim.contents.process_messages()
         if ptr:
             return ptr.contents
+        else:
+            raise AttributeError("REBOUNDx Error: Force {0} passed to rebx.get_force not found.".format(name))
 
     def get_operator(self, name):
         clibreboundx.rebx_get_operator.restype = POINTER(Operator)
@@ -179,15 +180,22 @@ class Extras(Structure):
         self._sim.contents.process_messages()
         if ptr:
             return ptr.contents
+        else:
+            raise AttributeError("REBOUNDx Error: Force {0} passed to rebx.get_operator not found.".format(name))
 
     def remove_force(self, force):
         if not isinstance(force, reboundx.extras.Force):
             raise TypeError("REBOUNDx Error: Object passed to rebx.remove_force is not a reboundx.Force instance.")
         success = clibreboundx.rebx_remove_force(byref(self), byref(force))
-        if success:
-            del force
-        else:
+        if not success:
             raise AttributeError("REBOUNDx Error: Force {0} passed to rebx.remove_force not found in simulation.")
+
+    def remove_operator(self, operator):
+        if not isinstance(operator, reboundx.extras.Operator):
+            raise TypeError("REBOUNDx Error: Object passed to rebx.remove_operator is not a reboundx.Operator instance.")
+        success = clibreboundx.rebx_remove_operator(byref(self), byref(operator))
+        if not success:
+            raise AttributeError("REBOUNDx Error: Operator {0} passed to rebx.remove_operator not found in simulation.")
 
     #######################################
     # Input/Output Routines
@@ -283,7 +291,7 @@ class Operator(Structure):
 STEPFUNCPTR = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Operator), c_double)
 
 Operator._fields_ = [   ("name", c_char_p),
-                        ("_ap", POINTER(Node)),
+                        ("ap", POINTER(Node)),
                         ("_sim", POINTER(rebound.Simulation)),
                         ("_operator_type", c_int),
                         ("_step", STEPFUNCPTR)]
