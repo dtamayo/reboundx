@@ -56,13 +56,6 @@ enum rebx_param_type{
     REBX_TYPE_POINTER,
     REBX_TYPE_FORCE,
 };
-/*REBX_TYPE_UINT32,                               ///< C type uint32_t
-    REBX_TYPE_ORBIT,                                ///< reb_orbit structure
-    REBX_TYPE_LONGLONG,                             ///< To hold python 64 bit int
-    REBX_TYPE_OPERATOR,
-    REBX_TYPE_FORCE,
-    
-};*/
 
 /**
  * @brief Enumeration for different coordinate systems.
@@ -89,6 +82,62 @@ enum rebx_operator_type{
     REBX_OPERATOR_RECORDER, // operator that leaves state unchanged. Just records
 };
 
+/**
+ * @brief Enum for identifying different fields for binary files
+ */
+enum rebx_binary_field_type{
+    REBX_BINARY_FIELD_TYPE_FORCE=0,
+    REBX_BINARY_FIELD_TYPE_OPERATOR=1,
+    REBX_BINARY_FIELD_TYPE_PARTICLE=2,
+    REBX_BINARY_FIELD_TYPE_REBX_STRUCTURE=3,
+    REBX_BINARY_FIELD_TYPE_PARAM=4,
+    REBX_BINARY_FIELD_TYPE_NAME=5,
+    REBX_BINARY_FIELD_TYPE_PARAM_TYPE=6,
+    REBX_BINARY_FIELD_TYPE_VALUE=7,
+    REBX_BINARY_FIELD_TYPE_END=8,
+    REBX_BINARY_FIELD_TYPE_PARTICLE_INDEX=9,
+    REBX_BINARY_FIELD_TYPE_REBX_INTEGRATOR=10,
+    REBX_BINARY_FIELD_TYPE_FORCE_TYPE=11,
+    REBX_BINARY_FIELD_TYPE_OPERATOR_TYPE=12,
+    REBX_BINARY_FIELD_TYPE_STEP=13,
+    REBX_BINARY_FIELD_TYPE_DT_FRACTION=14,
+    REBX_BINARY_FIELD_TYPE_OPERATOR_NAME=15,
+    REBX_BINARY_FIELD_TYPE_ADDITIONAL_FORCE=16,
+    REBX_BINARY_FIELD_TYPE_PARAM_LIST=17,
+    REBX_BINARY_FIELD_TYPE_REGISTERED_PARAMETERS=18,
+    REBX_BINARY_FIELD_TYPE_ALLOCATED_FORCES=19,
+    REBX_BINARY_FIELD_TYPE_ALLOCATED_OPERATORS=20,
+    REBX_BINARY_FIELD_TYPE_ADDITIONAL_FORCES=21,
+    REBX_BINARY_FIELD_TYPE_PRE_TIMESTEP_MODIFICATIONS=22,
+    REBX_BINARY_FIELD_TYPE_POST_TIMESTEP_MODIFICATIONS=23,
+    REBX_BINARY_FIELD_TYPE_PARTICLES=24,
+    REBX_BINARY_FIELD_TYPE_REGISTERED_PARAM=25,
+};
+
+/**
+ * @brief Enum describing possible errors that might occur during binary file reading.
+ */
+
+// not loaded should be warning, since user might have saved with custom params or effects
+enum rebx_input_binary_messages {
+    REBX_INPUT_BINARY_WARNING_NONE = 0,
+    REBX_INPUT_BINARY_ERROR_NOFILE = 1,
+    REBX_INPUT_BINARY_ERROR_CORRUPT = 2,
+    REBX_INPUT_BINARY_ERROR_NO_MEMORY = 4,
+    REBX_INPUT_BINARY_ERROR_REG_PARAM_NOT_LOADED = 8,
+    REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED = 16,
+    REBX_INPUT_BINARY_WARNING_REGISTERED_PARAM_NOT_LOADED = 32,
+    REBX_INPUT_BINARY_WARNING_PARTICLE_PARAMS_NOT_LOADED = 64,
+    REBX_INPUT_BINARY_WARNING_FORCE_NOT_LOADED = 128,
+    REBX_INPUT_BINARY_WARNING_OPERATOR_NOT_LOADED = 256,
+    REBX_INPUT_BINARY_WARNING_STEP_NOT_LOADED = 512,
+    REBX_INPUT_BINARY_WARNING_FIELD_UNKNOWN = 1024,
+    REBX_INPUT_BINARY_ERROR_REBX_NOT_POPULATED = 2048,
+    REBX_INPUT_BINARY_WARNING_LIST_UNKNOWN = 4096,
+    REBX_INPUT_BINARY_WARNING_VERSION = 8192,
+    REBX_INPUT_BINARY_WARNING_PARAM_VALUE_NULL = 16384,
+    REBX_INPUT_BINARY_WARNING_ADDITIONAL_FORCE_NOT_LOADED = 32768,
+};
 
 /****************************************
 Basic types in REBOUNDx
@@ -96,9 +145,8 @@ Basic types in REBOUNDx
 
 /**
  * @brief Node structure for all REBOUNDx linked lists.
- * @param name Name used for searching the linked list
- * @param object Data held by the node. Could be param, force, step etc
- * @param next Pointer to the next node in the linked list
+ *  object Data held by the node. Could be param, force, step etc
+ *  next Pointer to the next node in the linked list
  */
 
 struct rebx_node{
@@ -139,7 +187,6 @@ struct rebx_force{
 };
 
 struct rebx_step{
-    char* name;
     struct rebx_operator* operator;
     double dt_fraction;
 };
@@ -196,6 +243,8 @@ struct rebx_extras {
  * @return Returns a pointer to a rebx_extras structure, which holds all the information REBOUNDx needs.
  */
 struct rebx_extras* rebx_attach(struct reb_simulation* sim);
+
+void rebx_register_default_params(struct rebx_extras* rebx);
 
 /**
  * @brief Detaches REBOUNDx instance from simulation, resetting simulation's function pointers.
@@ -259,7 +308,7 @@ void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, cons
  */
 //struct rebx_effect* rebx_add(struct rebx_extras* rebx, const char* name);
 int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator);
-int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* operator, const double dt_fraction, enum rebx_timing timing, char* name);
+int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* operator, const double dt_fraction, enum rebx_timing timing);
 int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force);
 struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const char* name);
 struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* name);
@@ -492,4 +541,5 @@ void rebx_kepler_step(struct reb_simulation* const sim, struct rebx_operator* co
 void rebx_jump_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 */
+
 #endif

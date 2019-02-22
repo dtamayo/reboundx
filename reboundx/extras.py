@@ -33,6 +33,7 @@ class Extras(Structure):
             # Create a new rebx instance
             rebx = super(Extras,cls).__new__(cls)
             clibreboundx.rebx_initialize(byref(sim), byref(rebx))
+            clibreboundx.rebx_register_default_params(byref(self))
         else:
             pass
             '''

@@ -75,7 +75,7 @@ void rebx_integrate(struct reb_simulation* const sim, const double dt, struct re
  Initialization routines.
  ****************************/
 
-static void rebx_register_params(struct rebx_extras* rebx){
+void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "c", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "gr_source", REBX_TYPE_INT);
     rebx_register_param(rebx, "max_iterations", REBX_TYPE_INT);
@@ -101,13 +101,18 @@ void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum 
     if (param == NULL){
         return;
     }
-    rebx_add_param(rebx, &rebx->registered_params, param);
+    int success = rebx_add_param(rebx, &rebx->registered_params, param);
+    if(!success){
+        rebx_free_param(param);
+    }
+    
     return;
 }
 
 struct rebx_extras* rebx_attach(struct reb_simulation* sim){  // reboundx.h
     struct rebx_extras* rebx = malloc(sizeof(*rebx));
     rebx_initialize(sim, rebx);
+    rebx_register_default_params(rebx);
     return rebx;
 }
 
@@ -138,8 +143,6 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     sim->pre_timestep_modifications = rebx_pre_timestep_modifications;
     sim->post_timestep_modifications = rebx_post_timestep_modifications;
     sim->free_particle_ap = rebx_free_particle_ap;
-    
-    rebx_register_params(rebx);
 }
 
 void rebx_free(struct rebx_extras* rebx){
@@ -186,22 +189,26 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
 }
 
 struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* name){
-    struct rebx_force* force = rebx_create_force(rebx, name);
-    // loop over all names. precompiler list
+    struct rebx_force* force = NULL;
+    
     if(strcmp(name, "gr") == 0){
+        force = rebx_create_force(rebx, name);
         force->update_accelerations = rebx_gr;
         force->force_type = REBX_FORCE_VEL;
     }
     /*if (strcmp(name, "modify_orbits_forces") == 0){
+     force = rebx_create_force(rebx, name);
      force->update_accelerations = rebx_modify_orbits_forces;
      force->force_type = REBX_FORCE_VEL;
      }
      
      else if (strcmp(name, "gr_full") == 0){
+     force = rebx_create_force(rebx, name);
      force->update_accelerations = rebx_gr_full;
      force->force_type = REBX_FORCE_VEL;
      }
      else if (strcmp(name, "gravitational_harmonics") == 0){
+     force = rebx_create_force(rebx, name);
      force->update_accelerations = rebx_gravitational_harmonics;
      force->force_type = REBX_FORCE_POS;
      }*/
@@ -228,11 +235,9 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         char str[300];
         sprintf(str, "REBOUNDx error: Force '%s' not found in REBOUNDx library.\n", name);
         reb_error(rebx->sim, str);
-        rebx_remove_force(rebx, force);
-        return NULL;
     }
     
-    return force;
+    return force; // NULL if not found
 }
 
 struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const char* name){
@@ -269,29 +274,36 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
 }
 
 struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const char* name){
-    struct rebx_operator* operator = rebx_create_operator(rebx, name);
+    struct rebx_operator* operator = NULL;
+    
     if (strcmp(name, "modify_mass") == 0){
+        operator = rebx_create_operator(rebx, name);
         operator->step = rebx_modify_mass;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     /*else if (strcmp(name, "kepler") == 0){
+        operator = rebx_create_operator(rebx, name);
         operator->step = rebx_kepler_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else if (strcmp(name, "jump") == 0){
+        operator = rebx_create_operator(rebx, name);
         operator->step = rebx_jump_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else if (strcmp(name, "interaction") == 0){
+        operator = rebx_create_operator(rebx, name);
         operator->step = rebx_interaction_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else if (strcmp(name, "ias15") == 0){
+        operator = rebx_create_operator(rebx, name);
         operator->step = rebx_ias15_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     
      else if (strcmp(name, "modify_orbits_direct") == 0){
+     operator = rebx_create_operator(rebx, name);
      operator->step = rebx_modify_orbits_direct;
      operator->operator_type = REBX_OPERATOR_UPDATER;
      }
@@ -304,10 +316,8 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
         char str[300];
         sprintf(str, "REBOUNDx error: Operator '%s' not found in REBOUNDx library.\n", name);
         reb_error(rebx->sim, str);
-        rebx_remove_operator(rebx, operator);
-        return NULL;
     }
-    return operator;
+    return operator; // NULL if not found
 }
 
 int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force){
@@ -340,7 +350,7 @@ int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force){
     return 1;
 }
 
-int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* operator, const double dt_fraction, enum rebx_timing timing, char* name){
+int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* operator, const double dt_fraction, enum rebx_timing timing){
     if (operator->step == NULL){
         reb_error(rebx->sim, "REBOUNDx error: Need to set step function pointer on operator before adding to simulation. See custom effects example.\n");
         return 0;
@@ -357,13 +367,6 @@ int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* opera
     }
     step->operator = operator;
     step->dt_fraction = dt_fraction;
-    step->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
-    if (step->name == NULL){
-        return 0;
-    }
-    else{
-        strcpy(step->name, name);
-    }
     
     struct rebx_node* node = rebx_create_node(rebx);
     if (node == NULL){
@@ -391,7 +394,7 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
     if (operator->operator_type == REBX_OPERATOR_RECORDER){
         // Doesn't alter state. Add once after timestep.
         dt_fraction = 1.;
-        int success = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST, operator->name);
+        int success = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST);
         return success;
     }
     
@@ -400,14 +403,14 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
         // don't add pre-timestep b/c don't know what IAS will choose as dt
         {
             dt_fraction = 1.;
-            int success = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST, operator->name);
+            int success = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST);
             return success;
         }
         case REB_INTEGRATOR_WHFAST: // half step pre and post
         {
             dt_fraction = 1./2.;
-            int success1 = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_PRE, operator->name);
-            int success2 = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST, operator->name);
+            int success1 = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_PRE);
+            int success2 = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST);
             return (success1 && success2);
         }
         case REB_INTEGRATOR_MERCURIUS: // half step pre and post
@@ -447,7 +450,11 @@ int rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** ap
         if (param == NULL){ // adding new param failed
             return 0;
         }
-        rebx_add_param(rebx, apptr, param);
+        int success = rebx_add_param(rebx, apptr, param);
+        if(!success){
+            rebx_free_param(param);
+            return 0;
+        }
     }
     
     param->value = val;
@@ -476,7 +483,11 @@ int rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** app
         if (param == NULL){ // adding new param failed
             return 0;
         }
-        rebx_add_param(rebx, apptr, param);
+        int success = rebx_add_param(rebx, apptr, param);
+        if(!success){
+            rebx_free_param(param);
+            return 0;
+        }
         param->value = rebx_malloc(rebx, sizeof(double));
     }
     // Update new or existing param value
@@ -508,7 +519,11 @@ int rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr,
         if (param == NULL){ // adding new param failed
             return 0;
         }
-        rebx_add_param(rebx, apptr, param);
+        int success = rebx_add_param(rebx, apptr, param);
+        if(!success){
+            rebx_free_param(param);
+            return 0;
+        }
         param->value = rebx_malloc(rebx, sizeof(int));
     }
     int* valptr = param->value;
@@ -705,9 +720,6 @@ void rebx_free_operator(struct rebx_operator* operator){
 }
 
 void rebx_free_step(struct rebx_step* step){
-    if(step->name){
-        free(step->name);
-    }
     free(step);
 }
 
@@ -859,13 +871,14 @@ struct rebx_param* rebx_create_param(struct rebx_extras* rebx, const char* name,
     return param;
 }
 
-void rebx_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, struct rebx_param* param){
+int rebx_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, struct rebx_param* param){
     struct rebx_node* node = rebx_create_node(rebx);
     if (node == NULL){
-        return;
+        return 0;
     }
     node->object = param;
     rebx_add_node(apptr, node);
+    return 1;
 }
 
 // needed from Python
