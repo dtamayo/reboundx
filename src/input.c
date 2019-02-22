@@ -422,13 +422,12 @@ static int rebx_load_rebx(struct rebx_extras* rebx, FILE* inf, enum rebx_input_b
     return 1;
 }
 
-// return 0s should be fatal errors
+// Only fails (returns 0) if binary is in wrong format
 static int rebx_load_list(struct rebx_extras* rebx, enum rebx_binary_field_type expected_type, struct rebx_node** ap, FILE* inf, enum rebx_input_binary_messages* warnings){
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
         if (!fread(&field, sizeof(field), 1, inf)){
-            *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
             return 0;
         }
         
@@ -438,7 +437,6 @@ static int rebx_load_list(struct rebx_extras* rebx, enum rebx_binary_field_type 
         }
         
         if (field.type != expected_type){
-            *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
             return 0;
         }
         
@@ -550,44 +548,60 @@ void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, cons
                 }
                 break;
             }
-            // Errors loading lists are fatal and return immediately
-            // Means fields in list weren't of expected type or completely
-            // wrong format. Can't recover and will give garbage later.
             case REBX_BINARY_FIELD_TYPE_REGISTERED_PARAMETERS:
             {
                 if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_REGISTERED_PARAM, &rebx->registered_params, inf, warnings)){
-                    return;
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+                    rebx_skip_field(inf, field_start, field.size);
                 }
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_ALLOCATED_FORCES:
             {
-                rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_FORCE, &rebx->allocated_forces, inf, warnings);
+                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_FORCE, NULL, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+                    rebx_skip_field(inf, field_start, field.size);
+                }
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_ALLOCATED_OPERATORS:
             {
-                rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_OPERATOR, &rebx->allocated_operators, inf, warnings);
+                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_OPERATOR, NULL, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+                    rebx_skip_field(inf, field_start, field.size);
+                }
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_ADDITIONAL_FORCES:
             {
-                rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_ADDITIONAL_FORCE, &rebx->additional_forces, inf, warnings);
+                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_ADDITIONAL_FORCE, NULL, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+                    rebx_skip_field(inf, field_start, field.size);
+                }
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_PRE_TIMESTEP_MODIFICATIONS:
             {
-                rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_STEP, &rebx->pre_timestep_modifications, inf, warnings);
+                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_STEP, &rebx->pre_timestep_modifications, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+                    rebx_skip_field(inf, field_start, field.size);
+                }
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_POST_TIMESTEP_MODIFICATIONS:
             {
-                rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_STEP, &rebx->post_timestep_modifications, inf, warnings);
+                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_STEP, &rebx->post_timestep_modifications, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+                    rebx_skip_field(inf, field_start, field.size);
+                }
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_PARTICLES:
             {
-                rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_PARTICLE, NULL, inf, warnings);
+                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_PARTICLE, NULL, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+                    rebx_skip_field(inf, field_start, field.size);
+                }
                 break;
             }
             case REBX_BINARY_FIELD_TYPE_END:
