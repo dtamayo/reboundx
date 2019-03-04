@@ -74,14 +74,14 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
-static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source){
+static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source){
     double tau_a = INFINITY;
     double tau_e = INFINITY;
     double tau_inc = INFINITY;
     
-    const double* const tau_a_ptr = rebx_get_param_check(sim, p->ap, "tau_a", REBX_TYPE_DOUBLE);
-    const double* const tau_e_ptr = rebx_get_param_check(sim, p->ap, "tau_e", REBX_TYPE_DOUBLE);
-    const double* const tau_inc_ptr = rebx_get_param_check(sim, p->ap, "tau_inc", REBX_TYPE_DOUBLE);
+    const double* const tau_a_ptr = rebx_get_param(sim->extras, p->ap, "tau_a");
+    const double* const tau_e_ptr = rebx_get_param(sim->extras, p->ap, "tau_e");
+    const double* const tau_inc_ptr = rebx_get_param(sim->extras, p->ap, "tau_inc");
 
     const double dvx = p->vx - source->vx;
     const double dvy = p->vy - source->vy;
@@ -117,8 +117,8 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
     return a;
 }
 
-void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
-    int* ptr = rebx_get_param_check(sim, effect->ap, "coordinates", REBX_TYPE_INT);
+void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
+    int* ptr = rebx_get_param(sim->extras, force->ap, "coordinates");
     enum REBX_COORDINATES coordinates = REBX_COORDINATES_JACOBI; // Default
     if (ptr != NULL){
         coordinates = *ptr;
@@ -126,5 +126,5 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_eff
     
     const int back_reactions_inclusive = 1;
     const char* reference_name = "primary";
-    rebx_com_force(sim, effect, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_forces, particles, N);
+    rebx_com_force(sim, force, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_forces, particles, N);
 }

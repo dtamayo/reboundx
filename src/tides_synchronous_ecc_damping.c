@@ -59,13 +59,13 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-static void rebx_calculate_tides_synchronous_ecc_damping(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const int source_index){
+static void rebx_calculate_tides_synchronous_ecc_damping(struct rebx_extras* const rebx, struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const int source_index){
     const struct reb_particle source = particles[source_index];
     for(int i=0; i<N; i++){
         if(i==source_index){
             continue;
         }
-        const double* const tau_e_ptr = rebx_get_param_check(&particles[i], "tides_synchronous_tau_e", REBX_TYPE_DOUBLE);
+        const double* const tau_e_ptr = rebx_get_param(rebx, particles[i].ap, "tides_synchronous_tau_e");
         if(tau_e_ptr != NULL){
             const double tau_e = *tau_e_ptr;
             const struct reb_particle p = particles[i];
@@ -93,15 +93,16 @@ static void rebx_calculate_tides_synchronous_ecc_damping(struct reb_simulation* 
     }
 }
 
-void rebx_tides_synchronous_ecc_damping(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
+void rebx_tides_synchronous_ecc_damping(struct reb_simulation* const sim, struct rebx_force* const tides, struct reb_particle* const particles, const int N){
     int source_found=0;
+    struct rebx_extras* const rebx = sim->extras;
     for (int i=0; i<N; i++){
-        if (rebx_get_param_check(&particles[i], "tides_primary", REBX_TYPE_INT) != NULL){
+        if (rebx_get_param(rebx, particles[i].ap, "tides_primary") != NULL){
             source_found = 1;
-            rebx_calculate_tides_synchronous_ecc_damping(sim, particles, N, i);
+            rebx_calculate_tides_synchronous_ecc_damping(rebx, sim, particles, N, i);
         }
     }
     if (!source_found){
-        rebx_calculate_tides_synchronous_ecc_damping(sim, particles, N, 0);    // default source to index 0 if "tides_primary" not found on any particle
+        rebx_calculate_tides_synchronous_ecc_damping(rebx, sim, particles, N, 0);    // default source to index 0 if "tides_primary" not found on any particle
     }
 }
