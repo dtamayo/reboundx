@@ -11,7 +11,6 @@
 int main(int argc, char* argv[]){
     // We start by making a simulation and adding GR with REBOUNDx
     struct reb_simulation* sim = reb_create_simulation();
-    struct rebx_extras* rebx = rebx_init(sim);
 
     struct reb_particle star = {0};
     star.m     = 1.;   
@@ -23,6 +22,7 @@ int main(int argc, char* argv[]){
 
     reb_add(sim, planet);
     
+    struct rebx_extras* rebx = rebx_attach(sim);
     struct rebx_force* gr = rebx_create_force(rebx, "gr");
     rebx_add_force(rebx, gr);
     
