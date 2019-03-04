@@ -14,7 +14,6 @@
 
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
-    struct rebx_extras* rebx = rebx_init(sim);
     sim->dt = 1.e-8;
 
     struct reb_particle star = {0};
@@ -33,6 +32,7 @@ int main(int argc, char* argv[]){
     reb_add(sim, planet);
     reb_move_to_com(sim);
     
+    struct rebx_extras* rebx = rebx_attach(sim);
     // Could also add "gr" or "gr_full" here.  See documentation for details.
     struct rebx_force* gr = rebx_create_force(rebx, "gr");
     rebx_add_force(rebx, gr); 
