@@ -187,7 +187,7 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_force* const force, s
     }
 }
 
-static double rebx_calculate_gr_hamiltonian(struct reb_simulation* const sim, const double C2){
+static double rebx_calculate_gr_hamiltonian(struct rebx_extras* const rebx, struct reb_simulation* const sim, const double C2){
     const int N = sim->N - sim->N_var;
     const double G = sim->G;
 
@@ -245,13 +245,13 @@ static double rebx_calculate_gr_hamiltonian(struct reb_simulation* const sim, co
 	return T + V_newt + V_PN;
 }
 
-double rebx_gr_hamiltonian(struct reb_simulation* const sim, const struct rebx_force* const gr){
-    double* c = rebx_get_param(sim->extras, gr->ap, "c");
+double rebx_gr_hamiltonian(struct rebx_extras* const rebx, const struct rebx_force* const gr){
+    double* c = rebx_get_param(rebx, gr->ap, "c");
     if (c == NULL){
-        reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
+        reb_error(rebx->sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
         return 0;
     }
     const double C2 = (*c)*(*c);
-    return rebx_calculate_gr_hamiltonian(sim, C2);
+    return rebx_calculate_gr_hamiltonian(rebx, rebx->sim, C2);
 }
 

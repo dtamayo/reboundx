@@ -85,6 +85,27 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "particle", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "Acentral", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "gammacentral", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "max_iterations", REBX_TYPE_INT);
+    rebx_register_param(rebx, "J2", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "J4", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "R_eq", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "coordinates", REBX_TYPE_INT);
+    rebx_register_param(rebx, "p", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tau_a", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tau_e", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tau_inc", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tau_omega", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tau_Omega", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "primary", REBX_TYPE_INT);
+    rebx_register_param(rebx, "radiation_source", REBX_TYPE_INT);
+    rebx_register_param(rebx, "beta", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tides_primary", REBX_TYPE_INT);
+    rebx_register_param(rebx, "R_tides", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "k1", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tides_synchronous_tau_e", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "min_distance", REBX_TYPE_UINT32);
+    rebx_register_param(rebx, "min_distance_from", REBX_TYPE_UINT32);
+    //rebx_register_param(rebx, "min_distance_orbit", REBX_TYPE_ORBIT);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){

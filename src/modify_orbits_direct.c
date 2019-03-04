@@ -78,17 +78,18 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* primary, const double dt){
+static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_operator* const operator, struct reb_particle* p, struct reb_particle* primary, const double dt){
+    struct rebx_extras* const rebx = sim->extras;
     int err=0;
     struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, *p, *primary, &err);
     if(err){        // mass of primary was 0 or p = primary.  Return same particle without doing anything.
         return *p;
     }
-    const double* const tau_a = rebx_get_param_check(sim, p->ap, "tau_a", REBX_TYPE_DOUBLE);
-    const double* const tau_e = rebx_get_param_check(sim, p->ap, "tau_e", REBX_TYPE_DOUBLE);
-    const double* const tau_inc = rebx_get_param_check(sim, p->ap, "tau_inc", REBX_TYPE_DOUBLE);
-    const double* const tau_omega = rebx_get_param_check(sim, p->ap, "tau_omega", REBX_TYPE_DOUBLE);
-    const double* const tau_Omega = rebx_get_param_check(sim, p->ap, "tau_Omega", REBX_TYPE_DOUBLE);
+    const double* const tau_a = rebx_get_param(rebx, p->ap, "tau_a");
+    const double* const tau_e = rebx_get_param(rebx, p->ap, "tau_e");
+    const double* const tau_inc = rebx_get_param(rebx, p->ap, "tau_inc");
+    const double* const tau_omega = rebx_get_param(rebx, p->ap, "tau_omega");
+    const double* const tau_Omega = rebx_get_param(rebx, p->ap, "tau_Omega");
     
     const double a0 = o.a;
     const double e0 = o.e;
@@ -111,7 +112,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 	}
    
     if(tau_e != NULL){
-        const double* const p_param = rebx_get_param_check(sim, effect->ap, "p", REBX_TYPE_DOUBLE);
+        const double* const p_param = rebx_get_param(sim->extras, operator->ap, "p");
         if(p_param != NULL){
 			o.a += 2.*a0*e0*e0*(*p_param)*dt/(*tau_e); // Coupling term between e and a
 		}
@@ -119,13 +120,13 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
     return reb_tools_orbit_to_particle(sim->G, *primary, p->m, o.a, o.e, o.inc, o.Omega, o.omega, o.f);
 }
 
-void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt){
-    const int* const ptr = rebx_get_param_check(sim, effect->ap, "coordinates", REBX_TYPE_INT);
+void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
+    const int* const ptr = rebx_get_param(sim->extras, operator->ap, "coordinates");
    	enum REBX_COORDINATES coordinates = REBX_COORDINATES_JACOBI;
 	if (ptr != NULL){
 		coordinates = *ptr;
 	}
     const int back_reactions_inclusive = 1;
     const char* reference_name = "primary";
-    rebxtools_com_ptm(sim, effect, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_direct, dt);
+    rebxtools_com_ptm(sim, operator, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_direct, dt);
 }
