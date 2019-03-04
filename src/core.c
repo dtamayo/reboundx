@@ -83,6 +83,8 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "index", REBX_TYPE_INT);
     rebx_register_param(rebx, "force", REBX_TYPE_FORCE);
     rebx_register_param(rebx, "particle", REBX_TYPE_POINTER);
+    rebx_register_param(rebx, "Acentral", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "gammacentral", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -196,41 +198,46 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->update_accelerations = rebx_gr;
         force->force_type = REBX_FORCE_VEL;
     }
-    /*if (strcmp(name, "modify_orbits_forces") == 0){
-     force = rebx_create_force(rebx, name);
-     force->update_accelerations = rebx_modify_orbits_forces;
-     force->force_type = REBX_FORCE_VEL;
-     }
-     
-     else if (strcmp(name, "gr_full") == 0){
-     force = rebx_create_force(rebx, name);
-     force->update_accelerations = rebx_gr_full;
-     force->force_type = REBX_FORCE_VEL;
-     }
-     else if (strcmp(name, "gravitational_harmonics") == 0){
-     force = rebx_create_force(rebx, name);
-     force->update_accelerations = rebx_gravitational_harmonics;
-     force->force_type = REBX_FORCE_POS;
-     }*/
-    /*
-     else if (hash == reb_hash("gr_potential")){
-     update_accelerations = rebx_gr_potential;
-     }
-     else if (hash == reb_hash("radiation_forces")){
-     sim->force_is_velocity_dependent = 1;
-     update_accelerations = rebx_radiation_forces;
-     }
-     else if (hash == reb_hash("tides_precession")){
-     update_accelerations = rebx_tides_precession;
-     }
-     else if (hash == reb_hash("central_force")){
-     update_accelerations = rebx_central_force;
-     }
-     else if (hash == reb_hash("tides_synchronous_ecc_damping")){
-     sim->force_is_velocity_dependent = 1;
-     update_accelerations = rebx_tides_synchronous_ecc_damping;
-     }
-     */
+    else if (strcmp(name, "central_force") == 0){
+        force = rebx_create_force(rebx, name);
+        force->update_accelerations = rebx_central_force;
+        force->force_type = REBX_FORCE_POS;
+    }
+    else if (strcmp(name, "modify_orbits_forces") == 0){
+        force = rebx_create_force(rebx, name);
+        force->update_accelerations = rebx_modify_orbits_forces;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "gr_full") == 0){
+        force = rebx_create_force(rebx, name);
+        force->update_accelerations = rebx_gr_full;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "gravitational_harmonics") == 0){
+        force = rebx_create_force(rebx, name);
+        force->update_accelerations = rebx_gravitational_harmonics;
+        force->force_type = REBX_FORCE_POS;
+    }
+    else if (strcmp(name, "gr_potential") == 0){
+        force = rebx_create_force(rebx, name);
+        force->update_accelerations = rebx_gr_potential;
+        force->force_type = REBX_FORCE_POS;
+    }
+    else if (strcmp(name, "radiation_forces") == 0){
+        force = rebx_create_force(rebx, name);
+        force->update_accelerations = rebx_radiation_forces;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "tides_precession") == 0){
+        force = rebx_create_force(rebx, name);
+        force->update_accelerations = rebx_tides_precession;
+        force->force_type = REBX_FORCE_POS;
+    }
+    else if (strcmp(name, "tides_synchronous_ecc_damping") == 0){
+        force = rebx_create_force(rebx, name);
+        force->update_accelerations = rebx_tides_synchronous_ecc_damping;
+        force->force_type = REBX_FORCE_VEL;
+    }
     else{
         char str[300];
         sprintf(str, "REBOUNDx error: Force '%s' not found in REBOUNDx library.\n", name);
@@ -281,7 +288,7 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
         operator->step = rebx_modify_mass;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
-    /*else if (strcmp(name, "kepler") == 0){
+    else if (strcmp(name, "kepler") == 0){
         operator = rebx_create_operator(rebx, name);
         operator->step = rebx_kepler_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
@@ -301,17 +308,16 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
         operator->step = rebx_ias15_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
-    
-     else if (strcmp(name, "modify_orbits_direct") == 0){
-     operator = rebx_create_operator(rebx, name);
-     operator->step = rebx_modify_orbits_direct;
-     operator->operator_type = REBX_OPERATOR_UPDATER;
-     }
-     */
-
-    /*else if (hash == reb_hash("track_min_distance")){
-     operator->step = rebx_track_min_distance;
-     }*/
+    else if (strcmp(name, "modify_orbits_direct") == 0){
+        operator = rebx_create_operator(rebx, name);
+        operator->step = rebx_modify_orbits_direct;
+        operator->operator_type = REBX_OPERATOR_UPDATER;
+    }
+    else if (strcmp(name, "track_min_distance") == 0){
+        operator = rebx_create_operator(rebx, name);
+        operator->step = rebx_track_min_distance;
+        operator->operator_type = REBX_OPERATOR_RECORDER;
+    }
     else{
         char str[300];
         sprintf(str, "REBOUNDx error: Operator '%s' not found in REBOUNDx library.\n", name);
