@@ -11,13 +11,22 @@ REBX_FORCE_TYPE = {"none":0, "pos":1, "vel":2}
 REBX_OPERATOR_TYPE = {"none":0, "updater":1, "recorder":2}
 
 REBX_BINARY_WARNINGS = [
-        ("REBOUNDx Error: Cannot read binary file. Check filename and file contents.", 1),
-        ("REBOUNDx Error: Binary file was corrupt. Could not read.", 2),
-        ("REBOUNDx Warning: Binary file was saved with a different version of REBOUNDx. Binary format might have changed.", 4),
-        ("REBOUNDx Warning: At least one parameter in the binary file was not loaded. Check simulation.", 8),
-        ("REBOUNDx Warning: At least one particle's parameters in the binary file were not loaded. Check simulation.", 16),
-        ("REBOUNDx Warning: At least one effect and its parameters were not loaded from the binary file. Check simulation.", 32),
-        ("REBOUNDx Warning: At least one field in the binary field was not recognized, and not loaded. Probably binary was created with more recent REBOUNDx version than you are using.", 64)]
+    (True, 1, "REBOUNDx: Cannot open binary file. Check filename."),
+    (True, 2, "REBOUNDx: Binary file is unreadable. Please open an issue on Github mentioning the version of REBOUND and REBOUNDx you are using and include the binary file."),
+    (True, 4, "REBOUNDx: Ran out of system memory."),
+    (True, 8, "REBOUNDx: REBOUNDx structure couldn't be loaded."),
+    (True, 16, "REBOUNDx: At least one registered parameter was not loaded. This typically indicates the binary is corrupt or was saved with an incompatible version to the current one being used."),
+    (False, 32, "REBOUNDx: At least one force or operator parameter was not loaded from the binary file. This typically indicates the binary is corrupt or was saved with an incompatible version to the current one being used."),
+    (False, 64, "REBOUNDx: At least one particle's parameters were not loaded from the binary file."),
+    (False, 128, "REBOUNDx: At least one force was not loaded from the binary file. If binary was created with a newer version of REBOUNDx, a particular force may not be implemented in your current version of REBOUNDx."),
+    (False, 256, "REBOUNDx: At least one operator was not loaded from the binary file. If binary was created with a newer version of REBOUNDx, a particular force may not be implemented in your current version of REBOUNDx."),
+    (False, 512, "REBOUNDx: At least one operator step was not loaded from the binary file."),
+    (False, 1024, "REBOUNDx: At least one force was not added to the simulation. If binary was created with a newer version of REBOUNDx, a particular force may not be implemented in your current version of REBOUNDx."),
+    (False, 2048, "REBOUNDx: Unknown field found in binary file. Any unknown fields not loaded.  This can happen if the binary was created with a later version of REBOUNDx than the one used to read it."),
+    (False, 4096, "REBOUNDx: Unknown list in the REBOUNDx structure wasn't loaded. This can happen if the binary was created with a later version of REBOUNDx than the one used to read it."),
+    (False, 8192, "REBOUNDx: The value of at least one parameter was not loaded. This can happen if a custom structure was added by the user as a parameter. See Parameters.ipynb jupyter notebook example."),
+    (False,16384, "REBOUNDx: Binary file was saved with a different version of REBOUNDx. Binary format might have changed. Check that effects and parameters are loaded as expected.")
+]
 
 class Extras(Structure):
     """
@@ -28,65 +37,29 @@ class Extras(Structure):
     """
     
     def __new__(cls, sim, filename=None):
+        if not hasattr(sim, "_extras_ref"): # if REBOUNDx wasn't already attached, check for warnings in case additional_forces or ptm were already set.
+            sim.process_messages()
+        rebx = super(Extras,cls).__new__(cls)
+        sim._extras_ref = rebx # add a reference to this instance in sim to make sure it's not garbage collected
+        return rebx
+
+    def __init__(self, sim, filename=None):
+        clibreboundx.rebx_initialize(byref(sim), byref(self))
         # Create simulation
         if filename==None:
             # Create a new rebx instance
-            rebx = super(Extras,cls).__new__(cls)
-            clibreboundx.rebx_initialize(byref(sim), byref(rebx))
             clibreboundx.rebx_register_default_params(byref(self))
         else:
-            pass
-            '''
-            # Recreate exisitng simulation 
-            sa = SimulationArchive(filename,process_warnings=False)
-            sim = super(Simulation,cls).__new__(cls)
-            clibrebound.reb_init_simulation(byref(sim))
-            w = sa.warnings # warnings will be appended to previous warnings (as to not repeat them) 
-            clibrebound.reb_create_simulation_from_simulationarchive_with_messages(byref(sim),byref(sa),c_int(snapshot),byref(w))
-            for majorerror, value, message in BINARY_WARNINGS:
+            # Recreate existing simulation.
+            # Load registered parameters from binary
+            w = c_int(0)
+            clibreboundx.rebx_create_extras_from_binary_with_messages(byref(self), c_char_p(filename.encode('ascii')), byref(w))
+            for majorerror, value, message in REBX_BINARY_WARNINGS:
                 if w.value & value:
                     if majorerror:
                         raise RuntimeError(message)
-                    else:  
-                        # Just a warning
+                    else:
                         warnings.warn(message, RuntimeWarning)
-            '''
-        if not hasattr(sim, "_extras_ref"): # if REBOUNDx wasn't already attached, check for warnings in case additional_forces or ptm were already set.
-            sim.process_messages()
-        sim._extras_ref = rebx # add a reference to this instance in sim to make sure it's not garbage collected
-        rebx.custom_effects = {} # dictionary to keep references to custom effects so they don't get garbage collected
-        return rebx 
-
-    def __init__(self, sim, filename=None):
-        pass
-
-    @classmethod
-    def from_file(cls, sim, filename):
-        """
-        Loads REBOUNDx effects along with effect and particle parameters from a binary file.
-        
-        Arguments
-        ---------
-        filename : str
-            Filename of the binary file.
-        
-        Returns
-        ------- 
-        A reboundx.Extras object.
-        
-        """
-        w = c_int(0)
-        clibreboundx.rebx_init.restype = POINTER(Extras)
-        extrasp = clibreboundx.rebx_init(byref(sim))
-        clibreboundx.rebx_create_extras_from_binary_with_messages(extrasp, c_char_p(filename.encode("ascii")),byref(w))
-        if (extrasp is None) or (w.value & 1):     # Major error
-            raise ValueError(REBX_BINARY_WARNINGS[0])
-        for message, value in REBX_BINARY_WARNINGS:  # Just warnings
-            if w.value & value and value!=1:
-                warnings.warn(message, RuntimeWarning)
-        extras = extrasp.contents
-        sim.save_messages = 1 # Warnings will be checked within python
-        return extras 
 
     def __del__(self):
         if self._b_needsfree_ == 1:
