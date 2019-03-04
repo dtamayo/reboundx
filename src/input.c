@@ -641,12 +641,18 @@ struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, c
     }
     if (warnings & REBX_INPUT_BINARY_ERROR_NO_MEMORY){
         reb_error(sim,"REBOUNDx: Ran out of system memory.");
+        rebx_free(rebx);
+        rebx = NULL;
     }
     if (warnings & REBX_INPUT_BINARY_ERROR_REBX_NOT_LOADED){
         reb_error(sim,"REBOUNDx: REBOUNDx structure couldn't be loaded.");
+        rebx_free(rebx);
+        rebx = NULL;
     }
     if (warnings & REBX_INPUT_BINARY_ERROR_REGISTERED_PARAM_NOT_LOADED){
         reb_error(sim,"REBOUNDx: At least one registered parameter was not loaded. This typically indicates the binary is corrupt or was saved with an incompatible version to the current one being used.");
+        rebx_free(rebx);
+        rebx = NULL;
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED){
         reb_warning(sim,"REBOUNDx: At least one force or operator parameter was not loaded from the binary file. This typically indicates the binary is corrupt or was saved with an incompatible version to the current one being used.");
