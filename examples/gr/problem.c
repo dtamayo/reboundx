@@ -34,7 +34,7 @@ int main(int argc, char* argv[]){
     
     struct rebx_extras* rebx = rebx_attach(sim);
     // Could also add "gr" or "gr_full" here.  See documentation for details.
-    struct rebx_force* gr = rebx_create_force(rebx, "gr");
+    struct rebx_force* gr = rebx_load_force(rebx, "gr");
     rebx_add_force(rebx, gr); 
     // Have to set speed of light in right units (set by G & initial conditions).  Here we use default units of AU/(yr/2pi)
     rebx_set_param_double(rebx, &gr->ap, "c", REBX_C);  
