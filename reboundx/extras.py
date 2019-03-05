@@ -132,12 +132,12 @@ class Extras(Structure):
         clibreboundx.rebx_add_force(byref(self), byref(force))
         self._sim.contents.process_messages()
 
-    def add_operator(self, operator, dt_fraction=None, timing="post", name=""):
+    def add_operator(self, operator, dt_fraction=None, timing="post"):
         if dt_fraction is None:
             clibreboundx.rebx_add_operator(byref(self), byref(operator))
         else:
             timingint = REBX_TIMING[timing]
-            clibreboundx.rebx_add_operator_step(byref(self), byref(operator), c_double(dt_fraction), c_int(timingint), c_char_p(name.encode('ascii')))
+            clibreboundx.rebx_add_operator_step(byref(self), byref(operator), c_double(dt_fraction), c_int(timingint))
         self._sim.contents.process_messages()
 
     def get_force(self, name):
