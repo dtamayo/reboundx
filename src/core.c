@@ -78,9 +78,7 @@ void rebx_integrate(struct reb_simulation* const sim, const double dt, struct re
 void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "c", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "gr_source", REBX_TYPE_INT);
-    rebx_register_param(rebx, "max_iterations", REBX_TYPE_INT);
     rebx_register_param(rebx, "tau_mass", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "index", REBX_TYPE_INT);
     rebx_register_param(rebx, "force", REBX_TYPE_FORCE);
     rebx_register_param(rebx, "particle", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "Acentral", REBX_TYPE_DOUBLE);

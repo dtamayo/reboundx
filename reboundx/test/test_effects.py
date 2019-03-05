@@ -42,16 +42,16 @@ class TestForces(unittest.TestCase):
     
     def test_getforce(self):
         gr = self.rebx.load_force('gr')
-        gr.params['index'] = 3
+        gr.params['gr_source'] = 3
         newgr = self.rebx.get_force('gr')
-        self.assertEqual(newgr.params['index'], 3)
+        self.assertEqual(newgr.params['gr_source'], 3)
     
     def test_getforcenotfirst(self):
         gr = self.rebx.load_force('gr')
-        gr.params['index'] = 3
+        gr.params['gr_source'] = 3
         cust = self.rebx.create_force('myforce')
         newgr = self.rebx.get_force('gr')
-        self.assertEqual(newgr.params['index'], 3)
+        self.assertEqual(newgr.params['gr_source'], 3)
 
     def test_forcenotfound(self):
         with self.assertRaises(AttributeError):
@@ -122,16 +122,16 @@ class TestOperators(unittest.TestCase):
 
     def test_getoperator(self):
         mm = self.rebx.load_operator('modify_mass')
-        mm.params['index'] = 3
+        mm.params['gr_source'] = 3
         newmm = self.rebx.get_operator('modify_mass')
-        self.assertEqual(newmm.params['index'], 3)
+        self.assertEqual(newmm.params['gr_source'], 3)
     
     def test_getoperatornotfirst(self):
         mm = self.rebx.load_operator('modify_mass')
         cust = self.rebx.create_operator('myoperator')
-        mm.params['index'] = 3
+        mm.params['gr_source'] = 3
         newmm = self.rebx.get_operator('modify_mass')
-        self.assertEqual(newmm.params['index'], 3)
+        self.assertEqual(newmm.params['gr_source'], 3)
 
     def test_operatornotfound(self):
         with self.assertRaises(AttributeError):

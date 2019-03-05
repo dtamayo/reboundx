@@ -55,31 +55,31 @@ class TestParams(unittest.TestCase):
         self.assertAlmostEqual(self.gr.params["c"], 1.2, delta=1.e-15) # shouldn't reflect update because copied
     
     def test_addint(self):
-        self.gr.params['index'] = 1
-        self.mm.params['index'] = 2
-        self.p.params['index'] = 3
-        self.assertAlmostEqual(self.gr.params["index"], 1, delta=1.e-15)
-        self.assertAlmostEqual(self.mm.params["index"], 2, delta=1.e-15)
-        self.assertAlmostEqual(self.p.params["index"], 3, delta=1.e-15)
+        self.gr.params['gr_source'] = 1
+        self.mm.params['gr_source'] = 2
+        self.p.params['gr_source'] = 3
+        self.assertAlmostEqual(self.gr.params["gr_source"], 1, delta=1.e-15)
+        self.assertAlmostEqual(self.mm.params["gr_source"], 2, delta=1.e-15)
+        self.assertAlmostEqual(self.p.params["gr_source"], 3, delta=1.e-15)
     
     def test_updateint(self):
-        self.gr.params['index'] = 1
-        self.mm.params['index'] = 2 
-        self.p.params['index'] = 3 
+        self.gr.params['gr_source'] = 1
+        self.mm.params['gr_source'] = 2 
+        self.p.params['gr_source'] = 3 
         
-        self.gr.params['index'] = 11 
-        self.mm.params['index'] = 22
-        self.p.params['index'] = 33
-        self.assertEqual(self.gr.params["index"], 11)
-        self.assertEqual(self.mm.params["index"], 22)
-        self.assertEqual(self.p.params["index"], 33)
+        self.gr.params['gr_source'] = 11 
+        self.mm.params['gr_source'] = 22
+        self.p.params['gr_source'] = 33
+        self.assertEqual(self.gr.params["gr_source"], 11)
+        self.assertEqual(self.mm.params["gr_source"], 22)
+        self.assertEqual(self.p.params["gr_source"], 33)
    
     def test_updateintcopy(self):
         a = 1
-        self.gr.params['index'] = a
+        self.gr.params['gr_source'] = a
 
         a = 3
-        self.assertEqual(self.gr.params["index"], 1) # shouldn't reflect update because copied
+        self.assertEqual(self.gr.params["gr_source"], 1) # shouldn't reflect update because copied
     
     def test_addforce(self):
         self.gr.params['c'] = 3.5
@@ -184,7 +184,7 @@ class TestParams(unittest.TestCase):
 
     def test_length(self):
         self.gr.params['c'] = 1.3
-        self.gr.params['index'] = 7
+        self.gr.params['gr_source'] = 7
         self.gr.params['tau_mass'] = 3.2
         self.assertEqual(len(self.gr.params), 3)
 
