@@ -199,29 +199,29 @@ class Extras(Structure):
         return Acentral
 
     # Hamiltonian calculation functions
-    def gr_hamiltonian(self, sim, params):
+    def gr_hamiltonian(self, params):
         clibreboundx.rebx_gr_hamiltonian.restype = c_double
-        return clibreboundx.rebx_gr_hamiltonian(byref(sim), byref(params))
+        return clibreboundx.rebx_gr_hamiltonian(byref(self), byref(params))
     
-    def gr_potential_hamiltonian(self, sim, params):
+    def gr_potential_hamiltonian(self, params):
         clibreboundx.rebx_gr_potential_hamiltonian.restype = c_double
-        return clibreboundx.rebx_gr_potential_hamiltonian(byref(sim), byref(params))
+        return clibreboundx.rebx_gr_potential_hamiltonian(byref(self), byref(params))
     
-    def gr_full_hamiltonian(self, sim, params):
+    def gr_full_hamiltonian(self, params):
         clibreboundx.rebx_gr_full_hamiltonian.restype = c_double
-        return clibreboundx.rebx_gr_full_hamiltonian(byref(sim), byref(params))
+        return clibreboundx.rebx_gr_full_hamiltonian(byref(self), byref(params))
     
-    def tides_precession_hamiltonian(self, sim, params):
+    def tides_precession_hamiltonian(self, params):
         clibreboundx.rebx_tides_precession_hamiltonian.restype = c_double
-        return clibreboundx.rebx_tides_precession_hamiltonian(byref(sim), byref(params))
+        return clibreboundx.rebx_tides_precession_hamiltonian(byref(self), byref(params))
 
-    def central_force_hamiltonian(self, sim):
+    def central_force_hamiltonian(self):
         clibreboundx.rebx_central_force_hamiltonian.restype = c_double
-        return clibreboundx.rebx_central_force_hamiltonian(byref(sim))
+        return clibreboundx.rebx_central_force_hamiltonian(byref(self))
     
-    def gravitational_harmonics_hamiltonian(self, sim):
+    def gravitational_harmonics_hamiltonian(self):
         clibreboundx.rebx_gravitational_harmonics_hamiltonian.restype = c_double
-        return clibreboundx.rebx_gravitational_harmonics_hamiltonian(byref(sim))
+        return clibreboundx.rebx_gravitational_harmonics_hamiltonian(byref(self))
     
 #################################################
 # Generic REBOUNDx definitions
