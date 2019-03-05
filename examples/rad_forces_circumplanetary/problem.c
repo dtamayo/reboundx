@@ -109,6 +109,5 @@ void heartbeat(struct reb_simulation* sim){
         orbit = reb_tools_particle_to_orbit(sim->G, sim->particles[3], saturn); 
         double e3 = orbit.e;
         printf("%e\t%f\t%f\n", t, e2, e3);
-
     }
 }
