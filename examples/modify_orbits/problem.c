@@ -45,10 +45,10 @@ int main(int argc, char* argv[]){
     // There are two options for how to modify orbits.  You would only choose one (comment the other out).  
     // You can't set precession separately with modify_orbits_forces (eccentricity and inclination damping induce pericenter and nodal precession).
 
-    struct rebx_operator* mod = rebx_load_operator(rebx, "modify_orbits_direct");    					// directly update particles' orbital elements each timestep
-    rebx_add_operator(rebx, mod);
-    //struct rebx_force* mof = rebx_load_force(rebx, "modify_orbits_forces");    					// add forces that orbit-average to give exponential a and e damping
-    //rebx_add_force(rebx, mof);
+    struct rebx_operator* mo = rebx_load_operator(rebx, "modify_orbits_direct");    					// directly update particles' orbital elements each timestep
+    rebx_add_operator(rebx, mo);
+    //struct rebx_force* mo = rebx_load_force(rebx, "modify_orbits_forces");    					// add forces that orbit-average to give exponential a and e damping
+    //rebx_add_force(rebx, mo);
 
     // Set the timescales for each particle.  
     double tmax = 5.e4;
@@ -68,8 +68,8 @@ int main(int argc, char* argv[]){
      * If the latter, add a 'primary' flag to the reference particle (not neccesary for barycentric):
      */
 
-	rebx_set_param_int(rebx, &mod->ap, "coordinates", REBX_COORDINATES_PARTICLE);
-	rebx_set_param_double(rebx, &mod->ap, "p", 1.);
+	rebx_set_param_int(rebx, &mo->ap, "coordinates", REBX_COORDINATES_PARTICLE);
+	rebx_set_param_double(rebx, &mo->ap, "p", 1.); // doesn't do anything for modify_orbits_forces
 	rebx_set_param_int(rebx, &sim->particles[0].ap, "primary", 1);
 
     reb_integrate(sim, tmax);
