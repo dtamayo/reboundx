@@ -33,7 +33,7 @@ int main(int argc, char* argv[]){
     struct rebx_force* force = rebx_load_force(rebx, "central_force");
     rebx_add_force(rebx, force);
 
-    /* We first choose a power (must be a double!) for our central force (here F goes as r^-1).
+    /* We first choose a power for our central force (here F goes as r^-1).
      * We then need to add it to the particle(s) that will act as central sources for this force.*/
 
     struct reb_particle* ps = sim->particles;
