@@ -76,6 +76,8 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "tides_synchronous_tau_e", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "min_distance", REBX_TYPE_UINT32);
     rebx_register_param(rebx, "min_distance_from", REBX_TYPE_UINT32);
+    rebx_register_param(rebx, "integrator", REBX_TYPE_INT);
+    rebx_register_param(rebx, "free_arrays", REBX_TYPE_POINTER);
     //rebx_register_param(rebx, "min_distance_orbit", REBX_TYPE_ORBIT);
 }
 
@@ -161,7 +163,7 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
     {
         force->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
         if (force->name == NULL){
-            rebx_free_force(force);
+            rebx_free_force(rebx, force);
             return NULL;
         }
         else{
@@ -172,7 +174,7 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
     // Add force to allocated_forces list for later freeing
     struct rebx_node* node = rebx_create_node(rebx);
     if (node == NULL){
-        rebx_free_force(force);
+        rebx_free_force(rebx, force);
         return NULL;
     }
     node->object = force;
@@ -594,7 +596,7 @@ struct rebx_operator* rebx_get_operator(struct rebx_extras* const rebx, const ch
 int rebx_remove_force(struct rebx_extras* rebx, struct rebx_force* force){
     int allocated = rebx_remove_node(&rebx->allocated_forces, force);
     if(allocated){
-        rebx_free_force(force);
+        rebx_free_force(rebx, force);
     }
     // success only cares about removal from add_forces that affects sim
     int success = rebx_remove_node(&rebx->additional_forces, force);
@@ -705,7 +707,11 @@ void rebx_free_particle_ap(struct reb_particle* p){
     rebx_free_ap(&p->ap);
 }
 
-void rebx_free_force(struct rebx_force* force){
+void rebx_free_force(struct rebx_extras* rebx, struct rebx_force* force){
+    void (*free_arrays)(struct rebx_extras* rebx, struct rebx_force* force) = rebx_get_param(rebx, force->ap, "free_arrays");
+    if (free_arrays){
+        free_arrays(rebx, force);
+    }
     if(force->name){
         free(force->name);
     }
@@ -739,7 +745,7 @@ void rebx_free_pointers(struct rebx_extras* rebx){
     current = rebx->allocated_forces;
     while (current != NULL){
         next = current->next;
-        rebx_free_force(current->object);
+        rebx_free_force(rebx, current->object);
         free(current);
         current = next;
     }

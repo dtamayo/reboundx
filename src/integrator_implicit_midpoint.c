@@ -63,19 +63,45 @@ static int compare(struct reb_particle* ps1, struct reb_particle* ps2, int N){
     }
 }
 
-void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect){
-    /*const int N = sim->N - sim->N_var;
-    double* Edissipated = rebx_get_param_check(effect, "Edissipated", REBX_TYPE_DOUBLE);
-    struct reb_particle* const ps_orig = sim->particles;
+void free_arrays(struct rebx_extras* rebx, struct rebx_force* force){
+    struct reb_particle* const ps_final = rebx_get_param(rebx, force->ap, "ps_final");
+    fprintf(stderr, "Freeing\n");
+    free(ps_final);
+    struct reb_particle* const ps_prev = rebx_get_param(rebx, force->ap, "ps_prev");
+    free(ps_prev);
+    struct reb_particle* const ps_avg = rebx_get_param(rebx, force->ap, "ps_avg");
+    free(ps_avg);
+}
+
+static struct reb_particle* setup(struct rebx_extras* rebx, struct rebx_force* force, const int N){
+    rebx_set_param_pointer(rebx, &force->ap, "free_arrays", free_arrays);
     struct reb_particle* const ps_final = malloc(N*sizeof(*ps_final));
+    rebx_set_param_pointer(rebx, &force->ap, "ps_final", ps_final);
     struct reb_particle* const ps_prev = malloc(N*sizeof(*ps_prev));
+    rebx_set_param_pointer(rebx, &force->ap, "ps_prev", ps_prev);
     struct reb_particle* const ps_avg = malloc(N*sizeof(*ps_avg));
+    rebx_set_param_pointer(rebx, &force->ap, "ps_avg", ps_avg);
+    
+    return ps_final;
+}
+
+void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const sim, const double dt, struct rebx_force* const force){
+    struct rebx_extras* rebx = sim->extras;
+    const int N = sim->N - sim->N_var;
+    struct reb_particle* ps_final = rebx_get_param(rebx, force->ap, "ps_final");
+    if (ps_final == NULL){
+        ps_final = setup(rebx, force, N);
+    }
+    // These should not fail since we check above and setup if not there
+    struct reb_particle* const ps_prev = rebx_get_param(rebx, force->ap, "ps_prev");
+    struct reb_particle* const ps_avg = rebx_get_param(rebx, force->ap, "ps_avg");
+    struct reb_particle* const ps_orig = sim->particles;
     memcpy(ps_final, sim->particles, N*sizeof(*ps_final));
     memcpy(ps_avg, sim->particles, N*sizeof(*ps_orig));
     int n, converged;
     for(n=0;n<10;n++){
         memcpy(ps_prev, ps_final, N*sizeof(*ps_prev));
-        effect->force(sim, effect, ps_avg, N);
+        force->update_accelerations(sim, force, ps_avg, N);
         for(int i=0; i<N; i++){
             ps_final[i].vx = ps_orig[i].vx + dt*ps_avg[i].ax;
             ps_final[i].vy = ps_orig[i].vy + dt*ps_avg[i].ay;
@@ -83,10 +109,6 @@ void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const si
         }
         converged = compare(ps_final, ps_prev, N);
         if (converged){
-            if(Edissipated != NULL){
-                const double Edot = rebx_Edot(ps_avg, N);
-                *Edissipated += dt*Edot;
-            }
             break;
         }
         avg_particles(ps_avg, ps_orig, ps_final, N);
@@ -100,7 +122,4 @@ void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const si
         sim->particles[i].vy = ps_final[i].vy;
         sim->particles[i].vz = ps_final[i].vz;
     }
-    free(ps_final);
-    free(ps_prev);
-    free(ps_avg);*/
 }
