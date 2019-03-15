@@ -99,7 +99,7 @@ void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const si
 void* rebx_malloc(struct rebx_extras* const rebx, size_t memsize);
 void rebx_free_ap(struct rebx_node** ap);
 void rebx_free_particle_ap(struct reb_particle* p);
-void rebx_free_force(struct rebx_force* force);
+void rebx_free_force(struct rebx_extras* rebx, struct rebx_force* force);
 void rebx_free_operator(struct rebx_operator* operator);
 void rebx_free_step(struct rebx_step* step);
 void rebx_free_pointers(struct rebx_extras* rebx);

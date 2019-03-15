@@ -30,7 +30,7 @@
 #include "reboundx.h"
 #include "core.h"
 
-void rebx_integrator_rk2_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect){
+void rebx_integrator_rk2_integrate(struct reb_simulation* const sim, const double dt, struct rebx_force* const force){
     /*    
     const int N = sim->N - sim->N_var;
     struct reb_particle* const k2 = malloc(N*sizeof(*k2));

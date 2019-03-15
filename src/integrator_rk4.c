@@ -37,7 +37,7 @@ static void rebx_reset_acc(struct reb_particle* const particles, const int N){
     }
 }
 
-void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect){
+void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const double dt, struct rebx_force* const force){
     /*    
     const int N = sim->N - sim->N_var;
     rebx_reset_acc(sim->particles, N);
