@@ -63,7 +63,7 @@ static int compare(struct reb_particle* ps1, struct reb_particle* ps2, int N){
     }
 }
 
-void free_arrays(struct rebx_extras* rebx, struct rebx_force* force){
+void rebx_im_free_arrays(struct rebx_extras* rebx, struct rebx_force* force){
     struct reb_particle* const ps_final = rebx_get_param(rebx, force->ap, "ps_final");
     free(ps_final);
     struct reb_particle* const ps_prev = rebx_get_param(rebx, force->ap, "ps_prev");
@@ -73,7 +73,7 @@ void free_arrays(struct rebx_extras* rebx, struct rebx_force* force){
 }
 
 static struct reb_particle* setup(struct rebx_extras* rebx, struct rebx_force* force, const int N){
-    rebx_set_param_pointer(rebx, &force->ap, "free_arrays", free_arrays);
+    rebx_set_param_pointer(rebx, &force->ap, "free_arrays", rebx_im_free_arrays);
     struct reb_particle* const ps_final = malloc(N*sizeof(*ps_final));
     rebx_set_param_pointer(rebx, &force->ap, "im_ps_final", ps_final);
     struct reb_particle* const ps_prev = malloc(N*sizeof(*ps_prev));

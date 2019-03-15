@@ -53,7 +53,7 @@ int main(int argc, char* argv[]){
 
     struct rebx_operator* integrateforce = rebx_load_operator(rebx, "integrate_force");
     rebx_set_param_pointer(rebx, &integrateforce->ap, "force", gr);
-    rebx_set_param_int(rebx, &integrateforce->ap, "integrator", REBX_INTEGRATOR_IMPLICIT_MIDPOINT);
+    rebx_set_param_int(rebx, &integrateforce->ap, "integrator", REBX_INTEGRATOR_RK2);
     rebx_add_operator(rebx, integrateforce);
 
     double tmax = 10.;

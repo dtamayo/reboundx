@@ -81,7 +81,10 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "im_ps_final", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "im_ps_prev", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "im_ps_avg", REBX_TYPE_POINTER);
-    //rebx_register_param(rebx, "min_distance_orbit", REBX_TYPE_ORBIT);
+    rebx_register_param(rebx, "rk2_k2", REBX_TYPE_POINTER);
+    rebx_register_param(rebx, "rk4_k2", REBX_TYPE_POINTER);
+    rebx_register_param(rebx, "rk4_k3", REBX_TYPE_POINTER);
+//rebx_register_param(rebx, "min_distance_orbit", REBX_TYPE_ORBIT);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){

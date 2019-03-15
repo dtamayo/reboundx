@@ -30,14 +30,24 @@
 #include "reboundx.h"
 #include "core.h"
 
+void rebx_rk2_free_arrays(struct rebx_extras* rebx, struct rebx_force* force){
+    struct reb_particle* const k2 = rebx_get_param(rebx, force->ap, "rk2_k2");
+    free(k2);
+}
+
 void rebx_integrator_rk2_integrate(struct reb_simulation* const sim, const double dt, struct rebx_force* const force){
-    /*    
+    struct rebx_extras* rebx = sim->extras;
     const int N = sim->N - sim->N_var;
-    struct reb_particle* const k2 = malloc(N*sizeof(*k2));
+    struct reb_particle* k2 = rebx_get_param(rebx, force->ap, "rk2_k2");
+    if (k2 == NULL){
+        k2 = malloc(N*sizeof(*k2));
+        rebx_set_param_pointer(rebx, &force->ap, "rk2_k2", k2);
+        rebx_set_param_pointer(rebx, &force->ap, "free_arrays", rebx_rk2_free_arrays);
+        
+    }
     memcpy(k2, sim->particles, N*sizeof(*k2));
 
-    effect->force(sim, effect, sim->particles, N);  // k1 = sim.particles.a
-    
+    force->update_accelerations(sim, force, sim->particles, N);
     const double a21 = 2.*dt/3.;
     for(int i=0; i<N; i++){
         k2[i].vx = sim->particles[i].vx + a21*sim->particles[i].ax;
@@ -45,7 +55,7 @@ void rebx_integrator_rk2_integrate(struct reb_simulation* const sim, const doubl
         k2[i].vz = sim->particles[i].vz + a21*sim->particles[i].az;
     }
 
-    effect->force(sim, effect, k2, N);
+    force->update_accelerations(sim, force, k2, N);
 
     const double b1 = dt/4.;
     const double b2 = 3.*dt/4.;
@@ -54,5 +64,4 @@ void rebx_integrator_rk2_integrate(struct reb_simulation* const sim, const doubl
         sim->particles[i].vy += b1*sim->particles[i].ay + b2*k2[i].ay;
         sim->particles[i].vz += b1*sim->particles[i].az + b2*k2[i].az;
     }
-    free(k2);*/
 }
