@@ -65,7 +65,6 @@ static int compare(struct reb_particle* ps1, struct reb_particle* ps2, int N){
 
 void free_arrays(struct rebx_extras* rebx, struct rebx_force* force){
     struct reb_particle* const ps_final = rebx_get_param(rebx, force->ap, "ps_final");
-    fprintf(stderr, "Freeing\n");
     free(ps_final);
     struct reb_particle* const ps_prev = rebx_get_param(rebx, force->ap, "ps_prev");
     free(ps_prev);
@@ -76,11 +75,11 @@ void free_arrays(struct rebx_extras* rebx, struct rebx_force* force){
 static struct reb_particle* setup(struct rebx_extras* rebx, struct rebx_force* force, const int N){
     rebx_set_param_pointer(rebx, &force->ap, "free_arrays", free_arrays);
     struct reb_particle* const ps_final = malloc(N*sizeof(*ps_final));
-    rebx_set_param_pointer(rebx, &force->ap, "ps_final", ps_final);
+    rebx_set_param_pointer(rebx, &force->ap, "im_ps_final", ps_final);
     struct reb_particle* const ps_prev = malloc(N*sizeof(*ps_prev));
-    rebx_set_param_pointer(rebx, &force->ap, "ps_prev", ps_prev);
+    rebx_set_param_pointer(rebx, &force->ap, "im_ps_prev", ps_prev);
     struct reb_particle* const ps_avg = malloc(N*sizeof(*ps_avg));
-    rebx_set_param_pointer(rebx, &force->ap, "ps_avg", ps_avg);
+    rebx_set_param_pointer(rebx, &force->ap, "im_ps_avg", ps_avg);
     
     return ps_final;
 }
@@ -88,13 +87,13 @@ static struct reb_particle* setup(struct rebx_extras* rebx, struct rebx_force* f
 void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const sim, const double dt, struct rebx_force* const force){
     struct rebx_extras* rebx = sim->extras;
     const int N = sim->N - sim->N_var;
-    struct reb_particle* ps_final = rebx_get_param(rebx, force->ap, "ps_final");
+    struct reb_particle* ps_final = rebx_get_param(rebx, force->ap, "im_ps_final");
     if (ps_final == NULL){
         ps_final = setup(rebx, force, N);
     }
     // These should not fail since we check above and setup if not there
-    struct reb_particle* const ps_prev = rebx_get_param(rebx, force->ap, "ps_prev");
-    struct reb_particle* const ps_avg = rebx_get_param(rebx, force->ap, "ps_avg");
+    struct reb_particle* const ps_prev = rebx_get_param(rebx, force->ap, "im_ps_prev");
+    struct reb_particle* const ps_avg = rebx_get_param(rebx, force->ap, "im_ps_avg");
     struct reb_particle* const ps_orig = sim->particles;
     memcpy(ps_final, sim->particles, N*sizeof(*ps_final));
     memcpy(ps_avg, sim->particles, N*sizeof(*ps_orig));

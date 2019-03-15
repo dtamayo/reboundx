@@ -78,6 +78,9 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "min_distance_from", REBX_TYPE_UINT32);
     rebx_register_param(rebx, "integrator", REBX_TYPE_INT);
     rebx_register_param(rebx, "free_arrays", REBX_TYPE_POINTER);
+    rebx_register_param(rebx, "im_ps_final", REBX_TYPE_POINTER);
+    rebx_register_param(rebx, "im_ps_prev", REBX_TYPE_POINTER);
+    rebx_register_param(rebx, "im_ps_avg", REBX_TYPE_POINTER);
     //rebx_register_param(rebx, "min_distance_orbit", REBX_TYPE_ORBIT);
 }
 
