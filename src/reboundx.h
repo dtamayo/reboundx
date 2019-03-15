@@ -138,6 +138,14 @@ enum rebx_input_binary_messages {
     REBX_INPUT_BINARY_WARNING_VERSION = 16384,
 };
 
+enum rebx_integrator {
+    REBX_INTEGRATOR_NONE = -1,
+    REBX_INTEGRATOR_IMPLICIT_MIDPOINT = 0,
+    REBX_INTEGRATOR_RK4 = 1,
+    REBX_INTEGRATOR_EULER = 2,
+    REBX_INTEGRATOR_RK2 = 3,
+};
+
 /****************************************
 Basic types in REBOUNDx
 *****************************************/
@@ -211,14 +219,6 @@ struct rebx_extras {
     struct rebx_node* registered_params;    ///< Linked list of all the names registered for parameters, along with their type
     struct rebx_node* allocated_forces;
     struct rebx_node* allocated_operators;
-    
-    enum {
-        REBX_INTEGRATOR_IMPLICIT_MIDPOINT = 0,
-        REBX_INTEGRATOR_RK4 = 1,
-        REBX_INTEGRATOR_EULER = 2,
-        REBX_INTEGRATOR_RK2 = 3,
-        REBX_INTEGRATOR_NONE = -1,
-    } integrator;
 };
 
 /****************************************
