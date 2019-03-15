@@ -214,7 +214,6 @@ static void rebx_write_rebx(struct rebx_extras* rebx, FILE* of){
     fwrite(&rebx_field, sizeof(rebx_field), 1, of);
     long pos_start_rebx = ftell(of);
     
-    REBX_WRITE_FIELD(REBX_INTEGRATOR,   &rebx->integrator,  sizeof(rebx->integrator));
     REBX_WRITE_FIELD(END,               NULL,               0);
     
     // Go back and write size of entire parameter and reset file position to end of file

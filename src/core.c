@@ -42,34 +42,7 @@ const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build strin
 const char* rebx_version_str = "2.19.3";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
 
-void rebx_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect){
-    /*if (effect->force == NULL){
-        char str[300];
-        sprintf(str, "REBOUNDx Error: rebx_integrate called with non-force effect '%s'.\n", effect->name);
-        reb_error(sim, str);
-    }
-    struct rebx_extras* rebx = sim->extras;
-    rebx_reset_accelerations(sim->particles, sim->N);
-    
-    switch(rebx->integrator){
-        case REBX_INTEGRATOR_IMPLICIT_MIDPOINT:
-            rebx_integrator_implicit_midpoint_integrate(sim, dt, effect);
-            break;
-        case REBX_INTEGRATOR_RK2:
-            rebx_integrator_rk2_integrate(sim, dt, effect);
-            break;
-        case REBX_INTEGRATOR_RK4:
-            rebx_integrator_rk4_integrate(sim, dt, effect);
-            break;
-        case REBX_INTEGRATOR_EULER:
-            rebx_integrator_euler_integrate(sim, dt, effect);
-            break;
-        case REBX_INTEGRATOR_NONE:
-            break;
-        default:
-            break;
-    }*/
-}
+
 
 /*****************************
  Initialization routines.
@@ -154,7 +127,6 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     rebx->allocated_forces=NULL;
     rebx->allocated_operators=NULL;
     rebx->registered_params=NULL;
-    rebx->integrator = REBX_INTEGRATOR_IMPLICIT_MIDPOINT;
     
     if(sim->additional_forces || sim->pre_timestep_modifications || sim->post_timestep_modifications){
         reb_warning(sim, "REBOUNDx overwrites sim->additional_forces, sim->pre_timestep_modifications and sim->post_timestep_modifications.  If you want to use REBOUNDx together with your own custom functions that use these callbacks, you should add them through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.");
@@ -305,6 +277,11 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
     if (strcmp(name, "modify_mass") == 0){
         operator = rebx_create_operator(rebx, name);
         operator->step = rebx_modify_mass;
+        operator->operator_type = REBX_OPERATOR_UPDATER;
+    }
+    else if (strcmp(name, "integrate_force") == 0){
+        operator = rebx_create_operator(rebx, name);
+        operator->step = rebx_integrate_force;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else if (strcmp(name, "kepler") == 0){

@@ -401,11 +401,6 @@ static int rebx_load_rebx(struct rebx_extras* rebx, FILE* inf, enum rebx_input_b
             break;
         }
         switch (field.type){
-            case REBX_BINARY_FIELD_TYPE_REBX_INTEGRATOR:
-            {
-                fread(&rebx->integrator, sizeof(rebx->integrator), 1, inf);
-                break;
-            }
             case REBX_BINARY_FIELD_TYPE_END:
             {
                 reading_fields=0;
