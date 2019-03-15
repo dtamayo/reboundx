@@ -48,15 +48,11 @@ int main(int argc, char* argv[]){
     double* tau_e = rebx_get_param(rebx, sim->particles[1].ap, "tau_e");
     int* max_iterations = rebx_get_param(rebx, sim->particles[1].ap, "max_iterations");
     
-    // Change a rebx structure field
-    rebx->integrator = REBX_INTEGRATOR_RK4;
-    
     printf("c: Original = %f\n", *c);
     printf("gr_source: Original = %d\n", *gr_source);
     printf("tau_mass: Original = %f\n", *tau_mass);
     printf("tau_e: Original = %f\n", *tau_e);
     printf("max_iterations: Original = %d\n", *max_iterations);
-    printf("rebx->integrator: Original = %d\n", rebx->integrator);
     
     // We now have to save both a REBOUND binary (for the simulation) and a REBOUNDx one (for parameters and effects)
     reb_output_binary(sim, "reb.bin");
@@ -83,7 +79,6 @@ int main(int argc, char* argv[]){
     printf("tau_mass: Loaded = %f\n", *tau_mass);
     printf("tau_e: Loaded = %f\n", *tau_e);
     printf("max_iterations: Loaded = %d\n", *max_iterations);
-    printf("rebx->integrator: Original = %d\n", rebx->integrator);
     
     // You would now integrate as usual
     double tmax = 0.05;
