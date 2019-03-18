@@ -43,4 +43,4 @@ rebound.Particle.params = params
 from .extras import Extras, Param, Node, Force, Operator
 from .tools import coordinates, install_test
 from .params import Params
-__all__ = ["__version__", "__build__", "__githash__", "Extras", "Param", "Effect", "Params", "coordinates", "install_test"]
+__all__ = ["__version__", "__build__", "__githash__", "Extras", "Param", "Effect", "Params", "coordinates", "integrators"] 

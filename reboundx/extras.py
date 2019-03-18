@@ -4,7 +4,7 @@ import rebound
 import reboundx
 import warnings
 
-INTEGRATORS = {"implicit_midpoint": 0, "rk4":1, "euler": 2, "rk2": 3, "none": -1}
+integrators = {"implicit_midpoint": 0, "rk4":1, "euler": 2, "rk2": 3, "none": -1}
 
 REBX_TIMING = {"pre":-1, "post":1}
 REBX_FORCE_TYPE = {"none":0, "pos":1, "vel":2}
@@ -68,32 +68,6 @@ class Extras(Structure):
     def detach(self):
         clibreboundx.rebx_detach(self._sim)
 
-    @property
-    def integrator(self):
-        """
-        Get or set the intergrator module.
-
-        Available integrators are:
-
-        - ``'implicit_midpoint'`` (default)
-        
-        Check the online documentation for a full description of each of the integrators. 
-        """
-        i = self._integrator
-        for name, _i in INTEGRATORS.items():
-            if i==_i:
-                return name
-        return i
-    @integrator.setter
-    def integrator(self, value):
-        if isinstance(value, int):
-            self._integrator = c_int(value)
-        elif isinstance(value, basestring):
-            value = value.lower()
-            if value in INTEGRATORS: 
-                self._integrator = INTEGRATORS[value]
-            else:
-                raise ValueError("Warning. Integrator not found.")
     
     #######################################
     # Functions for manipulating REBOUNDx effects
