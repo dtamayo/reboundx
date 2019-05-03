@@ -101,6 +101,14 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
         tau_inc = *tau_inc_ptr;
     }
     
+    double cosine = 1.;
+    double sine = 0.; // default
+    double* thetarot = rebx_get_param(sim->extras, force->ap, "thetarot");
+    if (thetarot != NULL){ // This angle rotates the radial ecc damping force CCW by angle thetarot
+                           // Default is 0. Used in REBOUNDx paper as example
+        cosine = cos(*thetarot);
+        sine = sin(*thetarot);
+    }
     struct reb_vec3d a = {0};
 
     a.x =  dvx/(2.*tau_a);
@@ -110,8 +118,8 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
     if (tau_e < INFINITY || tau_inc < INFINITY){
         const double vdotr = dx*dvx + dy*dvy + dz*dvz;
         const double prefac = 2*vdotr/r2/tau_e;
-        a.x += prefac*dx;
-        a.y += prefac*dy;
+        a.x += prefac*(dx*cosine - dy*sine);
+        a.y += prefac*(dx*sine + dy*cosine);
         a.z += prefac*dz + 2.*dvz/tau_inc;
     }
     return a;
@@ -123,7 +131,6 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_for
     if (ptr != NULL){
         coordinates = *ptr;
     }
-    
     const int back_reactions_inclusive = 1;
     const char* reference_name = "primary";
     rebx_com_force(sim, force, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_forces, particles, N);

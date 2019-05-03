@@ -76,6 +76,7 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "tides_synchronous_tau_e", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "min_distance", REBX_TYPE_UINT32);
     rebx_register_param(rebx, "min_distance_from", REBX_TYPE_UINT32);
+    rebx_register_param(rebx, "thetarot", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "integrator", REBX_TYPE_INT);
     rebx_register_param(rebx, "free_arrays", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "im_ps_final", REBX_TYPE_POINTER);
