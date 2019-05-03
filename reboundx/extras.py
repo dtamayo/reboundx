@@ -223,13 +223,16 @@ class Operator(Structure):
         self._operator_type = REBX_OPERATOR_TYPE[value.lower()]
 
     @property
-    def step(self):
+    def step_function(self):
         return self._step
 
-    @step.setter
-    def step(self, func):
+    @step_function.setter
+    def step_function(self, func):
         self._sfp = STEPFUNCPTR(func) # keep a reference to func so it doesn't get garbage collected
-        self._step = self._sfp
+        self._step_function = self._sfp
+
+    def step(self, sim, dt):
+        self._step_function(byref(sim), byref(self), dt)
 
     @property 
     def params(self):
@@ -242,7 +245,7 @@ Operator._fields_ = [   ("name", c_char_p),
                         ("ap", POINTER(Node)),
                         ("_sim", POINTER(rebound.Simulation)),
                         ("_operator_type", c_int),
-                        ("_step", STEPFUNCPTR)]
+                        ("_step_function", STEPFUNCPTR)]
 class Force(Structure):
     @property
     def force_type(self):
