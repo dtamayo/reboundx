@@ -224,7 +224,7 @@ class Operator(Structure):
 
     @property
     def step_function(self):
-        return self._step
+        return self._step_function
 
     @step_function.setter
     def step_function(self, func):
