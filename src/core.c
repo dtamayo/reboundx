@@ -138,12 +138,8 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     rebx->registered_params=NULL;
     
     if(sim->additional_forces || sim->pre_timestep_modifications || sim->post_timestep_modifications){
-        reb_warning(sim, "REBOUNDx overwrites sim->additional_forces, sim->pre_timestep_modifications and sim->post_timestep_modifications.  If you want to use REBOUNDx together with your own custom functions that use these callbacks, you should add them through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.");
+        reb_warning(sim, "REBOUNDx overwrites sim->additional_forces, sim->pre_timestep_modifications and sim->post_timestep_modifications whenever forces or operators that use them get added.  If you want to use REBOUNDx together with your own custom functions that use these callbacks, you should add them through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.");
     }
-    // Have to set all the following at initialization since we can't know which will be needed ahead of time
-    sim->additional_forces = rebx_additional_forces;
-    sim->pre_timestep_modifications = rebx_pre_timestep_modifications;
-    sim->post_timestep_modifications = rebx_post_timestep_modifications;
     sim->free_particle_ap = rebx_free_particle_ap;
 }
 
@@ -357,6 +353,7 @@ int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force){
     }
     node->object = force;
     rebx_add_node(&rebx->additional_forces, node);
+    rebx->sim->additional_forces = rebx_additional_forces;
     
     return 1;
 }
@@ -386,10 +383,12 @@ int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* opera
     node->object = step;
     if (timing == REBX_TIMING_PRE){
         rebx_add_node(&rebx->pre_timestep_modifications, node);
+        rebx->sim->pre_timestep_modifications = rebx_pre_timestep_modifications;
         return 1;
     }
     if (timing == REBX_TIMING_POST){
         rebx_add_node(&rebx->post_timestep_modifications, node);
+        rebx->sim->post_timestep_modifications = rebx_post_timestep_modifications;
         return 1;
     }
     return 0;
