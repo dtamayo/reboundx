@@ -100,7 +100,7 @@ class TestOperators(unittest.TestCase):
         cust = self.rebx.create_operator('myoperator')
         def mystep(sim, operator, dt):
             sim.contents.particles[1].x += 1.e-4
-        cust.step = mystep
+        cust.step_function = mystep
         cust.operator_type = 'updater'
         self.rebx.add_operator(cust)
         self.sim.integrate(10)
@@ -116,7 +116,7 @@ class TestOperators(unittest.TestCase):
         cust = self.rebx.create_operator('myoperator')
         def mystep(sim, operator, dt):
             sim.contents.particles[1].x += 1.e-4
-        cust.step = mystep
+        cust.step_function = mystep
         with self.assertRaises(RuntimeError):
             self.rebx.add_operator(cust)
 
@@ -153,7 +153,7 @@ class TestOperators(unittest.TestCase):
         cust = self.rebx.create_operator('myoperator')
         def mystep(sim, operator, dt):
             sim.contents.particles[1].x += 1.e-4
-        cust.step = mystep
+        cust.step_function = mystep
         cust.operator_type = 'updater'
         self.rebx.add_operator(mm, dt_fraction=0.5, timing='post')
         self.rebx.add_operator(cust, dt_fraction=0.5, timing='post')
@@ -187,7 +187,7 @@ class TestAddOperator(unittest.TestCase):
         self.cust.params['ctr'] = 0
         def mystep(sim, operator, dt):
             operator.contents.params['ctr'] += 1
-        self.cust.step = mystep
+        self.cust.step_function = mystep
     
     def test_ias15updater(self):
         self.sim.integrator='ias15'
