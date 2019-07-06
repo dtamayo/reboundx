@@ -539,5 +539,7 @@ void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_operator* con
 void rebx_kepler_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 void rebx_jump_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+void rebx_drift_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+void rebx_kick_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 
 #endif

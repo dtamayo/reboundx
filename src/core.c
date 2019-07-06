@@ -289,6 +289,16 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
         operator->step = rebx_integrate_force;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
+    else if (strcmp(name, "drift") == 0){
+        operator = rebx_create_operator(rebx, name);
+        operator->step = rebx_drift_step;
+        operator->operator_type = REBX_OPERATOR_UPDATER;
+    }
+    else if (strcmp(name, "kick") == 0){
+        operator = rebx_create_operator(rebx, name);
+        operator->step = rebx_kick_step;
+        operator->operator_type = REBX_OPERATOR_UPDATER;
+    }
     else if (strcmp(name, "kepler") == 0){
         operator = rebx_create_operator(rebx, name);
         operator->step = rebx_kepler_step;

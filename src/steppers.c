@@ -87,7 +87,6 @@ void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_operator* con
 }
 
 void rebx_kepler_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
-    reb_integrator_whfast_reset(sim);
     reb_integrator_whfast_init(sim);
     reb_integrator_whfast_from_inertial(sim);
     reb_whfast_kepler_step(sim, dt);
@@ -110,4 +109,25 @@ void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_operato
     reb_integrator_whfast_to_inertial(sim);
 }
 
+void rebx_drift_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
+	const int N = sim->N;
+	struct reb_particle* restrict const particles = sim->particles;
+#pragma omp parallel for schedule(guided)
+	for (int i=0;i<N;i++){
+		particles[i].x  += dt * particles[i].vx;
+		particles[i].y  += dt * particles[i].vy;
+		particles[i].z  += dt * particles[i].vz;
+	}
+}
 
+void rebx_kick_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
+    reb_update_acceleration(sim);
+	const int N = sim->N;
+	struct reb_particle* restrict const particles = sim->particles;
+#pragma omp parallel for schedule(guided)
+	for (int i=0;i<N;i++){
+		particles[i].vx += dt * particles[i].ax;
+		particles[i].vy += dt * particles[i].ay;
+		particles[i].vz += dt * particles[i].az;
+	}
+}
