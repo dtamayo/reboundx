@@ -40,7 +40,8 @@ def params(self):
 
 rebound.Particle.params = params
 
-from .extras import Extras, Param, Node, Force, Operator, integrators, get_extras
+from .extras import Extras, Param, Node, Force, Operator, integrators
+from .simulationarchive import SimulationArchive
 from .tools import coordinates, install_test
 from .params import Params
-__all__ = ["__version__", "__build__", "__githash__", "Extras", "get_extras", "Param", "Effect", "Params", "coordinates", "integrators"] 
+__all__ = ["__version__", "__build__", "__githash__", "Extras", "SimulationArchive", "Param", "Effect", "Params", "coordinates", "integrators"] 

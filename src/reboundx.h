@@ -332,14 +332,6 @@ struct rebx_effect* rebx_add_custom_force(struct rebx_extras* rebx, const char* 
  */
 struct rebx_effect* rebx_add_custom_operator(struct rebx_extras* rebx, const char* name, void (*custom_operator)(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing));
 
-
-/**
- * @brief Get a the rebx_extras pointer from a simulation
- * @param sim Pointer to the reb_simulation instance
- * @return Pointer to the attached rebx_extras structure, or NULL if none is attached.
- */
-struct rebx_extras* rebx_get_extras(struct reb_simulation* const sim);
-
 /**
  * @brief Get a pointer to a force by name.
  * @param rebx Pointer to the rebx_extras instance
