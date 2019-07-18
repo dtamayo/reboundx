@@ -28,14 +28,6 @@ REBX_BINARY_WARNINGS = [
     (False,16384, "REBOUNDx: Binary file was saved with a different version of REBOUNDx. Binary format might have changed. Check that effects and parameters are loaded as expected.")
 ]
 
-def get_extras(sim):
-    clibreboundx.rebx_get_extras.restype = POINTER(Extras)
-    ptr = clibreboundx.rebx_get_extras(byref(sim))
-    if ptr:
-        return ptr.contents
-    else:
-        warnings.warn("REBOUNDX: No Extras instance attached to the passed simulation.", RuntimeWarning)
-
 class Extras(Structure):
     """
     Main object used for all REBOUNDx operations, tied to a particular REBOUND simulation.

@@ -579,11 +579,6 @@ void* rebx_get_param(struct rebx_extras* rebx, struct rebx_node* ap, const char*
     }
 }
 
-struct rebx_extras* rebx_get_extras(struct reb_simulation* const sim){
-    struct rebx_extras* rebx = sim->extras;
-    return rebx;
-}
-
 struct rebx_force* rebx_get_force(struct rebx_extras* const rebx, const char* const name){
     struct rebx_node* current = rebx->allocated_forces;
     while(current != NULL){
