@@ -331,11 +331,28 @@ struct rebx_effect* rebx_add_custom_force(struct rebx_extras* rebx, const char* 
  * @return Returns a pointer to a rebx_effect structure for the effect.
  */
 struct rebx_effect* rebx_add_custom_operator(struct rebx_extras* rebx, const char* name, void (*custom_operator)(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing));
+
+
 /**
- * @brief Get a pointer to an effect by name.
+ * @brief Get a the rebx_extras pointer from a simulation
+ * @param sim Pointer to the reb_simulation instance
+ * @return Pointer to the attached rebx_extras structure, or NULL if none is attached.
+ */
+struct rebx_extras* rebx_get_extras(struct reb_simulation* const sim);
+
+/**
+ * @brief Get a pointer to a force by name.
  * @param rebx Pointer to the rebx_extras instance
- * @param effect_name Name of the effect (string)
- * @return Pointer to the corresponding rebx_effect structure, or NULL if not found.
+ * @param effect_name Name of the force (string)
+ * @return Pointer to the corresponding rebx_force structure, or NULL if not found.
+ */
+struct rebx_force* rebx_get_force(struct rebx_extras* const rebx, const char* const name);
+
+/**
+ * @brief Get a pointer to an operator by name.
+ * @param rebx Pointer to the rebx_extras instance
+ * @param effect_name Name of the operator (string)
+ * @return Pointer to the corresponding rebx_operator structure, or NULL if not found.
  */
 struct rebx_force* rebx_get_force(struct rebx_extras* const rebx, const char* const name);
 struct rebx_operator* rebx_get_operator(struct rebx_extras* const rebx, const char* const name);
