@@ -67,6 +67,9 @@ Macro keeps track of size and writes it in at the end.
 static void rebx_write_list(struct rebx_extras* rebx, enum rebx_binary_field_type list_type, struct rebx_node* list, FILE* of);
 
 static void rebx_write_param(struct rebx_extras* rebx, struct rebx_param* param, FILE* of){
+    if (param->type == REBX_TYPE_POINTER){ // Don't write pointers because we won't know how to load them when we read binary. Need to add type to store in binaries.
+        return;
+    }
     long pos_param_rewrite = ftell(of);
     struct rebx_binary_field param_field = {.type = REBX_BINARY_FIELD_TYPE_PARAM, .size=0};
     fwrite(&param_field, sizeof(param_field), 1, of);
