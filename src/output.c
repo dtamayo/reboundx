@@ -63,12 +63,35 @@ Macro keeps track of size and writes it in at the end.
  Macro keeps track of size and writes it in at the end.
  */
 
-// forward declaration
 static void rebx_write_list(struct rebx_extras* rebx, enum rebx_binary_field_type list_type, struct rebx_node* list, FILE* of);
+
+static void rebx_write_force_param(struct rebx_extras* rebx, struct rebx_param* param, FILE* of){
+    long pos_param_rewrite = ftell(of);
+    struct rebx_binary_field param_field = {.type = REBX_BINARY_FIELD_TYPE_PARAM, .size=0};
+    fwrite(&param_field, sizeof(param_field), 1, of);
+    long pos_start_param = ftell(of);
+    
+    REBX_WRITE_FIELD(PARAM_TYPE, &param->type,     sizeof(param->type));
+    REBX_WRITE_FIELD(NAME,       param->name,      strlen(param->name) + 1);
+    struct rebx_force* force = param->value;
+    REBX_WRITE_FIELD(VALUE,      force->name,      strlen(force->name) + 1);
+    REBX_WRITE_FIELD(END,        NULL,             0);
+    
+    // Go back and write size of entire parameter and reset file position to end of file
+    long pos_end_param = ftell(of);
+    param_field.size = pos_end_param - pos_start_param;
+    fseek(of, pos_param_rewrite, SEEK_SET);
+    fwrite(&param_field, sizeof(param_field), 1, of);
+    fseek(of, 0, SEEK_END);
+}
 
 static void rebx_write_param(struct rebx_extras* rebx, struct rebx_param* param, FILE* of){
     if (param->type == REBX_TYPE_POINTER){ // Don't write pointers because we won't know how to load them when we read binary. Need to add type to store in binaries.
         return;
+    }
+    
+    if (param->type == REBX_TYPE_FORCE){ // Don't write pointers because we won't know how to load them when we read binary. Need to add type to store in binaries.
+        rebx_write_force_param(rebx, param, of);
     }
     long pos_param_rewrite = ftell(of);
     struct rebx_binary_field param_field = {.type = REBX_BINARY_FIELD_TYPE_PARAM, .size=0};
@@ -76,7 +99,7 @@ static void rebx_write_param(struct rebx_extras* rebx, struct rebx_param* param,
     long pos_start_param = ftell(of);
     
     REBX_WRITE_FIELD(PARAM_TYPE, &param->type,     sizeof(param->type));
-    REBX_WRITE_FIELD(NAME,       param->name,      strlen(param->name) + 1); // +1 for \0 at end
+    REBX_WRITE_FIELD(NAME,       param->name,      strlen(param->name) + 1);
     REBX_WRITE_FIELD(VALUE,      param->value,     rebx_sizeof(rebx, param->type));
     REBX_WRITE_FIELD(END,        NULL,             0);
 
@@ -95,7 +118,7 @@ static void rebx_write_registered_param(struct rebx_extras* rebx, struct rebx_pa
     long pos_start_param = ftell(of);
     
     REBX_WRITE_FIELD(PARAM_TYPE, &param->type,     sizeof(param->type));
-    REBX_WRITE_FIELD(NAME,       param->name,      strlen(param->name) + 1); // +1 for \0 at end
+    REBX_WRITE_FIELD(NAME,       param->name,      strlen(param->name) + 1);
     REBX_WRITE_FIELD(END,        NULL,             0);
     
     // Go back and write size of entire parameter and reset file position to end of file
@@ -113,7 +136,7 @@ static void rebx_write_force(struct rebx_extras* rebx, struct rebx_force* force,
     long pos_start_force = ftell(of);
     
     // must write name first so that force can be loaded on read
-    REBX_WRITE_FIELD(NAME, force->name, strlen(force->name) + 1); // +1 for \0 at end
+    REBX_WRITE_FIELD(NAME, force->name, strlen(force->name) + 1);
     
     REBX_WRITE_FIELD(PARAM_LIST, NULL,   0);
     rebx_write_list(rebx, REBX_BINARY_FIELD_TYPE_PARAM, force->ap, of); // Write all parameters
@@ -136,7 +159,7 @@ static void rebx_write_additional_force(struct rebx_extras* rebx, struct rebx_fo
     fwrite(&force_field, sizeof(force_field), 1, of);
     long pos_start_effect = ftell(of);
     
-    REBX_WRITE_FIELD(NAME,          force->name,        strlen(force->name) + 1); // +1 for \0 at end
+    REBX_WRITE_FIELD(NAME,          force->name,        strlen(force->name) + 1);
     REBX_WRITE_FIELD(END,           NULL,               0);
 
     // Go back and write size of entire parameter and reset file position to end of file
@@ -153,7 +176,7 @@ static void rebx_write_operator(struct rebx_extras* rebx, struct rebx_operator* 
     fwrite(&operator_field, sizeof(operator_field), 1, of);
     long pos_start_effect = ftell(of);
     
-    REBX_WRITE_FIELD(NAME,          operator->name,             strlen(operator->name) + 1); // +1 for \0 at end
+    REBX_WRITE_FIELD(NAME,          operator->name,             strlen(operator->name) + 1);
     
     REBX_WRITE_FIELD(PARAM_LIST, NULL,   0);
     rebx_write_list(rebx, REBX_BINARY_FIELD_TYPE_PARAM, operator->ap, of); // Write all parameters
@@ -299,7 +322,6 @@ void rebx_output_binary(struct rebx_extras* rebx, char* filename){
     REBX_WRITE_FIELD(ALLOCATED_FORCES,      NULL,   0);
     rebx_write_list(rebx, REBX_BINARY_FIELD_TYPE_FORCE, rebx->allocated_forces, of);
     REBX_WRITE_FIELD(END,                   NULL,   0);
-
     
     REBX_WRITE_FIELD(ALLOCATED_OPERATORS,   NULL,   0);
     rebx_write_list(rebx, REBX_BINARY_FIELD_TYPE_OPERATOR, rebx->allocated_operators, of);

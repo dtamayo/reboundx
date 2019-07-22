@@ -110,6 +110,5 @@ enum rebx_param_type rebx_get_type(struct rebx_extras* rebx, const char* name);
 struct rebx_param* rebx_create_param(struct rebx_extras* rebx, const char* name, enum rebx_param_type type);
 int rebx_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, struct rebx_param* param);
 struct rebx_node* rebx_create_node(struct rebx_extras* rebx);
-struct rebx_force* rebx_set_force_pointer(struct rebx_extras* const rebx, struct rebx_force* const force, const char* name);
 
 #endif
