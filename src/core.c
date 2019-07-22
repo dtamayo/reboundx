@@ -186,41 +186,51 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
     return force;
 }
 
-struct rebx_force* rebx_set_force_pointer(struct rebx_extras* const rebx, struct rebx_force* const force, const char* name){
+struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* name){
+    struct rebx_force* force = NULL;
     
     if(strcmp(name, "gr") == 0){
+        force = rebx_create_force(rebx, name);
         force->update_accelerations = rebx_gr;
         force->force_type = REBX_FORCE_VEL;
     }
     else if (strcmp(name, "central_force") == 0){
+        force = rebx_create_force(rebx, name);
         force->update_accelerations = rebx_central_force;
         force->force_type = REBX_FORCE_POS;
     }
     else if (strcmp(name, "modify_orbits_forces") == 0){
+        force = rebx_create_force(rebx, name);
         force->update_accelerations = rebx_modify_orbits_forces;
         force->force_type = REBX_FORCE_VEL;
     }
     else if (strcmp(name, "gr_full") == 0){
+        force = rebx_create_force(rebx, name);
         force->update_accelerations = rebx_gr_full;
         force->force_type = REBX_FORCE_VEL;
     }
     else if (strcmp(name, "gravitational_harmonics") == 0){
+        force = rebx_create_force(rebx, name);
         force->update_accelerations = rebx_gravitational_harmonics;
         force->force_type = REBX_FORCE_POS;
     }
     else if (strcmp(name, "gr_potential") == 0){
+        force = rebx_create_force(rebx, name);
         force->update_accelerations = rebx_gr_potential;
         force->force_type = REBX_FORCE_POS;
     }
     else if (strcmp(name, "radiation_forces") == 0){
+        force = rebx_create_force(rebx, name);
         force->update_accelerations = rebx_radiation_forces;
         force->force_type = REBX_FORCE_VEL;
     }
     else if (strcmp(name, "tides_precession") == 0){
+        force = rebx_create_force(rebx, name);
         force->update_accelerations = rebx_tides_precession;
         force->force_type = REBX_FORCE_POS;
     }
     else if (strcmp(name, "tides_synchronous_ecc_damping") == 0){
+        force = rebx_create_force(rebx, name);
         force->update_accelerations = rebx_tides_synchronous_ecc_damping;
         force->force_type = REBX_FORCE_VEL;
     }
@@ -231,13 +241,6 @@ struct rebx_force* rebx_set_force_pointer(struct rebx_extras* const rebx, struct
     }
     
     return force; // NULL if not found
-}
-
-struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* name){
-    struct rebx_force* force = NULL;
-    force = rebx_create_force(rebx, name);
-    rebx_set_force_pointer(rebx, force, name);
-    return force;
 }
 
 struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const char* name){

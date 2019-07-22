@@ -93,14 +93,12 @@ static struct rebx_param* rebx_read_param(struct rebx_extras* rebx, FILE* inf, e
             }
         }
     }
-    
-    // check value later (registered params should have value=NULL)
+    // Check type and name after param has been loaded. Check value later (registered params should have value=NULL)
     if (param->type == REBX_TYPE_NONE || param->name == NULL){
         *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
         rebx_free_param(param);
         return NULL;
     }
-    
     return param;
 }
 
@@ -118,9 +116,14 @@ static int rebx_load_param(struct rebx_extras* rebx, struct rebx_node** ap, FILE
     }
     
     if(param->type == REBX_TYPE_FORCE){
-        rebx_set_force_pointer(rebx, param->value, param->name);
+        struct rebx_force* force = rebx_get_force(rebx, param->value);
+        if (force == NULL){
+            *warnings |= REBX_INPUT_BINARY_WARNING_FORCE_PARAM_NOT_LOADED;
+            rebx_free_param(param);
+            return 0;
+        }
+        param->value = force;
     }
-    
     int success = rebx_add_param(rebx, ap, param);
     if(!success){
         return 0;
@@ -684,6 +687,9 @@ struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, c
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_VERSION){
         reb_warning(sim,"REBOUNDx: Binary file was saved with a different version of REBOUNDx. Binary format might have changed. Check that effects and parameters are loaded as expected.");
+    }
+    if (warnings & REBX_INPUT_BINARY_WARNING_FORCE_PARAM_NOT_LOADED){
+        reb_warning(sim,"REBOUNDx: A force parameter failed to load from the list of REBOUNDx implemented forces. Custom forces can't be saved to a REBOUNDx binary, and function points must be reset when a simulation is reloaded.");
     }
     return rebx;
 }
