@@ -110,11 +110,17 @@ static int rebx_load_param(struct rebx_extras* rebx, struct rebx_node** ap, FILE
     if(param == NULL){
         return 0;
     }
+    
     if(param->value == NULL){
         *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_VALUE_NULL;
         rebx_free_param(param);
         return 0;
     }
+    
+    if(param->type == REBX_TYPE_FORCE){
+        rebx_set_force_pointer(rebx, param->value, param->name);
+    }
+    
     int success = rebx_add_param(rebx, ap, param);
     if(!success){
         return 0;

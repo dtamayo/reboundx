@@ -48,6 +48,10 @@ int main(int argc, char* argv[]){
     double* tau_e = rebx_get_param(rebx, sim->particles[1].ap, "tau_e");
     int* max_iterations = rebx_get_param(rebx, sim->particles[1].ap, "max_iterations");
     
+    struct rebx_operator* integforce = rebx_load_operator(rebx, "integrate_force");
+    rebx_set_param_pointer(rebx, &integforce->ap, "force", gr);
+    rebx_add_operator(rebx, integforce);
+    
     printf("c: Original = %f\n", *c);
     printf("gr_source: Original = %d\n", *gr_source);
     printf("tau_mass: Original = %f\n", *tau_mass);
@@ -55,6 +59,7 @@ int main(int argc, char* argv[]){
     printf("max_iterations: Original = %d\n", *max_iterations);
     
     // We now have to save both a REBOUND binary (for the simulation) and a REBOUNDx one (for parameters and effects)
+    reb_integrate(sim, 1.e-4);
     reb_output_binary(sim, "reb.bin");
     rebx_output_binary(rebx, "rebx.bin");
     
@@ -81,7 +86,7 @@ int main(int argc, char* argv[]){
     printf("max_iterations: Loaded = %d\n", *max_iterations);
     
     // You would now integrate as usual
-    double tmax = 0.05;
+    double tmax = 1.e-4;
     reb_integrate(sim, tmax);
     rebx_free(rebx);
     reb_free_simulation(sim);
