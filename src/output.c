@@ -90,8 +90,9 @@ static void rebx_write_param(struct rebx_extras* rebx, struct rebx_param* param,
         return;
     }
     
-    if (param->type == REBX_TYPE_FORCE){ // Don't write pointers because we won't know how to load them when we read binary. Need to add type to store in binaries.
+    if (param->type == REBX_TYPE_FORCE){ // Force already written to allocated_force list. For parce PARAMETERS we agree to store force name in param->value so that the reallocated force can be linked up when we read binary
         rebx_write_force_param(rebx, param, of);
+        return;
     }
     long pos_param_rewrite = ftell(of);
     struct rebx_binary_field param_field = {.type = REBX_BINARY_FIELD_TYPE_PARAM, .size=0};
