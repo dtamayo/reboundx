@@ -87,21 +87,21 @@ enum rebx_operator_type{
  * @brief Enum for identifying different fields for binary files
  */
 enum rebx_binary_field_type{
-    REBX_BINARY_FIELD_TYPE_FORCE=0,
+    REBX_BINARY_FIELD_TYPE_NONE=0,
     REBX_BINARY_FIELD_TYPE_OPERATOR=1,
     REBX_BINARY_FIELD_TYPE_PARTICLE=2,
     REBX_BINARY_FIELD_TYPE_REBX_STRUCTURE=3,
-    REBX_BINARY_FIELD_TYPE_PARAM=4,
+    REBX_BINARY_FIELD_TYPE_PARAM=4,     // a param
     REBX_BINARY_FIELD_TYPE_NAME=5,
-    REBX_BINARY_FIELD_TYPE_PARAM_TYPE=6,
-    REBX_BINARY_FIELD_TYPE_VALUE=7,
+    REBX_BINARY_FIELD_TYPE_PARAM_TYPE=6,// value type stored in param e.g. int
+    REBX_BINARY_FIELD_TYPE_PARAM_VALUE=7,
     REBX_BINARY_FIELD_TYPE_END=8,
     REBX_BINARY_FIELD_TYPE_PARTICLE_INDEX=9,
     REBX_BINARY_FIELD_TYPE_REBX_INTEGRATOR=10,
     REBX_BINARY_FIELD_TYPE_FORCE_TYPE=11,
     REBX_BINARY_FIELD_TYPE_OPERATOR_TYPE=12,
     REBX_BINARY_FIELD_TYPE_STEP=13,
-    REBX_BINARY_FIELD_TYPE_DT_FRACTION=14,
+    REBX_BINARY_FIELD_TYPE_STEP_DT_FRACTION=14,
     REBX_BINARY_FIELD_TYPE_REGISTERED_PARAM=15,
     REBX_BINARY_FIELD_TYPE_ADDITIONAL_FORCE=16,
     REBX_BINARY_FIELD_TYPE_PARAM_LIST=17,
@@ -112,6 +112,8 @@ enum rebx_binary_field_type{
     REBX_BINARY_FIELD_TYPE_PRE_TIMESTEP_MODIFICATIONS=22,
     REBX_BINARY_FIELD_TYPE_POST_TIMESTEP_MODIFICATIONS=23,
     REBX_BINARY_FIELD_TYPE_PARTICLES=24,
+    REBX_BINARY_FIELD_TYPE_FORCE=25,
+    REBX_BINARY_FIELD_TYPE_SNAPSHOT=26,
 };
 
 /**
@@ -283,7 +285,6 @@ struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, c
  * @param warnings Pointer to an array of warnings to be populated during loading. 
  */
 void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings);
-
 /** @} */
 /** @} */
 
@@ -551,5 +552,43 @@ void rebx_jump_step(struct reb_simulation* const sim, struct rebx_operator* cons
 void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 void rebx_drift_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 void rebx_kick_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+
+/****************************************
+ Testing Functions
+ *****************************************/
+/**
+ * \name Testing Functions
+ * @{
+ */
+/**
+ * @defgroup TestingFunctions
+ * @details Functions for testing REBOUNDx
+ * @{
+ */
+
+/**
+ * @brief Loads a binary file, reads the header, and gives back the file pointer for manual reading
+ * @param filename File to open
+ * @param warnings Pointer to warnings enum to store warnings that come up
+ * @return Returns a pointer to the binary file at the position following the header
+ */
+FILE* rebx_input_inspect_binary(const char* const filename, enum rebx_input_binary_messages* warnings);
+
+/**
+ * @brief Read the next field in a binary file
+ * @param inf Pointer to the input file
+ * @return Returns rebx_binary_field struct, initialized to 0 if read fails
+ */
+struct rebx_binary_field rebx_input_read_binary_field(FILE* inf);
+
+/**
+ * @brief Skip forward in binary file
+ * @param inf Pointer to the input file
+ * @param field_size Length by which to skip from current file position
+ */
+void rebx_input_skip_binary_field(FILE* inf, long field_size);
+
+/** @} */
+/** @} */
 
 #endif
