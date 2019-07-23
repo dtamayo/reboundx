@@ -436,7 +436,7 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
         case REB_INTEGRATOR_MERCURIUS: // half step pre and post
         {
             if (operator->operator_type == REBX_OPERATOR_UPDATER){
-                reb_error(sim, "REBOUNDx Error: Operators that change particle states are not supported with Mercurius.\n");
+                reb_error(sim, "REBOUNDx Error: Operators that affect particle trajectories are not supported with Mercurius. Must add as forces.\n");
                 return 0;
             }
         }

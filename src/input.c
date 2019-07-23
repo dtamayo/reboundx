@@ -55,11 +55,11 @@ free(valueref);\
 break;\
 }\
 
-static int rebx_load_list(struct rebx_extras* rebx, enum rebx_binary_field_type expected_type, struct rebx_node** ap, FILE* inf, enum rebx_input_binary_messages* warnings);
-
-static void rebx_skip_field(FILE* inf, long field_start, long field_size){
-    fseek(inf, field_start + field_size, SEEK_SET);
+void rebx_input_skip_binary_field(FILE* inf, long field_size){
+    fseek(inf, field_size, SEEK_CUR);
 }
+
+static int rebx_load_list(struct rebx_extras* rebx, enum rebx_binary_field_type expected_type, struct rebx_node** ap, FILE* inf, enum rebx_input_binary_messages* warnings);
 
 static struct rebx_param* rebx_read_param(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
     
@@ -82,7 +82,7 @@ static struct rebx_param* rebx_read_param(struct rebx_extras* rebx, FILE* inf, e
         switch (field.type){
             CASE(PARAM_TYPE,                  &param->type);
             CASE_MALLOC(NAME,                 param->name);
-            CASE_MALLOC(VALUE,                param->value);
+            CASE_MALLOC(PARAM_VALUE,          param->value);
             case REBX_BINARY_FIELD_TYPE_END:
                 reading_fields=0;
                 break;
@@ -190,7 +190,6 @@ static int rebx_load_force_field(struct rebx_extras* rebx, FILE* inf, enum rebx_
             *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
             return 0;
         }
-        long field_start = ftell(inf);
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_PARAM_LIST:
             {
@@ -207,7 +206,7 @@ static int rebx_load_force_field(struct rebx_extras* rebx, FILE* inf, enum rebx_
             default:
             {
                 *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKNOWN;
-                rebx_skip_field(inf, field_start, field.size);
+                rebx_input_skip_binary_field(inf, field.size);
                 break;
             }
         }
@@ -237,7 +236,6 @@ static int rebx_load_additional_force_field(struct rebx_extras* rebx, FILE* inf,
             *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
             return 0;
         }
-        long field_start = ftell(inf);
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_END:
             {
@@ -247,7 +245,7 @@ static int rebx_load_additional_force_field(struct rebx_extras* rebx, FILE* inf,
             default:
             {
                 *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKNOWN;
-                rebx_skip_field(inf, field_start, field.size);
+                rebx_input_skip_binary_field(inf, field.size);
                 break;
             }
         }
@@ -277,7 +275,6 @@ static int rebx_load_operator_field(struct rebx_extras* rebx, FILE* inf, enum re
             *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
             break;
         }
-        long field_start = ftell(inf);
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_PARAM_LIST:
             {
@@ -294,7 +291,7 @@ static int rebx_load_operator_field(struct rebx_extras* rebx, FILE* inf, enum re
             default:
             {
                 *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKNOWN;
-                rebx_skip_field(inf, field_start, field.size);
+                rebx_input_skip_binary_field(inf, field.size);
                 break;
             }
         }
@@ -324,7 +321,7 @@ static int rebx_load_step_field(struct rebx_extras* rebx, FILE* inf, enum rebx_i
             break;
         }
         switch (field.type){
-            CASE(DT_FRACTION,                 &dt_fraction);
+            CASE(STEP_DT_FRACTION,                 &dt_fraction);
             case REBX_BINARY_FIELD_TYPE_END:
                 reading_fields=0;
                 break;
@@ -375,7 +372,6 @@ static int rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_inp
             *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
             return 0;
         }
-        long field_start = ftell(inf);
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_PARAM_LIST:
             {
@@ -392,7 +388,7 @@ static int rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_inp
             default:
             {
                 *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKNOWN;
-                rebx_skip_field(inf, field_start, field.size);
+                rebx_input_skip_binary_field(inf, field.size);
                 break;
             }
         }
@@ -401,7 +397,6 @@ static int rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_inp
 }
 
 static int rebx_load_rebx(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
-    long field_start = ftell(inf);
     struct rebx_binary_field field;
     int reading_fields = 1;
     while (reading_fields){
@@ -415,14 +410,114 @@ static int rebx_load_rebx(struct rebx_extras* rebx, FILE* inf, enum rebx_input_b
                 reading_fields=0;
                 break;
             }
+            case REBX_BINARY_FIELD_TYPE_REGISTERED_PARAMETERS:
+            {
+                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_REGISTERED_PARAM, &rebx->registered_params, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+                    rebx_input_skip_binary_field(inf, field.size);
+                }
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_ALLOCATED_FORCES:
+            {
+                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_FORCE, NULL, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+                    rebx_input_skip_binary_field(inf, field.size);
+                }
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_ALLOCATED_OPERATORS:
+            {
+                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_OPERATOR, NULL, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+                    rebx_input_skip_binary_field(inf, field.size);
+                }
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_ADDITIONAL_FORCES:
+            {
+                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_ADDITIONAL_FORCE, NULL, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+                    rebx_input_skip_binary_field(inf, field.size);
+                }
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_PRE_TIMESTEP_MODIFICATIONS:
+            {
+                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_STEP, &rebx->pre_timestep_modifications, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+                    rebx_input_skip_binary_field(inf, field.size);
+                }
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_POST_TIMESTEP_MODIFICATIONS:
+            {
+                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_STEP, &rebx->post_timestep_modifications, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+                    rebx_input_skip_binary_field(inf, field.size);
+                }
+                break;
+            }
             default:
             {
                 *warnings |= REBX_INPUT_BINARY_WARNING_FIELD_UNKNOWN;
-                rebx_skip_field(inf, field_start, field.size);
+                rebx_input_skip_binary_field(inf, field.size);
                 break;
             }
         }
     }
+    return 1;
+}
+
+static int rebx_load_snapshot(struct rebx_extras* rebx, FILE* inf, enum rebx_input_binary_messages* warnings){
+    struct rebx_binary_field field;
+    if (!fread(&field, sizeof(field), 1, inf)){
+        *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+        return 0;
+    }
+    if (field.type != REBX_BINARY_FIELD_TYPE_SNAPSHOT){
+        *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+        return 0;
+    }
+    
+    int reading_fields = 1;
+    while (reading_fields){
+        if (!fread(&field, sizeof(field), 1, inf)){
+            *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+            break;
+        }
+        switch (field.type){
+            case REBX_BINARY_FIELD_TYPE_REBX_STRUCTURE:
+            {
+                if (!rebx_load_rebx(rebx, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_ERROR_REBX_NOT_LOADED;
+                    rebx_input_skip_binary_field(inf, field.size);
+                }
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_PARTICLES:
+            {
+                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_PARTICLE, NULL, inf, warnings)){
+                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+                    rebx_input_skip_binary_field(inf, field.size);
+                }
+                break;
+            }
+            case REBX_BINARY_FIELD_TYPE_END:
+            {
+                reading_fields=0;
+                break;
+            }
+            default:
+            {
+                *warnings |= REBX_INPUT_BINARY_WARNING_LIST_UNKNOWN;
+                rebx_input_skip_binary_field(inf, field.size);
+                break;
+            }
+        }
+    }
+    
+    fclose(inf);
     return 1;
 }
 
@@ -445,13 +540,12 @@ static int rebx_load_list(struct rebx_extras* rebx, enum rebx_binary_field_type 
         }
         
         // Only will have fields of expected_type, check function to call
-        long field_start = ftell(inf);
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_PARAM:
             {
                 if(!rebx_load_param(rebx, ap, inf, warnings)){
                     *warnings |= REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED;
-                    rebx_skip_field(inf, field_start, field.size);
+                    rebx_input_skip_binary_field(inf, field.size);
                 }
                 break;
             }
@@ -459,7 +553,7 @@ static int rebx_load_list(struct rebx_extras* rebx, enum rebx_binary_field_type 
             {
                 if(!rebx_load_registered_param(rebx, inf, warnings)){
                     *warnings |= REBX_INPUT_BINARY_ERROR_REGISTERED_PARAM_NOT_LOADED;
-                    rebx_skip_field(inf, field_start, field.size);
+                    rebx_input_skip_binary_field(inf, field.size);
                 }
                 break;
             }
@@ -467,7 +561,7 @@ static int rebx_load_list(struct rebx_extras* rebx, enum rebx_binary_field_type 
             {
                 if (!rebx_load_force_field(rebx, inf, warnings)){
                     *warnings |= REBX_INPUT_BINARY_WARNING_FORCE_NOT_LOADED;
-                    rebx_skip_field(inf, field_start, field.size);
+                    rebx_input_skip_binary_field(inf, field.size);
                 }
                 break;
             }
@@ -475,7 +569,7 @@ static int rebx_load_list(struct rebx_extras* rebx, enum rebx_binary_field_type 
             {
                 if (!rebx_load_additional_force_field(rebx, inf, warnings)){
                     *warnings |= REBX_INPUT_BINARY_WARNING_ADDITIONAL_FORCE_NOT_LOADED;
-                    rebx_skip_field(inf, field_start, field.size);
+                    rebx_input_skip_binary_field(inf, field.size);
                 }
                 break;
             }
@@ -483,7 +577,7 @@ static int rebx_load_list(struct rebx_extras* rebx, enum rebx_binary_field_type 
             {
                 if (!rebx_load_operator_field(rebx, inf, warnings)){
                     *warnings |= REBX_INPUT_BINARY_WARNING_OPERATOR_NOT_LOADED;
-                    rebx_skip_field(inf, field_start, field.size);
+                    rebx_input_skip_binary_field(inf, field.size);
                 }
                 break;
             }
@@ -491,7 +585,7 @@ static int rebx_load_list(struct rebx_extras* rebx, enum rebx_binary_field_type 
             {
                 if (!rebx_load_step_field(rebx, inf, warnings, ap)){
                     *warnings |= REBX_INPUT_BINARY_WARNING_STEP_NOT_LOADED;
-                    rebx_skip_field(inf, field_start, field.size);
+                    rebx_input_skip_binary_field(inf, field.size);
                 }
                 break;
             }
@@ -499,7 +593,7 @@ static int rebx_load_list(struct rebx_extras* rebx, enum rebx_binary_field_type 
             {
                 if (!rebx_load_particle(rebx, inf, warnings)){
                     *warnings |= REBX_INPUT_BINARY_WARNING_PARTICLE_PARAMS_NOT_LOADED;
-                    rebx_skip_field(inf, field_start, field.size);
+                    rebx_input_skip_binary_field(inf, field.size);
                 }
                 break;
             }
@@ -513,13 +607,7 @@ static int rebx_load_list(struct rebx_extras* rebx, enum rebx_binary_field_type 
     return 1;
 }
 
-void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings){
-    FILE* inf = fopen(filename,"rb");
-    if (!inf){
-        *warnings |= REBX_INPUT_BINARY_ERROR_NOFILE;
-        return;
-    }
-    
+static void rebx_input_read_header(FILE* inf, enum rebx_input_binary_messages* warnings){
     long objects = 0;
     // Input header.
     const char str[] = "REBOUNDx Binary File. Version: ";
@@ -534,93 +622,17 @@ void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, cons
     if(strcmp(readbuf,curvbuf)!=0){
         *warnings |= REBX_INPUT_BINARY_WARNING_VERSION;
     }
-    
-    struct rebx_binary_field field;
-    int reading_fields = 1;
-    while (reading_fields){
-        if (!fread(&field, sizeof(field), 1, inf)){
-            *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
-            break;
-        }
-        long field_start = ftell(inf);
-        switch (field.type){
-            case REBX_BINARY_FIELD_TYPE_REBX_STRUCTURE:
-            {
-                if (!rebx_load_rebx(rebx, inf, warnings)){
-                    *warnings |= REBX_INPUT_BINARY_ERROR_REBX_NOT_LOADED;
-                    rebx_skip_field(inf, field_start, field.size);
-                }
-                break;
-            }
-            case REBX_BINARY_FIELD_TYPE_REGISTERED_PARAMETERS:
-            {
-                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_REGISTERED_PARAM, &rebx->registered_params, inf, warnings)){
-                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
-                    rebx_skip_field(inf, field_start, field.size);
-                }
-                break;
-            }
-            case REBX_BINARY_FIELD_TYPE_ALLOCATED_FORCES:
-            {
-                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_FORCE, NULL, inf, warnings)){
-                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
-                    rebx_skip_field(inf, field_start, field.size);
-                }
-                break;
-            }
-            case REBX_BINARY_FIELD_TYPE_ALLOCATED_OPERATORS:
-            {
-                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_OPERATOR, NULL, inf, warnings)){
-                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
-                    rebx_skip_field(inf, field_start, field.size);
-                }
-                break;
-            }
-            case REBX_BINARY_FIELD_TYPE_ADDITIONAL_FORCES:
-            {
-                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_ADDITIONAL_FORCE, NULL, inf, warnings)){
-                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
-                    rebx_skip_field(inf, field_start, field.size);
-                }
-                break;
-            }
-            case REBX_BINARY_FIELD_TYPE_PRE_TIMESTEP_MODIFICATIONS:
-            {
-                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_STEP, &rebx->pre_timestep_modifications, inf, warnings)){
-                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
-                    rebx_skip_field(inf, field_start, field.size);
-                }
-                break;
-            }
-            case REBX_BINARY_FIELD_TYPE_POST_TIMESTEP_MODIFICATIONS:
-            {
-                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_STEP, &rebx->post_timestep_modifications, inf, warnings)){
-                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
-                    rebx_skip_field(inf, field_start, field.size);
-                }
-                break;
-            }
-            case REBX_BINARY_FIELD_TYPE_PARTICLES:
-            {
-                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_PARTICLE, NULL, inf, warnings)){
-                    *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
-                    rebx_skip_field(inf, field_start, field.size);
-                }
-                break;
-            }
-            case REBX_BINARY_FIELD_TYPE_END:
-            {
-                reading_fields=0;
-                break;
-            }
-            default:
-            {
-                *warnings |= REBX_INPUT_BINARY_WARNING_LIST_UNKNOWN;
-                rebx_skip_field(inf, field_start, field.size);
-                break;
-            }
-        }
+}
+
+void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings){
+    FILE* inf = fopen(filename,"rb");
+    if (!inf){
+        *warnings |= REBX_INPUT_BINARY_ERROR_NOFILE;
+        return;
     }
+    
+    rebx_input_read_header(inf, warnings);
+    rebx_load_snapshot(rebx, inf, warnings);
     
     fclose(inf);
     return;
@@ -692,4 +704,26 @@ struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, c
         reb_warning(sim,"REBOUNDx: A force parameter failed to load from the list of REBOUNDx implemented forces. Custom forces can't be saved to a REBOUNDx binary, and function points must be reset when a simulation is reloaded.");
     }
     return rebx;
+}
+
+FILE* rebx_input_inspect_binary(const char* const filename, enum rebx_input_binary_messages* warnings){
+    FILE* inf = fopen(filename,"rb");
+    if (!inf){
+        *warnings |= REBX_INPUT_BINARY_ERROR_NOFILE;
+        return NULL;
+    }
+    
+    rebx_input_read_header(inf, warnings);
+    return inf;
+}
+
+struct rebx_binary_field rebx_input_read_binary_field(FILE* inf){
+    struct rebx_binary_field field;
+    if (fread(&field, sizeof(field), 1, inf)){
+        return field;
+    }
+    else{
+        struct rebx_binary_field empty = {0};
+        return empty;
+    }
 }
