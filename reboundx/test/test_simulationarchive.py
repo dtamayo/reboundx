@@ -35,10 +35,24 @@ class TestSimulationArchive(unittest.TestCase):
             
                 self.sim.integrate(1000)
                 E = self.rebx.gr_hamiltonian(self.gr)
+                # Test effect is actually doing something to the pericenter
                 self.assertGreater(self.sim.particles[1].pomega, 0.1, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
+                # test energy conservtaion
                 self.assertLess(np.abs((E-self.E0)/self.E0), 1.e-4, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
+               
+                # test bitwise reproducibility starting from an intermediate snapshot
+                self.sim.simulationarchive_snapshot('test.sa', deletefile=True)
+                self.rebx.save('test.rebx')
+                self.sim.integrate(2000)
+                self.sim.simulationarchive_snapshot('test.sa')
 
-                
+                sa = reboundx.SimulationArchive('test.sa', 'test.rebx')
+                simf, rebxf = sa[-1]
+                tmax = simf.t
+                sim, rebx = sa[0]
+                sim.integrate(tmax)
+                self.assertEqual(self.sim.particles[1].x, sim.particles[1].x, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
+
     def test_pre(self):
         for integrator in integrators:
             for rebxintegrator in rebxintegrators:
@@ -51,8 +65,23 @@ class TestSimulationArchive(unittest.TestCase):
             
                 self.sim.integrate(1000)
                 E = self.rebx.gr_hamiltonian(self.gr)
+                # Test effect is actually doing something to the pericenter
                 self.assertGreater(self.sim.particles[1].pomega, 0.1, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
+                # test energy conservtaion
                 self.assertLess(np.abs((E-self.E0)/self.E0), 1.e-4, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
+               
+                # test bitwise reproducibility starting from an intermediate snapshot
+                self.sim.simulationarchive_snapshot('test.sa', deletefile=True)
+                self.rebx.save('test.rebx')
+                self.sim.integrate(2000)
+                self.sim.simulationarchive_snapshot('test.sa')
+
+                sa = reboundx.SimulationArchive('test.sa', 'test.rebx')
+                simf, rebxf = sa[-1]
+                tmax = simf.t
+                sim, rebx = sa[0]
+                sim.integrate(tmax)
+                self.assertEqual(self.sim.particles[1].x, sim.particles[1].x, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
 
     def test_post(self):
         for integrator in integrators:
@@ -66,9 +95,23 @@ class TestSimulationArchive(unittest.TestCase):
             
                 self.sim.integrate(1000)
                 E = self.rebx.gr_hamiltonian(self.gr)
+                # Test effect is actually doing something to the pericenter
                 self.assertGreater(self.sim.particles[1].pomega, 0.1, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
+                # test energy conservtaion
                 self.assertLess(np.abs((E-self.E0)/self.E0), 1.e-4, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
+               
+                # test bitwise reproducibility starting from an intermediate snapshot
+                self.sim.simulationarchive_snapshot('test.sa', deletefile=True)
+                self.rebx.save('test.rebx')
+                self.sim.integrate(2000)
+                self.sim.simulationarchive_snapshot('test.sa')
 
+                sa = reboundx.SimulationArchive('test.sa', 'test.rebx')
+                simf, rebxf = sa[-1]
+                tmax = simf.t
+                sim, rebx = sa[0]
+                sim.integrate(tmax)
+                self.assertEqual(self.sim.particles[1].x, sim.particles[1].x, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
 
     def test_2ndorder(self):
         for integrator in integrators:
@@ -82,10 +125,23 @@ class TestSimulationArchive(unittest.TestCase):
             
                 self.sim.integrate(1000)
                 E = self.rebx.gr_hamiltonian(self.gr)
+                # Test effect is actually doing something to the pericenter
                 self.assertGreater(self.sim.particles[1].pomega, 0.1, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
+                # test energy conservtaion
                 self.assertLess(np.abs((E-self.E0)/self.E0), 1.e-4, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
+               
+                # test bitwise reproducibility starting from an intermediate snapshot
+                self.sim.simulationarchive_snapshot('test.sa', deletefile=True)
+                self.rebx.save('test.rebx')
+                self.sim.integrate(2000)
+                self.sim.simulationarchive_snapshot('test.sa')
 
-
+                sa = reboundx.SimulationArchive('test.sa', 'test.rebx')
+                simf, rebxf = sa[-1]
+                tmax = simf.t
+                sim, rebx = sa[0]
+                sim.integrate(tmax)
+                self.assertEqual(self.sim.particles[1].x, sim.particles[1].x, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
 
 if __name__ == '__main__':
     unittest.main()

@@ -839,11 +839,11 @@ void rebx_pre_timestep_modifications(struct reb_simulation* sim){
     const double dt = sim->dt;
     
     while(current != NULL){
-        if(sim->integrator==REB_INTEGRATOR_IAS15 && sim->ri_ias15.epsilon != 0){
-            reb_warning(sim, "REBOUNDx: Can't use pre-timestep modifications with adaptive timesteps (IAS15).");
-        }
         struct rebx_step* step = current->object;
         struct rebx_operator* operator = step->operator;
+        if(sim->integrator==REB_INTEGRATOR_IAS15 && sim->ri_ias15.epsilon != 0 && operator->operator_type == REBX_OPERATOR_UPDATER){
+            reb_warning(sim, "REBOUNDx: Operators that affect particle trajectories with adaptive timesteps can give spurious results. Use sim.ri_ias15.epsilon=0 for fixed timestep with IAS, or use a different integrator.");
+        }
         operator->step(sim, operator, dt*step->dt_fraction);
         current = current->next;
     }
@@ -852,11 +852,14 @@ void rebx_pre_timestep_modifications(struct reb_simulation* sim){
 void rebx_post_timestep_modifications(struct reb_simulation* sim){
     struct rebx_extras* rebx = sim->extras;
     struct rebx_node* current = rebx->post_timestep_modifications;
-    const double dt = sim->dt_last_done;
+    const double dt = sim->dt;
     
     while(current != NULL){
         struct rebx_step* step = current->object;
         struct rebx_operator* operator = step->operator;
+        if(sim->integrator==REB_INTEGRATOR_IAS15 && sim->ri_ias15.epsilon != 0 && operator->operator_type == REBX_OPERATOR_UPDATER){
+            reb_warning(sim, "REBOUNDx: Operators that affect particle trajectories with adaptive timesteps can give spurious results. Use sim.ri_ias15.epsilon=0 for fixed timestep with IAS, or use a different integrator.");
+        }
         operator->step(sim, operator, dt*step->dt_fraction);
         current = current->next;
     }
