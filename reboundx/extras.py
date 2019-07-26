@@ -53,7 +53,7 @@ class Extras(Structure):
             # Recreate existing simulation.
             # Load registered parameters from binary
             w = c_int(0)
-            clibreboundx.rebx_create_extras_from_binary_with_messages(byref(self), c_char_p(filename.encode('ascii')), byref(w))
+            clibreboundx.rebx_init_extras_from_binary(byref(self), c_char_p(filename.encode('ascii')), byref(w))
             for majorerror, value, message in REBX_BINARY_WARNINGS:
                 if w.value & value:
                     if majorerror:
