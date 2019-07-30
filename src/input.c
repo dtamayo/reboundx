@@ -624,7 +624,7 @@ static void rebx_input_read_header(FILE* inf, enum rebx_input_binary_messages* w
     }
 }
 
-void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings){
+void rebx_init_extras_from_binary(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings){
     FILE* inf = fopen(filename,"rb");
     if (!inf){
         *warnings |= REBX_INPUT_BINARY_ERROR_NOFILE;
@@ -643,7 +643,7 @@ struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, c
     // create manually so that default registered parameters not loaded
     struct rebx_extras* rebx = malloc(sizeof(*rebx));
     rebx_initialize(sim, rebx);
-    rebx_create_extras_from_binary_with_messages(rebx, filename, &warnings);
+    rebx_init_extras_from_binary(rebx, filename, &warnings);
     
     if (warnings & REBX_INPUT_BINARY_ERROR_NOFILE){
         reb_error(sim,"REBOUNDx: Cannot open binary file. Check filename.");

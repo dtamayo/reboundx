@@ -284,7 +284,7 @@ struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, c
  * @param filename Filename of the saved binary file.
  * @param warnings Pointer to an array of warnings to be populated during loading. 
  */
-void rebx_create_extras_from_binary_with_messages(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings);
+void rebx_init_extras_from_binary(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings);
 /** @} */
 /** @} */
 
