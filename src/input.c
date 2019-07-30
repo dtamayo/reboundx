@@ -479,7 +479,7 @@ static int rebx_load_snapshot(struct rebx_extras* rebx, FILE* inf, enum rebx_inp
         *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
         return 0;
     }
-    
+
     int reading_fields = 1;
     while (reading_fields){
         if (!fread(&field, sizeof(field), 1, inf)){
@@ -517,7 +517,6 @@ static int rebx_load_snapshot(struct rebx_extras* rebx, FILE* inf, enum rebx_inp
         }
     }
     
-    fclose(inf);
     return 1;
 }
 
@@ -647,28 +646,18 @@ struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, c
     
     if (warnings & REBX_INPUT_BINARY_ERROR_NOFILE){
         reb_error(sim,"REBOUNDx: Cannot open binary file. Check filename.");
-        rebx_free(rebx);
-        rebx = NULL;
     }
     if (warnings & REBX_INPUT_BINARY_ERROR_CORRUPT){
         reb_error(sim,"REBOUNDx: Binary file is unreadable. Please open an issue on Github mentioning the version of REBOUND and REBOUNDx you are using and include the binary file.");
-        rebx_free(rebx);
-        rebx = NULL;
     }
     if (warnings & REBX_INPUT_BINARY_ERROR_NO_MEMORY){
         reb_error(sim,"REBOUNDx: Ran out of system memory.");
-        rebx_free(rebx);
-        rebx = NULL;
     }
     if (warnings & REBX_INPUT_BINARY_ERROR_REBX_NOT_LOADED){
         reb_error(sim,"REBOUNDx: REBOUNDx structure couldn't be loaded.");
-        rebx_free(rebx);
-        rebx = NULL;
     }
     if (warnings & REBX_INPUT_BINARY_ERROR_REGISTERED_PARAM_NOT_LOADED){
         reb_error(sim,"REBOUNDx: At least one registered parameter was not loaded. This typically indicates the binary is corrupt or was saved with an incompatible version to the current one being used.");
-        rebx_free(rebx);
-        rebx = NULL;
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED){
         reb_warning(sim,"REBOUNDx: At least one force or operator parameter was not loaded from the binary file. This typically indicates the binary is corrupt or was saved with an incompatible version to the current one being used.");
