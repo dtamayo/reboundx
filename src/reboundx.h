@@ -4,7 +4,7 @@
  * @author  Dan Tamayo <tamayo.daniel@gmail.com>, Hanno Rein
  * 
  * @section     LICENSE
- * Copyright (c) 2015 Dan Tamayo, Hanno Rein
+ * Copyright (c) 2019 Dan Tamayo, Hanno Rein
  *
  * This file is part of reboundx.
  *
@@ -28,7 +28,6 @@
 #ifndef M_PI 
 #define M_PI 3.1415926535879323846
 #endif
-#define REBX_C 10064.9150404 // speed of light in default units of AU/(yr/2pi)
 
 #include <stdint.h>
 #include <limits.h>
@@ -39,7 +38,7 @@
 #endif // REBXGITHASH
 
 extern const char* rebx_build_str;      ///< Date and time build string.
-extern const char* rebx_version_str;    ///<Version string.
+extern const char* rebx_version_str;    ///< Version string.
 extern const char* rebx_githash_str;    ///< Current git hash.
 
 /******************************************
@@ -47,53 +46,63 @@ extern const char* rebx_githash_str;    ///< Current git hash.
 *******************************************/
 
 /**
- * @brief Enumeration for the different data types available in REBOUNDx for parameters.
+ * @brief Data types available in REBOUNDx for parameters.
  */
 enum rebx_param_type{
     REBX_TYPE_NONE,
-    REBX_TYPE_DOUBLE,                               ///< C type double
-    REBX_TYPE_INT,                                  ///< C type int
+    REBX_TYPE_DOUBLE,
+    REBX_TYPE_INT,
     REBX_TYPE_POINTER,
     REBX_TYPE_FORCE,
     REBX_TYPE_UINT32,
 };
 
 /**
- * @brief Enumeration for different coordinate systems.
+ * @brief Different coordinate systems.
  */
 enum REBX_COORDINATES{
-    REBX_COORDINATES_JACOBI,                        ///< Jacobi coordinates.  Default for REBOUND/REBOUNDx.
-    REBX_COORDINATES_BARYCENTRIC,                   ///< Coordinates referenced to the center of mass of the whole system.
-    REBX_COORDINATES_PARTICLE,                      ///< Coordinates referenced to a particular particle.
-};
-
-enum rebx_timing {
-    REBX_TIMING_PRE = -1,
-    REBX_TIMING_POST = 1,
-};
-
-enum rebx_force_type{
-    REBX_FORCE_NONE,
-    REBX_FORCE_POS,         // only position dependent force
-    REBX_FORCE_VEL,         // velocity (or pos and vel) dependent force
-};
-enum rebx_operator_type{
-    REBX_OPERATOR_NONE,
-    REBX_OPERATOR_UPDATER,  // operator that modifies x,v or m,
-    REBX_OPERATOR_RECORDER, // operator that leaves state unchanged. Just records
+    REBX_COORDINATES_JACOBI,                ///< Jacobi coordinates (default)
+    REBX_COORDINATES_BARYCENTRIC,           ///< Coordinates referenced to pos/vel of system's center of mass.
+    REBX_COORDINATES_PARTICLE,              ///< Coordinates relative to pos/vel of a particular particle.
 };
 
 /**
- * @brief Enum for identifying different fields for binary files
+ * @brief Flag for whether steps should happen before or after the timestep
+ */
+enum rebx_timing {
+    REBX_TIMING_PRE = -1,   ///< Pre timestep
+    REBX_TIMING_POST = 1,   ///< Post timestep
+};
+
+/**
+ * @brief Force types
+ */
+enum rebx_force_type{
+    REBX_FORCE_NONE,        ///< Uninitialized default
+    REBX_FORCE_POS,         ///< Force derivable from a position-dependent potential
+    REBX_FORCE_VEL,         ///< velocity (or pos and vel) dependent force
+};
+
+/**
+ * @brief Operator types
+ */
+enum rebx_operator_type{
+    REBX_OPERATOR_NONE,     ///< Uninitialized default
+    REBX_OPERATOR_UPDATER,  ///< operator that modifies x,v or m,
+    REBX_OPERATOR_RECORDER, ///< operator that leaves state unchanged. Just records
+};
+
+/**
+ * @brief Different fields for binary files
  */
 enum rebx_binary_field_type{
     REBX_BINARY_FIELD_TYPE_NONE=0,
     REBX_BINARY_FIELD_TYPE_OPERATOR=1,
     REBX_BINARY_FIELD_TYPE_PARTICLE=2,
     REBX_BINARY_FIELD_TYPE_REBX_STRUCTURE=3,
-    REBX_BINARY_FIELD_TYPE_PARAM=4,     // a param
+    REBX_BINARY_FIELD_TYPE_PARAM=4,
     REBX_BINARY_FIELD_TYPE_NAME=5,
-    REBX_BINARY_FIELD_TYPE_PARAM_TYPE=6,// value type stored in param e.g. int
+    REBX_BINARY_FIELD_TYPE_PARAM_TYPE=6,
     REBX_BINARY_FIELD_TYPE_PARAM_VALUE=7,
     REBX_BINARY_FIELD_TYPE_END=8,
     REBX_BINARY_FIELD_TYPE_PARTICLE_INDEX=9,
@@ -117,7 +126,7 @@ enum rebx_binary_field_type{
 };
 
 /**
- * @brief Enum describing possible errors that might occur during binary file reading.
+ * @brief Possible errors that might occur during binary file reading.
  */
 
 // not loaded should be warning, since user might have saved with custom params or effects
@@ -141,6 +150,9 @@ enum rebx_input_binary_messages {
     REBX_INPUT_BINARY_WARNING_FORCE_PARAM_NOT_LOADED = 32768,
 };
 
+/**
+ * @brief Different schemes for integrating across the interaction step
+ */
 enum rebx_integrator {
     REBX_INTEGRATOR_NONE = -1,
     REBX_INTEGRATOR_IMPLICIT_MIDPOINT = 0,
@@ -155,73 +167,78 @@ Basic types in REBOUNDx
 
 /**
  * @brief Node structure for all REBOUNDx linked lists.
- *  object Data held by the node. Could be param, force, step etc
- *  next Pointer to the next node in the linked list
  */
 
 struct rebx_node{
-    void* object;                   ///< Pointer to param
+    void* object;             ///< Pointer to object (param, force, step, etc)
     struct rebx_node* next;   ///< Pointer to next node in list
 };
 
 /**
- * @brief Main structure used for all parameters added to particles.
+ * @brief Main structure used for all parameters added to objects.
  */
 
 struct rebx_param{
-    char* name;                     ///< Used to search linked lists and informative errors
-    enum rebx_param_type type;      ///< Needed to cast value
-    void* value;                    ///< Pointer to value
-};
-
-/**
- * @brief Structure for REBOUNDx operators.
- */
-struct rebx_operator{
-    char* name;
-    struct rebx_node* ap;
-    struct reb_simulation* sim;
-    enum rebx_operator_type operator_type;
-    void (*step) (struct reb_simulation* sim, struct rebx_operator* operator, const double dt);   ///< Pointer to function to call before and/or after each timestep.
+    char* name;                 ///< For searching linked lists and informative errors
+    enum rebx_param_type type;  ///< Needed to cast value
+    void* value;                ///< Pointer to parameter value
 };
 
 /**
  * @brief Structure for REBOUNDx forces.
  */
 struct rebx_force{
-    char* name;
-    struct rebx_node* ap;
-    struct reb_simulation* sim; // need in python to match particles struct
-    enum rebx_force_type force_type;
-    void (*update_accelerations) (struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N); ///< Pointer to function to call during forces evaluation.
-};
-
-struct rebx_step{
-    struct rebx_operator* operator;
-    double dt_fraction;
+    char* name;                 ///< For searching linked lists and informative errors
+    struct rebx_node* ap;       ///< Additional parameters linked list
+    struct reb_simulation* sim; ///< Pointer to attached sim. Needed for error checks
+    // See comments in params.py in __init__
+    enum rebx_force_type force_type;    ///< Force type for internal logic
+    void (*update_accelerations) (struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N); ///< Function pointer to add additional accelerations
 };
 
 /**
- * @brief This structure is used to save and load binary files.
+ * @brief Structure for REBOUNDx operators.
+ */
+struct rebx_operator{
+    char* name;                 ///< For searching linked lists and informative errors
+    struct rebx_node* ap;       ///< Additional parameters linked list
+    struct reb_simulation* sim; ///< Pointer to attached sim. Needed for error checks
+    // See comments in params.py in __init__
+    enum rebx_operator_type operator_type;  ///< Operator type for internal logic
+    void (*step_function) (struct reb_simulation* sim, struct rebx_operator* operator, const double dt);       ///< Function pointer to execute step
+};
+
+/**
+ * @brief Structure for a REBOUNDx step.
+ @ @details A step is just a combination of an operator with a fraction of a timestep (see Sec. 6 of REBOUNdx paper). Can use same operator for different steps of different lengths to build higher order splitting schemes.
+ */
+struct rebx_step{
+    struct rebx_operator* operator;     ///< Pointer to operator to use
+    double dt_fraction;                 ///< Fraction of sim.dt to use each time it's called
+};
+
+/**
+ * @brief Structure used as building block to save and load binary files.
  */
 struct rebx_binary_field{
-    enum rebx_binary_field_type type;               ///< Type of object
-    long size;                                      ///< Size in bytes of the object data (not including this structure). So you can skip ahead.
+    enum rebx_binary_field_type type;   ///< Type of object
+    long size;                          ///< Size in bytes of the object data (not including this structure). So you can skip ahead.
 };
 
 /**
  * @brief Main REBOUNDx structure.
+ * @details These fields are used internally by REBOUNDx and generally should not be changed manually by the user. Use the API instead.
  */
 struct rebx_extras {	
 	struct reb_simulation* sim;					    ///< Pointer to the simulation REBOUNDx is linked to.
     
-    struct rebx_node* additional_forces;
-    struct rebx_node* pre_timestep_modifications;		            ///< Linked list with pointers to all the effects added to the simulation.
-	struct rebx_node* post_timestep_modifications;		            ///< Linked list with pointers to all the effects added to the simulation.
+    struct rebx_node* additional_forces;            ///< Linked list of extra forces
+    struct rebx_node* pre_timestep_modifications;   ///< Linked list of rebx_steps to apply before each timestep
+	struct rebx_node* post_timestep_modifications;  ///< Linked list of rebx_steps to apply after each timestep
 	
-    struct rebx_node* registered_params;    ///< Linked list of all the names registered for parameters, along with their type
-    struct rebx_node* allocated_forces;
-    struct rebx_node* allocated_operators;
+    struct rebx_node* registered_params;            ///< Linked list of rebx_params with all the parameter names registered with their type (for type safety)
+    struct rebx_node* allocated_forces;             ///< For memory management
+    struct rebx_node* allocated_operators;          ///< For memory management
 };
 
 /****************************************
@@ -239,17 +256,13 @@ struct rebx_extras {
 
 /**
  * @brief Adds REBOUNDx functionality to a passed REBOUND simulation.
- * @details Allocates memory for a REBOUNDx structure, initializes all variables and returns a pointer to
- * the rebx_extras structure.  The function must be called before calling any other REBOUNDx functions.
- * @param sim reb_simulation pointer to the simulation that you want to add REBOUNDx functionality.
- * @return Returns a pointer to a rebx_extras structure, which holds all the information REBOUNDx needs.
+ * @param sim Pointer to the reb_simulation on which to add REBOUNDx functionality.
+ * @return Pointer to a rebx_extras structure.
  */
 struct rebx_extras* rebx_attach(struct reb_simulation* sim);
 
-void rebx_register_default_params(struct rebx_extras* rebx);
-
 /**
- * @brief Detaches REBOUNDx instance from simulation, resetting simulation's function pointers.
+ * @brief Detaches REBOUNDx from simulation, resetting simulation's function pointers.
  * @param sim Pointer to the simulation from which to remove REBOUNDx
  */
 void rebx_detach(struct reb_simulation* sim);
@@ -377,28 +390,8 @@ struct rebx_operator* rebx_get_operator(struct rebx_extras* const rebx, const ch
 int rebx_remove_param(struct rebx_node** apptr, const char* const param_name);
 
 /**
- * @brief Adds a parameter to a particle or effect.
- * @param object Pointer to the particle or effect to which to add the parameter.
- * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org for what parameters are needed for each effect)
- * @param param_type Variable type from rebx_param_type enumeration.
- * @return A void pointer to the parameter, i.e., the contents member of the new rebx_param structure. 
- */
-//void* rebx_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type);
-/**
- * @brief Adds an array parameter to a particle or effect.
- * @param object Pointer to the particle or effect to which to add the parameter.
- * @param param_name Name of the parameter we want to set (see Effects page at http://reboundx.readthedocs.org for what parameters are needed for each effect)
- * @param param_type Variable type from rebx_param_type enumeration.
- * @param ndim Number of dimensions in the array.
- * @param shape Pointer to an integer array specifying the length of the array in each dimension.
- * @return A void pointer to the parameter, i.e., the contents member of the new rebx_param structure.
- */
-void* rebx_add_param_array(struct reb_simulation* const sim, struct rebx_node** apptr, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape);
-
-
-/**
  * @brief Gets a parameter from a particle or effect.
- * @param object Pointer to the particle or effect that holds the parameter.
+ * @param ap Pointer from which to get the param
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  * @return A void pointer to the parameter. NULL if not found.
  */

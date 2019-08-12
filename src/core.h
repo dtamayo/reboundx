@@ -43,6 +43,7 @@ struct rebx_node;
  ****************************/
 
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx); // Initializes all pointers and values.
+void rebx_register_default_params(struct rebx_extras* rebx); // Registers default params
 
 /**********************************************
  Functions executing forces & ptm each timestep
@@ -51,13 +52,6 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx); // I
 void rebx_additional_forces(struct reb_simulation* sim);                       // Calls all the forces that have been added to the simulation.
 void rebx_pre_timestep_modifications(struct reb_simulation* sim);   // Calls all the pre-timestep modifications that have been added to the simulation.
 void rebx_post_timestep_modifications(struct reb_simulation* sim);  // Calls all the post-timestep modifications that have been added to the simulation.
-
-/**********************************************
- Adders 
- *********************************************/
-
-// Add a parameter to the params_to_be_freed linked list for later freeing.
-//void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
 
 /***********************************************************************************
  * Miscellaneous Functions
