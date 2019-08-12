@@ -10,11 +10,13 @@ from rebound.tools import hash as rebhash
 class Params(MutableMapping):
     def __init__(self, parent):
         self.verbose = 0        # set to 1 to diagnose problems
-        self.parent = parent    # Particle, Force, Effect. Will work with any ctypes.Structure with appropriate ._sim and .ap fields
+        self.parent = parent    # Particle, Force, Operator. Will work with any ctypes.Structure with appropriate ._sim and .ap fields
 
         offset = type(parent).ap.offset # Need this hack to get address of initially NULL ap ptr. See my stackoverflow
         self.ap = (c_void_p).from_buffer(parent, offset)
-       
+      
+        # We want to be able to access params from objects like particles, objects etc. These must somehow point back to rebx for memory management
+        # We can't add a rebx pointer in rebound.Particle, but can use it's sim pointer. So we add a sim pointer to all rebx objects that need params.
         extrasvp = parent._sim.contents.extras
         if not extrasvp: # .extras = None
             raise AttributeError("Need to attach reboundx.Extras instance to simulation before setting params.")

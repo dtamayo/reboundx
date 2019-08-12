@@ -251,7 +251,7 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
     operator->ap = NULL;
     operator->sim = rebx->sim;
     operator->operator_type = REBX_OPERATOR_NONE;
-    operator->step = NULL;
+    operator->step_function = NULL;
     operator->name = NULL;
     if(name != NULL){
         operator->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
@@ -281,52 +281,52 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
     
     if (strcmp(name, "modify_mass") == 0){
         operator = rebx_create_operator(rebx, name);
-        operator->step = rebx_modify_mass;
+        operator->step_function = rebx_modify_mass;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else if (strcmp(name, "integrate_force") == 0){
         operator = rebx_create_operator(rebx, name);
-        operator->step = rebx_integrate_force;
+        operator->step_function = rebx_integrate_force;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else if (strcmp(name, "drift") == 0){
         operator = rebx_create_operator(rebx, name);
-        operator->step = rebx_drift_step;
+        operator->step_function = rebx_drift_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else if (strcmp(name, "kick") == 0){
         operator = rebx_create_operator(rebx, name);
-        operator->step = rebx_kick_step;
+        operator->step_function = rebx_kick_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else if (strcmp(name, "kepler") == 0){
         operator = rebx_create_operator(rebx, name);
-        operator->step = rebx_kepler_step;
+        operator->step_function = rebx_kepler_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else if (strcmp(name, "jump") == 0){
         operator = rebx_create_operator(rebx, name);
-        operator->step = rebx_jump_step;
+        operator->step_function = rebx_jump_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else if (strcmp(name, "interaction") == 0){
         operator = rebx_create_operator(rebx, name);
-        operator->step = rebx_interaction_step;
+        operator->step_function = rebx_interaction_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else if (strcmp(name, "ias15") == 0){
         operator = rebx_create_operator(rebx, name);
-        operator->step = rebx_ias15_step;
+        operator->step_function = rebx_ias15_step;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else if (strcmp(name, "modify_orbits_direct") == 0){
         operator = rebx_create_operator(rebx, name);
-        operator->step = rebx_modify_orbits_direct;
+        operator->step_function = rebx_modify_orbits_direct;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else if (strcmp(name, "track_min_distance") == 0){
         operator = rebx_create_operator(rebx, name);
-        operator->step = rebx_track_min_distance;
+        operator->step_function = rebx_track_min_distance;
         operator->operator_type = REBX_OPERATOR_RECORDER;
     }
     else{
@@ -369,8 +369,8 @@ int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force){
 }
 
 int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* operator, const double dt_fraction, enum rebx_timing timing){
-    if (operator->step == NULL){
-        reb_error(rebx->sim, "REBOUNDx error: Need to set step function pointer on operator before adding to simulation. See custom effects example.\n");
+    if (operator->step_function == NULL){
+        reb_error(rebx->sim, "REBOUNDx error: Need to set step_function pointer on operator before adding to simulation. See custom effects example.\n");
         return 0;
     }
     
@@ -844,7 +844,7 @@ void rebx_pre_timestep_modifications(struct reb_simulation* sim){
         if(sim->integrator==REB_INTEGRATOR_IAS15 && sim->ri_ias15.epsilon != 0 && operator->operator_type == REBX_OPERATOR_UPDATER){
             reb_warning(sim, "REBOUNDx: Operators that affect particle trajectories with adaptive timesteps can give spurious results. Use sim.ri_ias15.epsilon=0 for fixed timestep with IAS, or use a different integrator.");
         }
-        operator->step(sim, operator, dt*step->dt_fraction);
+        operator->step_function(sim, operator, dt*step->dt_fraction);
         current = current->next;
     }
 }
@@ -860,7 +860,7 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
         if(sim->integrator==REB_INTEGRATOR_IAS15 && sim->ri_ias15.epsilon != 0 && operator->operator_type == REBX_OPERATOR_UPDATER){
             reb_warning(sim, "REBOUNDx: Operators that affect particle trajectories with adaptive timesteps can give spurious results. Use sim.ri_ias15.epsilon=0 for fixed timestep with IAS, or use a different integrator.");
         }
-        operator->step(sim, operator, dt*step->dt_fraction);
+        operator->step_function(sim, operator, dt*step->dt_fraction);
         current = current->next;
     }
 }

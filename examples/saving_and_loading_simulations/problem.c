@@ -30,7 +30,7 @@ int main(int argc, char* argv[]){
     // Add some (arbitrary) parameters to effects and particles
     
     struct rebx_force* gr = rebx_load_force(rebx, "gr");
-    rebx_set_param_double(rebx, &gr->ap, "c", REBX_C);
+    rebx_set_param_double(rebx, &gr->ap, "c", 3e4);
     rebx_set_param_int(rebx, &gr->ap, "gr_source", 0);
     rebx_add_force(rebx, gr);
     

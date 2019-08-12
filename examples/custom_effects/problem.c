@@ -88,8 +88,8 @@ int main(int argc, char* argv[]){
      */
 
     drag->operator_type = REBX_OPERATOR_UPDATER;
-    drag->step = simple_drag;                   // set the function pointer to what we wrote above
-    rebx_add_operator(rebx, drag);              // Now it's initialized, add to REBOUNDx
+    drag->step_function = simple_drag;  // set function pointer to what we wrote above
+    rebx_add_operator(rebx, drag);      // Now it's initialized, add to REBOUNDx
 
     /* Now we set the parameters that our custom functions above need
      * Before setting them, we need to register them with their corresponding types

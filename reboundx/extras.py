@@ -62,6 +62,7 @@ class Extras(Structure):
                         warnings.warn(message, RuntimeWarning)
 
     def __del__(self):
+        print('deleting rebx')
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_pointers(byref(self))
 
