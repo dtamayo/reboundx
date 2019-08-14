@@ -29,6 +29,7 @@
 #include "core.h"
 
 /* Binary format is meant to allow for future structure modifications and backwards compatibility.
+ 
  It is a nested series of rebx_binary_field structs, with a binary_field_type enum that tells you how to handle what comes next, and a size so that you can skip this object if you don't recognize it (perhaps it's an older version of REBOUNDx reading a newer binary).
  
  At the outermost level you read in REBX_BINARY_FIELD_SNAPSHOT objects. Currently each binary only has one, but this allows us to later make it possible to append more snapshots if needed.
@@ -202,7 +203,7 @@ static void rebx_write_rebx(struct rebx_extras* rebx, FILE* of){
 
 // Write a particle field for each particle with a list of its parameters
 static void rebx_write_particles(struct rebx_extras* rebx, FILE* of){
-    struct reb_simulation* sim = rebx->sim;
+    struct reb_simulation* sim = rebx->sim; // checked sim valid in output_binray
     
     REBX_START_OBJECT_FIELD(particle_list, PARTICLES);
     for (int i=0; i<sim->N; i++){
@@ -266,9 +267,12 @@ static void rebx_write_snapshot(struct rebx_extras* rebx, FILE* of){
 void rebx_output_binary(struct rebx_extras* rebx, char* filename){
     FILE* of = fopen(filename,"wb");
     if (of==NULL){
-        reb_error(rebx->sim, "REBOUNDx error: Can not open file passed to rebx_output_binary.");
+        rebx_error(rebx, "REBOUNDx error: Can not open file passed to rebx_output_binary.");
     }
-
+    if (rebx->sim == NULL){
+        rebx_error(rebx, ""); // rebx_error gives meaningful err
+        return;
+    }
     // Write header.
     const char str[] = "REBOUNDx Binary File. Version: ";
     char zero = '\0';

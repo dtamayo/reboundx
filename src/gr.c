@@ -248,10 +248,14 @@ static double rebx_calculate_gr_hamiltonian(struct rebx_extras* const rebx, stru
 double rebx_gr_hamiltonian(struct rebx_extras* const rebx, const struct rebx_force* const gr){
     double* c = rebx_get_param(rebx, gr->ap, "c");
     if (c == NULL){
-        reb_error(rebx->sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
+        rebx_error(rebx, "Need to set speed of light in gr effect.  See examples in documentation.\n");
         return 0;
     }
     const double C2 = (*c)*(*c);
+    if (rebx->sim == NULL){
+        rebx_error(rebx, ""); // rebx_error gives meaningful err
+        return 0;
+    }
     return rebx_calculate_gr_hamiltonian(rebx, rebx->sim, C2);
 }
 

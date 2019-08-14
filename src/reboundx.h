@@ -262,7 +262,8 @@ struct rebx_extras {
 struct rebx_extras* rebx_attach(struct reb_simulation* sim);
 
 /**
- * @brief Detaches REBOUNDx from simulation, resetting simulation's function pointers.
+ * @brief Detaches REBOUNDx from simulation, resetting all the simulation's function pointers that REBOUNDx has set.
+ * @details This does not free the memory allocated by REBOUNDx (call rebx_free).
  * @param sim Pointer to the simulation from which to remove REBOUNDx
  */
 void rebx_detach(struct reb_simulation* sim);
@@ -398,9 +399,9 @@ int rebx_remove_param(struct rebx_node** apptr, const char* const param_name);
 
 void* rebx_get_param(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name);
 struct rebx_param* rebx_get_param_struct(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name);
-int rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* val);
-int rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
-int rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val);
+void rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* val);
+void rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
+void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val);
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type);
 /** @} */
 /** @} */
@@ -584,4 +585,5 @@ void rebx_input_skip_binary_field(FILE* inf, long field_size);
 /** @} */
 /** @} */
 
+void rebx_error(struct rebx_extras* rebx, const char* const msg);
 #endif

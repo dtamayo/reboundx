@@ -120,6 +120,10 @@ static double rebx_calculate_central_force_hamiltonian(struct reb_simulation* co
 }
 
 double rebx_central_force_hamiltonian(struct rebx_extras* const rebx){
+    if (rebx->sim == NULL){
+        rebx_error(rebx, ""); // rebx_error gives meaningful err
+        return 0;
+    }
     struct reb_simulation* sim = rebx->sim;
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
