@@ -180,6 +180,10 @@ static double rebx_calculate_tides_precession_hamiltonian(struct rebx_extras* co
 }
 
 double rebx_tides_precession_hamiltonian(struct rebx_extras* const rebx){
+    if (rebx->sim == NULL){
+        rebx_error(rebx, ""); // rebx_error gives meaningful err
+        return 0;
+    }
     struct reb_simulation* const sim = rebx->sim;
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;

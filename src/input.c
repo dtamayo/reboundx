@@ -364,7 +364,8 @@ static int rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_inp
         *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
         return 0;
     }
-    p = &rebx->sim->particles[index];
+    
+    p = &rebx->sim->particles[index]; // checked sim is valid in init_from_binary
     
     int reading_fields = 1;
     while (reading_fields){
@@ -598,7 +599,7 @@ static int rebx_load_list(struct rebx_extras* rebx, enum rebx_binary_field_type 
             }
             default:
             {
-                reb_error(rebx->sim, "REBOUNDx Error. Reached default in rebx_load_list reading binary. Should never reach this case. Means we added a list to rebx and didn't add new case to load_list. Please report bug as Github issue.\n");
+                rebx_error(rebx, "REBOUNDx Error. Reached default in rebx_load_list reading binary. Should never reach this case. Means we added a list to rebx and didn't add new case to load_list. Please report bug as Github issue.\n");
                 return 0;
             }
         }
@@ -624,6 +625,10 @@ static void rebx_input_read_header(FILE* inf, enum rebx_input_binary_messages* w
 }
 
 void rebx_init_extras_from_binary(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings){
+    if (rebx->sim == NULL){
+        rebx_error(rebx, ""); // rebx_error gives meaningful err
+        return;
+    }
     FILE* inf = fopen(filename,"rb");
     if (!inf){
         *warnings |= REBX_INPUT_BINARY_ERROR_NOFILE;
@@ -638,6 +643,10 @@ void rebx_init_extras_from_binary(struct rebx_extras* rebx, const char* const fi
 }
 
 struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, const char* const filename){
+    if (sim == NULL){
+        fprintf(stderr, "REBOUNDx Error: Simulation pointer passed to rebx_create_extras_from_binary was NULL.\n");
+        return NULL;
+    }
     enum rebx_input_binary_messages warnings = REBX_INPUT_BINARY_WARNING_NONE;
     // create manually so that default registered parameters not loaded
     struct rebx_extras* rebx = malloc(sizeof(*rebx));

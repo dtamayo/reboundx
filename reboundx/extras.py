@@ -37,18 +37,16 @@ class Extras(Structure):
     """
     
     def __new__(cls, sim, filename=None):
-        if not hasattr(sim, "_extras_ref"): # if REBOUNDx wasn't already attached, check for warnings in case additional_forces or ptm were already set.
-            sim.process_messages()
         rebx = super(Extras,cls).__new__(cls)
-        sim._extras_ref = rebx # add a reference to this instance in sim to make sure it's not garbage collected
         return rebx
 
     def __init__(self, sim, filename=None):
+        sim._extras_ref = self # add a reference to this instance in sim to make sure it's not garbage collected_ 
         clibreboundx.rebx_initialize(byref(sim), byref(self))
         # Create simulation
         if filename==None:
             # Create a new rebx instance
-            clibreboundx.rebx_register_default_params(byref(self))
+           clibreboundx.rebx_register_default_params(byref(self))
         else:
             # Recreate existing simulation.
             # Load registered parameters from binary
@@ -60,15 +58,15 @@ class Extras(Structure):
                         raise RuntimeError(message)
                     else:
                         warnings.warn(message, RuntimeWarning)
+        self.process_messages()
 
     def __del__(self):
-        print('deleting rebx')
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_pointers(byref(self))
 
-    def detach(self):
-        clibreboundx.rebx_detach(self._sim)
-
+    def detach(self, sim):
+        sim._extras_ref = None # remove reference to rebx so it can be garbage collected 
+        clibreboundx.rebx_detach(byref(sim))
     
     #######################################
     # Functions for manipulating REBOUNDx effects
@@ -77,43 +75,43 @@ class Extras(Structure):
     def register_param(self, name, param_type):
         type_enum = REBX_C_PARAM_TYPES[param_type] 
         clibreboundx.rebx_register_param(byref(self), c_char_p(name.encode('ascii')), c_int(type_enum))
-        self._sim.contents.process_messages()
+        self.process_messages()
 
     def load_force(self, name):
         clibreboundx.rebx_load_force.restype = POINTER(Force)
         ptr = clibreboundx.rebx_load_force(byref(self), c_char_p(name.encode('ascii')))
-        self._sim.contents.process_messages()
+        self.process_messages()
         return ptr.contents
     
     def create_force(self, name):
         clibreboundx.rebx_create_force.restype = POINTER(Force)
         ptr = clibreboundx.rebx_create_force(byref(self), c_char_p(name.encode('ascii')))
-        self._sim.contents.process_messages()
+        self.process_messages()
         return ptr.contents
 
     def load_operator(self, name):
         clibreboundx.rebx_load_operator.restype = POINTER(Operator)
         ptr = clibreboundx.rebx_load_operator(byref(self), c_char_p(name.encode('ascii')))
-        self._sim.contents.process_messages()
+        self.process_messages()
         return ptr.contents
 
     def create_operator(self, name):
         clibreboundx.rebx_create_operator.restype = POINTER(Operator)
         ptr = clibreboundx.rebx_create_operator(byref(self), c_char_p(name.encode('ascii')))
-        self._sim.contents.process_messages()
+        self.process_messages()
         return ptr.contents
 
     def add_force(self, force):
         clibreboundx.rebx_add_force(byref(self), byref(force))
-        self._sim.contents.process_messages()
+        self.process_messages()
 
-    def add_operator(self, operator, dt_fraction=None, timing="post"):
-        if dt_fraction is None:
+    def add_operator(self, operator, dtfraction=None, timing="post"):
+        if dtfraction is None:
             clibreboundx.rebx_add_operator(byref(self), byref(operator))
         else:
             timingint = REBX_TIMING[timing]
-            clibreboundx.rebx_add_operator_step(byref(self), byref(operator), c_double(dt_fraction), c_int(timingint))
-        self._sim.contents.process_messages()
+            clibreboundx.rebx_add_operator_step(byref(self), byref(operator), c_double(dtfraction), c_int(timingint))
+        self.process_messages()
 
     def get_force(self, name):
         clibreboundx.rebx_get_force.restype = POINTER(Force)
@@ -126,7 +124,7 @@ class Extras(Structure):
     def get_operator(self, name):
         clibreboundx.rebx_get_operator.restype = POINTER(Operator)
         ptr = clibreboundx.rebx_get_operator(byref(self), c_char_p(name.encode('ascii')))
-        self._sim.contents.process_messages()
+        self.process_messages()
         if ptr:
             return ptr.contents
         else:
@@ -154,6 +152,7 @@ class Extras(Structure):
         Save the entire REBOUND simulation to a binary file.
         """
         clibreboundx.rebx_output_binary(byref(self), c_char_p(filename.encode("ascii")))
+        self.process_messages()
 
     #######################################
     # Convenience Functions
@@ -170,7 +169,7 @@ class Extras(Structure):
     def central_force_Acentral(self, p, primary, pomegadot, gamma):
         clibreboundx.rebx_central_force_Acentral.restype = c_double
         Acentral = clibreboundx.rebx_central_force_Acentral(p, primary, c_double(pomegadot), c_double(gamma))
-        self._sim.contents.process_messages()
+        self.process_messages()
         return Acentral
 
     # Hamiltonian calculation functions
@@ -197,7 +196,13 @@ class Extras(Structure):
     def gravitational_harmonics_hamiltonian(self):
         clibreboundx.rebx_gravitational_harmonics_hamiltonian.restype = c_double
         return clibreboundx.rebx_gravitational_harmonics_hamiltonian(byref(self))
-    
+
+    def process_messages(self):
+        try:
+            self._sim.contents.process_messages()
+        except ValueError: # _sim is NULL
+            raise AttributeError("REBOUNDx Error: The Simulation instance REBOUNDx was attached to no longer exists. This can happen if the Simulation instance goes out of scope or otherwise gets garbage collected.")
+
 #################################################
 # Generic REBOUNDx definitions
 #################################################
@@ -285,8 +290,7 @@ Extras._fields_ =  [("_sim", POINTER(rebound.Simulation)),
                     ("_post_timestep_modifications", POINTER(Node)),
                     ("_registered_params", POINTER(Node)),
                     ("_allocated_forces", POINTER(Node)),
-                    ("_allocated_operators", POINTER(Node)),
-                    ("_integrator", c_int)]
+                    ("_allocated_operators", POINTER(Node))]
 
 # This list keeps pairing from C rebx_param_type enum to ctypes type 1-to-1. Derive the required mappings from it
 REBX_C_TO_CTYPES = [["REBX_TYPE_NONE", None], ["REBX_TYPE_DOUBLE", c_double], ["REBX_TYPE_INT",c_int], ["REBX_TYPE_POINTER", c_void_p], ["REBX_TYPE_FORCE", Force]]

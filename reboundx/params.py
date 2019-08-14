@@ -16,7 +16,7 @@ class Params(MutableMapping):
         self.ap = (c_void_p).from_buffer(parent, offset)
       
         # We want to be able to access params from objects like particles, objects etc. These must somehow point back to rebx for memory management
-        # We can't add a rebx pointer in rebound.Particle, but can use it's sim pointer. So we add a sim pointer to all rebx objects that need params.
+        # We can't add a rebx pointer in rebound.Particle, but can use its sim pointer. So we add a sim pointer to all rebx objects that need params.
         extrasvp = parent._sim.contents.extras
         if not extrasvp: # .extras = None
             raise AttributeError("Need to attach reboundx.Extras instance to simulation before setting params.")
@@ -31,8 +31,10 @@ class Params(MutableMapping):
         
         clibreboundx.rebx_get_param.restype = c_void_p
         valptr = clibreboundx.rebx_get_param(self.rebx, self.ap, c_char_p(key.encode('ascii')))
-        
-        if ctype == c_void_p: # Don't know how to cast it, so return for user to cast
+
+        if ctype == c_void_p: # Don't know how to cast it, so return for user to castA
+            if valptr is None:
+                raise AttributeError("REBOUNDx Error: Parameter '{0}' not found on object.".format(key))
             return valptr
         
         valptr = cast(valptr, POINTER(ctype))
@@ -40,6 +42,8 @@ class Params(MutableMapping):
             val = valptr.contents.value # return python int or float rather than c_int or c_double
         except AttributeError:
             val = valptr.contents # Structure, return ctypes object
+        except ValueError: # NULL access
+            raise AttributeError("REBOUNDx Error: Parameter '{0}' not found on object.".format(key))
 
         return val
 

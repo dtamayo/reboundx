@@ -29,6 +29,7 @@
 #include "rebound.h"
 #include "reboundx.h"
 
+// Assumes caller has checked head and node != NULL, since theye're the ones that can give meaningful errors
 void rebx_add_node(struct rebx_node** head, struct rebx_node* node){
     node->next = *head;
     *head = node;

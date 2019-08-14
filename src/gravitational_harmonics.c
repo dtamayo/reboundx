@@ -221,6 +221,10 @@ static double rebx_J4_hamiltonian(struct rebx_extras* const rebx, struct reb_sim
 }
 
 double rebx_gravitational_harmonics_hamiltonian(struct rebx_extras* const rebx){
+    if (rebx->sim == NULL){
+        rebx_error(rebx, ""); // rebx_error gives meaningful err
+        return 0;
+    }
     double H = rebx_J2_hamiltonian(rebx, rebx->sim);
     H += rebx_J4_hamiltonian(rebx, rebx->sim);
     return H;

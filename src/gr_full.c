@@ -249,8 +249,12 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_force* const gr_
 }
 
 double rebx_gr_full_hamiltonian(struct rebx_extras* const rebx, const struct rebx_force* const force){
-    double* c = rebx_get_param(rebx, force->ap, "c");
+    if (rebx->sim == NULL){
+        rebx_error(rebx, ""); // rebx_error gives meaningful err
+        return 0;
+    }
     struct reb_simulation* sim = rebx->sim;
+    double* c = rebx_get_param(rebx, force->ap, "c");
     if (c == NULL){
         reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
     }

@@ -121,8 +121,12 @@ static double rebx_calculate_gr_potential_hamiltonian(struct reb_simulation* con
 double rebx_gr_potential_hamiltonian(struct rebx_extras* const rebx, const struct rebx_force* const gr_potential){
     double* c = rebx_get_param(rebx, gr_potential->ap, "c");
     if (c == NULL){
-        reb_error(rebx->sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
+        rebx_error(rebx, "Need to set speed of light in gr effect.  See examples in documentation.\n");
     }
     const double C2 = (*c)*(*c);
+    if (rebx->sim == NULL){
+        rebx_error(rebx, ""); // rebx_error gives meaningful err
+        return 0;
+    }
     return rebx_calculate_gr_potential_hamiltonian(rebx->sim, C2);
 }

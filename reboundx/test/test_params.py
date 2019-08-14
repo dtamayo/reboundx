@@ -13,6 +13,11 @@ def mycomp(obj1, obj2):
         if getattr(obj1, attr) != getattr(obj2, attr):
             return False
     return True
+        
+from ctypes import Structure, c_double, cast, POINTER
+class Mystruct(Structure):
+    _fields_ = [('dt', c_double),
+                ('c', c_double)]
 
 class TestParams(unittest.TestCase):
     def setUp(self):
@@ -110,10 +115,6 @@ class TestParams(unittest.TestCase):
     
     def test_addcustomstruct(self):
         self.rebx.register_param('my_new_struct', 'REBX_TYPE_POINTER')
-        from ctypes import Structure, c_double, cast, POINTER
-        class Mystruct(Structure):
-            _fields_ = [('dt', c_double),
-                        ('c', c_double)]
         s = Mystruct()
         s.dt = 0.1
         s.c = 3.5
@@ -121,14 +122,10 @@ class TestParams(unittest.TestCase):
         new_s = self.gr.params['my_new_struct']
         new_s = cast(new_s, POINTER(Mystruct)).contents
         self.assertAlmostEqual(new_s.dt, 0.1, delta=1.e-15)
-        self.assertAlmostEqual(new_s.c, 3.5, delta=1.e-15)
-    
+        self.assertAlmostEqual(new_s.c, 3.5, delta=1.e-15)A
+
     def test_updatecustomstructptr(self):
         self.rebx.register_param('my_new_struct', 'REBX_TYPE_POINTER')
-        from ctypes import Structure, c_double, cast, POINTER
-        class Mystruct(Structure):
-            _fields_ = [('dt', c_double),
-                        ('c', c_double)]
         s = Mystruct()
         s.dt = 0.1
         s.c = 3.5
@@ -141,10 +138,6 @@ class TestParams(unittest.TestCase):
     
     def test_updatecustomstruct(self):
         self.rebx.register_param('my_new_struct', 'REBX_TYPE_POINTER')
-        from ctypes import Structure, c_double, cast, POINTER
-        class Mystruct(Structure):
-            _fields_ = [('dt', c_double),
-                        ('c', c_double)]
         s = Mystruct()
         s.dt = 0.1
         s.c = 3.5
@@ -171,7 +164,16 @@ class TestParams(unittest.TestCase):
     def test_registerexisting(self):
         with self.assertRaises(RuntimeError):
             self.rebx.register_param('c', 'REBX_TYPE_INT')
+
+    def test_not_attached(self):
+        with self.assertRaises(AttributeError):
+            b = self.gr.params['beta']
     
+    def test_custom_not_attached(self):
+        self.rebx.register_param('my_custom', 'REBX_TYPE_POINTER')
+        with self.assertRaises(AttributeError):
+            b = self.gr.params['my_custom']
+
     def test_newdouble(self):
         self.rebx.register_param('my_new_double', 'REBX_TYPE_DOUBLE')
         self.gr.params['my_new_double'] = 1.2
