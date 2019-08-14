@@ -259,7 +259,7 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         char str[300];
         sprintf(str, "REBOUNDx error: Force '%s' not found in REBOUNDx library.\n", name);
         rebx_error(rebx, str);
-        rebx_free_force(rebx, force);
+        rebx_remove_force(rebx, force); // Not free_force. Must remove from allocated_forces
         return NULL;
     }
     
@@ -352,7 +352,7 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
         char str[300];
         sprintf(str, "REBOUNDx error: Operator '%s' not found in REBOUNDx library.\n", name);
         rebx_error(rebx, str);
-        rebx_free_operator(operator);
+        rebx_remove_operator(rebx, operator); // Not free_op. Must rm from allocated_forces
         return NULL;
     }
     return operator;

@@ -5,7 +5,7 @@ class SimulationArchive(rebound.SimulationArchive):
     """
     SimulationArchive Class.
     """
-    def __init__(self,filename, rebxfilename, *args, **kwargs):#setup=None, setup_args=(), rebxfilename=None, process_warnings=True):
+    def __init__(self, filename, rebxfilename, *args, **kwargs):
         """
         Arguments
         ---------
@@ -16,6 +16,7 @@ class SimulationArchive(rebound.SimulationArchive):
         """
         super(SimulationArchive, self).__init__(filename, *args, **kwargs)
         self.rebxfilename = rebxfilename
+        sim, rebx = self[0] # test you can open rebxfilename to warn user if not
 
     def __getitem__(self, key):
         sim = super(SimulationArchive, self).__getitem__(key)

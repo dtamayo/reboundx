@@ -155,16 +155,16 @@ class TestOperators(unittest.TestCase):
             sim.contents.particles[1].x += 1.e-4
         cust.step_function = mystep
         cust.operator_type = 'updater'
-        self.rebx.add_operator(mm, dt_fraction=0.5, timing='post')
-        self.rebx.add_operator(cust, dt_fraction=0.5, timing='post')
-        self.rebx.add_operator(mm, dt_fraction=0.5, timing='post')
-        self.rebx.add_operator(cust, dt_fraction=0.5, timing='post')
-        self.rebx.add_operator(mm, dt_fraction=0.5, timing='post')
-        self.rebx.add_operator(cust, dt_fraction=0.5, timing='pre')
-        self.rebx.add_operator(mm, dt_fraction=0.5, timing='pre')
-        self.rebx.add_operator(cust, dt_fraction=0.5, timing='pre')
-        self.rebx.add_operator(mm, dt_fraction=0.5, timing='pre')
-        self.rebx.add_operator(cust, dt_fraction=0.5, timing='pre')
+        self.rebx.add_operator(mm, dtfraction=0.5, timing='post')
+        self.rebx.add_operator(cust, dtfraction=0.5, timing='post')
+        self.rebx.add_operator(mm, dtfraction=0.5, timing='post')
+        self.rebx.add_operator(cust, dtfraction=0.5, timing='post')
+        self.rebx.add_operator(mm, dtfraction=0.5, timing='post')
+        self.rebx.add_operator(cust, dtfraction=0.5, timing='pre')
+        self.rebx.add_operator(mm, dtfraction=0.5, timing='pre')
+        self.rebx.add_operator(cust, dtfraction=0.5, timing='pre')
+        self.rebx.add_operator(mm, dtfraction=0.5, timing='pre')
+        self.rebx.add_operator(cust, dtfraction=0.5, timing='pre')
         self.rebx.remove_operator(mm)
     
     def test_removenonoperator(self):

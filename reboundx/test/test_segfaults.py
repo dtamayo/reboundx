@@ -88,6 +88,5 @@ class TestSegFaults(unittest.TestCase):
         with self.assertRaises(AttributeError):
             sim.particles[0].params["a"] = 7
 
-
 if __name__ == '__main__':
     unittest.main()

@@ -102,10 +102,14 @@ class Extras(Structure):
         return ptr.contents
 
     def add_force(self, force):
+        if not isinstance(force, reboundx.extras.Force):
+            raise TypeError("REBOUNDx Error: Object passed to rebx.add_force is not a reboundx.Force instance.")
         clibreboundx.rebx_add_force(byref(self), byref(force))
         self.process_messages()
 
     def add_operator(self, operator, dtfraction=None, timing="post"):
+        if not isinstance(operator, reboundx.extras.Operator):
+            raise TypeError("REBOUNDx Error: Object passed to rebx.add_operator is not a reboundx.Operator instance.")
         if dtfraction is None:
             clibreboundx.rebx_add_operator(byref(self), byref(operator))
         else:
