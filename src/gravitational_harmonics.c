@@ -46,7 +46,7 @@
  * ============================ =========== ==================================================================
  * J2 (double)                  No          J2 coefficient
  * J4 (double)                  No          J4 coefficient
- * R_eq (double)                Yes         Equatorial radius of nonspherical body used for calculating Jn harmonics
+ * R_eq (double)                No         Equatorial radius of nonspherical body used for calculating Jn harmonics
  * ============================ =========== ==================================================================
  * 
  */
