@@ -129,7 +129,7 @@ void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_force* 
     }
 }
 
-static double rebx_calculate_tides_precession_hamiltonian(struct rebx_extras* const rebx, struct reb_simulation* const sim, const int source_index){
+static double rebx_calculate_tides_precession_potential(struct rebx_extras* const rebx, struct reb_simulation* const sim, const int source_index){
     struct reb_particle* const particles = sim->particles;
     struct reb_particle* const source = &particles[source_index];
     const double m0 = source->m;
@@ -179,7 +179,7 @@ static double rebx_calculate_tides_precession_hamiltonian(struct rebx_extras* co
     return H;
 }
 
-double rebx_tides_precession_hamiltonian(struct rebx_extras* const rebx){
+double rebx_tides_precession_potential(struct rebx_extras* const rebx){
     if (rebx->sim == NULL){
         rebx_error(rebx, ""); // rebx_error gives meaningful err
         return 0;
@@ -192,11 +192,11 @@ double rebx_tides_precession_hamiltonian(struct rebx_extras* const rebx){
     for (int i=0; i<N_real; i++){
         if (rebx_get_param(rebx, particles[i].ap, "primary") != NULL){
             source_found = 1;
-            H = rebx_calculate_tides_precession_hamiltonian(rebx, sim, i);
+            H = rebx_calculate_tides_precession_potential(rebx, sim, i);
         }
     }
     if (!source_found){
-        H = rebx_calculate_tides_precession_hamiltonian(rebx, sim, 0);    // default source to index 0 if "primary" not found on any particle
+        H = rebx_calculate_tides_precession_potential(rebx, sim, 0);    // default source to index 0 if "primary" not found on any particle
     }
     return H;
 }

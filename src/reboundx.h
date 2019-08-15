@@ -266,8 +266,8 @@ struct rebx_extras* rebx_attach(struct reb_simulation* sim);
  * @details This does not free the memory allocated by REBOUNDx (call rebx_free).
  * @param sim Pointer to the simulation from which to remove REBOUNDx
  */
-void rebx_detach(struct reb_simulation* sim);
-
+void rebx_detach(struct reb_simulation* sim, struct rebx_extras* rebx);
+void rebx_extras_cleanup(struct reb_simulation* sim);
 /**
  * @brief Frees all memory allocated by REBOUNDx instance.
  * @details Should be called after simulation is done if memory is a concern.
@@ -456,14 +456,6 @@ double rebx_rad_calc_particle_radius(const double G, const double c, const doubl
 double rebx_central_force_Acentral(const struct reb_particle p, const struct reb_particle primary, const double pomegadot, const double gamma);
 
 /**
- * @brief Calculates the hamiltonian for gr_potential, including the classical Hamiltonian.
- * @param rebx pointer to the REBOUNDx extras instance.
- * @param gr_potential Force structure returned by rebx_load_force
- * @return Total Hamiltonian, including classical Hamiltonian (double).
- */
-double rebx_gr_potential_hamiltonian(struct rebx_extras* const rebx, const struct rebx_force* const gr_potential);
-
-/**
  * @brief Calculates the hamiltonian for gr, including the classical Hamiltonian.
  * @details Assumes there is only one source particle (with gr_source set to 1)
  * @param rebx pointer to the REBOUNDx extras instance.
@@ -481,25 +473,33 @@ double rebx_gr_hamiltonian(struct rebx_extras* const rebx, const struct rebx_for
 double rebx_gr_full_hamiltonian(struct rebx_extras* const rebx, const struct rebx_force* const gr_full);
 
 /**
- * @brief Calculates the hamiltonian for tides_precession effect.
+ * @brief Calculates the potential for gr_potential, including the classical Hamiltonian.
+ * @param rebx pointer to the REBOUNDx extras instance.
+ * @param gr_potential Force structure returned by rebx_load_force
+ * @return Total Hamiltonian, including classical Hamiltonian (double).
+ */
+double rebx_gr_potential_potential(struct rebx_extras* const rebx, const struct rebx_force* const gr_potential);
+
+/**
+ * @brief Calculates the potential for tides_precession effect.
  * @param rebx pointer to the REBOUNDx extras instance.
  * @return Potential corresponding to tides_precession effect.
  */
-double rebx_tides_precession_hamiltonian(struct rebx_extras* const rebx);
+double rebx_tides_precession_potential(struct rebx_extras* const rebx);
 
 /**
- * @brief Calculates the hamiltonian for central_force effect.
+ * @brief Calculates the potential for central_force effect.
  * @param rebx pointer to the REBOUNDx extras instance.
  * @return Potential corresponding to central_force effect.
  */
-double rebx_central_force_hamiltonian(struct rebx_extras* const rebx);
+double rebx_central_force_potential(struct rebx_extras* const rebx);
 
 /**
- * @brief Calculates the hamiltonian contribution for all particles with additional gravity field harmonics beyond the monopole (i.e., J2, J4).
+ * @brief Calculates the potential for all particles with additional gravity field harmonics beyond the monopole (i.e., J2, J4).
  * @param rebx pointer to the REBOUNDx extras instance.
  * @return Potential corresponding to the effect from all particles of their additional gravity field harmonics
  */
-double rebx_gravitational_harmonics_hamiltonian(struct rebx_extras* const rebx);
+double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
 
 /** @} */
 /** @} */

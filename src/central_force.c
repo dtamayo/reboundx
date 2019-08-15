@@ -94,7 +94,7 @@ void rebx_central_force(struct reb_simulation* const sim, struct rebx_force* con
     }
 }
 
-static double rebx_calculate_central_force_hamiltonian(struct reb_simulation* const sim, const double A, const double gamma, const int source_index){
+static double rebx_calculate_central_force_potential(struct reb_simulation* const sim, const double A, const double gamma, const int source_index){
     const struct reb_particle* const particles = sim->particles;
 	const int _N_real = sim->N - sim->N_var;
     const struct reb_particle source = particles[source_index];
@@ -119,7 +119,7 @@ static double rebx_calculate_central_force_hamiltonian(struct reb_simulation* co
     return H;
 }
 
-double rebx_central_force_hamiltonian(struct rebx_extras* const rebx){
+double rebx_central_force_potential(struct rebx_extras* const rebx){
     if (rebx->sim == NULL){
         rebx_error(rebx, ""); // rebx_error gives meaningful err
         return 0;
@@ -133,7 +133,7 @@ double rebx_central_force_hamiltonian(struct rebx_extras* const rebx){
         if (Acentral != NULL){
             const double* const gammacentral = rebx_get_param(rebx, particles[i].ap, "gammacentral");
             if (gammacentral != NULL){
-                Htot += rebx_calculate_central_force_hamiltonian(sim, *Acentral, *gammacentral, i); 
+                Htot += rebx_calculate_central_force_potential(sim, *Acentral, *gammacentral, i);
             }
         }
     }

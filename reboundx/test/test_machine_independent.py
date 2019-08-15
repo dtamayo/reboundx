@@ -129,7 +129,7 @@ class TestMachineIndependent(unittest.TestCase):
         sim.integrate(simf.t)
         self.assertEqual(sim.particles[0].x, simf.particles[0].x)
 
-    def test_radiation_forces(self):
+    def test_tides_precession(self):
         name = 'tides_precession'
         try:
             sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')

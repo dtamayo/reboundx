@@ -139,7 +139,7 @@ void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_
     rebx_J4(sim->extras, sim, gh, particles, N);
 }
 
-static double rebx_calculate_J2_hamiltonian(struct reb_simulation* const sim, const double J2, const double R_eq, const int source_index){
+static double rebx_calculate_J2_potential(struct reb_simulation* const sim, const double J2, const double R_eq, const int source_index){
     const struct reb_particle* const particles = sim->particles;
 	const int _N_real = sim->N - sim->N_var;
     const struct reb_particle source = particles[source_index];
@@ -163,7 +163,7 @@ static double rebx_calculate_J2_hamiltonian(struct reb_simulation* const sim, co
     return H;
 }
 
-static double rebx_J2_hamiltonian(struct rebx_extras* const rebx, struct reb_simulation* const sim){
+static double rebx_J2_potential(struct rebx_extras* const rebx, struct reb_simulation* const sim){
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
     double Htot = 0.;
@@ -172,14 +172,14 @@ static double rebx_J2_hamiltonian(struct rebx_extras* const rebx, struct reb_sim
         if (J2 != NULL){
             const double* const R_eq = rebx_get_param(rebx, particles[i].ap, "R_eq");
             if (R_eq != NULL){
-                Htot += rebx_calculate_J2_hamiltonian(sim, *J2, *R_eq, i); 
+                Htot += rebx_calculate_J2_potential(sim, *J2, *R_eq, i);
             }
         }
     }
     return Htot;
 }
 
-static double rebx_calculate_J4_hamiltonian(struct reb_simulation* const sim, const double J4, const double R_eq, const int source_index){
+static double rebx_calculate_J4_potential(struct reb_simulation* const sim, const double J4, const double R_eq, const int source_index){
     const struct reb_particle* const particles = sim->particles;
 	const int _N_real = sim->N - sim->N_var;
     const struct reb_particle source = particles[source_index];
@@ -204,7 +204,7 @@ static double rebx_calculate_J4_hamiltonian(struct reb_simulation* const sim, co
     return H;
 }
 
-static double rebx_J4_hamiltonian(struct rebx_extras* const rebx, struct reb_simulation* const sim){
+static double rebx_J4_potential(struct rebx_extras* const rebx, struct reb_simulation* const sim){
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
     double Htot = 0.;
@@ -213,19 +213,19 @@ static double rebx_J4_hamiltonian(struct rebx_extras* const rebx, struct reb_sim
         if (J4 != NULL){
             const double* const R_eq = rebx_get_param(rebx, particles[i].ap, "R_eq");
             if (R_eq != NULL){
-                Htot += rebx_calculate_J4_hamiltonian(sim, *J4, *R_eq, i); 
+                Htot += rebx_calculate_J4_potential(sim, *J4, *R_eq, i);
             }
         }
     }
     return Htot;
 }
 
-double rebx_gravitational_harmonics_hamiltonian(struct rebx_extras* const rebx){
+double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx){
     if (rebx->sim == NULL){
         rebx_error(rebx, ""); // rebx_error gives meaningful err
         return 0;
     }
-    double H = rebx_J2_hamiltonian(rebx, rebx->sim);
-    H += rebx_J4_hamiltonian(rebx, rebx->sim);
+    double H = rebx_J2_potential(rebx, rebx->sim);
+    H += rebx_J4_potential(rebx, rebx->sim);
     return H;
 }
