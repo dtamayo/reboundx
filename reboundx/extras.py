@@ -62,11 +62,12 @@ class Extras(Structure):
 
     def __del__(self):
         if self._b_needsfree_ == 1:
+            print('deleting rebx')
             clibreboundx.rebx_free_pointers(byref(self))
 
     def detach(self, sim):
         sim._extras_ref = None # remove reference to rebx so it can be garbage collected 
-        clibreboundx.rebx_detach(byref(sim))
+        clibreboundx.rebx_detach(byref(sim), byref(self))
     
     #######################################
     # Functions for manipulating REBOUNDx effects
@@ -177,36 +178,36 @@ class Extras(Structure):
         return Acentral
 
     # Hamiltonian calculation functions
-    def gr_hamiltonian(self, params):
-        clibreboundx.rebx_gr_hamiltonian.restype = c_double
-        return clibreboundx.rebx_gr_hamiltonian(byref(self), byref(params))
-    
-    def gr_potential_hamiltonian(self, params):
-        clibreboundx.rebx_gr_potential_hamiltonian.restype = c_double
-        return clibreboundx.rebx_gr_potential_hamiltonian(byref(self), byref(params))
-    
     def gr_full_hamiltonian(self, params):
         clibreboundx.rebx_gr_full_hamiltonian.restype = c_double
         return clibreboundx.rebx_gr_full_hamiltonian(byref(self), byref(params))
     
-    def tides_precession_hamiltonian(self, params):
-        clibreboundx.rebx_tides_precession_hamiltonian.restype = c_double
-        return clibreboundx.rebx_tides_precession_hamiltonian(byref(self), byref(params))
-
-    def central_force_hamiltonian(self):
-        clibreboundx.rebx_central_force_hamiltonian.restype = c_double
-        return clibreboundx.rebx_central_force_hamiltonian(byref(self))
+    def gr_hamiltonian(self, params):
+        clibreboundx.rebx_gr_hamiltonian.restype = c_double
+        return clibreboundx.rebx_gr_hamiltonian(byref(self), byref(params))
     
-    def gravitational_harmonics_hamiltonian(self):
-        clibreboundx.rebx_gravitational_harmonics_hamiltonian.restype = c_double
-        return clibreboundx.rebx_gravitational_harmonics_hamiltonian(byref(self))
+    # Potential calculation functions
+    def gr_potential_potential(self, params):
+        clibreboundx.rebx_gr_potential_potential.restype = c_double
+        return clibreboundx.rebx_gr_potential_potential(byref(self), byref(params))
+    
+    def tides_precession_potential(self, params):
+        clibreboundx.rebx_tides_precession_potential.restype = c_double
+        return clibreboundx.rebx_tides_precession_potential(byref(self), byref(params))
+
+    def central_force_potential(self):
+        clibreboundx.rebx_central_force_potential.restype = c_double
+        return clibreboundx.rebx_central_force_potential(byref(self))
+    
+    def gravitational_harmonics_potential(self):
+        clibreboundx.rebx_gravitational_harmonics_potential.restype = c_double
+        return clibreboundx.rebx_gravitational_harmonics_potential(byref(self))
 
     def process_messages(self):
         try:
             self._sim.contents.process_messages()
         except ValueError: # _sim is NULL
             raise AttributeError("REBOUNDx Error: The Simulation instance REBOUNDx was attached to no longer exists. This can happen if the Simulation instance goes out of scope or otherwise gets garbage collected.")
-
 #################################################
 # Generic REBOUNDx definitions
 #################################################

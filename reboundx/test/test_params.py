@@ -122,7 +122,7 @@ class TestParams(unittest.TestCase):
         new_s = self.gr.params['my_new_struct']
         new_s = cast(new_s, POINTER(Mystruct)).contents
         self.assertAlmostEqual(new_s.dt, 0.1, delta=1.e-15)
-        self.assertAlmostEqual(new_s.c, 3.5, delta=1.e-15)A
+        self.assertAlmostEqual(new_s.c, 3.5, delta=1.e-15)
 
     def test_updatecustomstructptr(self):
         self.rebx.register_param('my_new_struct', 'REBX_TYPE_POINTER')

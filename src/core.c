@@ -123,24 +123,30 @@ struct rebx_extras* rebx_attach(struct reb_simulation* sim){  // reboundx.h
     return rebx;
 }
 
-void rebx_detach(struct reb_simulation* sim){
+void rebx_extras_cleanup(struct reb_simulation* sim){
+    struct rebx_extras* rebx = sim->extras;
+    rebx->sim = NULL;
+}
+
+void rebx_detach(struct reb_simulation* sim, struct rebx_extras* rebx){
     if (sim == NULL){
         return;
     }
-    struct rebx_extras* rebx = sim->extras;
     rebx->sim = NULL;
     
-    if (sim->additional_forces == rebx_additional_forces){
-        sim->additional_forces = NULL;
-    }
-    if (sim->pre_timestep_modifications == rebx_pre_timestep_modifications){
-        sim->pre_timestep_modifications = NULL;
-    }
-    if (sim->post_timestep_modifications == rebx_post_timestep_modifications){
-        sim->post_timestep_modifications = NULL;
-    }
-    if (sim->free_particle_ap == rebx_free_particle_ap){
-        sim->free_particle_ap = NULL;
+    if (sim->extras == rebx){
+        if (sim->additional_forces == rebx_additional_forces){
+            sim->additional_forces = NULL;
+        }
+        if (sim->pre_timestep_modifications == rebx_pre_timestep_modifications){
+            sim->pre_timestep_modifications = NULL;
+        }
+        if (sim->post_timestep_modifications == rebx_post_timestep_modifications){
+            sim->post_timestep_modifications = NULL;
+        }
+        if (sim->free_particle_ap == rebx_free_particle_ap){
+            sim->free_particle_ap = NULL;
+        }
     }
 }
 
@@ -160,7 +166,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     rebx->registered_params=NULL;
     
     sim->free_particle_ap = rebx_free_particle_ap;
-    sim->extras_cleanup = rebx_detach;
+    sim->extras_cleanup = rebx_extras_cleanup;
     
     if(sim->additional_forces || sim->pre_timestep_modifications || sim->post_timestep_modifications){
         reb_warning(sim, "REBOUNDx overwrites sim->additional_forces, sim->pre_timestep_modifications and sim->post_timestep_modifications whenever forces or operators that use them get added.  If you want to use REBOUNDx together with your own custom functions that use these callbacks, you should add them through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.");
@@ -775,7 +781,7 @@ void rebx_free_pointers(struct rebx_extras* rebx){
     if (rebx == NULL){
         return;
     }
-    rebx_detach(rebx->sim);
+    rebx_detach(rebx->sim, rebx);
     struct rebx_node* current;
     struct rebx_node* next;
     
