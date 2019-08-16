@@ -29,5 +29,5 @@ New Version and Paper!
 We've made some big improvements to REBOUNDx to make it more robust and easily extendable, so definitely upgrade to this new version (3.0) if you haven't already.
 We've also improved the binary format to better interface with the REBOUND SimulationArchive for the sharing and analysis of machine independent results.
 
-Definitely also check out our paper where we give an overview of the library and analyze the effects of dissipative forces on symplectic integrators and give some recommendations:`Tamayo, Rein, Shi and Hernandez 2019 <https://github.com/dtamayo/reboundx>`_
+Definitely also check out our paper where we give an overview of the library, analyze the effects of dissipative forces on symplectic integrators, and give some recommendations:`Tamayo, Rein, Shi and Hernandez 2019 <http://arxiv.org/abs/1908.05634>`_
 
