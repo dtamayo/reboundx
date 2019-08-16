@@ -350,10 +350,6 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
         operator->step_function = rebx_modify_orbits_direct;
         operator->operator_type = REBX_OPERATOR_UPDATER;
     }
-    else if (strcmp(name, "track_min_distance") == 0){
-        operator->step_function = rebx_track_min_distance;
-        operator->operator_type = REBX_OPERATOR_RECORDER;
-    }
     else{
         char str[300];
         sprintf(str, "REBOUNDx error: Operator '%s' not found in REBOUNDx library.\n", name);
