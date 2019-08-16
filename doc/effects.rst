@@ -464,39 +464,3 @@ R_eq (double)                No         Equatorial radius of nonspherical body u
 Miscellaneous Utilities
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _track_min_distance:
-
-track_min_distance
-******************
-
-======================= ===============================================
-Authors                 D. Tamayo
-Implementation Paper    *In progress*
-Based on                None
-C Example               :ref:`c_example_track_min_distance`
-Python Example          `TrackMinDistance.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TrackMinDistance.ipynb>`_.
-======================= ===============================================
-
-For a given particle, this keeps track of that particle's minimum distance from another body in the simulation.  User
-should add parameters to the particular particle whose distance should be tracked.
-
-**Effect Parameters**
-
-*None*
-
-**Particle Parameters**
-
-Only particles with their ``min_distance`` parameter set initially will track their minimum distance. The effect will
-update this parameter when the particle gets closer than the value of ``min_distance``, so the user has to set it
-initially.  By default distance is measured from sim->particles[0], but you can specify a different particle by setting
-the ``min_distance_from`` parameter to the hash of the target particle.
-
-================================ =========== =======================================================
-Name (C type)                    Required    Description
-================================ =========== =======================================================
-min_distance (double)            Yes         Particle's miminimum distance.
-min_distance_from (uint32)       No          Hash for particle from which to measure distance
-min_distance_orbit (reb_orbit)   No          Parameter to store orbital elements at moment corresponding to min_distance (heliocentric)
-================================ =========== =======================================================
-
-
