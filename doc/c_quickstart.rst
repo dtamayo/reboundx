@@ -6,11 +6,11 @@ Quickstart Guide (C)
 Installation
 ------------
 
-Navigate to the parent directory that holds the ``rebound`` folder (see below if you want to install in a custom folder).  Then::
+Navigate to the parent directory that holds the ``rebound`` folder (see below if you want to install in a custom folder).  Then in a terminaljk13GA::
 
     git clone https://github.com/dtamayo/reboundx.git
 
-(install git if you don't have it).  *If you do use* a custom install location for REBOUNDx, you have to additionally set the ``REB_DIR`` environment variable to the path to REBOUND. You might add this to your shell's startup files, e.g. with bash,::
+(install git if you don't have it).  *If you do use* a custom install location for REBOUNDx, you have to additionally set the ``REB_DIR`` environment variable to the path to REBOUND. You might add this to your shell's startup files, e.g. with bash::
     
     export REB_DIR=/Users/dtamayo/rebound
 
@@ -19,40 +19,43 @@ Navigate to the parent directory that holds the ``rebound`` folder (see below if
 Quick Start Guide
 -----------------
 
-We assume we've already set up a ``reb_simulation`` called ``sim``.  We always begin by adding REBOUNDx to our simulation::
+We assume we've already set up a ``reb_simulation`` called ``sim``.  We always begin by attaching REBOUNDx to our simulation::
     
-    struct rebx_extras* rebx = rebx_init(sim);
+    struct rebx_extras* rebx = rebx_attach(sim);
 
-We then add the effect we are interested in, which returns a pointer to a rebx_effect to which we can later add parameters.
-For example, to add general relativity effects,::
+We then add the effect we are interested in.
+There are two types of effects, forces and operators. 
+The easiest is to check the documentation for the effect you're interested in on the :ref:`effects` page, which links to a C example that shows you how to add it and set the relevant parameters.
+For example, to add post-Newtonian forces,::
 
-    struct rebx_effect* gr = rebx_add_effect(rebx, "gr");
+    struct rebx_force* gr = rebx_load_force(rebx, "gr");
 
-For details on particular effect implementations, and for a list of available effects, see :ref:`effects`.
+This returns a rebx_force pointer. 
+Different effects have their own set of parameters that must be set, listed on :ref:`effects` and explained in the examples. 
+For example, general relativity effects require us to set the speed of light (always in the units we're using in the rest of the simulation).
 
-We can now set parameters to our particles and effects.  
-**To understand which parameters need to be set for particular effects, consult** :ref:`effects`.
-For example, general relativity effects require us to set the speed of light in appropriate units.
+Simple parameters of type double can be set like this::
 
-We always first add a parameter to the effect (or particle), specifying the appropriate type from the rebx_param_type enumeration (see :ref:`c_api` under enums).
-This gives us back a pointer that we can then use to set the value::
+    rebx_set_param_double(rebx, &gr->ap, "c", 3e4);
 
-    double* c = rebx_add_param(gr, "c", REBX_TYPE_DOUBLE);
-    *c = 3.e8;
+Additional parmeters (ap) are stored in a linked list for each force, operator and particle, so in addition to passing
+the rebx instance, we always pass a pointer to the head of the ap linked list (&gr->ap). We then pass the name of 
+the parameter, and the value we want to set it to.
 
-The same goes for a particle, e.g. setting a semimajor axis damping timescale for the modify_orbits_forces effect::
+The same goes for a particle. For example, to set a semimajor axis damping timescale tau_a for the modify_orbits_forces effect to particles[1]::
 
-    double* tau_a = rebx_add_param(&sim->particles[1], "tau_a", REBX_TYPE_DOUBLE);
-    *tau_a = -1.e4;
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "tau_a", -1.e4);
 
-Note that rebx_add_param and rebx_get_param (below) always take a pointer to the particle or the effect.
+We can check the value of a particle's parameter by getting a pointer to that parameter with::
 
-We can check the value of a particle's parameter with the pointer we got back (c and tau_a above), but if particles or effects are removed from the simulation, dereferencing these pointers leads to undefined behavior / segmentation faults.
-When accessing parameters, one should therefore retrieve them each time with rebx_get_param::
+    double* c = rebx_get_param(rebx, gr->ap, "c");
+   
+Note that if the parameter name (here "c") is not found, rebx_get_param will return NULL.
+So check for NULL before dereferencing it, or you will get undefined behavior/seg faults.
 
-    double* tau_a = rebx_get_param(&sim->particles[1], "tau_a");
+Once you've set up your force, you still have to add it to the simulation. You do that with::
 
-This allows you to check whether the pointer is valid, as rebx_get_param will return NULL if the parameter is not found (**so make sure you check for NULL!**).
+    rebx_add_force(rebx, force);
 
 You can add as many effects as you'd like in the same simulation.
 Once you're done setting up all the effects you want, just run the REBOUND simulation as usual::
@@ -64,8 +67,3 @@ You can find links to the appropriate examples here: :ref:`effects`, along with 
 You can find the example files in the ``reboundx/examples`` folder.
 
 Even if you are using the C version, you might also take a look at the python example links at :ref:`effects`, as the iPython notebooks nicely incorporate text and may therefore have a bit longer discussions about the physical details for each effect.
-
-**Note that REBOUNDx is an all-or-nothing proposition.  Either you use it for all additional effects, or none.  
-If you use REBOUNDx and then try to set sim->additional_forces with your own custom routine, you will overwrite the function pointer that REBOUNDx is using under the hood.
-We therefore provide functions for adding your own custom effects within REBOUNDx itself.
-Follow the :ref:`c_example_custom_ptm` tutorial for how to do this.**  
