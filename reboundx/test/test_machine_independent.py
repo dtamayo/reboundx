@@ -216,34 +216,6 @@ class TestMachineIndependent(unittest.TestCase):
         sim.integrate(simf.t)
         self.assertEqual(sim.particles[0].x, simf.particles[0].x)
 
-
-    def test_modify_orbits_direct(self):
-        name = 'modify_orbits_direct'
-        try:
-            rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
-            rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
-            sa = reboundx.SimulationArchive(rebbin, rebxbin)
-        except:
-            sim = rebound.Simulation('binaries/twoplanets.bin')
-            sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
-            rebx = reboundx.Extras(sim)
-            mod = rebx.load_operator(name)
-            rebx.add_operator(mod)
-            ps = sim.particles
-            ps[1].params['tau_a'] = -1e4
-            ps[1].params['tau_e'] = -1e3
-            ps[2].params['tau_e'] = -1e3
-            ps[2].params['tau_inc'] = -1e3
-            ps[1].params['tau_omega'] = 1.e2
-            rebx.save('binaries/'+name+'.rebx')
-            sim.integrate(1.e4)
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
-
-        simf, rebx = sa[-1]
-        sim,  rebx = sa[0]
-        sim.integrate(simf.t)
-        self.assertEqual(sim.particles[0].x, simf.particles[0].x)
-
     def test_modify_mass(self):
         name = 'modify_mass'
         try:
