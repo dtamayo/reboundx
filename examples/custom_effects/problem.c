@@ -11,33 +11,41 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-/* A very simple post timestep modification to change the planet's orbit
- * All custom function *have* to take (struct reb_simulation* const sim, struct rebx_effect* const effect)
- * (you can just ignore the effect struct in your function body if you don't want to use it)
+/* There are two qualitatively different options for adding in effects. One can add a force, which evaluates accelerations to add
+ * on top of gravitational accelerations every timestep and will be integrated numerically.
+ * Alternatively one can apply operators before and/or after each REBOUND timestep that update particle properties
+ * (masses, positions/velocities, or other parameters).
+ * 
+ * Here's an example of a force, for whichi we have to update the particle accelerations in the passed particles array (not sim->particles!)
+ * Function must have the same prototype as below.
+ * We can have the user assign parameters to the force structure in main(), and our force function read and/or update those parameters each timestep when called.
  */
 
-// for a post_timestep_modification we update the particle states (positions, velocities, masses etc.)
-// function must have the same prototype as below, passing simulation and effect pointers, the timestep to apply,
-// and an enum telling you whether the function is being called before or after the timestep (not used here).
-void simple_drag(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing){
-    double* c = rebx_get_param(effect, "c");    // get parameters we want user to set
+void stark_force(struct reb_simulation* const sim, struct rebx_force* const starkforce, struct reb_particle* const particles, const int N){
+    double* starkconst = rebx_get_param(sim->extras, starkforce->ap, "starkconst");    // get parameters we want user to set
 
-    if(c != NULL){                              // check to make sure c is set to avoid segmentation fault if not!
-        sim->particles[2].vx *= 1. - (*c)*dt;
-        sim->particles[2].vy *= 1. - (*c)*dt;
-        sim->particles[2].vz *= 1. - (*c)*dt;
+    if(starkconst != NULL){                              
+        particles[1].ax += (*starkconst);           // make sure you += not =, which would overwrite other accelerations
     }
 }
 
-// for a force we have to update the particle accelerations in the passed particles array (not sim->particles!)
-// function must have the same prototype as below
-void stark_force(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
-    double* b = rebx_get_param(effect, "b");    // get parameters we want user to set
+/* Here's a very simple example of an operator to change the planet's orbit
+ *
+ * For a post_timestep_modification we update the particle states (positions, velocities, masses etc.)
+ * Function must have the same prototype as below, passing simulation and operator pointers (which can be used to hold parameters), 
+ * and the timestep over which the operator should act.
+ */
 
-    if(b != NULL){                              
-        particles[2].ax += (*b);           // make sure you += not =, which would overwrite other accelerations
+void simple_drag(struct reb_simulation* const sim, struct rebx_operator* const dragoperator, const double dt){
+    double* dragconst = rebx_get_param(sim->extras, dragoperator->ap, "dragconst");    // get parameters we want user to set
+
+    if(dragconst != NULL){                              
+        sim->particles[1].vx *= 1. - (*dragconst)*dt;
+        sim->particles[1].vy *= 1. - (*dragconst)*dt;
+        sim->particles[1].vz *= 1. - (*dragconst)*dt;
     }
 }
+
 
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
@@ -53,27 +61,50 @@ int main(int argc, char* argv[]){
     double f = 0.;
 
     struct reb_particle p1 = reb_tools_orbit2d_to_particle(sim->G, p, m, a1, e, omega, f);
-    struct reb_particle p2 = reb_tools_orbit2d_to_particle(sim->G, p, m, a2, e, omega, f);
     reb_add(sim,p1);
-    reb_add(sim,p2);
     reb_move_to_com(sim);
 
-    struct rebx_extras* rebx = rebx_init(sim);  // first initialize rebx
+    struct rebx_extras* rebx = rebx_attach(sim);  // first initialize rebx
 
-    /* We now add our custom operator
-     * We pass rebx, a name for the effect, and the function that should be called.
-     * For a custom force, we also have to pass force_is_velocity_dependent,
-     * which should be 1 if our function uses particle velocities, and 0 otherwise. 
+    /* We now add our custom functions. We do this in the same way as we add REBOUNDx forces and operators.
+     * We'll still get back a force and operator struct, respectively, with a warning that the name wasn't found 
+     * in REBOUNDx and that we're reponsible for setting their type flags and function pointers.
      */
 
-    struct rebx_effect* drag = rebx_add_custom_operator(rebx, "simple_drag", simple_drag);
-    struct rebx_effect* stark = rebx_add_custom_force(rebx, "stark_force", stark_force, 0);
+    struct rebx_force* stark = rebx_create_force(rebx, "stark_force");
+
+    /* We first set a flag for whether our force only depends on particle positions (REBX_FORCE_POS) 
+     * or whether it depends on velocities (or velocities and positions, REBX_FORCE_VEL)
+     */
+    stark->force_type = REBX_FORCE_VEL;
+    stark->update_accelerations = stark_force;  // set the function pointer to what we wrote above
+    rebx_add_force(rebx, stark);                // Now it's initialized, add to REBOUNDx
     
-    double* c = rebx_add_param(drag, "c", REBX_TYPE_DOUBLE);
-    double* b = rebx_add_param(stark, "b", REBX_TYPE_DOUBLE);
-    *c = 1.e-5;                                 
-    *b = 1.e-5;
-    
+    struct rebx_operator* drag = rebx_create_operator(rebx, "simple_drag"); // Now we create our custom operator
+   
+    /* We first set the operator_type enum for whether our operator modifies dynamical variables (positions, velocities
+     * or masses, REBX_OPERATOR_UPDATER), or whether it's just passively recording the state of the simulation, or 
+     * updating parameters that don't feed back on the dynamics (REBX_OPERATOR_RECORDER)
+     */
+
+    drag->operator_type = REBX_OPERATOR_UPDATER;
+    drag->step_function = simple_drag;  // set function pointer to what we wrote above
+    rebx_add_operator(rebx, drag);      // Now it's initialized, add to REBOUNDx
+
+    /* Now we set the parameters that our custom functions above need
+     * Before setting them, we need to register them with their corresponding types
+     */
+   
+    rebx_register_param(rebx, "starkconst", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "dragconst", REBX_TYPE_DOUBLE);
+
+    rebx_set_param_double(rebx, &stark->ap, "starkconst", 1.e-5);
+    rebx_set_param_double(rebx, &drag->ap, "dragconst", 1.e-5);
+   
+    /* To simplify things for other users, we can always add the new effects and register parameters in the REBOUNDx
+     * repo itself. Feel free to send a pull request or contact me (tamayo.daniel@gmail.com) about adding it
+     */
+
     double tmax = 5.e4;
     reb_integrate(sim, tmax);
     rebx_free(rebx);                            // Free all the memory allocated by rebx

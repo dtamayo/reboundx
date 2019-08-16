@@ -161,7 +161,6 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
                 a_constx += G*particles[j].m*factor2*dvxij/rij3/(C2);
                 a_consty += G*particles[j].m*factor2*dvyij/rij3/(C2);
                 a_constz += G*particles[j].m*factor2*dvzij/rij3/(C2);
-                //fprintf(stderr, "%e\n", a_constz);
             }
         }  
 
@@ -196,11 +195,6 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
                                 dzij*(a_newton[j][2]+a_old[j][2]))/(2.*C2) + (7./(2.*C2))*G*particles[j].m*(a_newton[j][1]+a_old[j][1])/rij;
                     non_constz += (G*particles[j].m*dzij/rij3)*(dxij*(a_newton[j][0]+a_old[j][0])+dyij*(a_newton[j][1]+a_old[j][1])+\
                                 dzij*(a_newton[j][2]+a_old[j][2]))/(2.*C2) + (7./(2.*C2))*G*particles[j].m*(a_newton[j][2]+a_old[j][2])/rij;
-                    //non_consty += (G*particles[j].m*dyij/rij3)*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C2)+\
-                                        (7./(2.*C2))*G*particles[j].m*a_old[j][1]/rij;
-                    //non_constz += (G*particles[j].m*dzij/rij3)*(dxij*a_old[j][0]+dyij*a_old[j][1]+dzij*a_old[j][2])/(2.*C2)+\
-                                        (7./(2.*C2))*G*particles[j].m*a_old[j][2]/rij;
-                    //fprintf(stderr, "%e\n", non_constz);
                 }
             }
             a_new[i][0] = (a_const[i][0] + non_constx);
@@ -208,31 +202,19 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
             a_new[i][2] = (a_const[i][2] + non_constz);
         }
         
-        //fprintf(stderr, "%e\t%e\t%e\t\n", k, a_new[1][0], particles[1].ax, fabs((a_new[1][0]-particles[1].ax)/particles[1].ax));
-
         // break out loop if a_new is converging
         double maxdev = 0.;
-        //fprintf(stderr, "k=%d\n", k);
         double dx, dy, dz;
         for (int i = 0; i < N; i++){
             dx = (fabs(a_new[i][0]) < 1.e-30) ? 0. : fabs(a_new[i][0] - a_old[i][0])/a_new[i][0];
             dy = (fabs(a_new[i][1]) < 1.e-30) ? 0. : fabs(a_new[i][1] - a_old[i][1])/a_new[i][1];
             dz = (fabs(a_new[i][2]) < 1.e-30) ? 0. : fabs(a_new[i][2] - a_old[i][2])/a_new[i][2];
-            //fprintf(stderr, "i=%d\t%e\n", i, a_old[i][2]);//\t%e\t%e\n", i, dx, dy, dz);
-            /*if (i ==1){FILE* d = fopen("difference.txt","a"); // this is used to check if the loop is giving resonable output
-            fprintf(d, "number %d: %.30e \n", k, dx);
-            fclose(d);
-            }*/
+            
             if (dx > maxdev) { maxdev = dx; }
             if (dy > maxdev) { maxdev = dy; }
             if (dz > maxdev) { maxdev = dz; }
         }
-        /*FILE* d = fopen("difference.txt","a"); // this is used to check if the loop is giving resonable output
-        fprintf(d, "number %d: %.30e \n", k, maxdev);
-        fclose(d);
-        */
-        //fprintf(stderr, "%d\tmaxdev = %e\n", k, maxdev);
-        //fprintf(stderr, "%d\t%e\t%e\t%.16e\n", k, a_new[1][0], a_old[1][0], a_new[1][0] - a_old[1][0]);
+        
         if (maxdev < 1.e-30){
             break;
         }
@@ -242,21 +224,21 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
     }
     // update acceleration in particles
     for (int i = 0; i <N;i++){
-        particles[i].ax += a_new[i][0]; // substract newtonian term off since gravity routine already put it in
+        particles[i].ax += a_new[i][0];
         particles[i].ay += a_new[i][1];
         particles[i].az += a_new[i][2];
-        //fprintf(stderr, "%e\n", particles[i].az);
     }
 }
 
-void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
-    double* c = rebx_get_param_check(effect, "c", REBX_TYPE_DOUBLE);
+void rebx_gr_full(struct reb_simulation* const sim, struct rebx_force* const gr_full, struct reb_particle* const particles, const int N){
+    double* c = rebx_get_param(sim->extras, gr_full->ap, "c");
     if (c == NULL){
         reb_error(sim, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
+        return;
     }
     const double C2 = (*c)*(*c);
     const unsigned int gravity_ignore_10 = sim->gravity_ignore_terms==1;
-    int* max_iterations = rebx_get_param_check(effect, "max_iterations", REBX_TYPE_INT);
+    int* max_iterations = rebx_get_param(sim->extras, gr_full->ap, "max_iterations");
     if(max_iterations != NULL){
         rebx_calculate_gr_full(sim, particles, N, C2, sim->G, *max_iterations, gravity_ignore_10);
     }
@@ -266,8 +248,13 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const ef
     }
 }
 
-double rebx_gr_full_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const effect){
-    double* c = rebx_get_param_check(effect, "c", REBX_TYPE_DOUBLE);
+double rebx_gr_full_hamiltonian(struct rebx_extras* const rebx, const struct rebx_force* const force){
+    if (rebx->sim == NULL){
+        rebx_error(rebx, ""); // rebx_error gives meaningful err
+        return 0;
+    }
+    struct reb_simulation* sim = rebx->sim;
+    double* c = rebx_get_param(rebx, force->ap, "c");
     if (c == NULL){
         reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
     }
@@ -294,7 +281,6 @@ double rebx_gr_full_hamiltonian(struct reb_simulation* const sim, const struct r
             
             double vtildei2 = vtilde[i].x*vtilde[i].x + vtilde[i].y*vtilde[i].y + vtilde[i].z*vtilde[i].z;
             double A = (1. - 0.5*vtildei2/C2);
-            double fac2 = pi.m*(1. + 0.5*(pi.vx*pi.vx + pi.vy*pi.vy + pi.vz*pi.vz)/C2);
             
             double sumk = 0.;
             for (int k=0;k<N;k++){
@@ -318,8 +304,6 @@ double rebx_gr_full_hamiltonian(struct reb_simulation* const sim, const struct r
                     double rij2 = xij*xij + yij*yij + zij*zij;
                     double rij = sqrt(rij2);
                     double rijdotvj = vtilde[j].x*xij + vtilde[j].y*yij + vtilde[j].z*zij;
-                    double rijdotvj2 = pj.vx*xij + pj.vy*yij + pj.vz*zij;
-                    //double pfac = pi.m*pj.m/rij;
                     double pfac = pj.m/rij;
 
                     dv_pn.x += pfac*(6.*vtilde[i].x - 7.*vtilde[j].x - rijdotvj*xij/rij2);
@@ -336,14 +320,8 @@ double rebx_gr_full_hamiltonian(struct reb_simulation* const sim, const struct r
             vtilde[i].y = (pi.vy + dv_pn.y)/A;
             vtilde[i].z = (pi.vz + dv_pn.z)/A;
         }
-        //fprintf(stderr, "%.16e\n", vtilde[1].y);
     }
-    /*
-    int n = 2;
-    fprintf(stderr, "%e\t%e\t%e\n", fabs((particles[n].m*particles[n].vx - pp[n].x)/pp[n].x), fabs((particles[n].vx - vtilde[n].x)/particles[n].vx), fabs((pp[n].x - particles[n].m*vtilde[n].x)/pp[n].x));
-    fprintf(stderr, "%e\t%e\t%e\n", fabs((particles[n].m*particles[n].vy - pp[n].y)/pp[n].y), fabs((particles[n].vy - vtilde[n].y)/particles[n].vy), fabs((pp[n].y - particles[n].m*vtilde[n].y)/pp[n].y));
-    fprintf(stderr, "%e\t%e\t%e\n", fabs((particles[n].m*particles[n].vy - pp[n].z)/pp[n].z), fabs((particles[n].vz - vtilde[n].z)/particles[n].vz), fabs((pp[n].z - particles[n].m*vtilde[n].z)/pp[n].z));
-    */ 
+    
     for (int i=0; i<N; i++){
         struct reb_particle p = particles[i];
         double vtildei2 = vtilde[i].x*vtilde[i].x + vtilde[i].y*vtilde[i].y + vtilde[i].z*vtilde[i].z;

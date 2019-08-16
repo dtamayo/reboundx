@@ -9,6 +9,21 @@
  * (could happen e.g. with barycentric coordinates with test particles and single massive body)
  */
 
+static inline struct reb_particle rebx_particle_minus(struct reb_particle p1, struct reb_particle p2){
+    struct reb_particle p = {0};
+    p.m = p1.m-p2.m;
+    p.x = p1.x-p2.x;
+    p.y = p1.y-p2.y;
+    p.z = p1.z-p2.z;
+    p.vx = p1.vx-p2.vx;
+    p.vy = p1.vy-p2.vy;
+    p.vz = p1.vz-p2.vz;
+    p.ax = p1.ax-p2.ax;
+    p.ay = p1.ay-p2.ay;
+    p.az = p1.az-p2.az;
+    return p;
+}
+
 void rebx_calculate_jacobi_masses(const struct reb_particle* const ps, double* const m_j, const int N){
     double eta = ps[0].m;
     for (unsigned int i=1;i<N;i++){ // jacobi masses are reduced mass of particle with interior masses
@@ -27,7 +42,8 @@ double rebx_Edot(struct reb_particle* const ps, const int N){
     return Edot;
 }
 
-void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const effect, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_vec3d (*calculate_effect) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source), struct reb_particle* const particles, const int N){
+void rebx_com_force(struct reb_simulation* const sim, struct rebx_force* const force, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_vec3d (*calculate_force) (struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source), struct reb_particle* const particles, const int N){
+    struct rebx_extras* const rebx = sim->extras;
     struct reb_particle com = reb_get_com(sim); // Start with full com for jacobi and barycentric coordinates.
   
     int refindex = -1;
@@ -37,7 +53,7 @@ void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const 
     else if(coordinates == REBX_COORDINATES_PARTICLE){
         for (int i=0; i < N; i++){
 			struct reb_particle* p = &particles[i];
-            const int* const reference = rebx_get_param_check(p, reference_name, REBX_TYPE_INT);
+            const int* const reference = rebx_get_param(rebx, p->ap, reference_name);
             if (reference){
                 com = particles[i];
                 refindex = i;
@@ -61,7 +77,7 @@ void rebx_com_force(struct reb_simulation* const sim, struct rebx_effect* const 
             com = reb_get_com_without_particle(com, *p);
         }
         
-        struct reb_vec3d a = calculate_effect(sim, effect, p, &com); 
+        struct reb_vec3d a = calculate_force(sim, force, p, &com);
         p->ax += a.x;
         p->ay += a.y;
         p->az += a.z;
@@ -118,22 +134,8 @@ static inline void rebx_subtract_posvel(struct reb_particle* p, struct reb_parti
     p->vz -= massratio*diff->vz;
 }
 
-static inline struct reb_particle rebx_particle_minus(struct reb_particle p1, struct reb_particle p2){
-    struct reb_particle p = {0};
-    p.m = p1.m-p2.m;
-    p.x = p1.x-p2.x;
-    p.y = p1.y-p2.y;
-    p.z = p1.z-p2.z;
-    p.vx = p1.vx-p2.vx;
-    p.vy = p1.vy-p2.vy;
-    p.vz = p1.vz-p2.vz;
-    p.ax = p1.ax-p2.ax;
-    p.ay = p1.ay-p2.ay;
-    p.az = p1.az-p2.az;
-    return p;
-}
-
-void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_effect* const effect, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_particle (*calculate_effect) (struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* source, const double dt), const double dt){
+void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* const operator, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_particle (*calculate_step) (struct reb_simulation* const sim, struct rebx_operator* const operator, struct reb_particle* p, struct reb_particle* source, const double dt), const double dt){
+    struct rebx_extras* const rebx = sim->extras;
     const int N_real = sim->N - sim->N_var;
     struct reb_particle com = reb_get_com(sim); // Start with full com for jacobi and barycentric coordinates.
   
@@ -144,7 +146,7 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_effect* con
     else if(coordinates == REBX_COORDINATES_PARTICLE){
         for (int i=0; i < N_real; i++){
             struct reb_particle* p = &sim->particles[i];
-            const int* const reference = rebx_get_param_check(p, reference_name, REBX_TYPE_INT);
+            const int* const reference = rebx_get_param(rebx, p->ap, reference_name);
             if (reference){
                 com = sim->particles[i];
                 refindex = i;
@@ -168,7 +170,7 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_effect* con
             com = reb_get_com_without_particle(com, *p);
         }
         
-        struct reb_particle modified_particle = calculate_effect(sim, effect, p, &com, dt);
+        struct reb_particle modified_particle = calculate_step(sim, operator, p, &com, dt);
         struct reb_particle diff = rebx_particle_minus(modified_particle, *p);
         p->x = modified_particle.x;
         p->y = modified_particle.y;
@@ -211,6 +213,7 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_effect* con
         }
     }
 }
+
 /*static const struct reb_orbit reb_orbit_nan = {.d = NAN, .v = NAN, .h = NAN, .P = NAN, .n = NAN, .a = NAN, .e = NAN, .inc = NAN, .Omega = NAN, .omega = NAN, .pomega = NAN, .f = NAN, .M = NAN, .l = NAN};
 
 #define MIN_REL_ERROR 1.0e-12   ///< Close to smallest relative floating point number, used for orbit calculation

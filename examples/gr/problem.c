@@ -14,7 +14,6 @@
 
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
-    struct rebx_extras* rebx = rebx_init(sim);
     sim->dt = 1.e-8;
 
     struct reb_particle star = {0};
@@ -33,14 +32,14 @@ int main(int argc, char* argv[]){
     reb_add(sim, planet);
     reb_move_to_com(sim);
     
+    struct rebx_extras* rebx = rebx_attach(sim);
     // Could also add "gr" or "gr_full" here.  See documentation for details.
-    struct rebx_effect* gr_params = rebx_add(rebx, "gr");
-   
+    struct rebx_force* gr = rebx_load_force(rebx, "gr");
+    rebx_add_force(rebx, gr); 
     // Have to set speed of light in right units (set by G & initial conditions).  Here we use default units of AU/(yr/2pi)
-    double* c = rebx_add_param(gr_params, "c", REBX_TYPE_DOUBLE);  
-    *c = REBX_C;
+    rebx_set_param_double(rebx, &gr->ap, "c", 10065.32);
 
-    double tmax = 5.e-2;
+    double tmax = 5.e-1;
     reb_integrate(sim, tmax); 
     rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 
     reb_free_simulation(sim);

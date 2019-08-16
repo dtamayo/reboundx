@@ -86,8 +86,8 @@ static void rebx_calculate_gr_potential(struct reb_particle* const particles, co
     }
 }
 
-void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* const gr_potential, struct reb_particle* const particles, const int N){
-    double* c = rebx_get_param_check(gr_potential, "c", REBX_TYPE_DOUBLE);
+void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_force* const gr_potential, struct reb_particle* const particles, const int N){
+    double* c = rebx_get_param(sim->extras, gr_potential->ap, "c");
     if (c == NULL){
         reb_error(sim, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
     }
@@ -97,14 +97,14 @@ void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* con
     }
 }
 
-static double rebx_calculate_gr_potential_hamiltonian(struct reb_simulation* const sim, const double C2){
+static double rebx_calculate_gr_potential_potential(struct reb_simulation* const sim, const double C2){
     const struct reb_particle* const particles = sim->particles;
 	const int _N_real = sim->N - sim->N_var;
 	const double G = sim->G;
     const struct reb_particle source = particles[0];
 	const double mu = G*source.m;
     const double prefac = 3.*mu*mu/C2;
-    double H = reb_tools_energy(sim);
+    double H = 0.;
 
 	for (int i=1;i<_N_real;i++){
 		struct reb_particle pi = particles[i];
@@ -118,11 +118,15 @@ static double rebx_calculate_gr_potential_hamiltonian(struct reb_simulation* con
     return H;
 }
 
-double rebx_gr_potential_hamiltonian(struct reb_simulation* const sim, const struct rebx_effect* const gr_potential){
-    double* c = rebx_get_param_check(gr_potential, "c", REBX_TYPE_DOUBLE);
+double rebx_gr_potential_potential(struct rebx_extras* const rebx, const struct rebx_force* const gr_potential){
+    double* c = rebx_get_param(rebx, gr_potential->ap, "c");
     if (c == NULL){
-        reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
+        rebx_error(rebx, "Need to set speed of light in gr effect.  See examples in documentation.\n");
     }
     const double C2 = (*c)*(*c);
-    return rebx_calculate_gr_potential_hamiltonian(sim, C2);
+    if (rebx->sim == NULL){
+        rebx_error(rebx, ""); // rebx_error gives meaningful err
+        return 0;
+    }
+    return rebx_calculate_gr_potential_potential(rebx->sim, C2);
 }

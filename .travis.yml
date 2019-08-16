@@ -28,8 +28,6 @@ addons:
     apt:
         sources:
             - debian-sid
-        #packages:
-            #- libglfw3-dev
 
 before_install:
   - travis_apt_get_update
@@ -58,14 +56,15 @@ script:
     - if [[ $TESTPART == "PYTHON" ]]; then cd $TRAVIS_BUILD_DIR && coverage run --source=reboundx setup.py test; fi
     - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py EccAndIncDamping.ipynb; fi
     - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py GeneralRelativity.ipynb; fi
+    - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py OperatorsOverview.ipynb; fi
     - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Migration.ipynb; fi
     - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Radiation_Forces_Circumplanetary_Dust.ipynb; fi
     - if [[ $TESTPART == "IPYTHON1" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Radiation_Forces_Debris_Disk.ipynb; fi
     - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Custom_Effects.ipynb; fi
     - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py ModifyMass.ipynb; fi
+    - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py GettingStartedParameters.ipynb; fi
     - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py TidesPrecession.ipynb; fi
     - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py SimulationArchive.ipynb; fi
-    - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py ArrayParameters.ipynb; fi
     - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py SavingAndLoadingSimulations.ipynb; fi
 
 after_success:

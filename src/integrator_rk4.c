@@ -28,50 +28,49 @@
 #include <stdio.h>
 #include "rebound.h"
 #include "reboundx.h"
+#include "core.h"
 
-static void rebx_reset_acc(struct reb_particle* const particles, const int N){
-    for(int i=0;i<N;i++){
-        particles[i].ax = 0.;
-        particles[i].ay = 0.;
-        particles[i].az = 0.;
-    }
+void rebx_rk4_free_arrays(struct rebx_extras* rebx, struct rebx_force* force){
+    struct reb_particle* const k2 = rebx_get_param(rebx, force->ap, "rk4_k2");
+    free(k2);
+    struct reb_particle* const k3 = rebx_get_param(rebx, force->ap, "rk4_k3");
+    free(k3);
 }
 
-void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect){
-    
+void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const double dt, struct rebx_force* const force){
+    struct rebx_extras* rebx = sim->extras;
     const int N = sim->N - sim->N_var;
-    rebx_reset_acc(sim->particles, N);
-    struct reb_particle* const k2 = malloc(N*sizeof(*k2));
-    struct reb_particle* const k3 = malloc(N*sizeof(*k3));
+    rebx_reset_accelerations(sim->particles, N);
+    struct reb_particle* k2 = rebx_get_param(rebx, force->ap, "rk4_k2");
+    if (k2 == NULL){
+        k2 = malloc(N*sizeof(*k2));
+        struct reb_particle* k3 = malloc(N*sizeof(*k3));
+        rebx_set_param_pointer(rebx, &force->ap, "rk4_k2", k2);
+        rebx_set_param_pointer(rebx, &force->ap, "rk4_k3", k3);
+        rebx_set_param_pointer(rebx, &force->ap, "free_arrays", rebx_rk4_free_arrays);
+        
+    }
+    struct reb_particle* k3 = rebx_get_param(rebx, force->ap, "rk4_k3");
     memcpy(k2, sim->particles, N*sizeof(*k2));
     memcpy(k3, sim->particles, N*sizeof(*k3));
-    double* const Edissipated = rebx_get_param_check(effect, "Edissipated",REBX_TYPE_DOUBLE);
-
-    const double dt2 = dt/2.;
-    effect->force(sim, effect, sim->particles, N);  // k1 = sim.particles.a
     
-    double Edot1, Edot2, Edot3, Edot4;
-    if (Edissipated != NULL){
-        Edot1 = rebx_Edot(sim->particles, N);
-    }
+    const double dt2 = dt/2.;
+    force->update_accelerations(sim, force, sim->particles, N);  // k1 = sim.particles.a
+    
     for(int i=0; i<N; i++){
         k2[i].vx = sim->particles[i].vx + dt2*sim->particles[i].ax;
         k2[i].vy = sim->particles[i].vy + dt2*sim->particles[i].ay;
         k2[i].vz = sim->particles[i].vz + dt2*sim->particles[i].az;
     }
-    effect->force(sim, effect, k2, N);
-    if (Edissipated != NULL){
-        Edot2 = rebx_Edot(k2, N);
-    }
+    force->update_accelerations(sim, force, k2, N);
+    
     for(int i=0; i<N; i++){
         k3[i].vx = sim->particles[i].vx + dt2*k2[i].ax;
         k3[i].vy = sim->particles[i].vy + dt2*k2[i].ay;
         k3[i].vz = sim->particles[i].vz + dt2*k2[i].az;
     }
-    effect->force(sim, effect, k3, N);
-    if (Edissipated != NULL){
-        Edot3 = rebx_Edot(k3, N);
-    }
+    force->update_accelerations(sim, force, k3, N);
+    
     for(int i=0; i<N; i++){     // store k2+k3 in k3 and reuse k2 for k4 to avoid a memcpy
         k2[i].vx = sim->particles[i].vx + dt*k3[i].ax;
         k2[i].vy = sim->particles[i].vy + dt*k3[i].ay;
@@ -80,20 +79,13 @@ void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const doubl
         k3[i].ay += k2[i].ay;
         k3[i].az += k2[i].az;
     }
-    rebx_reset_acc(k2, N);
-    effect->force(sim, effect, k2, N);
-    if (Edissipated != NULL){
-        Edot4 = rebx_Edot(k2, N);
-    }
+    rebx_reset_accelerations(k2, N);
+    force->update_accelerations(sim, force, k2, N);
+    
     const double dt6 = dt/6.;
     for(int i=0; i<N; i++){
         sim->particles[i].vx += dt6*(sim->particles[i].ax + k2[i].ax + 2.*k3[i].ax);
         sim->particles[i].vy += dt6*(sim->particles[i].ay + k2[i].ay + 2.*k3[i].ay);
         sim->particles[i].vz += dt6*(sim->particles[i].az + k2[i].az + 2.*k3[i].az);
     }
-    if(Edissipated != NULL){
-        *Edissipated += dt6*(Edot1 + 2.*(Edot2 + Edot3) + Edot4);
-    }
-    free(k2);
-    free(k3);
 }
