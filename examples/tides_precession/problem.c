@@ -13,7 +13,6 @@
 
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
-    struct rebx_extras* rebx = rebx_init(sim);
     sim->dt = 1.e-5;
 
     struct reb_particle star = {0};
@@ -32,24 +31,23 @@ int main(int argc, char* argv[]){
     reb_add(sim, planet);
     reb_move_to_com(sim);
     
-    struct rebx_effect* tides = rebx_add(rebx, "tides_precession");
+    struct rebx_extras* rebx = rebx_attach(sim);
+    struct rebx_force* tides = rebx_load_force(rebx, "tides_precession");
+    rebx_add_force(rebx, tides);
    
-                        // Have to set R_tides (physical radius) and k1 (apsidal motion constant, half the tidal Love number k2) parameters. 
-                        // Could just set one set to consider tides raised on one body only.
-    double* R_tides = rebx_add_param(&sim->particles[0], "R_tides", REBX_TYPE_DOUBLE);
-    *R_tides = 0.005;         // in consistent units (here we're using default G=1, so AU)
-    R_tides = rebx_add_param(&sim->particles[1], "R_tides", REBX_TYPE_DOUBLE);
-    *R_tides = 0.0005;
-    double* k1 = rebx_add_param(&sim->particles[0], "k1", REBX_TYPE_DOUBLE);
-    *k1 = 0.03;
-    k1 = rebx_add_param(&sim->particles[1], "k1", REBX_TYPE_DOUBLE);
-    *k1 = 0.3;
+    // Have to set R_tides (physical radius) and k1 (apsidal motion constant, half the tidal Love number k2) parameters. 
+    // Could just set one set to consider tides raised on one body only.
+
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "R_tides", 0.005);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "R_tides", 0.0005);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "k1", 0.03);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "k1", 0.3);
 
     /* By default, implementation assumes particles[0] is the primary.
      * You can also set the tides_primary flag explicitly (don't have to set it to a value):
      */
 
-    int* tides_primary = rebx_add_param(&sim->particles[0], "tides_primary", REBX_TYPE_INT);
+    rebx_set_param_int(rebx, &sim->particles[0].ap, "tides_primary", 1);
 
     double tmax = 1000.;
     reb_integrate(sim, tmax); 

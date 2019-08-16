@@ -14,7 +14,6 @@
 
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
-    struct rebx_extras* rebx = rebx_init(sim);
 
     struct reb_particle star = {0};
     star.m     = 1.;   
@@ -32,15 +31,15 @@ int main(int argc, char* argv[]){
     reb_add(sim, planet);
     reb_move_to_com(sim);
     
-    struct rebx_effect* params = rebx_add(rebx, "gravitational_harmonics");
-    double* J2 = rebx_add_param(&sim->particles[1], "J2", REBX_TYPE_DOUBLE);
-    double* J4 = rebx_add_param(&sim->particles[1], "J4", REBX_TYPE_DOUBLE);
-    double* R_eq = rebx_add_param(&sim->particles[1], "R_eq", REBX_TYPE_DOUBLE);
-    *J2 = 10.;
-    *J4 = 10.;
-    *R_eq = 1/100.;
-    
-    double tmax = 100.;
+    struct rebx_extras* rebx = rebx_attach(sim);
+    struct rebx_force* gh = rebx_load_force(rebx, "gravitational_harmonics");
+    rebx_add_force(rebx, gh);
+
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "J2", 0.1);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "J4", 0.01);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "R_eq", 0.01);
+   
+    double tmax = 1.e5;
     reb_integrate(sim, tmax); 
     rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 
     reb_free_simulation(sim);

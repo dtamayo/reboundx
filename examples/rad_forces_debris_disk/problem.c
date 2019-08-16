@@ -24,19 +24,21 @@ int main(int argc, char* argv[]){
     sim->dt             = 1e8;          // At ~100 AU, orbital periods are ~1000 yrs, so here we use ~1% of that, in sec
     sim->N_active       = 1;            // The dust particles do not interact with one another gravitationally
     sim->heartbeat      = heartbeat;
+    sim->usleep         = 1000;             // Slow down integration (for visualization only). Remove in your integrations!
     
     // sun
     struct reb_particle sun = {0};
     sun.m  = 1.99e30;                   // mass of Sun in kg
     reb_add(sim, sun);
     
-    struct rebx_extras* rebx = rebx_init(sim);
-    struct rebx_effect* rad_params = rebx_add(rebx, "radiation_forces");
-    double* c = rebx_add_param(rad_params, "c", REBX_TYPE_DOUBLE);
-    *c = 3.e8;                      // speed of light in SI units
+    struct rebx_extras* rebx = rebx_attach(sim);
+    struct rebx_force* rad = rebx_load_force(rebx, "radiation_forces");
+    rebx_add_force(rebx, rad);
+
+    rebx_set_param_double(rebx, &rad->ap, "c", 3.e8);
 
     /* The effect assumes the radiation source is particles[0].  You can set it to another one by adding a radiation_source flag to it:
-     * int* source = rebx_add_param(&sim->particles[3], "radiation_source", REBX_TYPE_INT);
+     * rebx_set_param_int(rebx, &sim->particles[3].ap, "radiation_source", 1);
 
      * Initialize dust particles
      * We idealize a perfectly coplanar debris disk with particles that have semimajor axes between 100 and 120 AU.
@@ -55,7 +57,7 @@ int main(int argc, char* argv[]){
     srand(seed);
     double a, pomega, f;
     struct reb_particle p;
-    double* beta;
+    double beta = 0.1;
     for(int i=1; i<=Ndust; i++){
                                         // first we set up the orbit from sets of uniformly drawn orbital elements.  
         a = amin + awidth*(double)rand() / (double)RAND_MAX;
@@ -66,12 +68,10 @@ int main(int argc, char* argv[]){
         p = reb_tools_orbit2d_to_particle(sim->G, sim->particles[0], m, a, e, pomega, f); 
         reb_add(sim, p); 
                                         // Only particles with beta set will feel radiation forces 
-        beta = rebx_add_param(&sim->particles[i], "beta", REBX_TYPE_DOUBLE);    
-        *beta = 0.1;
+        rebx_set_param_double(rebx, &sim->particles[i].ap, "beta", beta);    
     }
 
     reb_move_to_com(sim);
-
     reb_integrate(sim, tmax);
 
     /* Note that the debris disk will seem to undergo oscillations at first.  
@@ -81,12 +81,12 @@ int main(int argc, char* argv[]){
      * pressure), so they're all at pericenter.  All the particles therefore move outward in phase.  It
      * takes a few cycles before the differential motion randomizes the phases. */
 
-    rebx_free(rebx);                                /* free memory allocated by REBOUNDx */
+    rebx_free(rebx);                                
     reb_free_simulation(sim);
 }
 
 void heartbeat(struct reb_simulation* sim){
     if(reb_output_check(sim, 1.e8)){
-        reb_output_timing(sim, tmax);
+        //reb_output_timing(sim, tmax);
     }
 }

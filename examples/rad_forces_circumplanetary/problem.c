@@ -33,13 +33,6 @@ int main(int argc, char* argv[]){
     sun.m  = 1.99e30;                   // mass of Sun in kg
     reb_add(sim, sun);
     
-    struct rebx_extras* rebx = rebx_init(sim); 
-    struct rebx_effect* rad_params = rebx_add(rebx, "radiation_forces");
-    double* c = rebx_add_param(rad_params, "c", REBX_TYPE_DOUBLE);
-    *c = 3.e8;                          // speed of light in SI units 
-    // Will assume particles[0] is the radiation source by default. You can also add a flag to a particle explicitly
-    int* source = rebx_add_param(&sim->particles[0], "radiation_source", REBX_TYPE_INT);
-
     // Saturn (simulation set up in Saturn's orbital plane, i.e., inc=0, so only need 4 orbital elements 
     double mass_sat = 5.68e26;          // Mass of Saturn 
     double a_sat = 1.43e12;             // Semimajor axis of Saturn in m
@@ -49,6 +42,15 @@ int main(int argc, char* argv[]){
     struct reb_particle saturn = reb_tools_orbit2d_to_particle(sim->G, sun, mass_sat, a_sat, e_sat, pomega_sat, f_sat);
 
     reb_add(sim, saturn);
+
+    // Add REBOUNDx
+    struct rebx_extras* rebx = rebx_attach(sim); 
+    struct rebx_force* rad = rebx_load_force(rebx, "radiation_forces");
+    double c = 3.e8;                    // speed of light in SI units 
+    rebx_set_param_double(rebx, &rad->ap, "c", c);
+    
+    // Will assume particles[0] is the radiation source by default. You can also add a flag to a particle explicitly
+    rebx_set_param_int(rebx, &sim->particles[0].ap, "radiation_source", 1); 
 
     /* Dust particles
      Here we imagine particles launched from Saturn's irregular Satellite Phoebe.
@@ -71,8 +73,7 @@ int main(int argc, char* argv[]){
     reb_add(sim, p); 
 
     // For the first particle we simply specify beta directly.
-    double* beta = rebx_add_param(&sim->particles[2], "beta", REBX_TYPE_DOUBLE);    
-    *beta = 0.1;
+    rebx_set_param_double(rebx, &sim->particles[2].ap, "beta", 0.1); 
 
     // We now add a 2nd particle on the same orbit, but set its beta using physical parameters.  
     struct reb_particle p2 = reb_tools_orbit_to_particle(sim->G, sim->particles[1], 0., a_dust, e_dust, inc_dust, Omega_dust, omega_dust, f_dust); 
@@ -86,10 +87,10 @@ int main(int argc, char* argv[]){
     double Q_pr = 1.;                   // Equals 1 in limit where particle radius >> wavelength of radiation
     double L = 3.85e26;                 // Luminosity of the sun in Watts
 
-    beta = rebx_add_param(&sim->particles[3], "beta", REBX_TYPE_DOUBLE);    
-    *beta = rebx_rad_calc_beta(sim->G, *c, sim->particles[0].m, L, radius, density, Q_pr);
+    double beta = rebx_rad_calc_beta(sim->G, c, sim->particles[0].m, L, radius, density, Q_pr);
+    rebx_set_param_double(rebx, &sim->particles[3].ap, "beta", beta); 
 
-    printf("Particle 2 has beta = %f\n", *beta);
+    printf("Particle 2 has beta = %f\n", beta);
 
     reb_move_to_com(sim);
 
@@ -108,6 +109,5 @@ void heartbeat(struct reb_simulation* sim){
         orbit = reb_tools_particle_to_orbit(sim->G, sim->particles[3], saturn); 
         double e3 = orbit.e;
         printf("%e\t%f\t%f\n", t, e2, e3);
-
     }
 }

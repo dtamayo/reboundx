@@ -34,8 +34,8 @@
  * Python Example          `CentralForce.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/CentralForce.ipynb>`_.
  * ======================= ===============================================
  * 
- * Adds a general central acceleration of the form a=Aradial*r^gammaradial, outward along the direction from a central particle to the body.
- * Effect is turned on by adding Aradial and gammaradial parameters to a particle, which will act as the central body for the effect,
+ * Adds a general central acceleration of the form a=Acentral*r^gammacentral, outward along the direction from a central particle to the body.
+ * Effect is turned on by adding Acentral and gammacentral parameters to a particle, which will act as the central body for the effect,
  * and will act on all other particles.
  *
  * **Effect Parameters**
@@ -47,8 +47,8 @@
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * Aradial (double)             Yes         Normalization for central acceleration.
- * gammaradial (double)         Yes         Power index for central acceleration.
+ * Acentral (double)             Yes         Normalization for central acceleration.
+ * gammacentral (double)         Yes         Power index for central acceleration.
  * ============================ =========== ==================================================================
  * 
  */
@@ -82,11 +82,11 @@ static void rebx_calculate_central_force(struct reb_simulation* const sim, struc
     }
 }
 
-void rebx_central_force(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N){
+void rebx_central_force(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
     for (int i=0; i<N; i++){
-        const double* const Acentral = rebx_get_param_check(&particles[i], "Acentral", REBX_TYPE_DOUBLE);
+        const double* const Acentral = rebx_get_param(sim->extras, particles[i].ap, "Acentral");
         if (Acentral != NULL){
-            const double* const gammacentral = rebx_get_param_check(&particles[i], "gammacentral", REBX_TYPE_DOUBLE);
+            const double* const gammacentral = rebx_get_param(sim->extras, particles[i].ap, "gammacentral");
             if (gammacentral != NULL){
                 rebx_calculate_central_force(sim, particles, N, *Acentral, *gammacentral, i); // only calculates force if a particle has both Acentral and gammacentral parameters set.
             }
@@ -94,7 +94,7 @@ void rebx_central_force(struct reb_simulation* const sim, struct rebx_effect* co
     }
 }
 
-static double rebx_calculate_central_force_hamiltonian(struct reb_simulation* const sim, const double A, const double gamma, const int source_index){
+static double rebx_calculate_central_force_potential(struct reb_simulation* const sim, const double A, const double gamma, const int source_index){
     const struct reb_particle* const particles = sim->particles;
 	const int _N_real = sim->N - sim->N_var;
     const struct reb_particle source = particles[source_index];
@@ -119,16 +119,21 @@ static double rebx_calculate_central_force_hamiltonian(struct reb_simulation* co
     return H;
 }
 
-double rebx_central_force_hamiltonian(struct reb_simulation* const sim){ 
+double rebx_central_force_potential(struct rebx_extras* const rebx){
+    if (rebx->sim == NULL){
+        rebx_error(rebx, ""); // rebx_error gives meaningful err
+        return 0;
+    }
+    struct reb_simulation* sim = rebx->sim;
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
     double Htot = 0.;
     for (int i=0; i<N_real; i++){
-        const double* const Acentral = rebx_get_param_check(&particles[i], "Acentral", REBX_TYPE_DOUBLE);
+        const double* const Acentral = rebx_get_param(rebx, particles[i].ap, "Acentral");
         if (Acentral != NULL){
-            const double* const gammacentral = rebx_get_param_check(&particles[i], "gammacentral", REBX_TYPE_DOUBLE);
+            const double* const gammacentral = rebx_get_param(rebx, particles[i].ap, "gammacentral");
             if (gammacentral != NULL){
-                Htot += rebx_calculate_central_force_hamiltonian(sim, *Acentral, *gammacentral, i); 
+                Htot += rebx_calculate_central_force_potential(sim, *Acentral, *gammacentral, i);
             }
         }
     }
@@ -145,4 +150,3 @@ double rebx_central_force_Acentral(const struct reb_particle p, const struct reb
     }
     return G*primary.m*pomegadot/(1.+gamma/2.)/pow(o.d, gamma+2.)/o.n;
 }
-    

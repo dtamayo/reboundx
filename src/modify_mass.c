@@ -60,11 +60,11 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing){
+void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
     const int _N_real = sim->N - sim->N_var;
 	for(int i=0; i<_N_real; i++){
 		struct reb_particle* const p = &sim->particles[i];
-        const double* const tau_mass = rebx_get_param_check(p, "tau_mass", REBX_TYPE_DOUBLE);
+        const double* const tau_mass = rebx_get_param(sim->extras, p->ap, "tau_mass");
         if (tau_mass != NULL){
 		    p->m += p->m*dt/(*tau_mass);
         }

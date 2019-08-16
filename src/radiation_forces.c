@@ -66,7 +66,7 @@
 #include <stdlib.h>
 #include "reboundx.h"
 
-static void rebx_calculate_radiation_forces(struct reb_simulation* const sim, const double c, const int source_index){
+static void rebx_calculate_radiation_forces(struct rebx_extras* const rebx, struct reb_simulation* const sim, const double c, const int source_index){
     struct reb_particle* const particles = sim->particles;
     const struct reb_particle source = particles[source_index];
     const double mu = sim->G*source.m;
@@ -77,7 +77,7 @@ static void rebx_calculate_radiation_forces(struct reb_simulation* const sim, co
         
         if(i == source_index) continue;
         
-        const double* beta = rebx_get_param_check(&particles[i], "beta", REBX_TYPE_DOUBLE);
+        const double* beta = rebx_get_param(rebx, particles[i].ap, "beta");
         if(beta == NULL) continue; // only particles with beta set feel radiation forces
         
         const struct reb_particle p = particles[i];
@@ -100,22 +100,22 @@ static void rebx_calculate_radiation_forces(struct reb_simulation* const sim, co
 	}
 }
 
-void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const radiation_forces){ 
-    double* c = rebx_get_param_check(radiation_forces, "c", REBX_TYPE_DOUBLE);
+void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_force* const radiation_forces, struct reb_particle* const particles, const int N){
+    struct rebx_extras* const rebx = sim->extras;
+    double* c = rebx_get_param(rebx, radiation_forces->ap, "c");
     if (c == NULL){
         reb_error(sim, "Need to set speed of light in radiation_forces effect.  See examples in documentation.\n");
     }
     const int N_real = sim->N - sim->N_var;
-    struct reb_particle* const particles = sim->particles;
     int source_found=0;
     for (int i=0; i<N_real; i++){
-        if (rebx_get_param_check(&particles[i], "radiation_source", REBX_TYPE_INT) != NULL){
+        if (rebx_get_param(rebx, particles[i].ap, "radiation_source") != NULL){
             source_found = 1;
-            rebx_calculate_radiation_forces(sim, *c, i);
+            rebx_calculate_radiation_forces(rebx, sim, *c, i);
         }
     }
     if (!source_found){
-        rebx_calculate_radiation_forces(sim, *c, 0);    // default source to index 0 if "radiation_source" not found on any particle
+        rebx_calculate_radiation_forces(rebx, sim, *c, 0);    // default source to index 0 if "radiation_source" not found on any particle
     }
 }
 

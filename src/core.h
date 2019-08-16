@@ -26,28 +26,24 @@
 #ifndef _REBX_CORE_H
 #define _REBX_CORE_H
 
+struct rebx_extras;
+struct rebx_param;
+enum rebx_param_type;
+struct rebx_step;
+struct rebx_node;
+
 #include <stdint.h>
 #include "rebound.h"
 #include "reboundx.h"
 
-// Nodes for a linked list to all the parameters that have been allocated by REBOUNDx (so it can later free them).
-struct rebx_param_to_be_freed{
-    struct rebx_param* param;           // Pointer to a parameter node allocated by REBOUNDx.
-    struct rebx_param_to_be_freed* next;// Pointer to the next node in the linked list rebx_extras.params_to_be_freed.
-};
+
 
 /*****************************
  Internal initialization routine.
  ****************************/
 
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx); // Initializes all pointers and values.
-
-/*****************************
- Garbage Collection Routines
- ****************************/
-
-void rebx_free_params(struct rebx_extras* rebx);            // Steps through linked list to free all allocated particle parameters.
-void rebx_free_effects(struct rebx_extras* rebx);           // Frees all effects in effects linked list 
+void rebx_register_default_params(struct rebx_extras* rebx); // Registers default params
 
 /**********************************************
  Functions executing forces & ptm each timestep
@@ -57,50 +53,55 @@ void rebx_additional_forces(struct reb_simulation* sim);                       /
 void rebx_pre_timestep_modifications(struct reb_simulation* sim);   // Calls all the pre-timestep modifications that have been added to the simulation.
 void rebx_post_timestep_modifications(struct reb_simulation* sim);  // Calls all the post-timestep modifications that have been added to the simulation.
 
-/**********************************************
- Adders 
- *********************************************/
-
-// Add a parameter to the params_to_be_freed linked list for later freeing.
-void rebx_add_param_to_be_freed(struct rebx_extras* rebx, struct rebx_param* param); // add a node for param in the rebx_params_to_be_freed linked list.
-
 /***********************************************************************************
  * Miscellaneous Functions
 ***********************************************************************************/
-struct rebx_param* rebx_create_param(void);
-struct rebx_param* rebx_attach_param_node(void* const object, struct rebx_param* param);
-struct rebx_param* rebx_add_param_node(void* const object, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape);
-size_t rebx_sizeof(enum rebx_param_type param_type); // Returns size in bytes of the corresponding rebx_param_type type
-double install_test(void);  // Function for testing whether REBOUNDx can load librebound.so and call REBOUND functions.
+//struct rebx_param* rebx_add_node(struct reb_simulation* const sim, struct rebx_param** head, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape);
+size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type); // Returns size in bytes of the corresponding rebx_param_type type
 void rebx_reset_accelerations(struct reb_particle* const ps, const int N);
 
 /****************************************
 Force prototypes
 *****************************************/
-void rebx_gr(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_gr_full(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_central_force(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_tides_synchronous_ecc_damping(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
-void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* const particles, const int N);
+void rebx_gr(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_gr_full(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_central_force(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_tides_synchronous_ecc_damping(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 
 /****************************************
  Operator prototypes
  *****************************************/
-void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing);
-void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing);
-void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_effect* const effect, const double dt, enum rebx_timing timing);
+void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+void rebx_integrate_force(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 
 /****************************************
  Integrator prototypes
  *****************************************/
 
-void rebx_integrator_euler_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
-void rebx_integrator_rk2_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
-void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
-void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const sim, const double dt, struct rebx_effect* const effect);
+void rebx_integrator_euler_integrate(struct reb_simulation* const sim, const double dt, struct rebx_force* const force);
+void rebx_integrator_rk2_integrate(struct reb_simulation* const sim, const double dt, struct rebx_force* const force);
+void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const double dt, struct rebx_force* const force);
+void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const sim, const double dt, struct rebx_force* const force);
+
+void* rebx_malloc(struct rebx_extras* const rebx, size_t memsize);
+void rebx_free_ap(struct rebx_node** ap);
+void rebx_free_particle_ap(struct reb_particle* p);
+void rebx_free_force(struct rebx_extras* rebx, struct rebx_force* force);
+void rebx_free_operator(struct rebx_operator* operator);
+void rebx_free_step(struct rebx_step* step);
+void rebx_free_pointers(struct rebx_extras* rebx);
+void rebx_free_param(struct rebx_param* param);
+
+enum rebx_param_type rebx_get_type(struct rebx_extras* rebx, const char* name);
+
+struct rebx_param* rebx_create_param(struct rebx_extras* rebx, const char* name, enum rebx_param_type type);
+int rebx_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, struct rebx_param* param);
+struct rebx_node* rebx_create_node(struct rebx_extras* rebx);
 
 #endif
