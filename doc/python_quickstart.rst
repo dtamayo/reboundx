@@ -41,47 +41,43 @@ would, e.g.
     sim.add(a=1., hash="earth")
 
 To use reboundx, we first import it, and then create a
-``reboundx.Extras`` instance, passing it the simulation we want to modify:
+``reboundx.Extras`` instance, passing it the simulation we want to attach it to:
 
 .. code:: python
 
     import reboundx
     rebx = reboundx.Extras(sim)
 
-We then add the modification we are interested in (for a listing see :ref"`effects`).
-Each of these functions returns an instance of the rebx_effect class.
-For example:
+We then add the effect we are interested in.
+There are two types of effects, forces and operators. 
+The easiest is to go to the :ref:`effects` page, which lists all effects and links to a jupyter
+notebook example of how to set it up.
+For a deeper discussion, see Tamayo et al. 2019.
+Loading a force/operator returns an object of the appropriate type.
+For example, let's add some mass loss to the star:
 
 .. code:: python
 
-    effect = rebx.add("modify_orbits_direct")
+    mm = rebx.load_operator("modify_mass")
 
-Effects and particles have a params attribute that works like a dictionary.
-We set parameters for the effect with
-
-.. code:: python
-
-    effect.params["p"] = 0.5
-
-This sets the coupling parameter between eccentricity and semimajor axis evolution for all particles.
-In general, for each effect there are also particle-specific parameters. 
-These are set similarly:
+Each effect will have different parameters to set, listed on the :ref:`effects` page and the examples.
+Forces, operators and particles have a params attribute that works like a dictionary.
+For example, let's add a exponential mass loss (i.e., negative) timescale to the star (index 0) of 100 time units.
 
 .. code:: python
-    sim.particles["earth"].params["tau_a"] = -1000.
 
-Here we set the timescale for semimajor axis decay for ``earth``.
-In general, each effect has its own particular set of parameters, both for the effect as a whole, and for individual particles.
-
-**The user is responsible for checking what parameters need to be set for a particular effect, which can be found at** :ref:`effects`.
+    sim.particles[0].params["tau_mass"] = -100
 
 You can add as many modifications as you'd like in the same simulation.
 Simply add them:
 
 .. code:: python
 
-    rebx.add("gr")
+    gr = rebx.load_force("gr")
+    rebx.add_force(gr)
+    gr.params['c'] = 1.e4 # set speed of light
 
+The units for the various parameters should always match the units you're using for the rest of the simulation (see the examples).
 When you're done setting up the modifications you want, you just run your REBOUND simulation like you normally would:
 
 .. code:: python
