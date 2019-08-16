@@ -1,5 +1,5 @@
 .. REBOUNDx documentation master file, created by
-   sphinx-quickstart on Sun Nov 29 14:22:27 2015.
+   sphinx-quickstart on Sun Nov 29 14:22:27 2019.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -45,7 +45,7 @@ You'll find installation instructions in the links below.
 Issues
 ------
 
-If you have problems, please check out the :ref:`faq` page for possible answers, as well as for how to contact us for help!
+If you have problems, please open an issue on the github page at `https://github.com/dtamayo/reboundx <https://github.com/dtamayo/reboundx>`_
 
 Table of Contents
 -----------------
@@ -53,18 +53,8 @@ Table of Contents
     :numbered:
 
     self
-    effects 
+    effects
     python_quickstart
     c_quickstart
-    python_api
     c_api
     c_examples
-    add_effect
-    faq
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
-
