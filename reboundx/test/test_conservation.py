@@ -1,11 +1,15 @@
 import rebound
 import reboundx
 import unittest
+import os
+
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+binary = os.path.join(THIS_DIR, 'binaries/twoplanets.bin')
 
 class TestConservation(unittest.TestCase):
     def test_gr_full(self):
         name = 'gr_full'
-        sim = rebound.Simulation('binaries/twoplanets.bin')
+        sim = rebound.Simulation(binary)
         sim.integrator = "ias15"
         rebx = reboundx.Extras(sim)
         force = rebx.load_force(name)
@@ -19,7 +23,7 @@ class TestConservation(unittest.TestCase):
     
     def test_gr(self):
         name = 'gr'
-        sim = rebound.Simulation('binaries/twoplanets.bin')
+        sim = rebound.Simulation(binary)
         sim.integrator = "ias15"
         rebx = reboundx.Extras(sim)
         force = rebx.load_force(name)
@@ -33,7 +37,7 @@ class TestConservation(unittest.TestCase):
     
     def test_gr_potential(self):
         name = 'gr_potential'
-        sim = rebound.Simulation('binaries/twoplanets.bin')
+        sim = rebound.Simulation(binary)
         sim.integrator = "ias15"
         rebx = reboundx.Extras(sim)
         force = rebx.load_force(name)
@@ -47,7 +51,7 @@ class TestConservation(unittest.TestCase):
 
     def test_tides_precession(self):
         name = 'tides_precession'
-        sim = rebound.Simulation('binaries/twoplanets.bin')
+        sim = rebound.Simulation(binary)
         sim.integrator = "ias15"
         rebx = reboundx.Extras(sim)
         force = rebx.load_force(name)
@@ -62,7 +66,7 @@ class TestConservation(unittest.TestCase):
 
     def test_central_force(self):
         name = 'central_force'
-        sim = rebound.Simulation('binaries/twoplanets.bin')
+        sim = rebound.Simulation(binary)
         sim.integrator = "ias15"
         rebx = reboundx.Extras(sim)
         force = rebx.load_force(name)
@@ -77,7 +81,7 @@ class TestConservation(unittest.TestCase):
 
     def test_gravitational_harmonics(self):
         name = 'gravitational_harmonics'
-        sim = rebound.Simulation('binaries/twoplanets.bin')
+        sim = rebound.Simulation(binary)
         sim.integrator = "ias15"
         rebx = reboundx.Extras(sim)
         force = rebx.load_force(name)
