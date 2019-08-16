@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to REBOUNDx (2.19.3)
+Welcome to REBOUNDx (2.20.0)
 ============================
 
 .. image:: images/hlTau.png

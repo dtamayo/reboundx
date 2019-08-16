@@ -39,7 +39,7 @@
 #define str(s) #s
 
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
-const char* rebx_version_str = "2.19.3";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
+const char* rebx_version_str = "2.20.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
 
 
