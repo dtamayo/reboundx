@@ -62,7 +62,6 @@ class Extras(Structure):
 
     def __del__(self):
         if self._b_needsfree_ == 1:
-            print('deleting rebx')
             clibreboundx.rebx_free_pointers(byref(self))
 
     def detach(self, sim):

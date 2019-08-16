@@ -13,16 +13,6 @@
 .. image:: https://img.shields.io/badge/launch-binder-ff69b4.svg?style=flat
     :target: http://mybinder.org/repo/dtamayo/reboundx
 
- Welcome to REBOUNDx (eXtras)
-====================================
-
-REBOUNDx allows you to easily incorporate additional physics into your REBOUND simulations.
-All the computationally expensive parts of the code are written in C, so that the code will run much faster than if you define your own custom `additional_forces` functions in Python.
-
-For a list of supported effects, installation instructions, tutorials/examples and documentation, please see http://reboundx.readthedocs.io.
-
-.. image:: https://github.com/dtamayo/dtamayo.github.io/blob/master/pix/reboundx.png
-
 New Version and Paper!
 ======================
 
@@ -30,4 +20,14 @@ We've made some big improvements to REBOUNDx to make it more robust and easily e
 We've also improved the binary format to better interface with the REBOUND SimulationArchive for the sharing and analysis of machine independent results.
 
 Definitely also check out our paper where we give an overview of the library, analyze the effects of dissipative forces on symplectic integrators, and give some recommendations:`Tamayo, Rein, Shi and Hernandez 2019 <http://arxiv.org/abs/1908.05634>`_
+
+Welcome to REBOUNDx (eXtras)
+============================
+
+REBOUNDx allows you to easily incorporate additional physics into your REBOUND simulations.
+All the computationally expensive parts of the code are written in C, so that the code will run much faster than if you define your own custom `additional_forces` functions in Python.
+
+For a list of supported effects, installation instructions, tutorials/examples and documentation, please see http://reboundx.readthedocs.io.
+
+.. image:: https://github.com/dtamayo/dtamayo.github.io/blob/master/pix/reboundx.png
 

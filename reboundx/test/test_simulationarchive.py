@@ -61,7 +61,7 @@ class TestSimulationArchive(unittest.TestCase):
                 self.sim.ri_ias15.epsilon = 0 # use fixed timesteps for ias15 if used, no problem otherwise
                 self.integforce = self.rebx.load_operator("integrate_force")
                 self.integforce.params['force'] = self.gr
-                self.rebx.add_operator(self.integforce, dt_fraction=1., timing="pre")
+                self.rebx.add_operator(self.integforce, dtfraction=1., timing="pre")
             
                 self.sim.integrate(1000)
                 E = self.rebx.gr_hamiltonian(self.gr)
@@ -91,7 +91,7 @@ class TestSimulationArchive(unittest.TestCase):
                 self.sim.ri_ias15.epsilon = 0 # use fixed timesteps for ias15 if used, no problem otherwise
                 self.integforce = self.rebx.load_operator("integrate_force")
                 self.integforce.params['force'] = self.gr
-                self.rebx.add_operator(self.integforce, dt_fraction=1., timing="post")
+                self.rebx.add_operator(self.integforce, dtfraction=1., timing="post")
             
                 self.sim.integrate(1000)
                 E = self.rebx.gr_hamiltonian(self.gr)

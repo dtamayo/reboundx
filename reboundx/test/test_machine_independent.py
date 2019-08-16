@@ -1,6 +1,9 @@
 import rebound
 import reboundx
 import unittest
+import os
+
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class TestMachineIndependent(unittest.TestCase):
     def setUp(self):
@@ -10,8 +13,11 @@ class TestMachineIndependent(unittest.TestCase):
         self.rebx = reboundx.Extras(self.sim)
 
     def test_modify_orbits_forces(self):
+        name = "modify_orbits_forces"
         try:
-            sa = reboundx.SimulationArchive('binaries/modify_orbits_forces.sa', 'binaries/modify_orbits_forces.rebx')
+            rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
+            rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
+            sa = reboundx.SimulationArchive(rebbin, rebxbin)
         except:
             try:
                 sim = rebound.Simulation('binaries/twoplanets.bin')
@@ -46,7 +52,9 @@ class TestMachineIndependent(unittest.TestCase):
     def test_gr_full(self):
         name = 'gr_full'
         try:
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
+            rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
+            sa = reboundx.SimulationArchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
             sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
@@ -67,7 +75,9 @@ class TestMachineIndependent(unittest.TestCase):
     def test_gr(self):
         name = 'gr'
         try:
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
+            rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
+            sa = reboundx.SimulationArchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
             sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
@@ -88,7 +98,9 @@ class TestMachineIndependent(unittest.TestCase):
     def test_gr_potential(self):
         name = 'gr_potential'
         try:
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
+            rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
+            sa = reboundx.SimulationArchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
             sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
@@ -109,7 +121,9 @@ class TestMachineIndependent(unittest.TestCase):
     def test_radiation_forces(self):
         name = 'radiation_forces'
         try:
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
+            rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
+            sa = reboundx.SimulationArchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
             sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
@@ -132,7 +146,9 @@ class TestMachineIndependent(unittest.TestCase):
     def test_tides_precession(self):
         name = 'tides_precession'
         try:
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
+            rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
+            sa = reboundx.SimulationArchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
             sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
@@ -154,7 +170,9 @@ class TestMachineIndependent(unittest.TestCase):
     def test_central_force(self):
         name = 'central_force'
         try:
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
+            rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
+            sa = reboundx.SimulationArchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
             sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
@@ -176,7 +194,9 @@ class TestMachineIndependent(unittest.TestCase):
     def test_gravitational_harmonics(self):
         name = 'gravitational_harmonics'
         try:
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
+            rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
+            sa = reboundx.SimulationArchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
             sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
@@ -200,7 +220,9 @@ class TestMachineIndependent(unittest.TestCase):
     def test_modify_orbits_direct(self):
         name = 'modify_orbits_direct'
         try:
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
+            rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
+            sa = reboundx.SimulationArchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
             sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
@@ -225,7 +247,9 @@ class TestMachineIndependent(unittest.TestCase):
     def test_modify_mass(self):
         name = 'modify_mass'
         try:
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
+            rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
+            sa = reboundx.SimulationArchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
             sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
