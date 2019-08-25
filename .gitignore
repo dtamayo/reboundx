@@ -38,4 +38,4 @@ problems/
 *.txt
 *.dSYM
 Untitled*
-.vscode/settings.json
+.vscode/*
