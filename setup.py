@@ -39,12 +39,17 @@ class build_ext(_build_ext):
             sys.exit(1)
 
         rebdir = os.path.dirname(inspect.getfile(rebound))
+        rebdirsp = site.getsitepackages() # site-packages in case reb & rebx installed simul in tmp dir
         self.include_dirs.append(rebdir)
+        self.include_dirs.append(rebdirsp)
         sources = [ 'src/modify_mass.c', 'src/integrator_euler.c', 'src/modify_orbits_forces.c', 'src/integrator_rk2.c', 'src/tides_precession.c', 'src/rebxtools.c', 'src/tides_synchronous_ecc_damping.c', 'src/gravitational_harmonics.c', 'src/gr_potential.c', 'src/core.c', 'src/integrator_rk4.c', 'src/input.c', 'src/central_force.c', 'src/gr.c', 'src/modify_orbits_direct.c', 'src/gr_full.c', 'src/steppers.c', 'src/integrate_force.c', 'src/output.c', 'src/radiation_forces.c', 'src/integrator_implicit_midpoint.c', 'src/linkedlist.c'],
         self.library_dirs.append(rebdir+'/../')
+        self.library_dirs.append(rebdirsp+'/../')
         for ext in self.extensions:
             ext.runtime_library_dirs.append(rebdir+'/../')
             ext.extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
+            ext.runtime_library_dirs.append(rebdirsp+'/../')
+            ext.extra_link_args.append('-Wl,-rpath,'+rebdirsp+'/../')
 
 from distutils.version import LooseVersion
 
