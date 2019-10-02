@@ -58,3 +58,4 @@ Table of Contents
     c_quickstart
     c_api
     c_examples
+    add_effect

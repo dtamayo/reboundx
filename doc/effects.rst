@@ -254,44 +254,6 @@ gr_source (int)              No          Flag identifying the particle as the so
 Radiation Forces
 ^^^^^^^^^^^^^^^^
 
-.. _stark_force:
-
-stark_force
-***********
-
-======================= ===============================================
-Authors                 H. Rein, D. Tamayo
-Implementation Paper    *In progress*
-Based on                `Burns et al. 1979 <http://labs.adsabs.harvard.edu/adsabs/abs/1979Icar...40....1B/>`_.
-C Example               :ref:`c_example_rad_forces_debris_disk`, :ref:`c_example_rad_forces_circumplanetary`.
-Python Example          `Radiation_Forces_Debris_Disk.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Radiation_Forces_Debris_Disk.ipynb>`_,
-                        `Radiation_Forces_Circumplanetary_Dust.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Radiation_Forces_Circumplanetary_Dust.ipynb>`_.
-======================= ===============================================
-
-This applies radiation forces to particles in the simulation.  
-It incorporates both radiation pressure and Poynting-Robertson drag.
-Only particles whose `beta` parameter is set will feel the radiation.  
-
-**Effect Parameters**
-
-============================ =========== ==================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================
-c (double)                   Yes         Speed of light in the units used for the simulation.
-============================ =========== ==================================================================
-
-**Particle Parameters**
-
-If no particles have radiation_source set, effect will assume the particle at index 0 in the particles array is the source.
-
-============================ =========== ==================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================
-radiation_source (int)       No          Flag identifying the particle as the source of radiation.
-beta (float)                 Yes         Ratio of radiation pressure force to gravitational force. Particles without beta set feel no radiation forces.
-============================ =========== ==================================================================
-
-
 .. _radiation_forces:
 
 radiation_forces
@@ -400,39 +362,6 @@ primary (int)                No          Set to 1 to specify the primary.  Defau
 ============================ =========== ==================================================================
 
 
-.. _tides_synchronous_ecc_damping:
-
-tides_synchronous_ecc_damping
-*****************************
-
-======================= ===============================================
-Authors                 D. Tamayo
-Implementation Paper    *In progress*
-Based on                `Hut 1981 <https://ui.adsabs.harvard.edu/#abs/1981A&A....99..126H/abstract>`_.
-C Example               :ref:``.
-Python Example          ` <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesPrecession.ipynb>`_.
-======================= ===============================================
-
-This adds precession from the tidal interactions between the particles in the simulation and the central body, both from tides raised on the primary and on the other bodies.
-In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' R_tides (physical radius) and k1 (apsidal motion constant, half the tidal Love number).
-You can specify the primary with a "primary" flag.
-If not set, the primary will default to the particle at the 0 index in the particles array.
-
-**Effect Parameters**
-
-None
-
-**Particle Parameters**
-
-============================ =========== ==================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================
-R_tides (float)              Yes         Physical radius (required for contribution from tides raised on the body).
-k1 (float)                   Yes         Apsidal motion constant (half the tidal Love number k2).
-primary (int)                No          Set to 1 to specify the primary.  Defaults to treating particles[0] as primary if not set.
-============================ =========== ==================================================================
-
-
 Central Force
 ^^^^^^^^^^^^^^^^^^
 
@@ -501,4 +430,40 @@ R_eq (double)                No         Equatorial radius of nonspherical body u
 
 Miscellaneous Utilities
 ^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _track_min_distance:
+
+track_min_distance
+******************
+
+======================= ===============================================
+Authors                 D. Tamayo
+Implementation Paper    *In progress*
+Based on                None
+C Example               :ref:`c_example_track_min_distance`
+Python Example          `TrackMinDistance.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TrackMinDistance.ipynb>`_.
+======================= ===============================================
+
+For a given particle, this keeps track of that particle's minimum distance from another body in the simulation.  User
+should add parameters to the particular particle whose distance should be tracked.
+
+**Effect Parameters**
+
+*None*
+
+**Particle Parameters**
+
+Only particles with their ``min_distance`` parameter set initially will track their minimum distance. The effect will
+update this parameter when the particle gets closer than the value of ``min_distance``, so the user has to set it
+initially.  By default distance is measured from sim->particles[0], but you can specify a different particle by setting
+the ``min_distance_from`` parameter to the hash of the target particle.
+
+================================ =========== =======================================================
+Name (C type)                    Required    Description
+================================ =========== =======================================================
+min_distance (double)            Yes         Particle's miminimum distance.
+min_distance_from (uint32)       No          Hash for particle from which to measure distance
+min_distance_orbit (reb_orbit)   No          Parameter to store orbital elements at moment corresponding to min_distance (heliocentric)
+================================ =========== =======================================================
+
 
