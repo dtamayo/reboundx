@@ -254,6 +254,44 @@ gr_source (int)              No          Flag identifying the particle as the so
 Radiation Forces
 ^^^^^^^^^^^^^^^^
 
+.. _stark_force:
+
+stark_force
+***********
+
+======================= ===============================================
+Authors                 H. Rein, D. Tamayo
+Implementation Paper    *In progress*
+Based on                `Burns et al. 1979 <http://labs.adsabs.harvard.edu/adsabs/abs/1979Icar...40....1B/>`_.
+C Example               :ref:`c_example_rad_forces_debris_disk`, :ref:`c_example_rad_forces_circumplanetary`.
+Python Example          `Radiation_Forces_Debris_Disk.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Radiation_Forces_Debris_Disk.ipynb>`_,
+                        `Radiation_Forces_Circumplanetary_Dust.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Radiation_Forces_Circumplanetary_Dust.ipynb>`_.
+======================= ===============================================
+
+This applies radiation forces to particles in the simulation.  
+It incorporates both radiation pressure and Poynting-Robertson drag.
+Only particles whose `beta` parameter is set will feel the radiation.  
+
+**Effect Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+c (double)                   Yes         Speed of light in the units used for the simulation.
+============================ =========== ==================================================================
+
+**Particle Parameters**
+
+If no particles have radiation_source set, effect will assume the particle at index 0 in the particles array is the source.
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+radiation_source (int)       No          Flag identifying the particle as the source of radiation.
+beta (float)                 Yes         Ratio of radiation pressure force to gravitational force. Particles without beta set feel no radiation forces.
+============================ =========== ==================================================================
+
+
 .. _radiation_forces:
 
 radiation_forces
