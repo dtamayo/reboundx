@@ -32,7 +32,7 @@ class Params(MutableMapping):
         clibreboundx.rebx_get_param.restype = c_void_p
         valptr = clibreboundx.rebx_get_param(self.rebx, self.ap, c_char_p(key.encode('ascii')))
 
-        if ctype == c_void_p: # Don't know how to cast it, so return for user to castA
+        if ctype == c_void_p: # Don't know how to cast it, so return for user to cast
             if valptr is None:
                 raise AttributeError("REBOUNDx Error: Parameter '{0}' not found on object.".format(key))
             return valptr
@@ -60,6 +60,11 @@ class Params(MutableMapping):
         if ctype == Force:
             if not isinstance(value, Force):
                 raise AttributeError("REBOUNDx Error: Parameter '{0}' must be assigned a Force object.".format(key))
+            clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))
+
+        if ctype == rebound.Orbit:
+            if not isinstance(value, rebound.Orbit):
+                raise AttributeError("REBOUNDx Error: Parameter '{0}' must be assigned an Orbit object.".format(key))
             clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))
         if ctype == c_void_p:
             clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))

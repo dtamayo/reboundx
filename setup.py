@@ -3,6 +3,7 @@ import os
 import inspect
 import sys 
 from distutils import sysconfig
+from distutils.sysconfig import get_python_lib 
 
 try:
     from setuptools import setup, Extension
@@ -21,7 +22,7 @@ try:
     ghash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii")
     ghash_arg = "-DREBXGITHASH="+ghash
 except:
-    ghash_arg = "-DREBXGITHASH=4dd281b3e4015da6e818c0577eb8dbf14aa759a6" #GITHASHAUTOUPDATE
+    ghash_arg = "-DREBXGITHASH=f6f6c159ec82f3298938f5b2899db2896afaaf1a" #GITHASHAUTOUPDATE
 
 class build_ext(_build_ext):
     def finalize_options(self):
@@ -39,12 +40,17 @@ class build_ext(_build_ext):
             sys.exit(1)
 
         rebdir = os.path.dirname(inspect.getfile(rebound))
+        # get site-packages dir to add to paths in case reb & rebx installed simul in tmp dir
+        rebdirsp = get_python_lib()+'/'#[p for p in sys.path if p.endswith('site-packages')][0]+'/'
         self.include_dirs.append(rebdir)
-        sources = [ 'src/modify_mass.c', 'src/integrator_euler.c', 'src/modify_orbits_forces.c', 'src/integrator_rk2.c', 'src/tides_precession.c', 'src/rebxtools.c', 'src/tides_synchronous_ecc_damping.c', 'src/gravitational_harmonics.c', 'src/gr_potential.c', 'src/core.c', 'src/integrator_rk4.c', 'src/input.c', 'src/central_force.c', 'src/gr.c', 'src/modify_orbits_direct.c', 'src/gr_full.c', 'src/steppers.c', 'src/integrate_force.c', 'src/output.c', 'src/radiation_forces.c', 'src/integrator_implicit_midpoint.c', 'src/linkedlist.c'],
+        sources = [ 'src/modify_mass.c', 'src/integrator_euler.c', 'src/modify_orbits_forces.c', 'src/integrator_rk2.c', 'src/track_min_distance.c', 'src/tides_precession.c', 'src/rebxtools.c', 'src/gravitational_harmonics.c', 'src/gr_potential.c', 'src/core.c', 'src/integrator_rk4.c', 'src/input.c', 'src/central_force.c', 'src/gr.c', 'src/modify_orbits_direct.c', 'src/gr_full.c', 'src/steppers.c', 'src/integrate_force.c', 'src/output.c', 'src/radiation_forces.c', 'src/integrator_implicit_midpoint.c', 'src/linkedlist.c'],
         self.library_dirs.append(rebdir+'/../')
+        self.library_dirs.append(rebdirsp)
         for ext in self.extensions:
             ext.runtime_library_dirs.append(rebdir+'/../')
             ext.extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
+            ext.runtime_library_dirs.append(rebdirsp)
+            ext.extra_link_args.append('-Wl,-rpath,'+rebdirsp)
 
 from distutils.version import LooseVersion
 
@@ -56,7 +62,7 @@ if sys.platform == 'darwin':
     extra_link_args.append('-Wl,-install_name,@rpath/libreboundx'+suffix)
 
 libreboundxmodule = Extension('libreboundx',
-                    sources = [ 'src/modify_mass.c', 'src/integrator_euler.c', 'src/modify_orbits_forces.c', 'src/integrator_rk2.c', 'src/tides_precession.c', 'src/rebxtools.c', 'src/tides_synchronous_ecc_damping.c', 'src/gravitational_harmonics.c', 'src/gr_potential.c', 'src/core.c', 'src/integrator_rk4.c', 'src/input.c', 'src/central_force.c', 'src/gr.c', 'src/modify_orbits_direct.c', 'src/gr_full.c', 'src/steppers.c', 'src/integrate_force.c', 'src/output.c', 'src/radiation_forces.c', 'src/integrator_implicit_midpoint.c', 'src/linkedlist.c'],
+        sources = [ 'src/modify_mass.c', 'src/integrator_euler.c', 'src/modify_orbits_forces.c', 'src/integrator_rk2.c', 'src/track_min_distance.c', 'src/tides_precession.c', 'src/rebxtools.c', 'src/gravitational_harmonics.c', 'src/gr_potential.c', 'src/core.c', 'src/integrator_rk4.c', 'src/input.c', 'src/central_force.c', 'src/gr.c', 'src/modify_orbits_direct.c', 'src/gr_full.c', 'src/steppers.c', 'src/integrate_force.c', 'src/output.c', 'src/radiation_forces.c', 'src/integrator_implicit_midpoint.c', 'src/linkedlist.c'],
                     include_dirs = ['src'],
                     library_dirs = [],
                     runtime_library_dirs = ["."],
@@ -71,7 +77,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='reboundx',
-    version='3.0.0',
+    version='3.0.4',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
     url='http://github.com/dtamayo/reboundx',
