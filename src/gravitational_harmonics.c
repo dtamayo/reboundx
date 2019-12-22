@@ -59,7 +59,7 @@
 #include "reboundx.h"
 
 static void rebx_calculate_J2_force(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double J2, const double R_eq, const int source_index){
-    const struct reb_particle source = sim->particles[source_index];
+    const struct reb_particle source = particles[source_index];
     const double G = sim->G;
     for (int i=0; i<N; i++){
         if(i == source_index){
@@ -97,7 +97,7 @@ static void rebx_J2(struct rebx_extras* const rebx, struct reb_simulation* const
 }
 
 static void rebx_calculate_J4_force(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double J4, const double R_eq, const int source_index){
-    const struct reb_particle source = sim->particles[source_index];
+    const struct reb_particle source = particles[source_index];
     const double G = sim->G;
     for (int i=0; i<N; i++){
         if(i == source_index){

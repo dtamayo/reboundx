@@ -55,6 +55,7 @@ enum rebx_param_type{
     REBX_TYPE_POINTER,
     REBX_TYPE_FORCE,
     REBX_TYPE_UINT32,
+    REBX_TYPE_ORBIT,
 };
 
 /**
@@ -402,6 +403,7 @@ struct rebx_param* rebx_get_param_struct(struct rebx_extras* rebx, struct rebx_n
 void rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* val);
 void rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
 void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val);
+void rebx_set_param_uint32(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, uint32_t val);
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type);
 /** @} */
 /** @} */
