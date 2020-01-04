@@ -39,3 +39,4 @@ problems/
 *.dSYM
 Untitled*
 .vscode/*
+*.code-workspace
