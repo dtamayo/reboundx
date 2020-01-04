@@ -9,7 +9,7 @@ sources = [each for each in os.listdir('../src/') if each.endswith('.c')]
 print("Adding {0}".format(sources))
 sourcestring = "SOURCES="
 sourcesExamples = "SOURCES="
-sourcesSetup = "                    sources = ["
+sourcesSetup = "        sources = ["
 for source in sources:
     sourcestring += source + " "
     sourcesExamples += "$(REBOUNDXDIR)" + source + " "
@@ -36,20 +36,21 @@ with open("../examples/Makefile") as f:
 
     with open("../examples/Makefile", "w") as f:
         f.writelines(lines)
-
+'''
 for example in os.listdir('../examples/'):
     try:
         with open("../examples/" + example + "/Makefile") as f:
             lines = f.readlines()
             for i,l in enumerate(lines):
                 if "modify_orbits_direct.c" in l:
+                    print('here')
                     lines[i] = sourcesExamples
 
             with open("../examples/" + example + "/Makefile", "w") as f:
                 f.writelines(lines)
     except:
         pass
-
+'''
 with open("../setup.py") as f:
     setuplines = f.readlines()
     for i,l in enumerate(setuplines):
