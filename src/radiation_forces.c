@@ -66,14 +66,11 @@
 #include <stdlib.h>
 #include "reboundx.h"
 
-static void rebx_calculate_radiation_forces(struct rebx_extras* const rebx, struct reb_simulation* const sim, const double c, const int source_index){
-    struct reb_particle* const particles = sim->particles;
+static void rebx_calculate_radiation_forces(struct rebx_extras* const rebx, struct reb_simulation* const sim, const double c, const int source_index, struct reb_particle* const particles, const int N){
     const struct reb_particle source = particles[source_index];
     const double mu = sim->G*source.m;
 
-    const int _N_real = sim->N - sim->N_var;
-#pragma omp parallel for
-    for (int i=0;i<_N_real;i++){
+    for (int i=0;i<N;i++){
         
         if(i == source_index) continue;
         
@@ -106,16 +103,16 @@ void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_force* 
     if (c == NULL){
         reb_error(sim, "Need to set speed of light in radiation_forces effect.  See examples in documentation.\n");
     }
-    const int N_real = sim->N - sim->N_var;
+    
     int source_found=0;
-    for (int i=0; i<N_real; i++){
+    for (int i=0; i<N; i++){
         if (rebx_get_param(rebx, particles[i].ap, "radiation_source") != NULL){
             source_found = 1;
-            rebx_calculate_radiation_forces(rebx, sim, *c, i);
+            rebx_calculate_radiation_forces(rebx, sim, *c, i, particles, N);
         }
     }
     if (!source_found){
-        rebx_calculate_radiation_forces(rebx, sim, *c, 0);    // default source to index 0 if "radiation_source" not found on any particle
+        rebx_calculate_radiation_forces(rebx, sim, *c, 0, particles, N);    // default source to index 0 if "radiation_source" not found on any particle
     }
 }
 

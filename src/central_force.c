@@ -61,7 +61,7 @@
 #include "reboundx.h"
 
 static void rebx_calculate_central_force(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double A, const double gamma, const int source_index){
-    const struct reb_particle source = sim->particles[source_index];
+    const struct reb_particle source = particles[source_index];
     for (int i=0; i<N; i++){
         if(i == source_index){
             continue;
