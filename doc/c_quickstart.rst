@@ -6,7 +6,7 @@ Quickstart Guide (C)
 Installation
 ------------
 
-Navigate to the parent directory that holds the ``rebound`` folder (see below if you want to install in a custom folder).  Then in a terminaljk13GA::
+Navigate to the parent directory that holds the ``rebound`` folder (see below if you want to install in a custom folder).  Then in a terminal::
 
     git clone https://github.com/dtamayo/reboundx.git
 
