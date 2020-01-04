@@ -39,7 +39,7 @@
 #define str(s) #s
 
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
-const char* rebx_version_str = "3.0.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
+const char* rebx_version_str = "3.0.4";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
 
 
@@ -73,9 +73,6 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "tides_primary", REBX_TYPE_INT);
     rebx_register_param(rebx, "R_tides", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "k1", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "tides_synchronous_tau_e", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "min_distance", REBX_TYPE_UINT32);
-    rebx_register_param(rebx, "min_distance_from", REBX_TYPE_UINT32);
     rebx_register_param(rebx, "integrator", REBX_TYPE_INT);
     rebx_register_param(rebx, "free_arrays", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "im_ps_final", REBX_TYPE_POINTER);
@@ -84,7 +81,9 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "rk2_k2", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "rk4_k2", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "rk4_k3", REBX_TYPE_POINTER);
-//rebx_register_param(rebx, "min_distance_orbit", REBX_TYPE_ORBIT);
+    rebx_register_param(rebx, "min_distance", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "min_distance_from", REBX_TYPE_UINT32);
+    rebx_register_param(rebx, "min_distance_orbit", REBX_TYPE_ORBIT);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -257,14 +256,6 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->update_accelerations = rebx_tides_precession;
         force->force_type = REBX_FORCE_POS;
     }
-    else if (strcmp(name, "tides_synchronous_ecc_damping") == 0){
-        force->update_accelerations = rebx_tides_synchronous_ecc_damping;
-        force->force_type = REBX_FORCE_VEL;
-    }
-    else if (strcmp(name, "tides_drag") == 0){
-        force->update_accelerations = rebx_tides_drag;
-        force->force_type = REBX_FORCE_VEL;
-    }
     else{
         char str[300];
         sprintf(str, "REBOUNDx error: Force '%s' not found in REBOUNDx library.\n", name);
@@ -353,6 +344,10 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
     else if (strcmp(name, "modify_orbits_direct") == 0){
         operator->step_function = rebx_modify_orbits_direct;
         operator->operator_type = REBX_OPERATOR_UPDATER;
+    }
+    else if (strcmp(name, "track_min_distance") == 0){
+        operator->step_function = rebx_track_min_distance;
+        operator->operator_type = REBX_OPERATOR_RECORDER;
     }
     else{
         char str[300];
@@ -570,6 +565,21 @@ void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr
     }
     // Update new or existing param value
     int* valptr = param->value;
+    *valptr = val;
+    
+    return;
+}
+
+void rebx_set_param_uint32(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, uint32_t val){
+    struct rebx_param* param = rebx_get_or_add_param(rebx, apptr, param_name);
+    if (param == NULL){
+        return;
+    }
+    if (param->value == NULL){ // new parameter, allocate
+        param->value = rebx_malloc(rebx, sizeof(uint32_t));
+    }
+    // Update new or existing param value
+    uint32_t* valptr = param->value;
     *valptr = val;
     
     return;
@@ -960,6 +970,10 @@ size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type){
         {
             return sizeof(struct rebx_force);
         }
+        /*case REBX_TYPE_ORBIT:
+        {
+            return sizeof(struct reb_orbit);
+        }*/
         case REBX_TYPE_POINTER:
         {
             return 0;
