@@ -84,6 +84,8 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "min_distance", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "min_distance_from", REBX_TYPE_UINT32);
     rebx_register_param(rebx, "min_distance_orbit", REBX_TYPE_ORBIT);
+    rebx_register_param(rebx, "stark_acc", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "migration_tau", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -255,6 +257,14 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     else if (strcmp(name, "tides_precession") == 0){
         force->update_accelerations = rebx_tides_precession;
         force->force_type = REBX_FORCE_POS;
+    }
+    else if (strcmp(name, "stark_force") == 0){
+        force->update_accelerations = rebx_stark_force;
+        force->force_type = REBX_FORCE_POS;
+    }
+    else if (strcmp(name, "migration_force") == 0){
+        force->update_accelerations = rebx_migration_force;
+        force->force_type = REBX_FORCE_VEL;
     }
     else{
         char str[300];
