@@ -77,6 +77,8 @@ planet_f = planet_f_corrected.astype(np.float)
 # print(planet_a)
 # print(planet_mass)
 
+R0 = 0*planet_time + 0.78
+
 #Plots the semi-major axis of the planet and the radius of the Sun over the course of the simulation
 fig, ax = plt.subplots()
 # plt.ylim(0, 1.5)
@@ -84,6 +86,7 @@ plt.title(r'$R_{\odot}$' ' & ' r'$a_{\oplus}$' ' vs. Simulation Time')
 plt.xlabel('sim.t [yr]')
 plt.ylabel('[AU]')
 ax.plot(planet_time, planet_a, label = '$a_{\oplus}$')
+ax.plot(planet_time, R0, label = '$R_{\odot}$')
 # ax.plot(np.linspace(START_AGE, START_AGE + sim.t ,len(changing_a)), csr(np.linspace(START_AGE, START_AGE + sim.t, len(changing_a))), label = "Sun's surface radius")
 ax.legend(loc='best', ncol=1)
 plt.show()

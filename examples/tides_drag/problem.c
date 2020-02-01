@@ -18,7 +18,6 @@ int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
     // Setup constants
     sim->dt = 1./20.;              // 1/20 Earth's period (yrs)
-    // sim->dt = 0.0120423;           // 1/20 Mercury's period (yrs)
     tmax = 8e4;                    // 80 Kyr
     sim->G = 4*M_PI*M_PI;          // in AU^3 / Msun / yr^2.
     sim->ri_whfast.safe_mode = 0;  // Turn off safe mode. Need to call reb_integrator_synchronize() before outputs. 
