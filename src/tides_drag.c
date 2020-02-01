@@ -58,10 +58,9 @@
 #include <float.h>
 #include "reboundx.h"
 
-// double tau = 8e4;
-double R0 = 0.78; // Sun physical radius in AU
-double L0 = 869.5; // solar luminosity
-double Omega = 0; // angular velocity of solar rotation
+double R0 = 0.78;       // Sun physical radius in AU
+double L0 = 869.5;      // solar luminosity
+double Omega = 0;       // angular velocity of solar rotation
 double lambda2 = 0.023; // depends on properties of convective envelope
 
 void rebx_tides_drag(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
@@ -82,25 +81,23 @@ void rebx_tides_drag(struct reb_simulation* const sim, struct rebx_force* const 
 
     struct reb_orbit po = reb_tools_particle_to_orbit(sim->G, particles[1], particles[0]);
 
-    // TRY REPLACING WITH po.d
-    const double dx = particles[1].x - particles[0].x; 
-    const double dy = particles[1].y - particles[0].y;
-    const double dz = particles[1].z - particles[0].z;
-    // const double dr = sqrt(dx*dx + dy*dy + dz*dz); // distance to star
+    // const double dx = particles[1].x - particles[0].x; 
+    // const double dy = particles[1].y - particles[0].y;
+    // const double dz = particles[1].z - particles[0].z;
+    // const double dr = sqrt(dx*dx + dy*dy + dz*dz); // which is faster?
     const double dr = po.d;
 
-    // TRY REPLACING WITH po.v
     const double vx = particles[1].vx;
     const double vy = particles[1].vy;
     const double vz = particles[1].vz;
-    // const double vmag = sqrt(vx*vx + vy*vy + vz*vz); // magnitude of velocity
+    // const double vmag = sqrt(vx*vx + vy*vy + vz*vz); // magnitude of velocity (which is faster?)
     const double vmag = po.v;
 
-    const double M0 = particles[0].m; // primary mass
-    const double m = particles[1].m; // particle mass
-    const double q = m/M0; // mass ratio
-    const double rratio = R0/dr; // ratio of primary physical radius to orbital radius
-    const double omega = 2.*M_PI/po.P; // angular velocity of orbiting particle
+    const double M0 = particles[0].m;     // primary mass
+    const double m = particles[1].m;      // particle mass
+    const double q = m/M0;                // mass ratio
+    const double rratio = R0/dr;          // ratio of primary physical radius to orbital radius
+    const double omega = 2.*M_PI/po.P;    // angular velocity of orbiting particle
     const double t_f = cbrt(M0*R0*R0/L0); // convective friction time (Zahn 1989, Eq.15)
     
     // Equation (4) of Schroder & Smith (2008)
@@ -110,8 +107,4 @@ void rebx_tides_drag(struct reb_simulation* const sim, struct rebx_force* const 
     particles[1].ax += (torque/(m*dr))*(vx/vmag);
     particles[1].ay += (torque/(m*dr))*(vy/vmag);
     particles[1].az += (torque/(m*dr))*(vz/vmag);
-
-    // particles[1].ax -= particles[1].vx/tau;
-    // particles[1].ay -= particles[1].vy/tau;
-    // particles[1].az -= particles[1].vz/tau;
 }
