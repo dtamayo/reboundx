@@ -1,8 +1,8 @@
 /**
  * Drag interaction from tides.
  *
- * This example shows how to add drag interaction due to slowly rotating tides raised on the primary body.
- * See also the corresponding Python example for more details.
+ * This example shows how to add drag interaction due 
+ * to slowly rotating tides raised on the primary body.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,13 +48,22 @@ int main(int argc, char* argv[]){
     FILE* file = fopen("planet.txt","a");
     fprintf(file, "Time(yrs)\t\tMass(Msun)\t\tSemi-major Axis(AU)\t\tEccentricity\t\tInclination(Radians)\t\tLongitude_of_Ascending_Node(Radians)\t\tArgument_of_Periapsis(Radians))\t\tTrue_Anomaly(Radians)\n");
     fclose(file);
+
+    // Overwrite COM output file
+    system("rm -f COM.txt"); // remove existing file
+    FILE* com_file = fopen("COM.txt","a");
+    fprintf(com_file, "Time(yrs)\t\tx(AU)\t\ty(AU)\t\tz(AU)\n");
+    fclose(com_file);
     
+    // Run simulation
     reb_move_to_com(sim);
     reb_integrate(sim, tmax);
 }
 
 void heartbeat(struct reb_simulation* sim){
     if (reb_output_check(sim, 1000.)){
+        // retrieve COM "particle"
+        struct reb_particle com = reb_get_com(sim);
         // retrieve Sun particle
         struct reb_particle sun = sim->particles[0];
         // retrieve Earth particle
@@ -69,10 +78,13 @@ void heartbeat(struct reb_simulation* sim){
         double omega = eo.omega;
         double f = eo.f;
         FILE* file = fopen("planet.txt","a");
+        FILE* com_file = fopen("COM.txt","a");
 
         reb_output_timing(sim, tmax);
         reb_integrator_synchronize(sim);
         fprintf(file,"%e\t\t%e\t\t%e\t\t%e\t\t%e\t\t%e\t\t%e\t\t%e\n",t,m,a,e,inc,Omega,omega,f);
         fclose(file);
+        fprintf(com_file,"%e\t\t%e\t\t%e\t\t%e\t\t\n",t,com.x,com.y,com.z);
+        fclose(com_file);
     }
 }
