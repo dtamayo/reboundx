@@ -19,11 +19,11 @@ int main(int argc, char* argv[]){
     struct reb_simulation* r = reb_create_simulation();
     // Setup constants
     r->dt = 1./20.;              // 1/20 Earth's period in yrs
-    tmax = 4e6;                  // 4 Myr
+    tmax = 8e4;                  // 4 Myr
     r->G = 4*M_PI*M_PI;          // in AU^3 / Msun / yr^2.
     r->ri_whfast.safe_mode = 0;  // Turn off safe mode. Need to call reb_integrator_synchronize() before outputs. 
     r->ri_whfast.corrector = 11; // 11th order symplectic corrector
-    r->integrator = REB_INTEGRATOR_MERCURIUS;
+    r->integrator = REB_INTEGRATOR_WHFAST;
     r->heartbeat = heartbeat;
     r->exact_finish_time = 1;    // Finish exactly at tmax in reb_integrate(). Default is already 1.
 
@@ -44,6 +44,12 @@ int main(int argc, char* argv[]){
     fprintf(file, "Time(yrs)\t\tMass(Msun)\t\tSemi-major Axis(AU)\t\tEccentricity\t\tInclination(Radians)\t\tLongitude_of_Ascending_Node(Radians)\t\tArgument_of_Periapsis(Radians))\t\tTrue_Anomaly(Radians)\n");
     fclose(file);
 
+    // Overwrite COM output file
+    system("rm -f COM.txt"); // remove existing file
+    FILE* com_file = fopen("COM.txt","a");
+    fprintf(com_file, "Time(yrs)\t\tx(AU)\t\ty(AU)\t\tz(AU)\n");
+    fclose(com_file);
+
     // Run simulation
     reb_move_to_com(r);
     reb_integrate(r, tmax);
@@ -51,6 +57,8 @@ int main(int argc, char* argv[]){
 
 void heartbeat(struct reb_simulation* r){
     if (reb_output_check(r, 1000.)){
+        // retrieve COM "particle"
+        struct reb_particle com = reb_get_com(r);
         // retrieve Sun particle
         struct reb_particle sun = r->particles[0];
         // retrieve Earth particle
@@ -65,11 +73,14 @@ void heartbeat(struct reb_simulation* r){
         double omega = eo.omega;
         double f = eo.f;
         FILE* file = fopen("planet.txt","a");
+        FILE* com_file = fopen("COM.txt","a");
 
         reb_output_timing(r, tmax);
         reb_integrator_synchronize(r);
         fprintf(file,"%e\t\t%e\t\t%e\t\t%e\t\t%e\t\t%e\t\t%e\t\t%e\n",t,m,a,e,inc,Omega,omega,f);
         fclose(file);
+        fprintf(com_file,"%e\t\t%e\t\t%e\t\t%e\t\t\n",t,com.x,com.y,com.z);
+        fclose(com_file);
     }
 }
 
