@@ -58,10 +58,6 @@
 #include <float.h>
 #include "reboundx.h"
 
-// double L0 = 869.5;      // solar luminosity
-// double Omega = 0;       // angular velocity of solar rotation
-// double lambda2 = 0.023; // depends on properties of convective envelope
-
 void rebx_tides_drag(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
     //FOR USE LATER W/ REGISTERED PARAMETERS
     struct rebx_extras* const rebx = sim->extras; // to access add'l params
