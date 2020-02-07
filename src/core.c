@@ -86,6 +86,9 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "min_distance_orbit", REBX_TYPE_ORBIT);
     rebx_register_param(rebx, "stark_acc", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "migration_tau", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "luminosity", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tides_Omega", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tides_lambda2", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
