@@ -16,14 +16,19 @@ double tmax;
 
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
-    // Setup constants
+    // Define constants
     sim->dt = 1./20.;              // 1/20 Earth's period (yrs)
-    tmax = 8e4;                    // 80 Kyr
+    tmax = 7e4;                    // 70 Kyr
     sim->G = 4*M_PI*M_PI;          // in AU^3 / Msun / yr^2.
-    sim->ri_whfast.safe_mode = 0;  // Turn off safe mode. Need to call reb_integrator_synchronize() before outputs. 
-    sim->ri_whfast.corrector = 11; // 11th order symplectic corrector
-    sim->integrator = REB_INTEGRATOR_WHFAST;
     sim->heartbeat = heartbeat;
+
+    // sim->integrator = REB_INTEGRATOR_WHFAST;
+    // sim->ri_whfast.safe_mode = 0;  // Turn off safe mode. Need to call reb_integrator_synchronize() before outputs. 
+    // sim->ri_whfast.corrector = 11; // 11th order symplectic corrector
+    
+    sim->integrator = REB_INTEGRATOR_IAS15;
+	sim->ri_ias15.epsilon = 0;        // makes IAS15 a non-adaptive integrator
+    sim->force_is_velocity_dependent = 1;
 
     // Add Sun to sim
     struct reb_particle sun = {0}; // initialize w/ zeroes
@@ -31,7 +36,8 @@ int main(int argc, char* argv[]){
     reb_add(sim, sun);
     // Add Earth to sim
     struct reb_orbit eo = {0};
-    double e_mass = .000002988;
+    // double e_mass = 0.43;       // limiting case tests
+    double e_mass = 2.988e-6;
     eo.a = 1.0;                    // in AU
     struct reb_particle ep = reb_tools_orbit_to_particle(sim->G, sun, e_mass, eo.a, eo.e, eo.inc, eo.Omega, eo.omega, eo.f);
     reb_add(sim, ep);
@@ -62,11 +68,8 @@ int main(int argc, char* argv[]){
 
 void heartbeat(struct reb_simulation* sim){
     if (reb_output_check(sim, 1000.)){
-        // retrieve COM "particle"
         struct reb_particle com = reb_get_com(sim);
-        // retrieve Sun particle
         struct reb_particle sun = sim->particles[0];
-        // retrieve Earth particle
         struct reb_particle ep = sim->particles[1];
         struct reb_orbit eo  = reb_tools_particle_to_orbit(sim->G, ep, sun);
         double t = sim->t;
