@@ -48,7 +48,7 @@ int main(int argc, char* argv[]){
     struct rebx_force* tides = rebx_load_force(rebx, "tides_drag");             // add our new force
     rebx_set_param_double(rebx, &sim->particles[0].ap, "luminosity", 869.5);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "tides_Omega", 0);
-    // rebx_set_param_double(rebx, &sim->particles[0].ap, "tides_lambda2", 0.023);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "tides_lambda2", 0.023);
     rebx_add_force(rebx, tides);
 
     // Overwrite planet output file w/ col headers
