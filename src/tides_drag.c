@@ -81,10 +81,10 @@ void rebx_tides_drag(struct reb_simulation* const sim, struct rebx_force* const 
 
     struct reb_orbit po = reb_tools_particle_to_orbit(sim->G, particles[1], particles[0]);
 
-    const double dr = po.d;               // particle's radial distance
-    const double vmag = po.v;             // particl's' relative velocity
-    const double M0 = particles[0].m;     // primary's mass
-    const double m = particles[1].m;      // particle's mass
+    const double dr = po.d;               // orbital radius
+    const double vmag = po.v;             // relative velocity
+    const double M0 = particles[0].m;     // primary mass
+    const double m = particles[1].m;      // particle mass
     const double q = m/M0;                // mass ratio
     const double rratio = R0/dr;          // ratio of primary physical radius to orbital radius
     const double omega = po.n;            // angular velocity of orbiting particle
@@ -97,13 +97,22 @@ void rebx_tides_drag(struct reb_simulation* const sim, struct rebx_force* const 
 
     const double prefac = torque/m/dr/vmag; // consolidate prefactor for acceleration components
 
+    // ORIGINAL
     // Apply torque to acceleration components
-    particles[1].ax += prefac*particles[1].vx;
-    particles[1].ay += prefac*particles[1].vy;
-    particles[1].az += prefac*particles[1].vz;
+    // particles[1].ax += prefac*particles[1].vx;
+    // particles[1].ay += prefac*particles[1].vy;
+    // particles[1].az += prefac*particles[1].vz;
 
     // Apply proportional (mass ratio, q) reverse torque to primary
-    particles[0].ax -= q*prefac*particles[1].vx;
-    particles[0].ay -= q*prefac*particles[1].vy;
-    particles[0].az -= q*prefac*particles[1].vz;
+    // particles[0].ax -= q*prefac*particles[1].vx;
+    // particles[0].ay -= q*prefac*particles[1].vy;
+    // particles[0].az -= q*prefac*particles[1].vz;
+
+    // NEW
+    particles[1].ax += prefac/(1-q)*(particles[1].vx - particles[0].vx);
+    particles[1].ay += prefac/(1-q)*(particles[1].vy - particles[0].vy);
+    particles[1].az += prefac/(1-q)*(particles[1].vz - particles[0].vz);
+    particles[0].ax -= prefac*q/(1-q)*(particles[1].vx - particles[0].vx);
+    particles[0].ay -= prefac*q/(1-q)*(particles[1].vy - particles[0].vy);
+    particles[0].az -= prefac*q/(1-q)*(particles[1].vz - particles[0].vz);
 }
