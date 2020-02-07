@@ -79,6 +79,55 @@ planet_f = planet_f_corrected.astype(np.float)
 
 R0 = 0*planet_time + 0.78
 
+#
+#   NEW
+#
+planet1 = open('planet1.txt', 'r')
+planet1_data = []
+for line in planet1:
+    planet1_data.append(line)
+
+planet1_time = np.array([])
+planet1_mass = np.array([])
+planet1_a = np.array([])
+planet1_e = np.array([])
+planet1_inc = np.array([])
+planet1_Omega = np.array([])
+planet1_omega = np.array([])
+planet1_f = np.array([])
+
+for i in planet1_data:
+    planet1_time = np.append(planet1_time, (i.split(('\t\t'))[0]))
+    planet1_mass = np.append(planet1_mass, (i.split(('\t\t'))[1]))
+    planet1_a = np.append(planet1_a, (i.split(('\t\t'))[2]))
+    planet1_e = np.append(planet1_e, (i.split(('\t\t'))[3]))
+    planet1_inc = np.append(planet1_inc, (i.split(('\t\t'))[4]))
+    planet1_Omega = np.append(planet1_Omega, (i.split(('\t\t'))[5]))
+    planet1_omega = np.append(planet1_omega, (i.split(('\t\t'))[6]))
+    planet1_f = np.append(planet1_f, (i.split(('\t\t'))[7]))
+
+planet1_time = np.delete(planet1_time, 0)
+planet1_mass = np.delete(planet1_mass, 0)
+planet1_a = np.delete(planet1_a, 0)
+planet1_e = np.delete(planet1_e, 0)
+planet1_inc = np.delete(planet1_inc, 0)
+planet1_Omega = np.delete(planet1_Omega, 0)
+planet1_omega = np.delete(planet1_omega, 0)
+planet1_f = np.delete(planet1_f, 0)
+
+planet1_f_corrected = np.array([])
+for i in planet1_f:
+    planet1_f_corrected = np.append(planet1_f_corrected, str(i).strip())
+    
+planet1_time = planet1_time.astype(np.float)
+planet1_mass = planet1_mass.astype(np.float)
+planet1_a = planet1_a.astype(np.float)
+planet1_e = planet1_e.astype(np.float)
+planet1_inc = planet1_inc.astype(np.float)
+planet1_Omega = planet1_Omega.astype(np.float)
+planet1_omega = planet1_omega.astype(np.float)
+planet1_f = planet1_f_corrected.astype(np.float)
+
 #Plots the semi-major axis of the planet and the radius of the Sun over the course of the simulation
 fig, ax = plt.subplots(figsize=(6,2))
 # plt.ylim(0, 1.5)
@@ -92,122 +141,14 @@ ax.legend(loc='best', ncol=1)
 plt.tight_layout()
 plt.show()
 
-
-
-
-
-
-
-planet = open('planet.txt', 'r')
-planet_data = []
-for line in planet:
-    planet_data.append(line)
-
-planet_time = np.array([])
-planet_mass = np.array([])
-planet_a = np.array([])
-planet_e = np.array([])
-planet_inc = np.array([])
-planet_Omega = np.array([])
-planet_omega = np.array([])
-planet_f = np.array([])
-
-for i in planet_data:
-    planet_time = np.append(planet_time, (i.split(('\t\t'))[0]))
-    planet_mass = np.append(planet_mass, (i.split(('\t\t'))[1]))
-    planet_a = np.append(planet_a, (i.split(('\t\t'))[2]))
-    planet_e = np.append(planet_e, (i.split(('\t\t'))[3]))
-    planet_inc = np.append(planet_inc, (i.split(('\t\t'))[4]))
-    planet_Omega = np.append(planet_Omega, (i.split(('\t\t'))[5]))
-    planet_omega = np.append(planet_omega, (i.split(('\t\t'))[6]))
-    planet_f = np.append(planet_f, (i.split(('\t\t'))[7]))
-
-planet_time = np.delete(planet_time, 0)
-planet_mass = np.delete(planet_mass, 0)
-planet_a = np.delete(planet_a, 0)
-planet_e = np.delete(planet_e, 0)
-planet_inc = np.delete(planet_inc, 0)
-planet_Omega = np.delete(planet_Omega, 0)
-planet_omega = np.delete(planet_omega, 0)
-planet_f = np.delete(planet_f, 0)
-
-planet_f_corrected = np.array([])
-for i in planet_f:
-    planet_f_corrected = np.append(planet_f_corrected, str(i).strip())
-    
-planet_time = planet_time.astype(np.float)
-planet_mass = planet_mass.astype(np.float)
-planet_a = planet_a.astype(np.float)
-planet_e = planet_e.astype(np.float)
-planet_inc = planet_inc.astype(np.float)
-planet_Omega = planet_Omega.astype(np.float)
-planet_omega = planet_omega.astype(np.float)
-planet_f = planet_f_corrected.astype(np.float)
-
-
-
-#
-#   NEW
-#
-planet = open('planet.txt', 'r')
-planet_data = []
-for line in planet:
-    planet_data.append(line)
-
-planet_time = np.array([])
-planet_mass = np.array([])
-planet_a = np.array([])
-planet_e = np.array([])
-planet_inc = np.array([])
-planet_Omega = np.array([])
-planet_omega = np.array([])
-planet_f = np.array([])
-
-for i in planet_data:
-    planet_time = np.append(planet_time, (i.split(('\t\t'))[0]))
-    planet_mass = np.append(planet_mass, (i.split(('\t\t'))[1]))
-    planet_a = np.append(planet_a, (i.split(('\t\t'))[2]))
-    planet_e = np.append(planet_e, (i.split(('\t\t'))[3]))
-    planet_inc = np.append(planet_inc, (i.split(('\t\t'))[4]))
-    planet_Omega = np.append(planet_Omega, (i.split(('\t\t'))[5]))
-    planet_omega = np.append(planet_omega, (i.split(('\t\t'))[6]))
-    planet_f = np.append(planet_f, (i.split(('\t\t'))[7]))
-
-planet_time = np.delete(planet_time, 0)
-planet_mass = np.delete(planet_mass, 0)
-planet_a = np.delete(planet_a, 0)
-planet_e = np.delete(planet_e, 0)
-planet_inc = np.delete(planet_inc, 0)
-planet_Omega = np.delete(planet_Omega, 0)
-planet_omega = np.delete(planet_omega, 0)
-planet_f = np.delete(planet_f, 0)
-
-planet_f_corrected = np.array([])
-for i in planet_f:
-    planet_f_corrected = np.append(planet_f_corrected, str(i).strip())
-    
-planet_time = planet_time.astype(np.float)
-planet_mass = planet_mass.astype(np.float)
-planet_a = planet_a.astype(np.float)
-planet_e = planet_e.astype(np.float)
-planet_inc = planet_inc.astype(np.float)
-planet_Omega = planet_Omega.astype(np.float)
-planet_omega = planet_omega.astype(np.float)
-planet_f = planet_f_corrected.astype(np.float)
-
-
-
-
-
-
-
-
 #Plots the semi-major axis of the planet and the radius of the Sun over the course of the simulation
 fig2, ax2 = plt.subplots(figsize=(6,2))
 plt.title('Eccentricity')
 plt.xlabel('$t$ (yr)')
 plt.ylabel('$e_{\oplus}$')
-ax2.plot(planet_time, planet_e)
+ax2.plot(planet_time, planet_e, label='Original')
+ax2.plot(planet1_time, planet1_e, label='New')
+ax2.legend(loc='best', ncol=1)
 plt.tight_layout()
 plt.show()
 

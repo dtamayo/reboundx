@@ -30,21 +30,14 @@ com_x = com_x.astype(np.float)
 com_y = com_y.astype(np.float)
 com_z = com_z.astype(np.float)
 
-#Plots the x, y, and z coordinates of the COM vs. sim time
-fig, axs = plt.subplots(2, 2)
+#Plots the x and y coordinates of the COM vs. sim time
+fig, (ax1, ax2) = plt.subplots(1,2,figsize=(6,2))
 fig.suptitle('COM Position')
-axs[0, 0].plot(com_time, com_x)
-axs[0, 0].set_title('$x$-component')
-axs[0, 1].plot(com_time, com_y, 'tab:orange')
-axs[0, 1].set_title('$y$-component')
-axs[1, 0].plot(com_time, com_z, 'tab:green')
-axs[1, 0].set_title('$z$-component')
-
-for ax in axs.flat:
-    ax.set(xlabel='Time (yr)', ylabel='Position (AU)')
-
-# Hide x labels and tick labels for top plots and y ticks for right plots.
-for ax in axs.flat:
-    ax.label_outer()
-
+ax1.plot(com_time, com_x)
+ax1.set_title('$x$')
+ax1.set(xlabel='$t$ (yr)', ylabel='(AU)')
+ax2.plot(com_time, com_y, 'tab:orange')
+ax2.set_title('$y$')
+ax2.set(xlabel='$t$ (yr)')
+plt.tight_layout()
 plt.show()
