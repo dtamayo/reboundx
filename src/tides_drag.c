@@ -58,14 +58,17 @@
 #include <float.h>
 #include "reboundx.h"
 
-double R0 = 0.78;       // sun's physical radius in AU
-double L0 = 869.5;      // solar luminosity
-double Omega = 0;       // angular velocity of solar rotation
-double lambda2 = 0.023; // depends on properties of convective envelope
+// double L0 = 869.5;      // solar luminosity
+// double Omega = 0;       // angular velocity of solar rotation
+// double lambda2 = 0.023; // depends on properties of convective envelope
 
 void rebx_tides_drag(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
     //FOR USE LATER W/ REGISTERED PARAMETERS
-    // struct rebx_extras* const rebx = sim->extras; // to access add'l params
+    struct rebx_extras* const rebx = sim->extras; // to access add'l params
+    const double* L = rebx_get_param(rebx, particles[0].ap, "luminosity");
+    const double* O = rebx_get_param(rebx, particles[0].ap, "tides_Omega");
+    const double* l2 = rebx_get_param(rebx, particles[0].ap, "tides_lambda2");
+
     // for (int i=0; i<N; i++){
     //     const double* migration_tau = rebx_get_param(rebx, particles[i].ap, "migration_tau");
     //     if (migration_tau != NULL){
@@ -79,40 +82,47 @@ void rebx_tides_drag(struct reb_simulation* const sim, struct rebx_force* const 
     //     }
     // }
 
-    struct reb_orbit po = reb_tools_particle_to_orbit(sim->G, particles[1], particles[0]);
+    if (L == NULL){
+        rebx_error(rebx, "Primary luminosity required. Ignoring effect.");
+    }   
+    else if (O == NULL){
+        rebx_error(rebx, "Primary rotational velocity (Omega) required. Ignoring effect.");
+    }
+    else if (l2 == NULL){
+        rebx_error(rebx, "Primary lambda2 required. Ignoring effect.");
+    }
+    else{
+        // dereference add'l particle params
+        const double L0 = *L;                 // solar luminosity
+        const double Omega = *O;              // angular velocity of solar rotation
+        const double lambda2 = *l2;           // depends on properties of convective envelope
+        const double R0 = particles[0].r;     // primary physical radius
+        const double M0 = particles[0].m;     // primary mass
 
-    const double dr = po.d;               // orbital radius
-    const double vmag = po.v;             // relative velocity
-    const double M0 = particles[0].m;     // primary mass
-    const double m = particles[1].m;      // particle mass
-    const double q = m/M0;                // mass ratio
-    const double rratio = R0/dr;          // ratio of primary physical radius to orbital radius
-    const double omega = po.n;            // angular velocity of orbiting particle
-    const double t_f = cbrt(M0*R0*R0/L0); // convective friction time (Zahn 1989, Eq.15)
-    
-    // Equation (4) of Schroder & Smith (2008):
-    // torque from retarded solar bulges for planar (i.e.
-    // omega and Omega are parallel) and circular orbits
-    const double torque = 6.*(lambda2/t_f)*q*q*M0*R0*R0*rratio*rratio*rratio*rratio*rratio*rratio*(Omega - omega);
+        struct reb_orbit po = reb_tools_particle_to_orbit(sim->G, particles[1], particles[0]);
+        const double dr = po.d;               // orbital radius
+        const double vmag = po.v;             // relative velocity
+        const double m = particles[1].m;      // particle mass
+        const double q = m/M0;                // mass ratio
+        const double rratio = R0/dr;          // ratio of primary physical radius to orbital radius
+        const double omega = po.n;            // angular velocity of orbiting particle
+        const double t_f = cbrt(M0*R0*R0/L0); // convective friction time (Zahn 1989, Eq.15)
+        
+        // Equation (4) of Schroder & Smith (2008):
+        // torque from retarded solar bulges for planar (i.e.
+        // omega and Omega are parallel) and circular orbits
+        const double torque = 6.*(lambda2/t_f)*q*q*M0*R0*R0*rratio*rratio*rratio*rratio*rratio*rratio*(Omega - omega);
 
-    const double prefac = torque/m/dr/vmag; // consolidate prefactor for acceleration components
+        const double prefac = torque/m/dr/vmag; // consolidate prefactor for acceleration components
 
-    // ORIGINAL
-    // Apply torque to acceleration components
-    // particles[1].ax += prefac*particles[1].vx;
-    // particles[1].ay += prefac*particles[1].vy;
-    // particles[1].az += prefac*particles[1].vz;
-
-    // Apply proportional (mass ratio, q) reverse torque to primary
-    // particles[0].ax -= q*prefac*particles[1].vx;
-    // particles[0].ay -= q*prefac*particles[1].vy;
-    // particles[0].az -= q*prefac*particles[1].vz;
-
-    // NEW
-    particles[1].ax += prefac/(1-q)*(particles[1].vx - particles[0].vx);
-    particles[1].ay += prefac/(1-q)*(particles[1].vy - particles[0].vy);
-    particles[1].az += prefac/(1-q)*(particles[1].vz - particles[0].vz);
-    particles[0].ax -= prefac*q/(1-q)*(particles[1].vx - particles[0].vx);
-    particles[0].ay -= prefac*q/(1-q)*(particles[1].vy - particles[0].vy);
-    particles[0].az -= prefac*q/(1-q)*(particles[1].vz - particles[0].vz);
+        // Apply torque to acceleration components
+        particles[1].ax += prefac/(1-q)*(particles[1].vx - particles[0].vx);
+        particles[1].ay += prefac/(1-q)*(particles[1].vy - particles[0].vy);
+        particles[1].az += prefac/(1-q)*(particles[1].vz - particles[0].vz);
+        
+        // Apply proportional (mass ratio, q) reverse torque to primary
+        particles[0].ax -= prefac*q/(1-q)*(particles[1].vx - particles[0].vx);
+        particles[0].ay -= prefac*q/(1-q)*(particles[1].vy - particles[0].vy);
+        particles[0].az -= prefac*q/(1-q)*(particles[1].vz - particles[0].vz);
+    }
 }

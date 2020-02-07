@@ -33,6 +33,7 @@ int main(int argc, char* argv[]){
     // Add Sun to sim
     struct reb_particle sun = {0}; // initialize w/ zeroes
     sun.m = 0.86;                  // in Msun
+    sun.r = 0.78;                  // Physical radius in AU
     reb_add(sim, sun);
     // Add Earth to sim
     struct reb_orbit eo = {0};
@@ -43,10 +44,11 @@ int main(int argc, char* argv[]){
     reb_add(sim, ep);
     
     // Add REBOUNDx Additional Effect
-    struct rebx_extras* rebx = rebx_attach(sim);  // first initialize rebx
-    struct rebx_force* tides = rebx_load_force(rebx, "tides_drag"); // add our new force
-    // struct rebx_force* tides = rebx_load_force(rebx, "migration_force"); // add our new force
-    // rebx_set_param_double(rebx, &sim->particles[1].ap, "migration_tau", 8e4); // set particle parameter
+    struct rebx_extras* rebx = rebx_attach(sim);                                // first initialize rebx
+    struct rebx_force* tides = rebx_load_force(rebx, "tides_drag");             // add our new force
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "luminosity", 869.5);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "tides_Omega", 0);
+    // rebx_set_param_double(rebx, &sim->particles[0].ap, "tides_lambda2", 0.023);
     rebx_add_force(rebx, tides);
 
     // Overwrite planet output file w/ col headers
