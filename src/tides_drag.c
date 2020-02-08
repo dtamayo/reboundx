@@ -35,8 +35,11 @@
  * Python Example          `TidesDrag.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesDrag.ipynb>`_.
  * ======================= ===============================================
  *
- * ADD DESCRIPTION HERE
- *  ...torque from retarded solar bulges for planar (i.e. omega and Omega are parallel) and circular orbits
+ * This adds drag from the tidal interactions between the particles in the simulation and the central body, from slowly rotating tides raised on the primary body.
+ * The effect assumes all affected particles follow co-planar, circular orbits with respect to the primary's rotational pole.
+ * In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary by setting its R_tides (physical radius), luminosity (in units consistent with G), and tides_lambda2 (a coefficient that depends on the properties of the primary's convective envelope).
+ * You can specify the primary with a "primary" flag and its rotational angular velocity with the "Omega" parameter.
+ * If not set, the primary will default to the particle at the 0 index in the particles array and its rotational angular velocity will default to 0.
  * 
  * **Effect Parameters**
  * 
@@ -47,8 +50,11 @@
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
+ * R_tides (float)              Yes         Primary physical radius (required for contribution from tides raised on the body).
+ * luminosity (float)           Yes         Primary luminosity (in units consistent with G).
+ * tides_lambda2 (float)        Yes         Coefficient that depends on the properties of the primary convective envelope.
  * primary (int)                No          Set to 1 to specify the primary.  Defaults to treating particles[0] as primary if not set.
- * PARAM (float)                Yes         DESCRIPTION
+ * Omega (float)                No          Primary rotational angular velocity of the primary.  Defaults to 0 if not set.
  * ============================ =========== ==================================================================
  * 
  */
@@ -72,24 +78,26 @@ static void rebx_calculate_tides_drag(struct rebx_extras* const rebx, struct reb
     else{
         struct reb_orbit po;
         double m, dr, vmag, omega, q, rratio;
-        double R0 = *R;                 // primary physical radius
-        double L0 = *L;                 // solar luminosity
-        double M0 = source->m;          // primary mass
+        double R0 = *R;                 
+        double L0 = *L;                 
+        double M0 = source->m;          
         double t_f = cbrt(M0*R0*R0/L0); // convective friction time (Zahn 1989, Eq.15)
-        double lambda2 = *l2;           // depends on properties of convective envelope
-        double Omega = 0;               // angular velocity of solar rotation
+        double lambda2 = *l2;           
+        double Omega = 0;               
         if (O != NULL) Omega = *O;
         
         for (int i=0; i<N; i++){
             if (i == source_index) continue;
             po = reb_tools_particle_to_orbit(sim->G, particles[i], particles[0]);
-            dr = po.d;                  // orbital radius
-            vmag = po.v;                // relative velocity
-            m = particles[i].m;         // particle mass
+            dr = po.d;
+            vmag = po.v;
+            m = particles[i].m;
             q = m/M0;                   // mass ratio
             rratio = R0/dr;             // ratio of primary physical radius to orbital radius
-            omega = po.n;               // angular velocity of orbiting particle
-        
+            omega = po.n;
+
+            if (q < DBL_MIN) continue;  // m1 = 0. Continue to avoid overflow/nan
+
             // Equation (4) of Schroder & Smith (2008):
             const double torque = 6.*(lambda2/t_f)*q*q*M0*R0*R0*rratio*rratio*rratio*rratio*rratio*rratio*(Omega - omega);
 
