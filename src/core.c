@@ -259,14 +259,6 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->update_accelerations = rebx_tides_precession;
         force->force_type = REBX_FORCE_POS;
     }
-    else if (strcmp(name, "stark_force") == 0){
-        force->update_accelerations = rebx_stark_force;
-        force->force_type = REBX_FORCE_POS;
-    }
-    else if (strcmp(name, "migration_force") == 0){
-        force->update_accelerations = rebx_migration_force;
-        force->force_type = REBX_FORCE_VEL;
-    }
     else if (strcmp(name, "tides_drag") == 0){
         force->update_accelerations = rebx_tides_drag;
         force->force_type = REBX_FORCE_VEL;
