@@ -503,51 +503,6 @@ double rebx_central_force_potential(struct rebx_extras* const rebx);
  */
 double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
 
-/**
- * @brief Calculates lambda, a coefficient that depends on the properties of the convective envelope (Zahn 1989, Eq. 15).
- * @param alpha Convection parameter of solar model.
- * @return Lambda coefficient used to calculate the tidal torque, Gamma (double).
- */
-double rebx_tides_drag_lambda(const double alpha);
-
-/**
- * @brief Calculates t_f, the convective friction time (Zahn 1989, Eq. 7).
- * @param primary_mass Mass of the primary body.
- * @param primary_radius Physical radius of the primary body.
- * @param primary_luminosity Luminosity of radiation source.
- * @return Convective friction time, t_f, used to calculate the tidal torque, Gamma (double).
- */
-double rebx_tides_drag_t_f(const double primary_mass, const double primary_radius, const double primary_luminosity);
-
-/**
- * @brief Calculates q, the mass ratio of secondary to primary bodies.
- * @param secondary_mass Mass of the secondary body.
- * @param primary_mass Mass of the primary body.
- * @return Mass ratio, q, of secondary to primary bodies, used to calculate the tidal torque, Gamma (double). 
- */
-double rebx_tides_drag_q(const double secondary_mass, const double primary_mass);
-
-/**
- * @brief Calculates omega, the angular velocity of the orbiting particle.
- * @param secondary_period Orbital period of secondary particle.
- * @return Angular orbital velocity, omega, of secondary particle (double).
- */
-double rebx_tides_drag_omega(const double secondary_period);
-
-/**
- * @brief Calculates Gamma, the torque exerted on secondary particles with circular orbits by retarded (solar) tidal bulges on the primary body.
- * @param lambda Convective envelope coefficient (Zahn 1989, Eq. 15).
- * @param t_f Convective friction time (Zahn 1989, Eq. 7).
- * @param q Mass ratio (secondary / primary).
- * @param primary_mass Mass of the primary body.
- * @param primary_radius Physical radius of the primary body.
- * @param orbital_radius Orbital radius of secondary particle.
- * @param Omega Angular velocity of the primary's rotation.
- * @param omega Angular velocity of the secondary's orbit.
- * @return Torque, Gamma, exerted on secondary particles in circular orbits by retarded solar tidal bulges on the primary body (double). 
- */
-double rebx_tides_drag_Gamma(const double lambda, const double t_f, const double q, const double primary_mass, const double primary_radius, const double orbital_radius, const double Omega, const double omega);
-
 /** @} */
 /** @} */
 
