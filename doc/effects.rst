@@ -16,50 +16,6 @@ Positive timescales correspond to growth / progression, negative timescales corr
 Semimajor axes, eccentricities and inclinations grow / damp exponentially.  
 Pericenters and nodes progress/regress linearly.
 
-.. _modify_orbits_forces:
-
-modify_orbits_forces
-********************
-
-======================= ===============================================
-Authors                 D. Tamayo, H. Rein
-Implementation Paper    *In progress*
-Based on                `Papaloizou & Larwood 2000 <http://labs.adsabs.harvard.edu/adsabs/abs/2000MNRAS.315..823P/>`_.
-C Example               :ref:`c_example_modify_orbits`
-Python Example          `Migration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Migration.ipynb>`_
-                        `EccAndIncDamping.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/EccAndIncDamping.ipynb>`_.
-======================= ===============================================
-
-This applies physical forces that orbit-average to give exponential growth/decay of the semimajor axis, eccentricity and inclination.
-The eccentricity damping keeps the angular momentum constant (corresponding to `p=1` in modify_orbits_direct), which means that eccentricity damping will induce some semimajor axis evolution.
-Additionally, eccentricity/inclination damping will induce pericenter/nodal precession.
-Both these effects are physical, and the method is more robust for strongly perturbed systems.
-
-**Effect Parameters**
-
-If coordinates not, defaults to using Jacobi coordinates.
-
-============================ =========== ==================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================
-coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
-                                         See the examples for usage.
-============================ =========== ==================================================================
-
-**Particle Parameters**
-
-One can pick and choose which particles have which parameters set.  
-For each particle, any unset parameter is ignored.
-
-============================ =========== ==================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================
-tau_a (double)               No          Semimajor axis exponential growth/damping timescale
-tau_e (double)               No          Eccentricity exponential growth/damping timescale
-tau_inc (double)             No          Inclination axis exponential growth/damping timescale
-============================ =========== ==================================================================
-
-
 .. _modify_orbits_direct:
 
 modify_orbits_direct
@@ -109,46 +65,52 @@ tau_omega (double)           No          Period of linear apsidal precession/reg
 ============================ =========== ==================================================================
 
 
-General Relativity
-^^^^^^^^^^^^^^^^^^
+.. _modify_orbits_forces:
 
-.. _gr_potential:
-
-gr_potential
-************
+modify_orbits_forces
+********************
 
 ======================= ===============================================
-Authors                 H. Rein, D. Tamayo
+Authors                 D. Tamayo, H. Rein
 Implementation Paper    *In progress*
-Based on                `Nobili and Roxburgh 1986 <http://labs.adsabs.harvard.edu/adsabs/abs/1986IAUS..114..105N/>`_.
-C Example               :ref:`c_example_gr`
-Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+Based on                `Papaloizou & Larwood 2000 <http://labs.adsabs.harvard.edu/adsabs/abs/2000MNRAS.315..823P/>`_.
+C Example               :ref:`c_example_modify_orbits`
+Python Example          `Migration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Migration.ipynb>`_
+                        `EccAndIncDamping.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/EccAndIncDamping.ipynb>`_.
 ======================= ===============================================
 
-This is the simplest potential you can use for general relativity.
-It assumes that the masses are dominated by a single central body.
-It gets the precession right, but gets the mean motion wrong by :math:`\mathcal{O}(GM/ac^2)`.  
-It's the fastest option, and because it's not velocity-dependent, it automatically keeps WHFast symplectic.  
-Nice if you have a single-star system, don't need to get GR exactly right, and want speed.
+This applies physical forces that orbit-average to give exponential growth/decay of the semimajor axis, eccentricity and inclination.
+The eccentricity damping keeps the angular momentum constant (corresponding to `p=1` in modify_orbits_direct), which means that eccentricity damping will induce some semimajor axis evolution.
+Additionally, eccentricity/inclination damping will induce pericenter/nodal precession.
+Both these effects are physical, and the method is more robust for strongly perturbed systems.
 
 **Effect Parameters**
+
+If coordinates not, defaults to using Jacobi coordinates.
 
 ============================ =========== ==================================================================
 Field (C type)               Required    Description
 ============================ =========== ==================================================================
-c (double)                   Yes         Speed of light in the units used for the simulation.
+coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
+                                         See the examples for usage.
 ============================ =========== ==================================================================
 
 **Particle Parameters**
 
-If no particles have gr_source set, effect will assume the particle at index 0 in the particles array is the source.
+One can pick and choose which particles have which parameters set.  
+For each particle, any unset parameter is ignored.
 
 ============================ =========== ==================================================================
 Field (C type)               Required    Description
 ============================ =========== ==================================================================
-gr_source (int)              No          Flag identifying the particle as the source of perturbations.
+tau_a (double)               No          Semimajor axis exponential growth/damping timescale
+tau_e (double)               No          Eccentricity exponential growth/damping timescale
+tau_inc (double)             No          Inclination axis exponential growth/damping timescale
 ============================ =========== ==================================================================
 
+
+General Relativity
+^^^^^^^^^^^^^^^^^^
 
 .. _gr:
 
@@ -213,6 +175,44 @@ c (double)                   Yes         Speed of light in the units used for th
 **Particle Parameters**
 
 *None*
+
+.. _gr_potential:
+
+gr_potential
+************
+
+======================= ===============================================
+Authors                 H. Rein, D. Tamayo
+Implementation Paper    *In progress*
+Based on                `Nobili and Roxburgh 1986 <http://labs.adsabs.harvard.edu/adsabs/abs/1986IAUS..114..105N/>`_.
+C Example               :ref:`c_example_gr`
+Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+======================= ===============================================
+
+This is the simplest potential you can use for general relativity.
+It assumes that the masses are dominated by a single central body.
+It gets the precession right, but gets the mean motion wrong by :math:`\mathcal{O}(GM/ac^2)`.  
+It's the fastest option, and because it's not velocity-dependent, it automatically keeps WHFast symplectic.  
+Nice if you have a single-star system, don't need to get GR exactly right, and want speed.
+
+**Effect Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+c (double)                   Yes         Speed of light in the units used for the simulation.
+============================ =========== ==================================================================
+
+**Particle Parameters**
+
+If no particles have gr_source set, effect will assume the particle at index 0 in the particles array is the source.
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+gr_source (int)              No          Flag identifying the particle as the source of perturbations.
+============================ =========== ==================================================================
+
 
 .. _steppers:
 
@@ -328,6 +328,42 @@ tau_mass (double)            Yes         e-folding mass loss (<0) or growth (>0)
 
 Tides
 ^^^^^^^^^^^^^^^^^^
+
+.. _tides_drag:
+
+tides_drag
+**********
+
+======================= ===============================================
+Authors                 S.A. Baronett
+Implementation Paper    *In progress*
+Based on                `Schroder & Smith 2008 <https://arxiv.org/abs/0801.4031>`_.
+C Example               :ref:`c_example_tides_drag`.
+Python Example          `TidesDrag.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesDrag.ipynb>`_.
+======================= ===============================================
+
+This adds drag from the tidal interactions between the particles in the simulation and the central body, from slowly rotating tides raised on the primary body.
+The effect assumes all affected particles follow co-planar, circular orbits with respect to the primary's rotational pole.
+In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary by setting its R_tides (physical radius), luminosity (in units consistent with G), and tides_lambda2 (a coefficient that depends on the properties of the primary's convective envelope).
+You can specify the primary with a "primary" flag and its rotational angular velocity with the "Omega" parameter.
+If not set, the primary will default to the particle at the 0 index in the particles array and its rotational angular velocity will default to 0.
+
+**Effect Parameters**
+
+None
+
+**Particle Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+R_tides (float)              Yes         Primary physical radius (required for contribution from tides raised on the body).
+luminosity (float)           Yes         Primary luminosity (in units consistent with G).
+tides_lambda2 (float)        Yes         Coefficient that depends on the properties of the primary convective envelope.
+primary (int)                No          Set to 1 to specify the primary.  Defaults to treating particles[0] as primary if not set.
+Omega (float)                No          Primary rotational angular velocity of the primary.  Defaults to 0 if not set.
+============================ =========== ==================================================================
+
 
 .. _tides_precession:
 
