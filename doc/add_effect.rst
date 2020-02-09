@@ -44,7 +44,7 @@ The function prototype should always stay the same, so we just change the name
 
     void rebx_stark_force(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
 
-All forces are always passed a pointer to the simulation ``sim``, a force structure ``force``, a ``particles`` array, and the number ``N`` of particles in the array (real particles, not counting variational particles--you don't have to worry if you don't know what those are).
+All forces are always passed as a pointer to the simulation ``sim``, a force structure ``force``, a ``particles`` array, and the number ``N`` of particles in the array (real particles, not counting variational particles--you don't have to worry if you don't know what those are).
 The only thing our function needs to do is evaluate the accelerations for each particle, and add those to each particles' acceleration vector, as  we'll do below.
 Note that we should specifically update the passed ``particles`` array (NOT ``sim->particles``).
 
@@ -67,7 +67,7 @@ If evaluation of your accelerations involves the particle velocities, set ``REBX
     
     ...
     else if (strcmp(name, "stark_force") == 0){
-        force->update_accelerations = rebx_stark_force;;
+        force->update_accelerations = rebx_stark_force;
         force->force_type = REBX_FORCE_POS;
     }
     else{
@@ -109,7 +109,7 @@ Now we just modify the ``problem.c`` file in our new ``stark_force`` folder, e.g
         star.m     = 1.;   
         reb_add(sim, star); 
 
-        struct reb_particle planet = {0};  # add a planet on a circular orbit (with default units where G=1)
+        struct reb_particle planet = {0};  // add a planet on a circular orbit (with default units where G=1)
         planet.x = 1.;
         planet.vy = 1.;
         reb_add(sim, planet);
@@ -227,7 +227,7 @@ Now in C we can set our particle parameter in our ``problem.c`` file:
 
 .. code-block:: c
 
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "stark_force", 0.01);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "stark_acc", 0.01);
 
 and everything will work as before.
 
