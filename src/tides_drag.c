@@ -72,9 +72,9 @@ static void rebx_calculate_tides_drag(struct rebx_extras* const rebx, struct reb
     double* l2 = rebx_get_param(rebx, source->ap, "tides_lambda2");
     double* O  = rebx_get_param(rebx, source->ap, "tides_Omega");
     
-    if      (R == NULL)  rebx_error(rebx, "Primary \"R_tides\" (physical radius) required. Ignoring effect.");
-    else if (L == NULL)  rebx_error(rebx, "Primary \"luminosity\" required. Ignoring effect.");   
-    else if (l2 == NULL) rebx_error(rebx, "Primary \"lambda2\" required. Ignoring effect.");
+    if      (R == NULL)  rebx_error(rebx, "REBOUNDx Error: Primary \"R_tides\" (physical radius) required. Ignoring effect.");
+    else if (L == NULL)  rebx_error(rebx, "REBOUNDx Error: Primary \"luminosity\" required. Ignoring effect.");   
+    else if (l2 == NULL) rebx_error(rebx, "REBOUNDx Error: Primary \"lambda2\" required. Ignoring effect.");
     else{
         struct reb_orbit po;
         double m, dr, vmag, omega, q, rratio;
