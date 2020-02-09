@@ -38,10 +38,6 @@ problems/
 *.txt
 *.dSYM
 Untitled*
-<<<<<<< Updated upstream
 .vscode/*
 *.code-workspace
-=======
-.vscode/c_cpp_properties.json
-.vscode/settings.json
->>>>>>> Stashed changes
+.eggs/*
