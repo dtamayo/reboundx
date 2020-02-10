@@ -413,7 +413,22 @@ Underneath your table, provide a description that will inform users when it's ap
 
 Finally, if your effect requires the user to set (possibly optionally) particular effect or particle parameters, we create tables for them too. 
 
-You can check how everything looks by navigating to ``reboundx/doc`` and typing ``make clean``, then ``make html``.
+To check how everything looks the way it should, you need to 
+
+.. code-block:: bash
+
+    pip install breathe sphinx
+
+and you need to install `doxygen <http://www.doxygen.nl/manual/install.html>`_. Then
+
+.. code-block:: bash
+
+    cd reboundx/doc/doxygen
+    doxygen Doxyfile
+    cd reboundx/doc
+    make clean
+    make html
+
 Then navigate to ``reboundx/doc/_build/html`` and open ``index.html`` in your browser.
 The main effects page (with the tables) is on the left: REBx Effects & Parameters.
 The automatically included documentation will be under API Documentation (Python) and API Documentation (C).
