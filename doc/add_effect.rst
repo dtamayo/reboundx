@@ -152,7 +152,7 @@ Then, e.g. in a jupyter notebook:
 will run with our new effect. We could plot the eccentricity vs time, just like in the Custom_Effects.ipynb ipython_example where we code the effect in python (and is a factor of a few slower than our new C code).
 
 That's all there is to it. 
-If you want to make your effect more flexible, so that users can change parameters at runtime, check out :ref:`adding_parameters`, and :ref:`contribute` if you want to add your effect to REBOUNDx so others can also use it.
+If you want to make your effect more flexible, so that users can change parameters at runtime, check out :ref:`adding_parameters`, and :ref:`contributing` if you want to add your effect to REBOUNDx so others can also use it.
 
 .. _operators:
 
@@ -176,7 +176,7 @@ where ``sim`` is again a pointer to the simulation, ``operator`` is an operator 
 Adding Parameters
 ^^^^^^^^^^^^^^^^^
 
-In :ref:`add_effect` we went over how to add a simple new force, where we simply hardcoded which particles were effected, and by how much. 
+In :ref:`basic_force` we went over how to add a simple new force, where we simply hardcoded which particles were effected, and by how much. 
 REBOUNDx also makes it easy to add parameters to forces and particles so that the user can have the flexibility to choose these values at runtime, can write a script that sets parameters individually on particles, can inspect them to write output to files, change values halfway through, etc.
 This will show you how to do that with your effect.
 
@@ -256,6 +256,7 @@ Here we will take that ipython_example with a made up SPH_sim struct and show ho
 First in ``src/reboundx.h``, we need to add a new enum to ``rebx_param_type``:
 
 .. code-block:: c
+
     enum rebx_param_type{
         REBX_TYPE_NONE,
         ...
@@ -265,6 +266,7 @@ First in ``src/reboundx.h``, we need to add a new enum to ``rebx_param_type``:
 Then we need to define this struct below under 'Basic types in REBOUNDx':
 
 .. code-block:: c
+
     struct rebx_SPH_sim {
         double dt;
         int Nparticles;
@@ -389,8 +391,9 @@ For example, for the stark_force implementation we did:
 We first add the group that our effect belongs to, between dollar signs.
 This keeps different implementations of, e.g., general relativity corrections in the same place.
 Here I made up a new one called $Documentation Examples$.
-If you want to make a new category like here, you have to add it to, edit :ref:`effect_headers` (/reboundx/doc/effect_headers.rst).
-You can optionally add a description general to all implementations in the category following the format in the file, which will show up in :ref:`effects`.
+If you want to make a new category like here, you have to add it to the /reboundx/doc/effect_headers.rst file.
+
+When you create a new category in that file, you can optionally add a description general to all implementations in the category following the format in the file, which will show up in :ref:`effects`.
 
 .. code-block:: rst
 
@@ -398,6 +401,8 @@ You can optionally add a description general to all implementations in the categ
     Documentation Examples 
     ^^^^^^^^^^^^^^^^^^^^^^
     These are effects that have been added as documentation examples
+
+You can also compare with the Orbit Modifications category in that file and how it shows up in the list of effects in the documentation at :ref:`effects`.
 
 Then fill in the table:
 ``Authors`` says who wrote the code.
