@@ -211,7 +211,7 @@ struct rebx_operator{
 
 /**
  * @brief Structure for a REBOUNDx step.
- @ @details A step is just a combination of an operator with a fraction of a timestep (see Sec. 6 of REBOUNdx paper). Can use same operator for different steps of different lengths to build higher order splitting schemes.
+ * @details A step is just a combination of an operator with a fraction of a timestep (see Sec. 6 of REBOUNdx paper). Can use same operator for different steps of different lengths to build higher order splitting schemes.
  */
 struct rebx_step{
     struct rebx_operator* operator;     ///< Pointer to operator to use
