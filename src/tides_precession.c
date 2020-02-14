@@ -62,121 +62,86 @@
 #include <float.h>
 #include "reboundx.h"
 
-static void rebx_calculate_tides_precession(struct rebx_extras* const rebx, struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const int source_index){
-    struct reb_particle* const source = &particles[source_index];
-    const double m0 = source->m;
-    double R0 = 0.;
-    double* R = rebx_get_param(rebx, source->ap, "R_tides");
-    if (R){
-        R0 = *R;
-    }
-    double k10 = 0.;
-    double* k1 = rebx_get_param(rebx, source->ap, "k1");
-    if (k1){
-        k10 = *k1;
-    }
-    const double fac0 = k10*R0*R0*R0*R0*R0; 
-    const int _N_real = sim->N - sim->N_var;
-    double k1p, Rp;
-    for (int i=0;i<_N_real;i++){
-        if(i == source_index) continue;
-        struct reb_particle* const p = &particles[i];
-        const double mratio = p->m/m0;
-        if (mratio < DBL_MIN){ // m1 = 0. Continue to avoid overflow/nan
-            continue;
-        }
-        double fac=0.; 
-        fac += fac0*mratio;
-        
-        Rp = 0.;
-        R = rebx_get_param(rebx, p->ap, "R_tides");
-        if(R){
-            Rp = *R;
-        }
-        k1p = 0.;
-        k1 = rebx_get_param(rebx, p->ap, "k1");
-        if(k1){
-            k1p = *k1;
-        }
-        
-        fac += k1p*Rp*Rp*Rp*Rp*Rp/mratio;
-        const double dx = p->x - source->x; 
-        const double dy = p->y - source->y;
-        const double dz = p->z - source->z;
-        const double dr2 = dx*dx + dy*dy + dz*dz; 
-        const double prefac = -3*sim->G*(m0 + p->m)/(dr2*dr2*dr2*dr2)*fac;
+static void rebx_calculate_tides(struct reb_particle* source, struct reb_particle* target, const double G, const double k1, const double tau){
+    const double ms = source->m;
+    const double mt = target->m;
+    const double Rt = target->r;
 
-        p->ax += prefac*dx;
-        p->ay += prefac*dy;
-        p->az += prefac*dz;
-        source->ax -= mratio*prefac*dx;
-        source->ay -= mratio*prefac*dy;
-        source->az -= mratio*prefac*dz;
-	}
+    const double mratio = ms/mt; // have already checked for 0 and inf
+    const double fac = mratio*k1*Rt*Rt*Rt*Rt*Rt; 
+    
+    const double dx = target->x - source->x; 
+    const double dy = target->y - source->y;
+    const double dz = target->z - source->z;
+    const double dr2 = dx*dx + dy*dy + dz*dz; 
+    const double prefac = -3*G/(dr2*dr2*dr2*dr2)*fac;
+
+    target->ax += prefac*ms*dx;
+    target->ay += prefac*ms*dy;
+    target->az += prefac*ms*dz;
+    source->ax -= prefac*mt*dx;
+    source->ay -= prefac*mt*dy;
+    source->az -= prefac*mt*dz;
 }
+
 
 void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_force* const tides_prec, struct reb_particle* const particles, const int N){
     struct rebx_extras* const rebx = sim->extras;
-    int source_found=0;
-    for (int i=0; i<N; i++){
-        if (rebx_get_param(rebx, particles[i].ap, "tides_primary") != NULL){
-            source_found = 1;
-            rebx_calculate_tides_precession(rebx, sim, particles, N, i);
+    const double G = sim->G;
+
+    // Calculate tides raised on star
+    struct reb_particle* target = &particles[0];// assumes nearly Keplerian motion around a single primary (particles[0])
+    if (target->m == 0){                        // nothing makes sense if primary has no mass
+        return;
+    }
+    double* k1 = rebx_get_param(rebx, target->ap, "tctl_k1");
+    if (k1 != NULL && target->r != 0){  // tides on star only nonzero if k1 and finite size are set
+        // We don't require time lag tau to be set. Might just want conservative piece of tidal potential
+        double tau = 0.;
+        double* tauptr = rebx_get_param(rebx, target->ap, "tctl_tau");
+        if (tauptr){
+            tau = *tauptr;
+        }
+        for (int i=1; i<N; i++){
+            struct reb_particle* source = &particles[i]; // planet raising the tides on the star
+            if (source->m == 0){
+                continue;
+            }
+            rebx_calculate_tides(source, target, G, *k1, tau);
         }
     }
-    if (!source_found){
-        rebx_calculate_tides_precession(rebx, sim, particles, N, 0);    // default source to index 0 if "tides_primary" not found on any particle
+
+    // Calculate tides raised on the planets
+    struct reb_particle* source = &particles[0]; // Source is always the star (no planet-planet tides)
+    for (int i=1; i<N; i++){
+        struct reb_particle* target = &particles[i]; 
+        double* k1 = rebx_get_param(rebx, target->ap, "tctl_k1");
+        if (k1 == NULL || target->r == 0 || target->m == 0){
+            continue;
+        }
+        double tau = 0.;
+        double* tauptr = rebx_get_param(rebx, target->ap, "tctl_tau");
+        if (tauptr){
+            tau = *tauptr;
+        }
+        rebx_calculate_tides(source, target, G, *k1, tau);
     }
 }
 
-static double rebx_calculate_tides_precession_potential(struct rebx_extras* const rebx, struct reb_simulation* const sim, const int source_index){
-    struct reb_particle* const particles = sim->particles;
-    struct reb_particle* const source = &particles[source_index];
-    const double m0 = source->m;
-    double R0 = 0.;
-    double* R = rebx_get_param(rebx, source->ap, "R_tides");
-    if (R){
-        R0 = *R;
-    }
-    double k10 = 0.;
-    double* k1 = rebx_get_param(rebx, source->ap, "k1");
-    if (k1){
-        k10 = *k1;
-    }
-    const double fac0 = k10*R0*R0*R0*R0*R0; 
-    const int _N_real = sim->N - sim->N_var;
-    double H=0.;
-    double Rp, k1p;
-    for (int i=0;i<_N_real;i++){
-        if(i == source_index) continue;
-        struct reb_particle* const p = &particles[i];
-        const double mratio = p->m/m0;
-        if (mratio < DBL_MIN){ // m1 = 0. Continue to avoid overflow/nan
-            continue;
-        }
-        double fac=0.; 
-        fac += fac0*mratio;
-        
-        Rp = 0.;
-        R = rebx_get_param(rebx, p->ap, "R_tides");
-        if(R){
-            Rp = *R;
-        }
-        k1p = 0.;
-        k1 = rebx_get_param(rebx, p->ap, "k1");
-        if(k1){
-            k1p = *k1;
-        }
-        
-        fac += k1p*Rp*Rp*Rp*Rp*Rp/mratio;
-        
-        const double dx = p->x - source->x; 
-        const double dy = p->y - source->y;
-        const double dz = p->z - source->z;
-        const double dr2 = dx*dx + dy*dy + dz*dz; 
-        H += -3./6.*sim->G*(m0 + p->m)*p->m/(dr2*dr2*dr2)*fac;
-	}
-    return H;
+static double rebx_calculate_tides_potential(struct reb_particle* source, struct reb_particle* target, const double G, const double k1){
+    const double ms = source->m;
+    const double mt = target->m;
+    const double Rt = target->r;
+
+    const double mratio = ms/mt; // have already checked for 0 and inf
+    const double fac = mratio*k1*Rt*Rt*Rt*Rt*Rt; 
+    
+    const double dx = target->x - source->x; 
+    const double dy = target->y - source->y;
+    const double dz = target->z - source->z;
+    const double dr2 = dx*dx + dy*dy + dz*dz; 
+    
+    return -1./2.*G*ms*mt/(dr2*dr2*dr2)*fac;
 }
 
 double rebx_tides_precession_potential(struct rebx_extras* const rebx){
@@ -187,16 +152,35 @@ double rebx_tides_precession_potential(struct rebx_extras* const rebx){
     struct reb_simulation* const sim = rebx->sim;
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
-    int source_found=0;
+    const double G = sim->G;
     double H=0.;
-    for (int i=0; i<N_real; i++){
-        if (rebx_get_param(rebx, particles[i].ap, "primary") != NULL){
-            source_found = 1;
-            H = rebx_calculate_tides_precession_potential(rebx, sim, i);
+
+    // Calculate tides raised on star
+    struct reb_particle* target = &particles[0];// assumes nearly Keplerian motion around a single primary (particles[0])
+    if (target->m == 0){                        // No potential with massless primary
+        return 0.;
+    }
+    double* k1 = rebx_get_param(rebx, target->ap, "tctl_k1");
+    if (k1 != NULL && target->r != 0){  // tides on star only nonzero if k1 and finite size are set
+        for (int i=1; i<N_real; i++){
+            struct reb_particle* source = &particles[i]; // planet raising the tides on the star
+            if (source->m == 0){
+                continue;
+            }
+            H += rebx_calculate_tides_potential(source, target, G, *k1);
         }
     }
-    if (!source_found){
-        H = rebx_calculate_tides_precession_potential(rebx, sim, 0);    // default source to index 0 if "primary" not found on any particle
+
+    // Calculate tides raised on the planets
+    struct reb_particle* source = &particles[0]; // Source is always the star (no planet-planet tides)
+    for (int i=1; i<N_real; i++){
+        struct reb_particle* target = &particles[i]; 
+        double* k1 = rebx_get_param(rebx, target->ap, "tctl_k1");
+        if (k1 == NULL || target->r == 0 || target->m == 0){
+            continue;
+        }
+        H += rebx_calculate_tides_potential(source, target, G, *k1);
     }
+
     return H;
 }
