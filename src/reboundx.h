@@ -483,11 +483,12 @@ double rebx_gr_full_hamiltonian(struct rebx_extras* const rebx, const struct reb
 double rebx_gr_potential_potential(struct rebx_extras* const rebx, const struct rebx_force* const gr_potential);
 
 /**
- * @brief Calculates the potential for tides_precession effect.
+ * @brief Calculates the potential for the conservative piece of the tides_constant_time_lag effect.
+ * @details Will be conserved if tctl_tau = 0
  * @param rebx pointer to the REBOUNDx extras instance.
- * @return Potential corresponding to tides_precession effect.
+ * @return Potential corresponding to tides_constant_time_lag effect.
  */
-double rebx_tides_precession_potential(struct rebx_extras* const rebx);
+double rebx_tides_constant_time_lag_potential(struct rebx_extras* const rebx);
 
 /**
  * @brief Calculates the potential for central_force effect.
