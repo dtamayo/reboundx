@@ -57,8 +57,7 @@ class TestConservation(unittest.TestCase):
         force = rebx.load_force(name)
         rebx.add_force(force)
         ps = sim.particles
-        ps[0].params['R_tides'] = 1.e-3
-        ps[0].params['k1'] = 0.4
+        ps[0].params['tctl_k1'] = 0.4
         H0 = sim.calculate_energy() + rebx.tides_precession_potential(force)
         sim.integrate(1.e4)
         H = sim.calculate_energy() + rebx.tides_precession_potential(force)

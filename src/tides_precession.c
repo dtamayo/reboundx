@@ -62,7 +62,7 @@
 #include <float.h>
 #include "reboundx.h"
 
-static void rebx_calculate_tides(struct reb_particle* source, struct reb_particle* target, const double G, const double k1, const double tau){
+static void rebx_calculate_tides(struct reb_particle* source, struct reb_particle* target, const double G, const double k1, const double tau, const double Omega){
     const double ms = source->m;
     const double mt = target->m;
     const double Rt = target->r;
@@ -75,13 +75,43 @@ static void rebx_calculate_tides(struct reb_particle* source, struct reb_particl
     const double dz = target->z - source->z;
     const double dr2 = dx*dx + dy*dy + dz*dz; 
     const double prefac = -3*G/(dr2*dr2*dr2*dr2)*fac;
+    double rfac = prefac;
 
-    target->ax += prefac*ms*dx;
-    target->ay += prefac*ms*dy;
-    target->az += prefac*ms*dz;
-    source->ax -= prefac*mt*dx;
-    source->ay -= prefac*mt*dy;
-    source->az -= prefac*mt*dz;
+    if (tau != 0){
+        const double dvx = target->vx - source->vx; 
+        const double dvy = target->vy - source->vy;
+        const double dvz = target->vz - source->vz;
+
+        rfac *= (1. + 3.*tau/dr2*(dx*dvx + dy*dvy + dz*dvz));
+        const double thetafac = -prefac*tau;
+
+        const double hx = dy*dvz - dz*dvy;
+        const double hy = dz*dvx - dx*dvz;
+        const double hz = dx*dvy - dy*dvx;
+
+        const double thetadotcrossrx = (hy*dz - hz*dy)/dr2; // vec(thetadot) cross vec(r) Bolmont Eq. 7
+        const double thetadotcrossry = (hz*dx - hx*dz)/dr2;
+        const double thetadotcrossrz = (hx*dy - hy*dx)/dr2;
+
+        // Assumes all spins vec(Omega) = Omega zhat, i.e., spin fixed along z axis
+        const double Omegacrossrx = -Omega*dy;
+        const double Omegacrossry = Omega*dx; 
+        const double Omegacrossrz = 0.;
+
+        target->ax += thetafac*ms*(Omegacrossrx-thetadotcrossrx);
+        target->ay += thetafac*ms*(Omegacrossry-thetadotcrossry);
+        target->az += thetafac*ms*(Omegacrossrz-thetadotcrossrz);
+        source->ax -= thetafac*mt*(Omegacrossrx-thetadotcrossrx);
+        source->ay -= thetafac*mt*(Omegacrossry-thetadotcrossry);
+        source->az -= thetafac*mt*(Omegacrossrz-thetadotcrossrz);
+    }
+
+    target->ax += rfac*ms*dx;
+    target->ay += rfac*ms*dy;
+    target->az += rfac*ms*dz;
+    source->ax -= rfac*mt*dx;
+    source->ay -= rfac*mt*dy;
+    source->az -= rfac*mt*dz;
 }
 
 
@@ -98,16 +128,21 @@ void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_force* 
     if (k1 != NULL && target->r != 0){  // tides on star only nonzero if k1 and finite size are set
         // We don't require time lag tau to be set. Might just want conservative piece of tidal potential
         double tau = 0.;
+        double Omega = 0.;
         double* tauptr = rebx_get_param(rebx, target->ap, "tctl_tau");
         if (tauptr){
             tau = *tauptr;
+            double* Omegaptr = rebx_get_param(rebx, target->ap, "Omega");
+            if (Omegaptr){
+                Omega = *Omegaptr;
+            }
         }
         for (int i=1; i<N; i++){
             struct reb_particle* source = &particles[i]; // planet raising the tides on the star
             if (source->m == 0){
                 continue;
             }
-            rebx_calculate_tides(source, target, G, *k1, tau);
+            rebx_calculate_tides(source, target, G, *k1, tau, Omega);
         }
     }
 
@@ -120,11 +155,16 @@ void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_force* 
             continue;
         }
         double tau = 0.;
+        double Omega = 0.;
         double* tauptr = rebx_get_param(rebx, target->ap, "tctl_tau");
         if (tauptr){
             tau = *tauptr;
+            double* Omegaptr = rebx_get_param(rebx, target->ap, "Omega");
+            if (Omegaptr){
+                Omega = *Omegaptr;
+            }
         }
-        rebx_calculate_tides(source, target, G, *k1, tau);
+        rebx_calculate_tides(source, target, G, *k1, tau, Omega);
     }
 }
 
