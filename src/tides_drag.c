@@ -125,3 +125,23 @@ void rebx_tides_drag(struct reb_simulation* const sim, struct rebx_force* const 
     }
     if (!source_found) rebx_calculate_tides_drag(rebx, sim, particles, N, 0); // default source to index 0 if "tides_primary" not found on any particle
 }
+
+/*
+CONVENIENCE FUNCTIONS
+*/
+double rebx_calculate_tides_drag_lambda2(const double alpha){
+    return cbrt(0.019*alpha*alpha*alpha*alpha);
+}
+
+double rebx_calculate_tides_drag_t_f(const double primary_mass, const double primary_radius, const double source_luminosity){
+    return cbrt(primary_mass*primary_radius*primary_radius/source_luminosity);
+}
+
+double rebx_calculate_tides_drag_q(const double secondary_mass, const double primary_mass){
+    return secondary_mass/primary_mass;
+}
+
+double rebx_calculate_tides_drag_Gamma(const double lambda2, const double t_f, const double q, const double primary_mass, const double primary_radius, const double orbital_radius, const double Omega, const double omega){
+    const double rratio = primary_radius / orbital_radius;
+    return 6.*(lambda2/t_f)*q*q*primary_mass*primary_radius*primary_radius*rratio*rratio*rratio*rratio*rratio*rratio*(Omega - omega);
+}
