@@ -50,8 +50,8 @@
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
  * particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
- * k1 (float)                   Yes         Apsidal motion constant (half the tidal Love number k2).
- * tau (float)                  No          Constant time lag. If not set will default to 0 and give conservative tidal potential
+ * tctl_k1 (float)                   Yes         Apsidal motion constant (half the tidal Love number k2).
+ * tctl_tau (float)                  No          Constant time lag. If not set will default to 0 and give conservative tidal potential
  * Omega (float)                No          Rotation rate. If not set will default to 0
  * ============================ =========== ==================================================================
  * 
@@ -169,7 +169,8 @@ void rebx_tides_constant_time_lag(struct reb_simulation* const sim, struct rebx_
     }
 }
 
-static double rebx_calculate_tides_constant_time_lag(struct reb_particle* source, struct reb_particle* target, const double G, const double k1){
+// Calculate potential of conservative piece of tidal interaction
+static double rebx_calculate_tides_potential(struct reb_particle* source, struct reb_particle* target, const double G, const double k1){
     const double ms = source->m;
     const double mt = target->m;
     const double Rt = target->r;
