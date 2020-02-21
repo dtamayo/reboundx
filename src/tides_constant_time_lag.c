@@ -28,7 +28,7 @@
  * $Tides$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
  *
  * ======================= ===============================================
- * Authors                 Stanley Baronett, D. Tamayo
+ * Authors                 Stanley A. Baronett, D. Tamayo
  * Implementation Paper    *In progress*
  * Based on                `Hut 1981 <https://ui.adsabs.harvard.edu/#abs/1981A&A....99..126H/abstract>`_, `Bolmont et al., 2015 <https://ui.adsabs.harvard.edu/abs/2015A%26A...583A.116B/abstract>`_.
  * C Example               :ref:`c_example_tides_constant_time_lag`.
