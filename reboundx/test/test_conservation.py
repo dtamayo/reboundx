@@ -49,20 +49,6 @@ class TestConservation(unittest.TestCase):
         H = sim.calculate_energy() + rebx.gr_potential_potential(force)
         self.assertLess(abs((H-H0)/H0), 1.e-12)
 
-    def test_tides_precession(self):
-        name = 'tides_precession'
-        sim = rebound.Simulation(binary)
-        sim.integrator = "ias15"
-        rebx = reboundx.Extras(sim)
-        force = rebx.load_force(name)
-        rebx.add_force(force)
-        ps = sim.particles
-        ps[0].params['tctl_k1'] = 0.4
-        H0 = sim.calculate_energy() + rebx.tides_precession_potential(force)
-        sim.integrate(1.e4)
-        H = sim.calculate_energy() + rebx.tides_precession_potential(force)
-        self.assertLess(abs((H-H0)/H0), 1.e-12)
-
     def test_central_force(self):
         name = 'central_force'
         sim = rebound.Simulation(binary)
