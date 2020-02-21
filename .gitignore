@@ -38,5 +38,6 @@ problems/
 *.txt
 *.dSYM
 Untitled*
-.vscode/settings.json
-.vscode/c_cpp_properties.json
+.vscode/*
+*.code-workspace
+.eggs/*
