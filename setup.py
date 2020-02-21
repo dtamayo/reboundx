@@ -22,7 +22,7 @@ try:
     ghash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii")
     ghash_arg = "-DREBXGITHASH="+ghash
 except:
-    ghash_arg = "-DREBXGITHASH=f354cb6148b1e9a3b4cf5752e29d0c99a8bfc64c" #GITHASHAUTOUPDATE
+    ghash_arg = "-DREBXGITHASH=e7732178e1cff9d1c581adc0082cfe9ca521d3f3" #GITHASHAUTOUPDATE
 
 class build_ext(_build_ext):
     def finalize_options(self):
@@ -77,7 +77,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='reboundx',
-    version='3.0.4',
+    version='3.0.5',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
     url='http://github.com/dtamayo/reboundx',
