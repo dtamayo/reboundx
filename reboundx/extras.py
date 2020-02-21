@@ -190,9 +190,9 @@ class Extras(Structure):
         clibreboundx.rebx_gr_potential_potential.restype = c_double
         return clibreboundx.rebx_gr_potential_potential(byref(self), byref(force))
     
-    def tides_precession_potential(self, force):
-        clibreboundx.rebx_tides_precession_potential.restype = c_double
-        return clibreboundx.rebx_tides_precession_potential(byref(self), byref(force))
+    def tides_constant_time_lag_potential(self, force):
+        clibreboundx.rebx_tides_constant_time_lag_potential.restype = c_double
+        return clibreboundx.rebx_tides_constant_time_lag_potential(byref(self), byref(force))
 
     def central_force_potential(self):
         clibreboundx.rebx_central_force_potential.restype = c_double
