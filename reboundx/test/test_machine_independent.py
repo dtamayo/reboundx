@@ -143,30 +143,6 @@ class TestMachineIndependent(unittest.TestCase):
         sim.integrate(simf.t)
         self.assertEqual(sim.particles[0].x, simf.particles[0].x)
 
-    def test_tides_precession(self):
-        name = 'tides_precession'
-        try:
-            rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
-            rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
-            sa = reboundx.SimulationArchive(rebbin, rebxbin)
-        except:
-            sim = rebound.Simulation('binaries/twoplanets.bin')
-            sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
-            rebx = reboundx.Extras(sim)
-            force = rebx.load_force(name)
-            rebx.add_force(force)
-            ps = sim.particles
-            ps[0].params['R_tides'] = 1.e-3
-            ps[0].params['k1'] = 0.4
-            rebx.save('binaries/'+name+'.rebx')
-            sim.integrate(1.e4)
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
-
-        simf, rebx = sa[-1]
-        sim,  rebx = sa[0]
-        sim.integrate(simf.t)
-        self.assertEqual(sim.particles[0].x, simf.particles[0].x)
-    
     def test_central_force(self):
         name = 'central_force'
         try:

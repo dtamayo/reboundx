@@ -38,3 +38,6 @@ problems/
 *.txt
 *.dSYM
 Untitled*
+.vscode/*
+*.code-workspace
+.eggs/*

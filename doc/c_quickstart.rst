@@ -6,7 +6,7 @@ Quickstart Guide (C)
 Installation
 ------------
 
-Navigate to the parent directory that holds the ``rebound`` folder (see below if you want to install in a custom folder).  Then in a terminaljk13GA::
+Navigate to the parent directory that holds the ``rebound`` folder (see below if you want to install in a custom folder).  Then in a terminal::
 
     git clone https://github.com/dtamayo/reboundx.git
 
@@ -26,7 +26,7 @@ We assume we've already set up a ``reb_simulation`` called ``sim``.  We always b
 We then add the effect we are interested in.
 There are two types of effects, forces and operators. 
 The easiest is to check the documentation for the effect you're interested in on the :ref:`effects` page, which links to a C example that shows you how to add it and set the relevant parameters.
-For example, to add post-Newtonian forces,::
+For example, to add post-Newtonian forces::
 
     struct rebx_force* gr = rebx_load_force(rebx, "gr");
 
