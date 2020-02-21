@@ -23,7 +23,7 @@ int main(int argc, char* argv[]){
     reb_add(sim, planet);
     
     struct rebx_extras* rebx = rebx_attach(sim);
-    struct rebx_force* gr = rebx_create_force(rebx, "gr");
+    struct rebx_force* gr = rebx_load_force(rebx, "gr");
     rebx_add_force(rebx, gr);
     
     /* The documentation page https://reboundx.readthedocs.io/en/latest/effects.html lists the various required and optional parameters that need to be set for each effect in REBOUNDx. 
@@ -36,8 +36,6 @@ int main(int argc, char* argv[]){
 
     double c = 10064.915; // speed of light in default units of AU, Msun and yr/2pi
     rebx_set_param_double(rebx, &gr->ap, "c", c); 
-    // We now add an arbitrary int parameter to the planet in the simulation
-    rebx_set_param_int(rebx, &sim->particles[1].ap, "index", 73);
 
     // After setting the parameters we want to set, we would integrate as usual. 
 
@@ -47,7 +45,6 @@ int main(int argc, char* argv[]){
     /* At any point, we can access the parameters we set (e.g., some effects could update these values as the simulation progresses). We get all parameter types back with rebx_get_param, which returns a void pointer that we are responsible for casting to the correct type. Since we are not modifying the linked list, we don't pass a reference to ap like above*/
 
     double* new_c = rebx_get_param(rebx, gr->ap, "c");
-    int* new_index = rebx_get_param(rebx, sim->particles[1].ap, "index");
 
     /* It is important to check returned parameters!
      * If the parameter is not found, it will return a NULL pointer.
@@ -59,10 +56,6 @@ int main(int argc, char* argv[]){
         printf("c=%f\n", *new_c);
     }
 
-    if (new_index != NULL){
-        printf("index=%d\n", *new_index);
-    }
-  
     /* The above functionality is probably enough for most users.
      * If you find you need to do more complicated things, read below!
      *
