@@ -1,4 +1,4 @@
-.. image:: http://img.shields.io/badge/REBOUNDx-v3.0.4-green.svg?style=flat
+.. image:: http://img.shields.io/badge/REBOUNDx-v3.0.5-green.svg?style=flat
     :target: http://reboundx.readthedocs.org
 .. image:: https://badge.fury.io/py/reboundx.svg
     :target: https://badge.fury.io/py/reboundx
@@ -33,3 +33,10 @@ For a list of supported effects, installation instructions, tutorials/examples a
 
 .. image:: https://github.com/dtamayo/dtamayo.github.io/blob/master/pix/reboundx.png
 
+Changelog
+=========
+
+Version 3.0.5
+-------------
+
+* Generalized tides_precession effect to general constant time lag model (Hut 1981)

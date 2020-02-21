@@ -329,23 +329,23 @@ tau_mass (double)            Yes         e-folding mass loss (<0) or growth (>0)
 Tides
 ^^^^^^^^^^^^^^^^^^
 
-.. _tides_precession:
+.. _tides_constant_time_lag:
 
-tides_precession
-****************
+tides_constant_time_lag
+***********************
 
 ======================= ===============================================
-Authors                 D. Tamayo
+Authors                 Stanley Baronett, D. Tamayo
 Implementation Paper    *In progress*
-Based on                `Hut 1981 <https://ui.adsabs.harvard.edu/#abs/1981A&A....99..126H/abstract>`_.
-C Example               :ref:`c_example_tides_precession`.
-Python Example          `TidesPrecession.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesPrecession.ipynb>`_.
+Based on                `Hut 1981 <https://ui.adsabs.harvard.edu/#abs/1981A&A....99..126H/abstract>`_, `Bolmont et al., 2015 <https://ui.adsabs.harvard.edu/abs/2015A%26A...583A.116B/abstract>`_.
+C Example               :ref:`c_example_tides_constant_time_lag`.
+Python Example          `TidesConstantTimeLag.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesConstantTimeLag.ipynb>`_.
 ======================= ===============================================
 
-This adds precession from the tidal interactions between the particles in the simulation and the central body, both from tides raised on the primary and on the other bodies.
-In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' R_tides (physical radius) and k1 (apsidal motion constant, half the tidal Love number).
-You can specify the primary with a "primary" flag.
-If not set, the primary will default to the particle at the 0 index in the particles array.
+This adds constant time lag tidal interactions between orbiting bodies in the simulation and the primary, both from tides raised on the primary and on the other bodies.
+In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' physical radius particles[i].r, k1 (apsidal motion constant, half the tidal Love number), constant time lag tau, and rotation rate Omega. See Hut (1981) and Bolmont et al. 2015 above.
+
+If tau is not set, it will default to zero and yield the conservative piece of the tidal potential.
 
 **Effect Parameters**
 
@@ -356,9 +356,10 @@ None
 ============================ =========== ==================================================================
 Field (C type)               Required    Description
 ============================ =========== ==================================================================
-R_tides (float)              Yes         Physical radius (required for contribution from tides raised on the body).
-k1 (float)                   Yes         Apsidal motion constant (half the tidal Love number k2).
-primary (int)                No          Set to 1 to specify the primary.  Defaults to treating particles[0] as primary if not set.
+particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
+tctl_k1 (float)                   Yes         Apsidal motion constant (half the tidal Love number k2).
+tctl_tau (float)                  No          Constant time lag. If not set will default to 0 and give conservative tidal potential
+Omega (float)                No          Rotation rate. If not set will default to 0
 ============================ =========== ==================================================================
 
 
@@ -412,6 +413,7 @@ C Example               :ref:`c_example_J2`
 Python Example          `J2.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/J2.ipynb>`_.
 ======================= ===============================================
 
+Adds azimuthally symmetric gravitational harmonics (J2, J4) to bodies in the simulation. Current implementation assumes everything is planar, i.e. spin pole of body aligned with z axis of simulation.
 
 **Effect Parameters**
 
@@ -424,7 +426,7 @@ Field (C type)               Required    Description
 ============================ =========== ==================================================================
 J2 (double)                  No          J2 coefficient
 J4 (double)                  No          J4 coefficient
-R_eq (double)                No         Equatorial radius of nonspherical body used for calculating Jn harmonics
+R_eq (double)                No          Equatorial radius of nonspherical body used for calculating Jn harmonics
 ============================ =========== ==================================================================
 
 
