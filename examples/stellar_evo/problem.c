@@ -1,12 +1,10 @@
 /**
- * REWRITE***
- * Migration and other orbit modifications
+ * Stellar evolution with splined mass data
  *
- * This example shows how to add migration, eccentricity damping
- * and pericenter precession to a REBOUND simulation.  If you have
- * GLUT installed for visualization, press 'w' to see the orbits
- * as wires.  You can zoom out by holding shift, holding down the mouse
- * and dragging.  Press 'c' to better see migration/e-damping.
+ * This example shows how to change a particle's mass using splined time-series data during a REBOUND simulation. 
+ * If you have GLUT installed for visualization, press 'w' to see the orbits as wires.
+ * You can zoom out by holding shift, holding down the mouse and dragging.
+ * Press 'c' to better see migration/e-damping.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,7 +29,7 @@ int main(int argc, char* argv[]){
 	planet.m = 1.e-3;
 	planet.x = 1.;
 	planet.vy = 2.*M_PI;
-	reb_add(sim,planet);
+	reb_add(sim, planet);
 	planet.x *= 2.;
 	planet.vy /= sqrt(2.);
 	reb_add(sim, planet);
@@ -42,35 +40,54 @@ int main(int argc, char* argv[]){
 	reb_move_to_com(sim);
 	
 	struct rebx_extras* rebx = rebx_attach(sim); // initialize reboundx
-    struct rebx_operator* modify_mass = rebx_load_operator(rebx, "modify_mass");
+    struct rebx_operator* stellar_evo = rebx_load_operator(rebx, "stellar_evo");
 
     /* The function rebx_add_operator will choose how to add the operator to the integration
      * scheme based on the integrator being used and the properties of the operator.
      * This is typically a half operator timestep before the main REBOUND timestep, and half afterward.
      */
-
-	rebx_add_operator(rebx, modify_mass);
+	rebx_add_operator(rebx, stellar_evo);
 
     /* If you wanted to make your own choices, you can add individual operator steps.
-     * In this case you would pass additional parameters. Say we wanted to add a full operaator timestep after the main REBOUND timestep;
+     * In this case you would pass additional parameters. Say we wanted to add a full operator timestep after the main REBOUND timestep;
      *
      * dt_fraction = 1. // Fraction of a REBOUND timestep (sim->dt) operator should act
      * timing = REBX_TIMING_POST; // Should happen POST timestep
-     * name = "modify_mass_post"; // Name identifier
-     * rebx_add_operator_step(rebx, modify_mass, dt_fraction, timing, name);
+     * name = "stellar_evo_post"; // Name identifier
+     * rebx_add_operator_step(rebx, stellar_evo, dt_fraction, timing, name);
      */
 
-	// To set an exponential mass loss rate, we set the e-folding timescale (positive for growth, negative for loss)
-    // Here have the star lose mass with e-damping timescale = tmax
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "tau_mass", -tmax);
+	// To set how the mass will change, we pass two arrays (pointers to double) for the corresponding time-mass values.
+    // Here we have several values that correspond to a star losing mass with an e-damping timescale of -tmax (-1e4) over 12,500 yr.
+	// The effect will use a cubic spline to interpolate any intermediate values needed by the simulation.
+	double tarr[] = {0, 2500, 5000, 7500, 10000, 12500}; 											// in yr
+	double marr[] = {1., 0.77880078307, 0.60653065971, 0.47236655274, 0.36787944117, 0.28650479686}; // in Msun
 
-	// We can approximate a linear mass loss/growth rate if the rate is small by taking tau_mass = M_initial / mass_loss_rate (or growth)
-	double M_dot = 1.e-12; // mass growth rate for the planet (in simulation units--here Msun/yr)
-    double tau_mass = sim->particles[1].m / M_dot; // first planet gains mass at linear rate M_dot
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "tau_mass", tau_mass);
+	rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_age", tarr);
+	rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_val", marr);
+
+	// Overwrite stellar mass output file
+    system("rm -f star.txt"); // remove existing file
+    FILE* com_file = fopen("star.txt", "a");
+    fprintf(com_file, "Time(yrs)\t\tM(Msun)\n");
+    fclose(com_file);
+
+	// Overwrite planet output file w/ col headers
+    system("rm -f planet.txt"); // remove existing file
+    FILE* file = fopen("planet.txt", "a");
+    fprintf(file, "Time(yrs)\t\tMass(Msun)\t\tSemi-major Axis(AU)\t\tEccentricity\t\tInclination(Radians)\t\tLongitude_of_Ascending_Node(Radians)\t\tArgument_of_Periapsis(Radians))\t\tTrue_Anomaly(Radians)\n");
+    fclose(file);
+
+    // Overwrite COM output file
+    system("rm -f COM.txt"); // remove existing file
+    FILE* com_file = fopen("COM.txt", "a");
+    fprintf(com_file, "Time(yrs)\t\tx(AU)\t\ty(AU)\t\tz(AU)\n");
+    fclose(com_file);
 
 	reb_integrate(sim, tmax); 
 	rebx_free(rebx); 	// this explicitly frees all the memory allocated by REBOUNDx 
+
+	// try moving all file close statements to here
 }
 
 void heartbeat(struct reb_simulation* const sim){ 
@@ -78,5 +95,31 @@ void heartbeat(struct reb_simulation* const sim){
     if(reb_output_check(sim, tmax/100.)){
 		struct reb_orbit o = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
 		printf("t=%e, Sun mass = %f, planet mass = %e, planet semimajor axis = %f\n", sim->t, sim->particles[0].m, sim->particles[1].m, o.a);
+
+        struct reb_particle sun = sim->particles[0];
+        struct reb_particle cp = sim->particles[1];
+		struct reb_orbit co  = reb_tools_particle_to_orbit(sim->G, cp, sun);
+		struct reb_particle com = reb_get_com(sim);
+		double M = sun.m;
+        double t = sim->t;
+        double m = cp.m;
+        double a = co.a;
+        double e = co.e;
+        double inc = co.inc;
+        double Omega = co.Omega;
+        double omega = co.omega;
+        double f = co.f;
+		FILE* star_file = fclose("star.txt", "a");
+        FILE* planet_file = fopen("planet.txt", "a");
+        FILE* com_file = fopen("COM.txt", "a");
+
+        reb_output_timing(sim, tmax);
+        reb_integrator_synchronize(sim);
+		fprintf(star_file, "%e\t\t%e\n", t, M);
+        fclose(star_file);
+        fprintf(planet_file, "%e\t\t%e\t\t%e\t\t%e\t\t%e\t\t%e\t\t%e\t\t%e\n", t, m, a, e, inc, Omega, omega, f);
+        fclose(planet_file);
+        fprintf(com_file, "%e\t\t%e\t\t%e\t\t%e\n", t, com.x, com.y, com.z);
+        fclose(com_file);
 	}   
  }
