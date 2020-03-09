@@ -20,13 +20,16 @@ int main(int argc, char* argv[]){
 	struct reb_simulation* sim = reb_create_simulation();
     sim->G = 4*M_PI*M_PI;               // use units of AU, yr and solar masses
 	sim->heartbeat = heartbeat;
+
+	sim->integrator = REB_INTEGRATOR_IAS15;
+	sim->ri_ias15.epsilon = 0; // makes IAS15 non-adaptive
+    sim->force_is_velocity_dependent = 1;
 	
 	struct reb_particle sun = {0}; 
 	sun.m  	= 1.;	
 	reb_add(sim, sun); 
 
 	struct reb_particle planet = {0};   // Initialize planets on circular orbits, each 2 times farther than last.
-	planet.m = 1.e-3;
 	planet.x = 1.;
 	planet.vy = 2.*M_PI;
 	reb_add(sim, planet);
@@ -57,20 +60,22 @@ int main(int argc, char* argv[]){
      * rebx_add_operator_step(rebx, stellar_evo, dt_fraction, timing, name);
      */
 
-	// To set how the mass will change, we pass two arrays (pointers to double) for the corresponding time-mass values.
-    // Here we have several values that correspond to a star losing mass with an e-damping timescale of -tmax (-1e4) over 12,500 yr.
+	// To set how the mass will change, we pass two arrays (pointers to double) and their equal size for the corresponding time-mass values.
+    // Here we have six (6) values that correspond to a star losing mass with an e-damping timescale of -tmax (-1e4) over 12,500 yr.
 	// The effect will use a cubic spline to interpolate any intermediate values needed by the simulation.
-	double tarr[] = {0, 2500, 5000, 7500, 10000, 12500}; 											// in yr
+	double tarr[] = {0, 2500, 5000, 7500, 10000, 12500}; 											 // in yr
 	double marr[] = {1., 0.77880078307, 0.60653065971, 0.47236655274, 0.36787944117, 0.28650479686}; // in Msun
+	int n = 6;																						 // size of arrays
 
-	rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_age", tarr);
-	rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_val", marr);
+	rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_age", tarr); // pass address &?
+	rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_val", marr); // pass address &?
+	rebx_set_param_int(rebx, &sim->particles[0].ap, "mass_n", n);
 
 	// Overwrite stellar mass output file
     system("rm -f star.txt"); // remove existing file
-    FILE* com_file = fopen("star.txt", "a");
-    fprintf(com_file, "Time(yrs)\t\tM(Msun)\n");
-    fclose(com_file);
+    FILE* star_file = fopen("star.txt", "a");
+    fprintf(star_file, "Time(yrs)\t\tM(Msun)\n");
+    fclose(star_file);
 
 	// Overwrite planet output file w/ col headers
     system("rm -f planet.txt"); // remove existing file
@@ -109,17 +114,17 @@ void heartbeat(struct reb_simulation* const sim){
         double Omega = co.Omega;
         double omega = co.omega;
         double f = co.f;
-		FILE* star_file = fclose("star.txt", "a");
+		FILE* star_file = fopen("star.txt", "a");
         FILE* planet_file = fopen("planet.txt", "a");
         FILE* com_file = fopen("COM.txt", "a");
 
         reb_output_timing(sim, tmax);
         reb_integrator_synchronize(sim);
 		fprintf(star_file, "%e\t\t%e\n", t, M);
-        fclose(star_file);
         fprintf(planet_file, "%e\t\t%e\t\t%e\t\t%e\t\t%e\t\t%e\t\t%e\t\t%e\n", t, m, a, e, inc, Omega, omega, f);
-        fclose(planet_file);
         fprintf(com_file, "%e\t\t%e\t\t%e\t\t%e\n", t, com.x, com.y, com.z);
+		fclose(star_file);
+		fclose(planet_file);
         fclose(com_file);
 	}   
  }
