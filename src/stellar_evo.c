@@ -131,16 +131,20 @@ void rebx_stellar_evo(struct reb_simulation* const sim, struct rebx_operator* co
         const double* const nptr = rebx_get_param(rebx, p->ap, "mass_n");
 
         if (nptr != NULL) {
-            const double* const x = rebx_get_param(rebx, p->ap, "mass_age");
-            const double* const y = rebx_get_param(rebx, p->ap, "mass_val");
+            const double* const xptr = rebx_get_param(rebx, p->ap, "mass_age");
+            const double* const yptr = rebx_get_param(rebx, p->ap, "mass_val");
 
-            if (x != NULL && y != NULL) {
-                double* y2 = rebx_get_param(rebx, p->ap, "mass_2val");
+            if (xptr != NULL && yptr != NULL) {
+                double* y2ptr = rebx_get_param(rebx, p->ap, "mass_2val");
+                // NEED TO FIGURE OUT HOW TO DEREFERENCE
+                double x[] = *xptr; // COMPILE ERROR
+                double y[] = *yptr; // COMPILE ERROR
             
-                if (y2 == NULL) {                                          // not yet splined
+                if (y2ptr == NULL) {                                       // not yet splined
                     rebx_spline(rebx, p, x, y, *nptr);                     // called only once
-                    y2 = rebx_get_param(rebx, p->ap, "mass_2val");         // immediately update
+                    y2ptr = rebx_get_param(rebx, p->ap, "mass_2val");      // immediately update
                 }
+                double y2[] = *y2ptr;
                 double interp = rebx_splint(rebx, p, x, y, y2, sim->t+dt); // interpolate at last sim time + operator dt
                 p->m = interp;
             }
