@@ -67,8 +67,8 @@ int main(int argc, char* argv[]){
 	double marr[] = {1., 0.77880078307, 0.60653065971, 0.47236655274, 0.36787944117, 0.28650479686}; // in Msun
 	int n = 6;																						 // size of arrays
 
-	rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_age", tarr); // pass address &?
-	rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_val", marr); // pass address &?
+	rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_age", &tarr); // pass address &?
+	rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_val", &marr); // pass address &?
 	rebx_set_param_int(rebx, &sim->particles[0].ap, "mass_n", n);
 
 	// Overwrite stellar mass output file
