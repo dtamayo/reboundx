@@ -89,11 +89,13 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "luminosity", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_Omega", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_lambda2", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "mass_n", REBX_TYPE_INT);
+    rebx_register_param(rebx, "mass_klo", REBX_TYPE_INT);
+    rebx_register_param(rebx, "mass_splined", REBX_TYPE_INT);
     rebx_register_param(rebx, "mass_age", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "mass_val", REBX_TYPE_POINTER);
-    rebx_register_param(rebx, "mass_n", REBX_TYPE_INT);
     rebx_register_param(rebx, "mass_2val", REBX_TYPE_POINTER);
-    rebx_register_param(rebx, "mass_klo", REBX_TYPE_INT);
+    
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){

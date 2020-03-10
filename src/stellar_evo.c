@@ -69,25 +69,24 @@
  * 
  * Adapted from "Numerical Recipes for C," 2nd Ed., §3.3, p. 115.
  */
-void rebx_spline(struct rebx_extras* const rebx, struct reb_particle* particle, const double x[], const double y[], const int n) {
-    double y2[n], u[n];
-    double p, qn, sig, un;
+void rebx_spline(struct rebx_extras* const rebx, struct reb_particle* particle, const double* x, const double* y, const int n, double* y2) {
+    // *** const rebx?
+    double p, qn, sig, un, u[n];
 
-    y2[0] = u[0] = 0.0; // lower boundary condition is set to "natural"
+    *y2 = u[0] = 0.0; // lower boundary condition is set to "natural"
     for (int i=1; i<n-1; i++) {
         // the decomposition loop of the tridiagonal algorithm.
         // y2 and u are used for temporary storage of the decompsed factors.
-        sig = (x[i] - x[i-1]) / (x[i+1] - x[i-1]);
-        p = sig*y2[i-1] + 2.;
-        y2[i] = (sig - 1.)/p;
-        u[i] = (y[i+1]-y[i]) / (x[i+1]-x[i]) - (y[i]-y[i-1]) / (x[i]-x[i-1]);
-        u[i] = (6.*u[i] / (x[i+1] - x[i-1]) - sig*u[i-1]) / p;
+        sig = (*(x+i) - *(x+i-1)) / (*(x+i+1) - *(x+i-1));
+        p = sig * *(y2+i-1) + 2.;
+        *(y2+i) = (sig - 1.)/p;
+        u[i] = (*(y+i+1)-*(y+i)) / (*(x+i+1)-*(x+i)) - (*(y+i)-*(y+i-1)) / (*(x+i)-*(x+i-1));
+        u[i] = (6.*u[i] / (*(x+i+1) - *(x+i-1)) - sig*u[i-1]) / p;
     }
     qn = un = 0.0; // upper boundary condition is set to "natural"
-    y2[n-1] = (un - qn*u[n-2]) / (qn*y2[n-2] + 1.);
+    *(y2+n-1) = (un - qn*u[n-2]) / (qn * *(y2+n-2) + 1.);
     for (int k=n-2; k>=0; k--) // backsubstitution loop of tridiagonal alg.
-        y2[k] = y2[k]*y2[k+1] + u[k];
-    rebx_set_param_pointer(rebx, particle->ap, "mass_2val", y2); // shallow copy?
+        *(y2+k) = *(y2+k) * *(y2+k+1) + u[k];
 }
 
 /**
@@ -98,8 +97,8 @@ void rebx_spline(struct rebx_extras* const rebx, struct reb_particle* particle, 
  * 
  * Adapted from "Numerical Recipes for C," 2nd Ed., §3.3, p. 116
  */
-double rebx_splint(struct rebx_extras* const rebx, struct reb_particle* particle, const double xa[], const double ya[], const double y2a[], double x) {
-    int *kptr = rebx_get_param(rebx, particle->ap, "mass_klo");
+double rebx_splint(struct rebx_extras* const rebx, struct reb_particle* particle, const double* xa, const double* ya, const double* y2a, const double x) {
+    int* kptr = rebx_get_param(rebx, particle->ap, "mass_klo");
     int klo;
     double h, b, a;
 
@@ -107,19 +106,19 @@ double rebx_splint(struct rebx_extras* const rebx, struct reb_particle* particle
     else klo = *kptr;
     // since sequential calls are in increasing order,
     // find and update place for current and future calls
-    while (xa[klo+1] < x) klo++;
+    while (*(xa+klo+1) < x) klo++;
     rebx_set_param_int(rebx, particle->ap, "mass_klo", klo); // update klo
-    h = xa[klo+1] - xa[klo];
+    h = *(xa+klo+1) - *(xa+klo);
     if (h == 0.0) {                                          // xa's must be distinct
         rebx_error(rebx, "Cubic spline run-time error...\n");
         rebx_error(rebx, "Bad xa input to routine splint\n");
         rebx_error(rebx, "...now exiting to system...\n");
         return 0;
     }
-    a = (xa[klo+1] - x) / h;
-    b = (x - xa[klo]) / h;
+    a = (*(xa+klo+1) - x) / h;
+    b = (x - *(xa+klo)) / h;
     // evaluate cubic spline
-    return a*ya[klo]+b*ya[klo+1]+((a*a*a-a)*y2a[klo]+(b*b*b-b)*y2a[klo+1])*(h*h)/6.; 
+    return a**(ya+klo)+b**(ya+klo+1)+((a*a*a-a)**(y2a+klo)+(b*b*b-b)**(y2a+klo+1))*(h*h)/6.;
 }
 
 void rebx_stellar_evo(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt) {
@@ -128,28 +127,23 @@ void rebx_stellar_evo(struct reb_simulation* const sim, struct rebx_operator* co
 
     for (int i=0; i<_N_real; i++) {
         struct reb_particle* const p = &sim->particles[i];
-        const double* const nptr = rebx_get_param(rebx, p->ap, "mass_n");
+        const int* n = rebx_get_param(rebx, p->ap, "mass_n");
 
-        if (nptr != NULL) {
-            const double* const xptr = rebx_get_param(rebx, p->ap, "mass_age");
-            const double* const yptr = rebx_get_param(rebx, p->ap, "mass_val");
+        if (n != NULL) {
+            const double* x = rebx_get_param(rebx, p->ap, "mass_age");
+            const double* y = rebx_get_param(rebx, p->ap, "mass_val");
+            double* y2 = rebx_get_param(rebx, p->ap, "mass_2val");
 
-            if (xptr != NULL && yptr != NULL) {
-                double* y2ptr = rebx_get_param(rebx, p->ap, "mass_2val");
-                // NEED TO FIGURE OUT HOW TO DEREFERENCE
-                double x[] = *xptr; // COMPILE ERROR
-                double y[] = *yptr; // COMPILE ERROR
-            
-                if (y2ptr == NULL) {                                       // not yet splined
-                    rebx_spline(rebx, p, x, y, *nptr);                     // called only once
-                    y2ptr = rebx_get_param(rebx, p->ap, "mass_2val");      // immediately update
+            if (x != NULL && y != NULL && y2 != NULL) {
+                if (rebx_get_param(rebx, p->ap, "mass_splined") == NULL) {              // not yet splined
+                    rebx_spline(rebx, p, x, y, *n, y2);                                 // call just once
+                    rebx_set_param_int(rebx, &sim->particles[0].ap, "mass_splined", 1); // immediately update
                 }
-                double y2[] = *y2ptr;
-                double interp = rebx_splint(rebx, p, x, y, y2, sim->t+dt); // interpolate at last sim time + operator dt
-                p->m = interp;
+                p->m = rebx_splint(rebx, p, x, y, y2, sim->t+dt);                       // interpolate at last sim time + operator dt
             }
-            else rebx_error(rebx, "Array size set but missing values.");   // rebx_error gives meaningful err
+            else rebx_error(rebx, "Size parameter set but missing one or more required arrays."); // rebx_error gives meaningful err
         }
+        else rebx_error(rebx, "Required size parameter not set.");                      // rebx_error gives meaningful err
     }
     reb_move_to_com(sim);
 }
