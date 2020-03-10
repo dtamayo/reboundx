@@ -60,17 +60,20 @@ int main(int argc, char* argv[]){
      * rebx_add_operator_step(rebx, stellar_evo, dt_fraction, timing, name);
      */
 
+    // ***REVISE***
 	// To set how the mass will change, we pass two arrays (pointers to double) and their equal size for the corresponding time-mass values.
     // Here we have six (6) values that correspond to a star losing mass with an e-damping timescale of -tmax (-1e4) over 12,500 yr.
 	// The effect will use a cubic spline to interpolate any intermediate values needed by the simulation.
-	double tarr[] = {0, 2500, 5000, 7500, 10000, 12500}; 											 // in yr
-	double marr[] = {1., 0.77880078307, 0.60653065971, 0.47236655274, 0.36787944117, 0.28650479686}; // in Msun
-	int n = 6;																						 // size of arrays
+    int n = 6;																						     // size of arrays
+	double mass_age[] = {0, 2500, 5000, 7500, 10000, 12500}; 											 // in yr
+	double mass_val[] = {1., 0.77880078307, 0.60653065971, 0.47236655274, 0.36787944117, 0.28650479686}; // in Msun
+    double mass_2val[n];                                                                           // empty n-sized array
 
-	rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_age", &tarr); // pass address &?
-	rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_val", &marr); // pass address &?
-	rebx_set_param_int(rebx, &sim->particles[0].ap, "mass_n", n);
-
+    rebx_set_param_int(rebx, &sim->particles[0].ap, "mass_n", n);
+	rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_age", mass_age);
+	rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_val", mass_val);
+    rebx_set_param_pointer(rebx, &sim->particles[0].ap, "mass_2val", mass_2val);
+	
 	// Overwrite stellar mass output file
     system("rm -f star.txt"); // remove existing file
     FILE* star_file = fopen("star.txt", "a");
