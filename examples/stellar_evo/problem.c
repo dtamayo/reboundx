@@ -22,8 +22,7 @@ int main(int argc, char* argv[]){
 	sim->heartbeat = heartbeat;
 
 	sim->integrator = REB_INTEGRATOR_IAS15;
-	sim->ri_ias15.epsilon = 0; // makes IAS15 non-adaptive
-    sim->force_is_velocity_dependent = 1;
+	sim->ri_ias15.epsilon = 0;          // makes IAS15 non-adaptive
 	
 	struct reb_particle sun = {0}; 
 	sun.m  	= 1.;	
