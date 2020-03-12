@@ -51,7 +51,8 @@
  * ============================ =========== =======================================================
  * mass_age (double array)      Yes         Monotonic array of times in one-to-one correspondence with elements of ``mass_val``.
  * mass_val (double array)      Yes         Array of mass values in one-to-one correspondence with elements of ``mass_age``.
- * mass_n (int)                 Yes         Size of both ``mass_age`` and ``mass_val`` arrays. Mismatches will result in an invalid interpolation (``mass_n`` < actual size) or segmentation fault (``mass_n`` > actual size).
+ * mass_2val (double array)     Yes         Empty array, of size ``mass_n``, used for spline interpolation.
+ * mass_n (int)                 Yes         Size of ``mass_age``, ``mass_val``, and ``mass_2val`` arrays. Mismatches will result in an invalid interpolation (``mass_n`` < actual size) or segmentation fault (``mass_n`` > actual size).
  * ============================ =========== =======================================================
  *
  */
@@ -69,8 +70,7 @@
  * 
  * Adapted from "Numerical Recipes for C," 2nd Ed., §3.3, p. 115.
  */
-void rebx_spline(struct rebx_extras* const rebx, struct reb_particle* particle, const double* x, const double* y, const int n, double* y2) {
-    // *** const rebx?
+void rebx_spline(const double* x, const double* y, const int n, double* y2) {
     double p, qn, sig, un, u[n];
 
     *y2 = u[0] = 0.0; // lower boundary condition is set to "natural"
@@ -97,19 +97,16 @@ void rebx_spline(struct rebx_extras* const rebx, struct reb_particle* particle, 
  * 
  * Adapted from "Numerical Recipes for C," 2nd Ed., §3.3, p. 116
  */
-double rebx_splint(struct rebx_extras* const rebx, struct reb_particle* particle, const double* xa, const double* ya, const double* y2a, const double x) {
-    int* kptr = rebx_get_param(rebx, particle->ap, "mass_klo");
-    int klo;
+double rebx_splint(struct rebx_extras* const rebx, const double* xa, const double* ya, const double* y2a, const double x) {
+    // *** PASS KLO BY REF INTO HERE
+    int klo = 0;
     double h, b, a;
 
-    if (kptr == NULL) klo = 0; // first call
-    else klo = *kptr;
     // since sequential calls are in increasing order,
     // find and update place for current and future calls
     while (*(xa+klo+1) < x) klo++;
-    rebx_set_param_int(rebx, particle->ap, "mass_klo", klo); // update klo
     h = *(xa+klo+1) - *(xa+klo);
-    if (h == 0.0) {                                          // xa's must be distinct
+    if (h == 0.0) { // xa's must be distinct
         rebx_error(rebx, "Cubic spline run-time error...\n");
         rebx_error(rebx, "Bad xa input to routine splint\n");
         rebx_error(rebx, "...now exiting to system...\n");
@@ -125,8 +122,8 @@ void rebx_stellar_evo(struct reb_simulation* const sim, struct rebx_operator* co
     struct rebx_extras* const rebx = sim->extras;
     const int _N_real = sim->N - sim->N_var;
 
-    for (int i=0; i<_N_real; i++) {
-        struct reb_particle* const p = &sim->particles[i];
+    for (int j=0; j<_N_real; j++) {
+        struct reb_particle* const p = &sim->particles[j];
         const int* n = rebx_get_param(rebx, p->ap, "mass_n");
 
         if (n != NULL) {
@@ -136,14 +133,15 @@ void rebx_stellar_evo(struct reb_simulation* const sim, struct rebx_operator* co
 
             if (x != NULL && y != NULL && y2 != NULL) {
                 if (rebx_get_param(rebx, p->ap, "mass_splined") == NULL) {              // not yet splined
-                    rebx_spline(rebx, p, x, y, *n, y2);                                 // call just once
-                    rebx_set_param_int(rebx, &sim->particles[0].ap, "mass_splined", 1); // immediately update
+                    rebx_spline(x, y, *n, y2);                                          // call just once
+                    rebx_set_param_int(rebx, &sim->particles[j].ap, "mass_splined", 1); // immediately update
                 }
-                p->m = rebx_splint(rebx, p, x, y, y2, sim->t+dt);                       // interpolate at last sim time + operator dt
+                // ADD KLO LOGIC AND PARAM SET HERE
+                // rebx_set_param_int(rebx, particle->ap, "mass_klo", klo);                // update klo
+                p->m = rebx_splint(rebx, x, y, y2, sim->t+dt);                          // interpolate at last sim time + operator dt
             }
             else rebx_error(rebx, "Size parameter set but missing one or more required arrays."); // rebx_error gives meaningful err
         }
-        else rebx_error(rebx, "Required size parameter not set.");                      // rebx_error gives meaningful err
     }
     reb_move_to_com(sim);
 }

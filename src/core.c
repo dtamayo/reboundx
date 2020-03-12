@@ -95,7 +95,6 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "mass_age", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "mass_val", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "mass_2val", REBX_TYPE_POINTER);
-    
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
