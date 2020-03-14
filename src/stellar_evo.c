@@ -52,7 +52,7 @@
  * mass_age (double array)      Yes         Monotonic array of times in one-to-one correspondence with elements of ``mass_val``.
  * mass_val (double array)      Yes         Array of mass values in one-to-one correspondence with elements of ``mass_age``.
  * mass_2val (double array)     Yes         Uninitialized array, of size ``mass_n``, used for spline interpolation.
- * mass_n (int)                 Yes         Size of ``mass_age``, ``mass_val``, and ``mass_2val`` arrays. Mismatches will result in invalid interpolation (``mass_n`` < actual size) or segmentation fault (``mass_n`` > actual size).
+ * mass_n (int)                 Yes         Size of ``mass_age``, ``mass_val``, and ``mass_2val`` arrays. Mismatches will result in invalid interpolations (``mass_n`` < actual size) or segmentation faults (``mass_n`` > actual size).
  * ============================ =========== =======================================================
  *
  */
