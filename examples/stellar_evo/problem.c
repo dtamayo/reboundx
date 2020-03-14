@@ -1,7 +1,7 @@
 /**
  * Stellar evolution with splined mass data
  *
- * This example shows how to change a particle's mass using splined time-series data during a REBOUND simulation. 
+ * This example shows how to change a particle's mass by interpolating time-series data during a REBOUND simulation. 
  * If you have GLUT installed for visualization, press 'w' to see the orbits as wires.
  * You can zoom out by holding shift, holding down the mouse and dragging.
  * Press 'c' to better see migration/e-damping.
@@ -21,8 +21,8 @@ int main(int argc, char* argv[]){
     sim->G = 4*M_PI*M_PI;                   // use units of AU, yr and solar masses
 	sim->heartbeat = heartbeat;
 
-	sim->integrator = REB_INTEGRATOR_IAS15;
-	sim->ri_ias15.epsilon = 0;              // makes IAS15 non-adaptive
+	sim->integrator = REB_INTEGRATOR_IAS15; // accurate for operators that affect particle trajectories
+	sim->ri_ias15.epsilon = 0;              // makes IAS15 non-adaptive to avoid spurious results
 	
 	struct reb_particle sun = {0}; 
 	sun.m  	= 1.;	
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]){
      */
 
 	// To set how the mass will change, we pass three equally-sized arrays necessary to interpolate the time-mass values.
-    // Here we have six (6) values that correspond to a star losing mass with an e-damping timescale of -tmax (-1e4) up to 12,500 yr.
+    // Here we have six (6) values that correspond to a star losing mass with an e-damping timescale of tmax (1e4) up to 12,500 yr.
 	// The effect will use a cubic spline to interpolate any intermediate values needed by the simulation.
     int n = 6;																						     // size of arrays
 	double mass_age[] = {0, 2500, 5000, 7500, 10000, 12500}; 											 // in yr
