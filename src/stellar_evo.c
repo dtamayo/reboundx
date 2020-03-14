@@ -1,6 +1,6 @@
 /**
  * @file    stellar_evo.c
- * @brief   Interpolate particle parameters from external data between timesteps in the simulation.
+ * @brief   Interpolate particle parameters from passed dataset between timesteps in the simulation.
  * @author  Stanley A. Baronett <stanley.a.baronett@gmail.com>
  * 
  * @section     LICENSE
@@ -32,11 +32,11 @@
  * Implementation Paper    *In progress*
  * Based on                None
  * C Example               :ref:`c_example_stellar_evo`
- * Python Example          `StellarEvo.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/StellarEvo.ipynb>`_.
+ * Python Example          `StellarEvolution.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/StellarEvolution.ipynb>`_.
  * ======================= ===============================================
  * 
  * This interpolates particle parameter data for individual particles every timestep.
- * Set particles' ``mass_age``, ``mass_val``, and ``mass_n`` with n-sized double arrays of time-mass values to be interpolated.
+ * Set particles' ``mass_age``, ``mass_val``, and ``mass_2val`` as ``mass_n``-sized double arrays of time-mass values to be interpolated.
  * 
  * **Effect Parameters**
  * 
@@ -44,15 +44,15 @@
  * 
  * **Particle Parameters**
  * 
- * Only particles with their ``mass_age``, ``mass_val``, and ``mass_n`` parameters set will have their masses affected.
+ * Only particles with their ``mass_age``, ``mass_val``, ``mass_2val``, and ``mass_n`` parameters set will have their masses affected.
  * 
  * ============================ =========== =======================================================
  * Name (C type)                Required    Description
  * ============================ =========== =======================================================
  * mass_age (double array)      Yes         Monotonic array of times in one-to-one correspondence with elements of ``mass_val``.
  * mass_val (double array)      Yes         Array of mass values in one-to-one correspondence with elements of ``mass_age``.
- * mass_2val (double array)     Yes         Empty array, of size ``mass_n``, used for spline interpolation.
- * mass_n (int)                 Yes         Size of ``mass_age``, ``mass_val``, and ``mass_2val`` arrays. Mismatches will result in an invalid interpolation (``mass_n`` < actual size) or segmentation fault (``mass_n`` > actual size).
+ * mass_2val (double array)     Yes         Uninitialized array, of size ``mass_n``, used for spline interpolation.
+ * mass_n (int)                 Yes         Size of ``mass_age``, ``mass_val``, and ``mass_2val`` arrays. Mismatches will result in invalid interpolation (``mass_n`` < actual size) or segmentation fault (``mass_n`` > actual size).
  * ============================ =========== =======================================================
  *
  */
@@ -64,9 +64,11 @@
 #include "reboundx.h"
 
 /**
- * Given monotonic array x[0..(n-1)] and any array y[0..(n-1)], sets passed
- * particle's mass_2val[0..(n-1)] with second-order derivatives of the
+ * Given a monotonic array x[0..(n-1)] and any array y[0..(n-1)],
+ * sets y2[0..(n-1)] with second-order derivatives of the
  * interpolating function at the tabulated points x[i].
+ * This routine assumes a "natural" spline, i.e. boundary
+ * conditions with zero second derivatives at y2[0] and y2[(n-1)]. 
  * 
  * Adapted from "Numerical Recipes for C," 2nd Ed., §3.3, p. 115.
  */
@@ -90,9 +92,9 @@ void rebx_spline(const double* x, const double* y, const int n, double* y2) {
 }
 
 /**
- * Given monotonic array xa[0..(n-1)], any array ya[0..(n-1)], array
- * y2a[0..(n-1)] outputted from spline above, and a value of x, this returns a
- * cubic-spline interpolated value y.
+ * Given a monotonic array xa[0..(n-1)], any array ya[0..(n-1)], an array of
+ * second derivatives y2a[0..(n-1)] outputted from spline() above, and a value
+ * of x, this returns a cubic-spline interpolated value y.
  * "Splint" comes from spl(ine)-int(erpolation).
  * 
  * Adapted from "Numerical Recipes for C," 2nd Ed., §3.3, p. 116
@@ -130,7 +132,7 @@ void rebx_stellar_evo(struct reb_simulation* const sim, struct rebx_operator* co
             double* y2 = rebx_get_param(rebx, p->ap, "mass_2val");
 
             if (x != NULL && y != NULL && y2 != NULL) {
-                int* kptr = rebx_get_param(rebx, p->ap, "mass_klo");                    // store last valid spline interpolation interval
+                int* kptr = rebx_get_param(rebx, p->ap, "mass_klo");                    // stores last valid spline interpolation interval
                 int klo = 0;                                                            
 
                 if (rebx_get_param(rebx, p->ap, "mass_splined") == NULL) {              // not yet splined
@@ -141,7 +143,7 @@ void rebx_stellar_evo(struct reb_simulation* const sim, struct rebx_operator* co
                 p->m = rebx_splint(rebx, x, y, y2, sim->t+dt, &klo);                    // interpolate at last sim time + operator dt
                 rebx_set_param_int(rebx, &sim->particles[j].ap, "mass_klo", klo);       // immediately update
             }
-            else rebx_error(rebx, "Data size parameter set, but missing one or more required arrays."); // rebx_error gives meaningful err
+            else rebx_error(rebx, "Data size parameter set, but missing one or more required arrays.");
         }
     }
     reb_move_to_com(sim);
