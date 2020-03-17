@@ -62,34 +62,36 @@
 #include <math.h>
 #include "rebound.h"
 #include "reboundx.h"
+#include "core.h"
 
-void rebx_stellar_evo(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt) {
+void rebx_mass_evolution(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt) {
     struct rebx_extras* const rebx = sim->extras;
-    const int _N_real = sim->N - sim->N_var;
 
-    for (int j=0; j<_N_real; j++) {
-        struct reb_particle* const p = &sim->particles[j];
-        const int* n = rebx_get_param(rebx, p->ap, "mass_n");
-
-        if (n != NULL) {
-            const double* x = rebx_get_param(rebx, p->ap, "mass_age");
-            const double* y = rebx_get_param(rebx, p->ap, "mass_val");
-            double* y2 = rebx_get_param(rebx, p->ap, "mass_2val");
-
-            if (x != NULL && y != NULL && y2 != NULL) {
-                int* kptr = rebx_get_param(rebx, p->ap, "mass_klo");                    // stores last valid spline interpolation interval
-                int klo = 0;                                                            
-
-                if (rebx_get_param(rebx, p->ap, "mass_splined") == NULL) {              // not yet splined
-                    rebx_spline(x, y, *n, y2);                                          // call just once
-                    rebx_set_param_int(rebx, &sim->particles[j].ap, "mass_splined", 1); // immediately update
-                }
-                if (kptr != NULL) klo = *kptr;                                          // not first call
-                p->m = rebx_splint(rebx, x, y, y2, sim->t+dt, &klo);                    // interpolate at last sim time + operator dt
-                rebx_set_param_int(rebx, &sim->particles[j].ap, "mass_klo", klo);       // immediately update
-            }
-            else rebx_error(rebx, "Data size parameter set, but missing one or more required arrays.");
-        }
+    uint32_t* hash = rebx_get_param(rebx, operator->ap, "me_hash");
+    if (hash == NULL){
+        return;
     }
+
+    struct reb_particle* p = reb_get_particle_by_hash(sim, *hash);
+    if (p == NULL){
+        return;
+    }
+
+    const int* Nvalues = rebx_get_param(rebx, operator->ap, "me_Nvalues");
+    const double* times = rebx_get_param(rebx, operator->ap, "me_times");
+    const double* values = rebx_get_param(rebx, operator->ap, "me_values");
+
+    if (Nvalues == NULL || times == NULL || values == NULL) {
+        return;
+    }
+    
+    const enum rebx_interpolation_type* interp = rebx_get_param(rebx, operator->ap, "me_interpolation");
+   
+    if (interp == NULL){
+        rebx_set_param_int(rebx, &operator->ap, "me_interpolation", REBX_INTERPOLATION_SPLINE); // def if not set
+        interp = rebx_get_param(rebx, operator->ap, "me_interpolation");
+    }
+    p->m = rebx_interpolate(rebx, &operator->ap, *Nvalues, sim->t, times, values, *interp);
+
     reb_move_to_com(sim);
 }

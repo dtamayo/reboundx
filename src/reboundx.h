@@ -162,6 +162,14 @@ enum rebx_integrator {
     REBX_INTEGRATOR_RK2 = 3,
 };
 
+/**
+ * @brief Different interpolation options
+ */
+enum rebx_interpolation_type {
+    REBX_INTERPOLATION_NONE = 0,
+    REBX_INTERPOLATION_SPLINE = 1,
+};
+
 /****************************************
 Basic types in REBOUNDx
 *****************************************/
