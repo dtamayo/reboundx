@@ -81,16 +81,6 @@ void rebx_integrate_force(struct reb_simulation* const sim, struct rebx_operator
 void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 void rebx_stellar_evo(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
-void rebx_mass_evolution(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
-void rebx_radius_evolution(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
-void rebx_parameter_evolution(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
-
-/****************************************
- Interpolation prototypes
- *****************************************/
-double rebx_splint(struct rebx_extras* const rebx, const double* xa, const double* ya, const double* y2a, const double x, int* klo);
-void rebx_spline(const double* x, const double* y, const int n, double* y2);
-double rebx_interpolate(struct rebx_extras* const rebx, struct rebx_node** apptr, const int Nvalues, const double time, const double* times, const double* values, enum rebx_interpolation_type interp);
 
 /****************************************
  Integrator prototypes
