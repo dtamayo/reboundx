@@ -89,13 +89,6 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "luminosity", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_Omega", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_lambda2", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "me_hash", REBX_TYPE_UINT32);
-    rebx_register_param(rebx, "me_Nvalues", REBX_TYPE_INT);
-    rebx_register_param(rebx, "me_times", REBX_TYPE_POINTER);
-    rebx_register_param(rebx, "me_values", REBX_TYPE_POINTER);
-    rebx_register_param(rebx, "me_interpolation", REBX_TYPE_INT);
-    rebx_register_param(rebx, "interp_klo", REBX_TYPE_INT);
-    rebx_register_param(rebx, "interp_2val", REBX_TYPE_POINTER);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -360,22 +353,6 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
     else if (strcmp(name, "track_min_distance") == 0){
         operator->step_function = rebx_track_min_distance;
         operator->operator_type = REBX_OPERATOR_RECORDER;
-    }
-    else if (strcmp(name, "stellar_evo") == 0){
-        operator->step_function = rebx_stellar_evo;
-        operator->operator_type = REBX_OPERATOR_UPDATER;
-    }
-    else if (strcmp(name, "mass_evolution") == 0){
-        operator->step_function = rebx_mass_evolution;
-        operator->operator_type = REBX_OPERATOR_UPDATER;
-    }
-    else if (strcmp(name, "radius_evolution") == 0){
-        operator->step_function = rebx_radius_evolution;
-        operator->operator_type = REBX_OPERATOR_UPDATER;
-    }
-    else if (strcmp(name, "parameter_evolution") == 0){
-        operator->step_function = rebx_parameter_evolution;
-        operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else{
         char str[300];
