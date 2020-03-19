@@ -60,8 +60,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include "rebound.h"
 #include "reboundx.h"
+#include "core.h"
 
 /**
  * Given a monotonic array x[0..(n-1)] and any array y[0..(n-1)],
@@ -72,7 +74,7 @@
  * 
  * Adapted from "Numerical Recipes for C," 2nd Ed., §3.3, p. 115.
  */
-void rebx_spline(const double* x, const double* y, const int n, double* y2) {
+static void rebx_spline(const double* x, const double* y, const int n, double* y2) {
     double p, qn, sig, un, u[n];
 
     *y2 = u[0] = 0.0; // lower boundary condition is set to "natural"
@@ -99,7 +101,7 @@ void rebx_spline(const double* x, const double* y, const int n, double* y2) {
  * 
  * Adapted from "Numerical Recipes for C," 2nd Ed., §3.3, p. 116
  */
-double rebx_splint(struct rebx_extras* const rebx, const double* xa, const double* ya, const double* y2a, const double x, int* klo) {
+static double rebx_splint(struct rebx_extras* const rebx, const double* xa, const double* ya, const double* y2a, const double x, int* klo) {
     double h, b, a;
 
     // since sequential calls are in increasing order,
@@ -118,33 +120,54 @@ double rebx_splint(struct rebx_extras* const rebx, const double* xa, const doubl
     return a**(ya+*klo)+b**(ya+*klo+1)+((a*a*a-a)**(y2a+*klo)+(b*b*b-b)**(y2a+*klo+1))*(h*h)/6.;
 }
 
-void rebx_stellar_evo(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt) {
-    struct rebx_extras* const rebx = sim->extras;
-    const int _N_real = sim->N - sim->N_var;
+struct rebx_interpolator* rebx_create_interpolator(struct rebx_extras* const rebx, const int Nvalues, const double* times, const double* values, enum rebx_interpolation_type interpolation){
+    struct rebx_interpolator* interp = rebx_malloc(rebx, sizeof(interp));
+    rebx_init_interpolator(rebx, interp, Nvalues, times, values, interpolation);
+    return interp;
+}
 
-    for (int j=0; j<_N_real; j++) {
-        struct reb_particle* const p = &sim->particles[j];
-        const int* n = rebx_get_param(rebx, p->ap, "mass_n");
+void rebx_init_interpolator(struct rebx_extras* const rebx, struct rebx_interpolator* const interp, const int Nvalues, const double* times, const double* values, enum rebx_interpolation_type interpolation){
+    interp->Nvalues = Nvalues;
+    interp->interpolation = interpolation;
+    interp->times = rebx_malloc(rebx, Nvalues*sizeof(double));
+    memcpy(interp->times, times, Nvalues*sizeof(double));
+    interp->values = rebx_malloc(rebx, Nvalues*sizeof(double));
+    memcpy(interp->values, values, Nvalues*sizeof(double));
+    interp->y2 = NULL;
+    interp->klo = 0;
+    if (interpolation == REBX_INTERPOLATION_SPLINE){
+        interp->y2 = rebx_malloc(rebx, Nvalues*sizeof(interp->y2));
+        rebx_spline(interp->times, interp->values, interp->Nvalues, interp->y2);
+    }
+    return;
+}
 
-        if (n != NULL) {
-            const double* x = rebx_get_param(rebx, p->ap, "mass_age");
-            const double* y = rebx_get_param(rebx, p->ap, "mass_val");
-            double* y2 = rebx_get_param(rebx, p->ap, "mass_2val");
-
-            if (x != NULL && y != NULL && y2 != NULL) {
-                int* kptr = rebx_get_param(rebx, p->ap, "mass_klo");                    // stores last valid spline interpolation interval
-                int klo = 0;                                                            
-
-                if (rebx_get_param(rebx, p->ap, "mass_splined") == NULL) {              // not yet splined
-                    rebx_spline(x, y, *n, y2);                                          // call just once
-                    rebx_set_param_int(rebx, &sim->particles[j].ap, "mass_splined", 1); // immediately update
-                }
-                if (kptr != NULL) klo = *kptr;                                          // not first call
-                p->m = rebx_splint(rebx, x, y, y2, sim->t+dt, &klo);                    // interpolate at last sim time + operator dt
-                rebx_set_param_int(rebx, &sim->particles[j].ap, "mass_klo", klo);       // immediately update
-            }
-            else rebx_error(rebx, "Data size parameter set, but missing one or more required arrays.");
+void rebx_free_interpolator(struct rebx_interpolator* const interpolator){
+   free(interpolator->times); 
+   free(interpolator->values);
+   if (interpolator->y2 != NULL){
+       free(interpolator->y2);
+   }
+   free(interpolator);
+   return;
+}
+   
+// Assumes all passed pointers are not NULL
+// Interp value at t=time from an array of times and values
+double rebx_interpolate(struct rebx_extras* const rebx, struct rebx_interpolator* const interpolator, const double time){
+    switch (interpolator->interpolation){
+        case REBX_INTERPOLATION_NONE:
+        {
+            return 0; // UPDATE
+        }
+        case REBX_INTERPOLATION_SPLINE:
+        {
+            return rebx_splint(rebx, interpolator->times, interpolator->values, interpolator->y2, time, &interpolator->klo);       // interpolate at passed time
+        }
+        default:
+        {
+            rebx_error(rebx, "REBOUNDx Error: Interpolation option not supported\n");
+            return 0;
         }
     }
-    reb_move_to_com(sim);
 }
