@@ -162,6 +162,14 @@ enum rebx_integrator {
     REBX_INTEGRATOR_RK2 = 3,
 };
 
+/**
+ * @brief Different interpolation options
+ */
+enum rebx_interpolation_type {
+    REBX_INTERPOLATION_NONE = 0,
+    REBX_INTERPOLATION_SPLINE = 1,
+};
+
 /****************************************
 Basic types in REBOUNDx
 *****************************************/
@@ -226,6 +234,14 @@ struct rebx_binary_field{
     long size;                          ///< Size in bytes of the object data (not including this structure). So you can skip ahead.
 };
 
+struct rebx_interpolator{
+    enum rebx_interpolation_type interpolation;
+    double* times;
+    double* values;
+    int Nvalues;
+    double* y2;
+    int klo;
+};
 /**
  * @brief Main REBOUNDx structure.
  * @details These fields are used internally by REBOUNDx and generally should not be changed manually by the user. Use the API instead.
@@ -550,6 +566,10 @@ void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_operato
 void rebx_drift_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 void rebx_kick_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 
+struct rebx_interpolator* rebx_create_interpolator(struct rebx_extras* const rebx, const int Nvalues, const double* times, const double* values, enum rebx_interpolation_type interpolation);
+void rebx_init_interpolator(struct rebx_extras* const rebx, struct rebx_interpolator* const interp, const int Nvalues, const double* times, const double* values, enum rebx_interpolation_type interpolation);
+void rebx_free_interpolator(struct rebx_interpolator* const interpolator);
+double rebx_interpolate(struct rebx_extras* const rebx, struct rebx_interpolator* const interpolator, const double time);
 /****************************************
  Testing Functions
  *****************************************/
