@@ -77,22 +77,23 @@
 static void rebx_spline(const double* x, const double* y, const int n, double* y2) {
     double p, qn, sig, un, u[n];
 
-    *y2 = u[0] = 0.0; // lower boundary condition is set to "natural"
+    y2[0] = 0.;
+    u[0] = 0.0; // lower boundary condition is set to "natural"
     for (int i=1; i<n-1; i++) {
         // the decomposition loop of the tridiagonal algorithm.
         // y2 and u are used for temporary storage of the decompsed factors.
-        sig = (*(x+i) - *(x+i-1)) / (*(x+i+1) - *(x+i-1));
-        p = sig * *(y2+i-1) + 2.;
-        *(y2+i) = (sig - 1.)/p;
-        u[i] = (*(y+i+1)-*(y+i)) / (*(x+i+1)-*(x+i)) - (*(y+i)-*(y+i-1)) / (*(x+i)-*(x+i-1));
-        u[i] = (6.*u[i] / (*(x+i+1) - *(x+i-1)) - sig*u[i-1]) / p;
+        sig = (x[i] - x[i-1])/(x[i+1] - x[i-1]);
+        p = sig * y2[i-1] + 2.;
+        y2[i] = (sig - 1.)/p;
+        u[i] = (y[i+1] - y[i]) / (x[i+1] - x[i]) - (y[i] - y[i-1]) / (x[i] - x[i-1]);
+        u[i] = (6.*u[i] / (x[i+1] - x[i-1]) - sig*u[i-1]) / p;
     }
-    qn = un = 0.0; // upper boundary condition is set to "natural"
-    *(y2+n-1) = (un - qn*u[n-2]) / (qn * *(y2+n-2) + 1.);
+    qn = 0.;
+    un = 0.; // upper boundary condition is set to "natural"
+    y2[n-1] = (un - qn*u[n-2]) / (qn * y2[n-2] + 1.);
     for (int k=n-2; k>=0; k--) // backsubstitution loop of tridiagonal alg.
-        *(y2+k) = *(y2+k) * *(y2+k+1) + u[k];
+        y2[k] = y2[k] * y2[k+1] + u[k];
 }
-
 /**
  * Given a monotonic array xa[0..(n-1)], any array ya[0..(n-1)], an array of
  * second derivatives y2a[0..(n-1)] outputted from spline() above, and a value
@@ -101,7 +102,7 @@ static void rebx_spline(const double* x, const double* y, const int n, double* y
  * 
  * Adapted from "Numerical Recipes for C," 2nd Ed., §3.3, p. 116
  */
-static double rebx_splint(struct rebx_extras* const rebx, const double* xa, const double* ya, const double* y2a, const double x, int* klo) {
+static double rebx_splint2(struct rebx_extras* const rebx, const double* xa, const double* ya, const double* y2a, const double x, int* klo) {
     double h, b, a;
 
     // since sequential calls are in increasing order,
@@ -119,9 +120,29 @@ static double rebx_splint(struct rebx_extras* const rebx, const double* xa, cons
     // evaluate cubic spline
     return a**(ya+*klo)+b**(ya+*klo+1)+((a*a*a-a)**(y2a+*klo)+(b*b*b-b)**(y2a+*klo+1))*(h*h)/6.;
 }
+static double rebx_splint(struct rebx_extras* const rebx, const double* xa, const double* ya, const double* y2a, const double x, int* klo) {
+    double h, b, a;
+
+    // since sequential calls are in increasing order,
+    // find and update place for current and future calls
+    while (xa[*klo+1] < x){
+        *klo = *klo+1;
+    }
+    h = xa[*klo+1] - xa[*klo];
+    if (h == 0.0) { // xa's must be distinct
+        rebx_error(rebx, "Cubic spline run-time error...\n");
+        rebx_error(rebx, "Bad xa input to routine splint\n");
+        rebx_error(rebx, "...now exiting to system...\n");
+        return 0;
+    }
+    a = (xa[*klo+1]-x) / h;
+    b = (x - xa[*klo]) / h;
+    // evaluate cubic spline
+    return a*ya[*klo] + b*ya[*klo+1] + ((a*a*a-a)*y2a[*klo] + (b*b*b-b)*y2a[*klo+1])*(h*h)/6.;
+}
 
 struct rebx_interpolator* rebx_create_interpolator(struct rebx_extras* const rebx, const int Nvalues, const double* times, const double* values, enum rebx_interpolation_type interpolation){
-    struct rebx_interpolator* interp = rebx_malloc(rebx, sizeof(interp));
+    struct rebx_interpolator* interp = rebx_malloc(rebx, sizeof(*interp));
     rebx_init_interpolator(rebx, interp, Nvalues, times, values, interpolation);
     return interp;
 }
@@ -129,27 +150,31 @@ struct rebx_interpolator* rebx_create_interpolator(struct rebx_extras* const reb
 void rebx_init_interpolator(struct rebx_extras* const rebx, struct rebx_interpolator* const interp, const int Nvalues, const double* times, const double* values, enum rebx_interpolation_type interpolation){
     interp->Nvalues = Nvalues;
     interp->interpolation = interpolation;
-    interp->times = rebx_malloc(rebx, Nvalues*sizeof(double));
-    memcpy(interp->times, times, Nvalues*sizeof(double));
-    interp->values = rebx_malloc(rebx, Nvalues*sizeof(double));
-    memcpy(interp->values, values, Nvalues*sizeof(double));
+    interp->times = calloc(Nvalues, sizeof(*interp->times));
+    interp->values = calloc(Nvalues, sizeof(*interp->values));
+    memcpy(interp->times, times, Nvalues*sizeof(*interp->times));
+    memcpy(interp->values, values, Nvalues*sizeof(*interp->values));
     interp->y2 = NULL;
     interp->klo = 0;
     if (interpolation == REBX_INTERPOLATION_SPLINE){
-        interp->y2 = rebx_malloc(rebx, Nvalues*sizeof(interp->y2));
+        interp->y2 = rebx_malloc(rebx, Nvalues*sizeof(*interp->y2));
         rebx_spline(interp->times, interp->values, interp->Nvalues, interp->y2);
     }
     return;
 }
 
+void rebx_free_interpolator_pointers(struct rebx_interpolator* const interpolator){
+    free(interpolator->times); 
+    free(interpolator->values);
+    if (interpolator->y2 != NULL){
+        free(interpolator->y2);
+    }
+    return;
+}
 void rebx_free_interpolator(struct rebx_interpolator* const interpolator){
-   free(interpolator->times); 
-   free(interpolator->values);
-   if (interpolator->y2 != NULL){
-       free(interpolator->y2);
-   }
-   free(interpolator);
-   return;
+    rebx_free_interpolator_pointers(interpolator);
+    free(interpolator);
+    return;
 }
    
 // Assumes all passed pointers are not NULL
