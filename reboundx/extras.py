@@ -325,7 +325,7 @@ class Interpolator(Structure):
     
     def __del__(self):
         if self._b_needsfree_ == 1:
-            clibreboundx.rebx_free_interpolator(byref(self))
+            clibreboundx.rebx_free_interpolator_pointers(byref(self))
         
 Interpolator._fields_ = [  ("interpolation", c_int),
                     ("times", POINTER(c_double)),

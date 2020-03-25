@@ -569,6 +569,7 @@ void rebx_kick_step(struct reb_simulation* const sim, struct rebx_operator* cons
 struct rebx_interpolator* rebx_create_interpolator(struct rebx_extras* const rebx, const int Nvalues, const double* times, const double* values, enum rebx_interpolation_type interpolation);
 void rebx_init_interpolator(struct rebx_extras* const rebx, struct rebx_interpolator* const interp, const int Nvalues, const double* times, const double* values, enum rebx_interpolation_type interpolation);
 void rebx_free_interpolator(struct rebx_interpolator* const interpolator);
+void rebx_free_interpolator_pointers(struct rebx_interpolator* const interpolator);
 double rebx_interpolate(struct rebx_extras* const rebx, struct rebx_interpolator* const interpolator, const double time);
 /****************************************
  Testing Functions
