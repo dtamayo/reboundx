@@ -1,10 +1,11 @@
 /**
- * Stellar evolution with splined mass data
+ * Stellar evolution with interpolated mass data
  *
- * This example shows how to change a particle's mass by interpolating time-series data during a REBOUND simulation. 
- * If you have GLUT installed for visualization, press 'w' to see the orbits as wires.
- * You can zoom out by holding shift, holding down the mouse and dragging.
- * Press 'c' to better see migration/e-damping.
+ * This example shows how to change a particle's mass by interpolating
+ * time-series data during a REBOUND simulation. If you have GLUT installed for
+ * visualization, press 'w' to see the orbits as wires. You can zoom out by
+ * holding shift, holding down the mouse and dragging. Press 'c' to better see
+ * migration/e-damping.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,17 +20,15 @@ struct rebx_extras* rebx;
 double tmax = 1e4;
 int main(int argc, char* argv[]){
 	struct reb_simulation* sim = reb_create_simulation();
-    sim->G = 4*M_PI*M_PI;                   // use units of AU, yr and solar masses
+    sim->G = 4*M_PI*M_PI; // use units of AU, yr and solar masses
 	sim->heartbeat = heartbeat;
-
-	sim->integrator = REB_INTEGRATOR_WHFAST; // accurate for operators that affect particle trajectories
-	sim->ri_ias15.epsilon = 0;              // makes IAS15 non-adaptive to avoid spurious results
+	sim->integrator = REB_INTEGRATOR_WHFAST;
 	
-	struct reb_particle sun = {0}; 
-	sun.m  	= 1.;	
-	reb_add(sim, sun); 
-
-	struct reb_particle planet = {0};       // Initialize planets on circular orbits, each 2 times farther than last.
+	struct reb_particle sun = {0};
+	sun.m  	= 1.;
+	reb_add(sim, sun);
+	// Initialize planets on circular orbits, each 2 times farther than last.
+	struct reb_particle planet = {0};
 	planet.x = 1.;
 	planet.vy = 2.*M_PI;
 	reb_add(sim, planet);
@@ -41,18 +40,21 @@ int main(int argc, char* argv[]){
 	reb_add(sim, planet);
 
 	reb_move_to_com(sim);
-	
 	rebx = rebx_attach(sim); // initialize reboundx
-	// To set how the mass will change, we pass three equally-sized arrays necessary to interpolate the time-mass values.
-    // Here we have six (6) values that correspond to a star losing mass with an e-damping timescale of tmax (1e4) up to 12,500 yr.
-	// The effect will use a cubic spline to interpolate any intermediate values needed by the simulation.
-    int n = 6;																						     // size of arrays
-	double times[] = {0, 2500, 5000, 7500, 10000, 12500}; 											 // in yr
+
+	// To set how the mass will change, we pass three equally-sized arrays
+	// necessary to interpolate the time-mass values. Here we have six (6)
+	// values that correspond to a star losing mass with an e-damping timescale
+	// of tmax (1e4) up to 12,500 yr. The effect will use a cubic spline to
+	// interpolate any intermediate values needed by the simulation.
+    int n = 6; // size of arrays
+	double times[] = {0, 2500, 5000, 7500, 10000, 12500}; // in yr
 	double values[] = {1., 0.77880078307, 0.60653065971, 0.47236655274, 0.36787944117, 0.28650479686}; // in Msun
     stellarmass = rebx_create_interpolator(rebx, n, times, values, REBX_INTERPOLATION_SPLINE);
+
     reb_integrate(sim, tmax); 
     rebx_free_interpolator(stellarmass);
-	rebx_free(rebx); 	// this explicitly frees all the memory allocated by REBOUNDx 
+	rebx_free(rebx); // explicitly free all the memory allocated by REBOUNDx
 }
 
 void heartbeat(struct reb_simulation* sim){
