@@ -50,8 +50,8 @@ int main(int argc, char* argv[]){
 	double times[] = {0, 2500, 5000, 7500, 10000, 12500}; 											 // in yr
 	double values[] = {1., 0.77880078307, 0.60653065971, 0.47236655274, 0.36787944117, 0.28650479686}; // in Msun
     stellarmass = rebx_create_interpolator(rebx, n, times, values, REBX_INTERPOLATION_SPLINE);
-
     reb_integrate(sim, tmax); 
+    rebx_free_interpolator(stellarmass);
 	rebx_free(rebx); 	// this explicitly frees all the memory allocated by REBOUNDx 
 }
 
@@ -60,6 +60,6 @@ void heartbeat(struct reb_simulation* sim){
         sim->particles[0].m = rebx_interpolate(rebx, stellarmass, sim->t);
         reb_move_to_com(sim);
         struct reb_orbit o = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
-        printf("t=%e, Sun mass = %f, planet semimajor axis = %f\n", sim->t, sim->particles[0].m, o.e);
+        printf("t=%e, Sun mass = %f, planet semimajor axis = %f\n", sim->t, sim->particles[0].m, o.a);
 	}
 }
