@@ -1,10 +1,10 @@
 /**
- * @file    stellar_evo.c
+ * @file    interpolation.c
  * @brief   Interpolate particle parameters from passed dataset between timesteps in the simulation.
- * @author  Stanley A. Baronett <stanley.a.baronett@gmail.com>
- * 
- * @section     LICENSE
- * Copyright (c) 2015 Dan Tamayo, Hanno Rein
+ * @author  Stanley A. Baronett <stanley.a.baronett@gmail.com>, Dan Tamayo <tamayo.daniel@gmail.com>
+ *
+ * @section LICENSE
+ * Copyright (c) 2020 Dan Tamayo, Hanno Rein
  *
  * This file is part of reboundx.
  *
@@ -20,40 +20,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
- *
- * The section after the dollar signs gets built into the documentation by a script.  All lines must start with space * space like below.
- * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
- * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
- *
- * $Mass Modifications$     // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script). 
- * 
- * ======================= ===============================================
- * Authors                 Stanley A. Baronett
- * Implementation Paper    *In progress*
- * Based on                None
- * C Example               :ref:`c_example_stellar_evo`
- * Python Example          `StellarEvolution.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/StellarEvolution.ipynb>`_.
- * ======================= ===============================================
- * 
- * This interpolates particle parameter data for individual particles every timestep.
- * Set particles' ``mass_age``, ``mass_val``, and ``mass_2val`` as ``mass_n``-sized double arrays of time-mass values to be interpolated.
- * 
- * **Effect Parameters**
- * 
- * *None*
- * 
- * **Particle Parameters**
- * 
- * Only particles with their ``mass_age``, ``mass_val``, ``mass_2val``, and ``mass_n`` parameters set will have their masses affected.
- * 
- * ============================ =========== =======================================================
- * Name (C type)                Required    Description
- * ============================ =========== =======================================================
- * mass_age (double array)      Yes         Monotonic array of times in one-to-one correspondence with elements of ``mass_val``.
- * mass_val (double array)      Yes         Array of mass values in one-to-one correspondence with elements of ``mass_age``.
- * mass_2val (double array)     Yes         Uninitialized array, of size ``mass_n``, used for spline interpolation.
- * mass_n (int)                 Yes         Size of ``mass_age``, ``mass_val``, and ``mass_2val`` arrays. Mismatches will result in invalid interpolations (``mass_n`` < actual size) or segmentation faults (``mass_n`` > actual size).
- * ============================ =========== =======================================================
  *
  */
 
@@ -94,6 +60,7 @@ static void rebx_spline(const double* x, const double* y, const int n, double* y
     for (int k=n-2; k>=0; k--) // backsubstitution loop of tridiagonal alg.
         y2[k] = y2[k] * y2[k+1] + u[k];
 }
+
 /**
  * Given a monotonic array xa[0..(n-1)], any array ya[0..(n-1)], an array of
  * second derivatives y2a[0..(n-1)] outputted from spline() above, and a value
@@ -102,31 +69,23 @@ static void rebx_spline(const double* x, const double* y, const int n, double* y
  * 
  * Adapted from "Numerical Recipes for C," 2nd Ed., §3.3, p. 116
  */
-static double rebx_splint2(struct rebx_extras* const rebx, const double* xa, const double* ya, const double* y2a, const double x, int* klo) {
+static double rebx_splint(struct rebx_extras* const rebx, const double* xa, const double* ya, const double* y2a, const double x, int* klo, const int n) {
     double h, b, a;
 
-    // since sequential calls are in increasing order,
-    // find and update place for current and future calls
-    while (*(xa+*klo+1) < x) *klo = *klo+1;
-    h = *(xa+*klo+1) - *(xa+*klo);
-    if (h == 0.0) { // xa's must be distinct
-        rebx_error(rebx, "Cubic spline run-time error...\n");
-        rebx_error(rebx, "Bad xa input to routine splint\n");
-        rebx_error(rebx, "...now exiting to system...\n");
-        return 0;
+    // since calls are generally sequential, find and update place for current
+    // and future calls
+    if (xa[*klo] > x) { // backward case
+        while (xa[*klo-1] > x) {
+            *klo = *klo-1;
+        }
+        if (xa[*klo-1] <= x) {
+            *klo = *klo-1; // back one more
+        }
     }
-    a = (*(xa+*klo+1) - x) / h;
-    b = (x - *(xa+*klo)) / h;
-    // evaluate cubic spline
-    return a**(ya+*klo)+b**(ya+*klo+1)+((a*a*a-a)**(y2a+*klo)+(b*b*b-b)**(y2a+*klo+1))*(h*h)/6.;
-}
-static double rebx_splint(struct rebx_extras* const rebx, const double* xa, const double* ya, const double* y2a, const double x, int* klo) {
-    double h, b, a;
-
-    // since sequential calls are in increasing order,
-    // find and update place for current and future calls
-    while (xa[*klo+1] < x){
-        *klo = *klo+1;
+    else { // forward case
+        while (xa[*klo+1] <= x && *klo+1 != n-1) {
+            *klo = *klo+1;
+        }
     }
     h = xa[*klo+1] - xa[*klo];
     if (h == 0.0) { // xa's must be distinct
@@ -187,7 +146,7 @@ double rebx_interpolate(struct rebx_extras* const rebx, struct rebx_interpolator
         }
         case REBX_INTERPOLATION_SPLINE:
         {
-            return rebx_splint(rebx, interpolator->times, interpolator->values, interpolator->y2, time, &interpolator->klo);       // interpolate at passed time
+            return rebx_splint(rebx, interpolator->times, interpolator->values, interpolator->y2, time, &interpolator->klo, interpolator->Nvalues); // interpolate at passed time
         }
         default:
         {
