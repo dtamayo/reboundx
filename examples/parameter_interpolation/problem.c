@@ -18,7 +18,7 @@ void heartbeat(struct reb_simulation* sim);
 struct rebx_interpolator* stellarmass;
 struct rebx_extras* rebx;
 double tmax = 1e4;
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[]) {
 	struct reb_simulation* sim = reb_create_simulation();
     sim->G = 4*M_PI*M_PI; // use units of AU, yr and solar masses
 	sim->heartbeat = heartbeat;
@@ -57,8 +57,8 @@ int main(int argc, char* argv[]){
 	rebx_free(rebx); // explicitly free all the memory allocated by REBOUNDx
 }
 
-void heartbeat(struct reb_simulation* sim){
-	if(reb_output_check(sim, tmax/1000)){			
+void heartbeat(struct reb_simulation* sim) {
+	if (reb_output_check(sim, tmax/1000)) {			
         sim->particles[0].m = rebx_interpolate(rebx, stellarmass, sim->t);
         reb_move_to_com(sim);
         struct reb_orbit o = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
