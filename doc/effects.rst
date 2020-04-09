@@ -1,7 +1,7 @@
 .. _effects:
 
-REBx Effects & Parameters
-=========================
+Implemented Effects
+===================
 
 Below are descriptions for each of the effects included in REBOUNDx.
 Different implementations for the same effect are grouped together.
