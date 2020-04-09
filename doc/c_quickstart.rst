@@ -1,7 +1,7 @@
 .. _c_quickstart:
 
-Quickstart Guide (C)
-====================
+Quickstart (C)
+==============
 
 Installation
 ------------
