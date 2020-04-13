@@ -17,8 +17,9 @@ Welcome
 =======
 
 REBOUNDx (eXtras) allows you to easily incorporate additional physics into your REBOUND N-body integrations.
-Most users' main reference point in the documentation is the list of implemented :ref:`effects` and their associated parameters.
+The main documentation to refer back to is the :ref:`effects` page.
 Each effect links to both a Python and C example demonstrating its use.
+If you are using REBOUNDx for the first time check out the quickstart guides below with installation instructions.
 
 If you clone the repository at `https://github.com/dtamayo/reboundx <https://github.com/dtamayo/reboundx>`_ you can load and run all the jupyter notebook examples locally (under reboundx/ipython_examples) as well as the C examples (under reboundx/examples. 
 In the terminal you can run the example in each folder with ``make clean && make && ./rebound``). 
@@ -30,8 +31,7 @@ For an overview of the technical details and some practical recommendations, see
 Get Started!
 ------------
 
-REBOUNDx is written in C, but we also provide a convenient Python wrapper.
-You can find installation instructions in the links below.
+REBOUNDx is written in C, but we also provide a convenient Python wrapper (that's just as fast).
 
 :ref:`python_quickstart`
 
@@ -42,7 +42,7 @@ Attribution
 
 If you find this code useful in your research, we have tried to structure the :ref:`effects` documentation in a way that makes it easy to credit the various people who have contributed, and for others to reproduce your results. 
 
-For example 'We incorporated a constant time-lag model of tides \\citep{Hut81} using the \\textt{tides_constant_time_lag} implementation \\citep{Baronnett20} in \\textt{REBOUNDx 3.1.0} \\citep{Tamayo19}.
+For example 'We incorporated a constant time-lag model of tides \\citep{Hut81} using the \\textt{tides_constant_time_lag} implementation (Baronett et al., {\\em in prep.}) in {\\textsc \\tt REBOUNDx 3.1.0} \\citep{Tamayo19}.
 The relevant such ADS links for each effect are provided in :ref:`effects`.
 
 Contribute

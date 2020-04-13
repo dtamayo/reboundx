@@ -63,7 +63,7 @@ Once you're done setting up all the effects you want, just run the REBOUND simul
     reb_integrate(sim, tmax);
 
 Probably the quickest way to get up and running is to modify an existing example for your effect.
-You can find links to the appropriate examples here: :ref:`effects`, along with implementation descriptions and citations.
+You can find links to the appropriate examples here: :ref:`effects`, along with implementation descriptions.
 You can find the example files in the ``reboundx/examples`` folder.
 
 Even if you are using the C version, you might also take a look at the python example links at :ref:`effects`, as the iPython notebooks nicely incorporate text and may therefore have a bit longer discussions about the physical details for each effect.

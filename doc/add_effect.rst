@@ -124,7 +124,6 @@ Now we just modify the ``problem.c`` file in our new ``stark_force`` folder, e.g
 
 In the terminal in the ``stark_force`` folder then just ``make clean``, ``make``  and then run it with  ``./rebound``. 
 In the visualization press 'w' to see the orbits. You should see a mess with the orbit getting more and less eccentric.
-(See Sec. 2.4 of `OpenGL Keyboard Commands <http://rebound.readthedocs.org/en/latest/c_quickstart.html>`_ for a list of the visualization keyboard commands).
 If you get an error about OpenGL or GLUT, just google `install openGL glut libraries <your OS here>` for instructions, or open your ``Makefile`` and set OPENGL=0 to turn it off.
 
 Python Example
