@@ -54,6 +54,6 @@ int rebx_remove_node(struct rebx_node** head, void* object);
  * @param head Pointer to the head of the linked list, e.g. &ps[1]->ap
  * @return Length of linked list.
  */
-int rebx_len(struct rebx_node* head){
+int rebx_len(struct rebx_node* head);
 
 #endif
