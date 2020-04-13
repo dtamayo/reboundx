@@ -422,6 +422,32 @@ None
 None
 
 
+Parameter Interpolation
+^^^^^^^^^^^^^^^^^^^^^^^
+
+This isn't an effect that's loaded like the others, but an object that facilitates machine-independent interpolation of parameters that can be shared by both the C and Python versions. See the examples below for how to use them.
+
+.. _interpolation:
+
+interpolation
+*************
+
+======================= ===============================================
+Authors                 S.A. Baronett, D. Tamayo, N. Ferich
+Implementation Paper    Baronett et al., in prep.
+Based on                `Press et al., 1992 <https://ui.adsabs.harvard.edu/abs/1992nrca.book.....P/abstract>`_. 
+C Example               :ref:`c_example_parameter_interpolation`
+Python Example          `ParameterInterpolation.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ParameterInterpolation.ipynb>`_.
+======================= ===============================================
+
+**Effect Parameters**
+
+Not applicable. See examples.
+
+**Particle Parameters**
+
+Not applicable. See examples.
+
 Miscellaneous Utilities
 ^^^^^^^^^^^^^^^^^^^^^^^
 
