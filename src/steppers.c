@@ -29,10 +29,10 @@
  *
  * ======================= ===============================================
  * Authors                 D. Tamayo, H. Rein
- * Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019` <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
- * Based on                `Rein and Liu, 2012` <https://ui.adsabs.harvard.edu/abs/2012A%26A...537A.128R/abstract>`_.
+ * Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
+ * Based on                `Rein and Liu, 2012 <https://ui.adsabs.harvard.edu/abs/2012A%26A...537A.128R/abstract>`_.
  * C Example               None
- * Python Example          `CustomSplittingInteegrationSchemes.ipynb` `https://github.com/dtamayo/reboundx/blob/master/ipython_examples/CustomSplittingIntegrationSchemes.ipynb>`_.
+ * Python Example          `CustomSplittingIntegrationSchemes.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/CustomSplittingIntegrationSchemes.ipynb>`_.
  * ======================= ===============================================
  *
  * These are wrapper functions to taking steps with several of REBOUND's integrators in order to build custom splitting schemes.

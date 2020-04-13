@@ -27,7 +27,7 @@
  * 
  * ======================= ===============================================
  * Authors                 D. Tamayo
- * Implementation Paper    *In progress*
+ * Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
  * Based on                None
  * C Example               :ref:`c_example_track_min_distance`
  * Python Example          `TrackMinDistance.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TrackMinDistance.ipynb>`_.
