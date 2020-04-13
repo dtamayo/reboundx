@@ -47,6 +47,12 @@ Integration Steppers
 
 These are wrapper functions to taking steps with several of REBOUND's integrators in order to build custom splitting schemes.
 
+$$$$$$$$$$$$$$$$$$$$$$$
+Parameter Interpolation
+^^^^^^^^^^^^^^^^^^^^^^^
+
+This isn't an effect that's loaded like the others, but an object that facilitates machine-independent interpolation of parameters that can be shared by both the C and Python versions. See the examples below for how to use them.
+
 $$$$$$$$$$$$
 Miscellaneous Utilities
 ^^^^^^^^^^^^^^^^^^^^^^^
