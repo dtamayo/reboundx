@@ -1,4 +1,4 @@
-.. image:: http://img.shields.io/badge/REBOUNDx-v3.0.5-green.svg?style=flat
+.. image:: http://img.shields.io/badge/REBOUNDx-v3.1.0-green.svg?style=flat
     :target: http://reboundx.readthedocs.org
 .. image:: https://badge.fury.io/py/reboundx.svg
     :target: https://badge.fury.io/py/reboundx
@@ -37,6 +37,12 @@ Please see the Attribution section at `http://reboundx.readthedocs.io <http://re
 
 Changelog
 =========
+
+Version 3.1.0
+-------------
+
+* Added interpolator object for interpolating parameters
+* Many improvements to the documentation
 
 Version 3.0.5
 -------------
