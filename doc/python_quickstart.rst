@@ -1,7 +1,7 @@
 .. _python_quickstart:
 
-Quickstart Guide (Python)
-=========================
+Quickstart (Python)
+===================
 
 Installation
 ------------

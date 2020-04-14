@@ -20,7 +20,28 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * The section after the dollar signs gets built into the documentation by a script.  All lines must start with space * space like below.
+ * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
+ * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
+ * $Parameter Interpolation$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ *
+ * ======================= ===============================================
+ * Authors                 S.A. Baronett, D. Tamayo, N. Ferich
+ * Implementation Paper    Baronett et al., in prep.
+ * Based on                `Press et al., 1992 <https://ui.adsabs.harvard.edu/abs/1992nrca.book.....P/abstract>`_. 
+ * C Example               :ref:`c_example_parameter_interpolation`
+ * Python Example          `ParameterInterpolation.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ParameterInterpolation.ipynb>`_.
+ * ======================= ===============================================
+ * 
+ * **Effect Parameters**
+ * 
+ * Not applicable. See examples.
+ *
+ * **Particle Parameters**
+ *
+ * Not applicable. See examples.
  */
 
 #include <stdio.h>
