@@ -29,7 +29,7 @@
  * 
  * ======================= ===============================================
  * Authors                 D. Tamayo
- * Implementation Paper    *In progress*
+ * Implementation Paper    `Kostov et al., 2016 <https://ui.adsabs.harvard.edu/abs/2016ApJ...832..183K/abstract>`_.
  * Based on                None
  * C Example               :ref:`c_example_modify_mass`
  * Python Example          `ModifyMass.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ModifyMass.ipynb>`_.

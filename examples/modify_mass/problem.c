@@ -1,11 +1,9 @@
 /**
- * Migration and other orbit modifications
+ * Exponential mass loss/gain
  *
- * This example shows how to add migration, eccentricity damping
- * and pericenter precession to a REBOUND simulation.  If you have
- * GLUT installed for visualization, press 'w' to see the orbits
- * as wires.  You can zoom out by holding shift, holding down the mouse
- * and dragging.  Press 'c' to better see migration/e-damping.
+ * This example shows how to add exponential mass loss to bodies in the integration.
+ * The primary's mass loss causes planets' orbits to expand.
+ * For more flexible variations in mass or other parameters see the parameter interpolation example.
  */
 #include <stdio.h>
 #include <stdlib.h>

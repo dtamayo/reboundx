@@ -25,38 +25,25 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
- * $General Relativity$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ * $Integration Steppers$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
  *
  * ======================= ===============================================
- * Authors                 P. Shi, D. Tamayo, H. Rein
- * Implementation Paper    *In progress*
- * Based on                `Anderson et al. 1975 <http://labs.adsabs.harvard.edu/adsabs/abs/1975ApJ...200..221A/>`_.
- * C Example               :ref:`c_example_gr`
- * Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+ * Authors                 D. Tamayo, H. Rein
+ * Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
+ * Based on                `Rein and Liu, 2012 <https://ui.adsabs.harvard.edu/abs/2012A%26A...537A.128R/abstract>`_.
+ * C Example               None
+ * Python Example          `CustomSplittingIntegrationSchemes.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/CustomSplittingIntegrationSchemes.ipynb>`_.
  * ======================= ===============================================
  *
- * This assumes that the masses are dominated by a single central body, and should be good enough for most applications with planets orbiting single stars.
- * It ignores terms that are smaller by of order the mass ratio with the central body.
- * It gets both the mean motion and precession correct, and will be significantly faster than :ref:`gr_full`, particularly with several bodies.
- * Adding this effect to several bodies is NOT equivalent to using gr_full.
+ * These are wrapper functions to taking steps with several of REBOUND's integrators in order to build custom splitting schemes.
  *
  * **Effect Parameters**
  *
- * ============================ =========== ==================================================================
- * Field (C type)               Required    Description
- * ============================ =========== ==================================================================
- * c (double)                   Yes         Speed of light in the units used for the simulation.
- * ============================ =========== ==================================================================
- *
+ * None
+ * 
  * **Particle Parameters**
  *
- * If no particles have gr_source set, effect will assume the particle at index 0 in the particles array is the source.
- *
- * ============================ =========== ==================================================================
- * Field (C type)               Required    Description
- * ============================ =========== ==================================================================
- * gr_source (int)              No          Flag identifying the particle as the source of perturbations.
- * ============================ =========== ==================================================================
+ * None
  *
  */
 
