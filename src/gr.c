@@ -29,7 +29,7 @@
  *
  * ======================= ===============================================
  * Authors                 P. Shi, D. Tamayo, H. Rein
- * Implementation Paper    *In progress*
+ * Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
  * Based on                `Anderson et al. 1975 <http://labs.adsabs.harvard.edu/adsabs/abs/1975ApJ...200..221A/>`_.
  * C Example               :ref:`c_example_gr`
  * Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.

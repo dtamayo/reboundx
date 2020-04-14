@@ -162,6 +162,14 @@ enum rebx_integrator {
     REBX_INTEGRATOR_RK2 = 3,
 };
 
+/**
+ * @brief Different interpolation options
+ */
+enum rebx_interpolation_type {
+    REBX_INTERPOLATION_NONE = 0,
+    REBX_INTERPOLATION_SPLINE = 1,
+};
+
 /****************************************
 Basic types in REBOUNDx
 *****************************************/
@@ -226,6 +234,14 @@ struct rebx_binary_field{
     long size;                          ///< Size in bytes of the object data (not including this structure). So you can skip ahead.
 };
 
+struct rebx_interpolator{
+    enum rebx_interpolation_type interpolation;
+    double* times;
+    double* values;
+    int Nvalues;
+    double* y2;
+    int klo;
+};
 /**
  * @brief Main REBOUNDx structure.
  * @details These fields are used internally by REBOUNDx and generally should not be changed manually by the user. Use the API instead.
@@ -363,7 +379,6 @@ struct rebx_force* rebx_get_force(struct rebx_extras* const rebx, const char* co
  * @param effect_name Name of the operator (string)
  * @return Pointer to the corresponding rebx_operator structure, or NULL if not found.
  */
-struct rebx_force* rebx_get_force(struct rebx_extras* const rebx, const char* const name);
 struct rebx_operator* rebx_get_operator(struct rebx_extras* const rebx, const char* const name);
 /** @} */
 /** @} */
@@ -379,7 +394,7 @@ struct rebx_operator* rebx_get_operator(struct rebx_extras* const rebx, const ch
 /**
  * @defgroup ParameterManipulators
  * @brief Functions for accessing and modifying particle and effect parameters.
- * @detail These functions make up the main interface for users.  See below for more specialized parameter functions.
+ * @details These functions make up the main interface for users.  See below for more specialized parameter functions.
  * @{
  */
 
@@ -518,37 +533,127 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
 /**
  * @defgroup SpecializedParameterManipulators
  * @brief Specialized functions for accessing and modifying particle and effect parameters.
- * @detail The main parameter manipulation functions are listed above, but these functions can be useful when writing effects.
+ * @details The main parameter manipulation functions are listed above, but these functions can be useful when writing effects.
  * @{
  */
 
 /**
  * @brief Gets the full rebx_param structure for a particular parameter, rather than just the pointer to the contents.
- * @detail This can be useful to check properties of the parameter, like the param_type or shape.
+ * @details This can be useful to check properties of the parameter, like the param_type or shape.
  * @param object Pointer to the particle or effect that holds the parameter.
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  * @return Pointer to the rebx_param structure that holds the parameter. NULL if not found.
  */
 /**
  * @brief Returns a void pointer to the parameter just like rebx_get_param, but additionally checks that the param_type matches what is expected.
- * @detail Effects should use this function rather than rebx_get_param to ensure that the user appropriately set parameters if working from Python.
+ * @details Effects should use this function rather than rebx_get_param to ensure that the user appropriately set parameters if working from Python.
  * @param object Pointer to the particle or effect that holds the parameter.
  * @param param_name Name of the parameter we want to get (see Effects page at http://reboundx.readthedocs.org)
  * @return Void pointer to the parameter. NULL if not found or type does not match (will write error to stderr).
  */
 void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
 
-void rebx_gr_acc(struct rebx_extras* const rebx, double* acc, const double C2);
-double rebx_calculate_energy(struct reb_simulation* const sim);
-int rebx_len(struct rebx_node* head);
-struct rebx_param_wrapper* rebx_get_param_wrapper(struct rebx_node* ap, const char* const param_name);
+/****************************************
+ Stepper Functions
+ *****************************************/
+/**
+ * \name REBOUND Stepper Functions
+ * @{
+ */
+/**
+ * @defgroup StepperFunctions
+ * @details Wrapper functions to execute a step using various REBOUND integrators. Can be used to make custom splitting schemes.
+ * @{
+ */
 
+/**
+ * @brief Executes a step for passed time dt using the IAS15 integrator in REBOUND.
+ * @param sim Pointer to the simulation to step.
+ * @param operator Unused pointer (kept for consistency with other operators). Can pass NULL.
+ * @param dt timestep for which to step in simulation time units.
+ */
 void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+/**
+ * @brief Executes a Kepler step for passed time dt using the WHFast integrator in REBOUND.
+ * @details Will use the coordinates and other options set in sim.ri_whfast
+ * @param sim Pointer to the simulation to step.
+ * @param operator Unused pointer (kept for consistency with other operators). Can pass NULL.
+ * @param dt timestep for which to step in simulation time units.
+ */
 void rebx_kepler_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+/**
+ * @brief Executes a jump step for passed time dt using the WHFast integrator in REBOUND.
+ * @details Will use the coordinates and other options set in sim.ri_whfast
+ * @param sim Pointer to the simulation to step.
+ * @param operator Unused pointer (kept for consistency with other operators). Can pass NULL.
+ * @param dt timestep for which to step in simulation time units.
+ */
 void rebx_jump_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+/**
+ * @brief Executes an interaction step for passed time dt using the WHFast integrator in REBOUND.
+ * @details Will use the coordinates and other options set in sim.ri_whfast
+ * @param sim Pointer to the simulation to step.
+ * @param operator Unused pointer (kept for consistency with other operators). Can pass NULL.
+ * @param dt timestep for which to step in simulation time units.
+ */
 void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+/**
+ * @brief Executes a drift step for passed time dt using the leapfrog integrator in REBOUND.
+ * @param sim Pointer to the simulation to step.
+ * @param operator Unused pointer (kept for consistency with other operators). Can pass NULL.
+ * @param dt timestep for which to step in simulation time units.
+ */
 void rebx_drift_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+/**
+ * @brief Executes a kick step for passed time dt using the leapfrog integrator in REBOUND.
+ * @param sim Pointer to the simulation to step.
+ * @param operator Unused pointer (kept for consistency with other operators). Can pass NULL.
+ * @param dt timestep for which to step in simulation time units.
+ */
 void rebx_kick_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
+/** @} */
+/** @} */
+
+/****************************************
+ Interpolation Routines
+ *****************************************/
+/**
+ * \name Interpolation Routines
+ * @{
+ */
+/**
+ * @defgroup InterpolationFunctions
+ * @details Functions for doing parameter interpolation.
+ * @{
+ */
+
+/**
+ * @brief Takes an array of times and corresponding array of values and returns a structure that allows interpolation of values at arbitrary times.
+ * @details See the parameter interpolation examples in C and Python.
+ * @param rebx pointer to the REBOUNDx extras instance.
+ * @param Nvalues Length of times and values arrays (must be equal for both).
+ * @param times Array of times at which the corresponding values are supplied.
+ * @param values Array of values at each corresponding time.
+ * @param interpolation Enum specifying the interpolation method. Defaults to spline.
+ * @return Pointer to a rebx_interpolator structure. Call rebx_interpolate to get values.
+ */
+struct rebx_interpolator* rebx_create_interpolator(struct rebx_extras* const rebx, const int Nvalues, const double* times, const double* values, enum rebx_interpolation_type interpolation);
+/**
+ * @brief Frees the memory for a rebx_interpolator structure.
+ */
+void rebx_free_interpolator(struct rebx_interpolator* const interpolator);
+
+/**
+ * @brief Interpolate value at arbitrary times.
+ * @details Need to first rebx_create_interpolator with an array of times and corresponding values to interpolate between. See parameter interpolation examples.
+ * @param rebx Pointer to the REBOUNDx extras instance.
+ * @param interpolator Pointer to the rebx_interpolator structure to interpolate from.
+ * @param time Time at which to interpolate value.
+ * @return Interpolated value at passed time.
+ */
+double rebx_interpolate(struct rebx_extras* const rebx, struct rebx_interpolator* const interpolator, const double time);
+/** @} */
+/** @} */
 
 /****************************************
  Testing Functions

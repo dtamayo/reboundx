@@ -49,4 +49,11 @@ struct rebx_node* rebx_get_node(struct rebx_node* head, const char* name);
  */
 int rebx_remove_node(struct rebx_node** head, void* object);
 
+/**
+ * @brief Get length of linked list
+ * @param head Pointer to the head of the linked list, e.g. &ps[1]->ap
+ * @return Length of linked list.
+ */
+int rebx_len(struct rebx_node* head);
+
 #endif
