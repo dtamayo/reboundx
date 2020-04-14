@@ -633,7 +633,7 @@ void rebx_kick_step(struct reb_simulation* const sim, struct rebx_operator* cons
  * @param rebx pointer to the REBOUNDx extras instance.
  * @param Nvalues Length of times and values arrays (must be equal for both).
  * @param times Array of times at which the corresponding values are supplied.
- * @param times Array of values at each corresponding time.
+ * @param values Array of values at each corresponding time.
  * @param interpolation Enum specifying the interpolation method. Defaults to spline.
  * @return Pointer to a rebx_interpolator structure. Call rebx_interpolate to get values.
  */
