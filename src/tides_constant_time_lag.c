@@ -120,52 +120,60 @@ void rebx_tides_constant_time_lag(struct reb_simulation* const sim, struct rebx_
     struct rebx_extras* const rebx = sim->extras;
     const double G = sim->G;
 
-    // Calculate tides raised on star
-    struct reb_particle* target = &particles[0];// assumes nearly Keplerian motion around a single primary (particles[0])
-    if (target->m == 0){                        // nothing makes sense if primary has no mass
+    struct reb_particle* star = &particles[0];  // assumes nearly Keplerian motion around a single primary (particles[0])
+   
+    double starmass = star->m;
+    if (star->m == 0){                          // nothing makes sense if primary has no mass
         return;
     }
-    double* k1 = rebx_get_param(rebx, target->ap, "tctl_k1");
-    if (k1 != NULL && target->r != 0){  // tides on star only nonzero if k1 and finite size are set
-        // We don't require time lag tau to be set. Might just want conservative piece of tidal potential
-        double tau = 0.;
-        double Omega = 0.;
-        double* tauptr = rebx_get_param(rebx, target->ap, "tctl_tau");
-        if (tauptr){
-            tau = *tauptr;
-            double* Omegaptr = rebx_get_param(rebx, target->ap, "Omega");
-            if (Omegaptr){
-                Omega = *Omegaptr;
-            }
-        }
-        for (int i=1; i<N; i++){
-            struct reb_particle* source = &particles[i]; // planet raising the tides on the star
-            if (source->m == 0){
-                continue;
-            }
-            rebx_calculate_tides(source, target, G, *k1, tau, Omega);
-        }
+    
+    double starradius = star->r;
+    double starOmega = 0.;
+    double stark1 = 0.; 
+    double fixedstartau = 0.;
+    double* starOmegaptr = rebx_get_param(rebx, star->ap, "Omega");
+    double* stark1ptr = rebx_get_param(rebx, star->ap, "tctl_k1");
+    double* fixedstartauptr = rebx_get_param(rebx, star->ap, "tctl_tau");
+    if (stark1ptr){
+        stark1 = *stark1ptr;
+    }
+    if (starOmegaptr){
+        starOmega = *starOmegaptr;
+    }
+    if (fixedstartauptr){
+        fixedstartau = *fixedstartauptr;
     }
 
-    // Calculate tides raised on the planets
-    struct reb_particle* source = &particles[0]; // Source is always the star (no planet-planet tides)
     for (int i=1; i<N; i++){
-        struct reb_particle* target = &particles[i]; 
-        double* k1 = rebx_get_param(rebx, target->ap, "tctl_k1");
-        if (k1 == NULL || target->r == 0 || target->m == 0){
-            continue;
-        }
-        double tau = 0.;
-        double Omega = 0.;
-        double* tauptr = rebx_get_param(rebx, target->ap, "tctl_tau");
-        if (tauptr){
-            tau = *tauptr;
-            double* Omegaptr = rebx_get_param(rebx, target->ap, "Omega");
-            if (Omegaptr){
-                Omega = *Omegaptr;
+        struct reb_particle* planet = &particles[i]; 
+    
+        // Calculate tides raised on the planets
+        double* k1 = rebx_get_param(rebx, planet->ap, "tctl_k1");
+        if (k1 != NULL && planet->r > 0 && planet->m > 0){ // tides only nonzero if k1 and finite size & mass are set
+            double tau = 0.;
+            double Omega = 0.;
+            double* tauptr = rebx_get_param(rebx, planet->ap, "tctl_tau");
+            // We don't require time lag tau to be set. Might just want conservative piece of tidal potential
+            if (tauptr){
+                tau = *tauptr;
+                double* Omegaptr = rebx_get_param(rebx, planet->ap, "Omega");
+                if (Omegaptr){
+                    Omega = *Omegaptr;
+                }
             }
+            rebx_calculate_tides(star, planet, G, *k1, tau, Omega);
         }
-        rebx_calculate_tides(source, target, G, *k1, tau, Omega);
+        
+        // Calculate tides raised on the star by the planet 
+        if (stark1 > 0 && starradius > 0 && starmass > 0){
+            double startau = fixedstartau; // use particles[0]'s tctl_tau by default 
+            // if planet's primary_tau is set, overwrite startau
+            double* startauptr = rebx_get_param(rebx, planet->ap, "tctl_primary_tau");
+            if (startauptr){
+                startau = *startauptr;
+            }
+            rebx_calculate_tides(planet, star, G, stark1, startau, starOmega);
+        }
     }
 }
 
@@ -197,7 +205,9 @@ double rebx_tides_constant_time_lag_potential(struct rebx_extras* const rebx){
     const double G = sim->G;
     double H=0.;
 
-    // Calculate tides raised on star
+    // For conservative tidal potential, we can do stellar tides on all planets separately
+    // We only allow dissipative part (primary tau) of tides raised on primary to vary planet by secondary
+    // Calculate tides raised on primary
     struct reb_particle* target = &particles[0];// assumes nearly Keplerian motion around a single primary (particles[0])
     if (target->m == 0){                        // No potential with massless primary
         return 0.;
@@ -214,7 +224,7 @@ double rebx_tides_constant_time_lag_potential(struct rebx_extras* const rebx){
     }
 
     // Calculate tides raised on the planets
-    struct reb_particle* source = &particles[0]; // Source is always the star (no planet-planet tides)
+    struct reb_particle* source = &particles[0]; // Source is always the primary (no planet-planet tides)
     for (int i=1; i<N_real; i++){
         struct reb_particle* target = &particles[i]; 
         double* k1 = rebx_get_param(rebx, target->ap, "tctl_k1");
