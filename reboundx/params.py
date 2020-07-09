@@ -56,6 +56,8 @@ class Params(MutableMapping):
             clibreboundx.rebx_set_param_double(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), c_double(value))
         if ctype == c_int:
             clibreboundx.rebx_set_param_int(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), c_int(value))
+        if ctype == c_uint32:
+            clibreboundx.rebx_set_param_uint32(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), value)
 
         if ctype == Force:
             if not isinstance(value, Force):

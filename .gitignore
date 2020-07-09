@@ -35,8 +35,8 @@ doc/doxygen/html/
 doc/ipython
 doc/search.json
 problems/
-*.txt
 *.dSYM
 Untitled*
-.vscode/settings.json
-.vscode/c_cpp_properties.json
+.vscode/*
+*.code-workspace
+.eggs/*

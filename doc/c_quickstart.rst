@@ -1,12 +1,12 @@
 .. _c_quickstart:
 
-Quickstart Guide (C)
-====================
+Quickstart (C)
+==============
 
 Installation
 ------------
 
-Navigate to the parent directory that holds the ``rebound`` folder (see below if you want to install in a custom folder).  Then in a terminaljk13GA::
+Navigate to the parent directory that holds the ``rebound`` folder (see below if you want to install in a custom folder).  Then in a terminal::
 
     git clone https://github.com/dtamayo/reboundx.git
 
@@ -26,7 +26,7 @@ We assume we've already set up a ``reb_simulation`` called ``sim``.  We always b
 We then add the effect we are interested in.
 There are two types of effects, forces and operators. 
 The easiest is to check the documentation for the effect you're interested in on the :ref:`effects` page, which links to a C example that shows you how to add it and set the relevant parameters.
-For example, to add post-Newtonian forces,::
+For example, to add post-Newtonian forces::
 
     struct rebx_force* gr = rebx_load_force(rebx, "gr");
 
@@ -63,7 +63,7 @@ Once you're done setting up all the effects you want, just run the REBOUND simul
     reb_integrate(sim, tmax);
 
 Probably the quickest way to get up and running is to modify an existing example for your effect.
-You can find links to the appropriate examples here: :ref:`effects`, along with implementation descriptions and citations.
+You can find links to the appropriate examples here: :ref:`effects`, along with implementation descriptions.
 You can find the example files in the ``reboundx/examples`` folder.
 
 Even if you are using the C version, you might also take a look at the python example links at :ref:`effects`, as the iPython notebooks nicely incorporate text and may therefore have a bit longer discussions about the physical details for each effect.
