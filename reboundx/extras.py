@@ -296,6 +296,46 @@ Extras._fields_ =  [("_sim", POINTER(rebound.Simulation)),
                     ("_allocated_forces", POINTER(Node)),
                     ("_allocated_operators", POINTER(Node))]
 
+class Interpolator(Structure):
+    def __new__(cls, rebx, times, values, interpolation):
+        interp = super(Interpolator, cls).__new__(cls)
+        return interp 
+
+    def __init__(self, rebx, times, values, interpolation="spline"):
+        try:
+            Nvalues = len(times)
+            Nvalues2 = len(values)
+        except:
+            raise TypeError("REBOUNDx Error: Times and values passed to Interpolator must be lists or arrays")
+        if Nvalues != Nvalues2:
+            raise ValueError("REBOUNDx Error: Times and values must be same length)")
+
+        interpolation = interpolation.lower()
+        if interpolation in INTERPOLATION_TYPE:
+            interp = INTERPOLATION_TYPE[interpolation]
+        else:
+            raise ValueError("REBOUNDx Error: Interpolation type not supported")
+
+        DblArr = c_double * Nvalues
+        clibreboundx.rebx_init_interpolator(byref(rebx), byref(self), c_int(Nvalues), DblArr(*times), DblArr(*values), c_int(interp)) 
+
+    def interpolate(self, rebx, t):
+        clibreboundx.rebx_interpolate.restype = c_double
+        return clibreboundx.rebx_interpolate(byref(rebx), byref(self), c_double(t))
+    
+    def __del__(self):
+        if self._b_needsfree_ == 1:
+            clibreboundx.rebx_free_interpolator_pointers(byref(self))
+        
+Interpolator._fields_ = [  ("interpolation", c_int),
+                    ("times", POINTER(c_double)),
+                    ("values", POINTER(c_double)),
+                    ("Nvalues", c_int),
+                    ("y2", POINTER(c_double)),
+                    ("klo", c_int)]
+
+INTERPOLATION_TYPE = {"none":0, "spline":1}
+
 # This list keeps pairing from C rebx_param_type enum to ctypes type 1-to-1. Derive the required mappings from it
 REBX_C_TO_CTYPES = [["REBX_TYPE_NONE", None], ["REBX_TYPE_DOUBLE", c_double], ["REBX_TYPE_INT",c_int], ["REBX_TYPE_POINTER", c_void_p], ["REBX_TYPE_FORCE", Force], ["REBX_TYPE_UNIT32", c_uint32], ["REBX_TYPE_ORBIT", rebound.Orbit]]
 REBX_CTYPES = {} # maps int value of rebx_param_type enum to ctypes type
