@@ -1,4 +1,4 @@
-.. image:: http://img.shields.io/badge/REBOUNDx-v3.0.5-green.svg?style=flat
+.. image:: http://img.shields.io/badge/REBOUNDx-v3.1.0-green.svg?style=flat
     :target: http://reboundx.readthedocs.org
 .. image:: https://badge.fury.io/py/reboundx.svg
     :target: https://badge.fury.io/py/reboundx
@@ -15,26 +15,34 @@
 .. image:: https://img.shields.io/badge/launch-binder-ff69b4.svg?style=flat
     :target: http://mybinder.org/repo/dtamayo/reboundx
 
-New Version and Paper!
-======================
-
-We've made some big improvements to REBOUNDx to make it more robust and easily extendable, so definitely upgrade to this new version (3.0) if you haven't already.
-We've also improved the binary format to better interface with the REBOUND SimulationArchive for the sharing and analysis of machine independent results.
-
-Definitely also check out our paper where we give an overview of the library, analyze the effects of dissipative forces on symplectic integrators, and give some recommendations:`Tamayo, Rein, Shi and Hernandez 2019 <http://arxiv.org/abs/1908.05634>`_
-
 Welcome to REBOUNDx (eXtras)
 ============================
 
 REBOUNDx allows you to easily incorporate additional physics into your REBOUND simulations.
-All the computationally expensive parts of the code are written in C, so that the code will run much faster than if you define your own custom `additional_forces` functions in Python.
+The main code is written in C, and we provide a convenient Python wrapper.
+For an overview of the technical details and some practical recommendations, see `Tamayo, Rein, Shi and Hernandez 2019 <http://arxiv.org/abs/1908.05634>`_.
+The paper publication lines up with REBOUNDx version 3.0.0.
 
-For a list of supported effects, installation instructions, tutorials/examples and documentation, please see http://reboundx.readthedocs.io.
+Documentation
+=============
 
-.. image:: https://github.com/dtamayo/dtamayo.github.io/blob/master/pix/reboundx.png
+For a list of supported effects, and descriptions of the parameters that need to be set for each effect, see the documentation at `http://reboundx.readthedocs.io <http://reboundx.readthedocs.io>`_.
+You can also find installation instructions and a quickstart guide there.
+
+Attribution
+===========
+
+We have tried to structure the documentation in a way that makes it easy to credit the various people who have contributed to any given effect.
+Please see the Attribution section at `http://reboundx.readthedocs.io <http://reboundx.readthedocs.io>`_ for direct links to ADS.
 
 Changelog
 =========
+
+Version 3.1.0
+-------------
+
+* Added interpolator object for interpolating parameters
+* Many improvements to the documentation
 
 Version 3.0.5
 -------------

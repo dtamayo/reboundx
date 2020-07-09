@@ -29,7 +29,7 @@
  *
  * ======================= ===============================================
  * Authors                 D. Tamayo, H. Rein
- * Implementation Paper    *In progress*
+ * Implementation Paper    `Kostov et al., 2016 <https://ui.adsabs.harvard.edu/abs/2016ApJ...832..183K/abstract>`_.
  * Based on                `Papaloizou & Larwood 2000 <http://labs.adsabs.harvard.edu/adsabs/abs/2000MNRAS.315..823P/>`_.
  * C Example               :ref:`c_example_modify_orbits`
  * Python Example          `Migration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Migration.ipynb>`_
