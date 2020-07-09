@@ -39,7 +39,7 @@
 #define str(s) #s
 
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
-const char* rebx_version_str = "3.0.4";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
+const char* rebx_version_str = "3.1.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
 
 
@@ -72,7 +72,9 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "beta", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_primary", REBX_TYPE_INT);
     rebx_register_param(rebx, "R_tides", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "k1", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tctl_k1", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tctl_tau", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "Omega", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "integrator", REBX_TYPE_INT);
     rebx_register_param(rebx, "free_arrays", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "im_ps_final", REBX_TYPE_POINTER);
@@ -84,6 +86,9 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "min_distance", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "min_distance_from", REBX_TYPE_UINT32);
     rebx_register_param(rebx, "min_distance_orbit", REBX_TYPE_ORBIT);
+    rebx_register_param(rebx, "luminosity", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tides_Omega", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tides_lambda2", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -252,9 +257,9 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->update_accelerations = rebx_radiation_forces;
         force->force_type = REBX_FORCE_VEL;
     }
-    else if (strcmp(name, "tides_precession") == 0){
-        force->update_accelerations = rebx_tides_precession;
-        force->force_type = REBX_FORCE_POS;
+    else if (strcmp(name, "tides_constant_time_lag") == 0){
+        force->update_accelerations = rebx_tides_constant_time_lag;
+        force->force_type = REBX_FORCE_VEL;
     }
     else{
         char str[300];

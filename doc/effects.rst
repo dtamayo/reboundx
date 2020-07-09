@@ -1,7 +1,7 @@
 .. _effects:
 
-REBx Effects & Parameters
-=========================
+Implemented Effects
+===================
 
 Below are descriptions for each of the effects included in REBOUNDx.
 Different implementations for the same effect are grouped together.
@@ -23,7 +23,7 @@ modify_orbits_forces
 
 ======================= ===============================================
 Authors                 D. Tamayo, H. Rein
-Implementation Paper    *In progress*
+Implementation Paper    `Kostov et al., 2016 <https://ui.adsabs.harvard.edu/abs/2016ApJ...832..183K/abstract>`_.
 Based on                `Papaloizou & Larwood 2000 <http://labs.adsabs.harvard.edu/adsabs/abs/2000MNRAS.315..823P/>`_.
 C Example               :ref:`c_example_modify_orbits`
 Python Example          `Migration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Migration.ipynb>`_
@@ -67,7 +67,7 @@ modify_orbits_direct
 
 ======================= ===============================================
 Authors                 D. Tamayo
-Implementation Paper    *In progress*
+Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_. 
 Based on                `Lee & Peale 2002 <http://labs.adsabs.harvard.edu/adsabs/abs/2002ApJ...567..596L/>`_. 
 C Example               :ref:`c_example_modify_orbits`
 Python Example          `Migration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Migration.ipynb>`_,
@@ -119,7 +119,7 @@ gr_potential
 
 ======================= ===============================================
 Authors                 H. Rein, D. Tamayo
-Implementation Paper    *In progress*
+Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
 Based on                `Nobili and Roxburgh 1986 <http://labs.adsabs.harvard.edu/adsabs/abs/1986IAUS..114..105N/>`_.
 C Example               :ref:`c_example_gr`
 Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
@@ -157,7 +157,7 @@ gr
 
 ======================= ===============================================
 Authors                 P. Shi, D. Tamayo, H. Rein
-Implementation Paper    *In progress*
+Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
 Based on                `Anderson et al. 1975 <http://labs.adsabs.harvard.edu/adsabs/abs/1975ApJ...200..221A/>`_.
 C Example               :ref:`c_example_gr`
 Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
@@ -194,7 +194,7 @@ gr_full
 
 ======================= ===============================================
 Authors                 P. Shi, H. Rein, D. Tamayo
-Implementation Paper    *In progress*
+Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
 Based on                `Newhall et al. 1983 <http://labs.adsabs.harvard.edu/adsabs/abs/1983A%26A...125..150N/>`_.
 C Example               :ref:`c_example_gr`
 Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
@@ -214,43 +214,6 @@ c (double)                   Yes         Speed of light in the units used for th
 
 *None*
 
-.. _steppers:
-
-steppers
-********
-
-======================= ===============================================
-Authors                 P. Shi, D. Tamayo, H. Rein
-Implementation Paper    *In progress*
-Based on                `Anderson et al. 1975 <http://labs.adsabs.harvard.edu/adsabs/abs/1975ApJ...200..221A/>`_.
-C Example               :ref:`c_example_gr`
-Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
-======================= ===============================================
-
-This assumes that the masses are dominated by a single central body, and should be good enough for most applications with planets orbiting single stars.
-It ignores terms that are smaller by of order the mass ratio with the central body.
-It gets both the mean motion and precession correct, and will be significantly faster than :ref:`gr_full`, particularly with several bodies.
-Adding this effect to several bodies is NOT equivalent to using gr_full.
-
-**Effect Parameters**
-
-============================ =========== ==================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================
-c (double)                   Yes         Speed of light in the units used for the simulation.
-============================ =========== ==================================================================
-
-**Particle Parameters**
-
-If no particles have gr_source set, effect will assume the particle at index 0 in the particles array is the source.
-
-============================ =========== ==================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================
-gr_source (int)              No          Flag identifying the particle as the source of perturbations.
-============================ =========== ==================================================================
-
-
 Radiation Forces
 ^^^^^^^^^^^^^^^^
 
@@ -261,7 +224,7 @@ radiation_forces
 
 ======================= ===============================================
 Authors                 H. Rein, D. Tamayo
-Implementation Paper    *In progress*
+Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
 Based on                `Burns et al. 1979 <http://labs.adsabs.harvard.edu/adsabs/abs/1979Icar...40....1B/>`_.
 C Example               :ref:`c_example_rad_forces_debris_disk`, :ref:`c_example_rad_forces_circumplanetary`.
 Python Example          `Radiation_Forces_Debris_Disk.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Radiation_Forces_Debris_Disk.ipynb>`_,
@@ -302,7 +265,7 @@ modify_mass
 
 ======================= ===============================================
 Authors                 D. Tamayo
-Implementation Paper    *In progress*
+Implementation Paper    `Kostov et al., 2016 <https://ui.adsabs.harvard.edu/abs/2016ApJ...832..183K/abstract>`_.
 Based on                None
 C Example               :ref:`c_example_modify_mass`
 Python Example          `ModifyMass.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ModifyMass.ipynb>`_.
@@ -329,23 +292,23 @@ tau_mass (double)            Yes         e-folding mass loss (<0) or growth (>0)
 Tides
 ^^^^^^^^^^^^^^^^^^
 
-.. _tides_precession:
+.. _tides_constant_time_lag:
 
-tides_precession
-****************
+tides_constant_time_lag
+***********************
 
 ======================= ===============================================
-Authors                 D. Tamayo
-Implementation Paper    *In progress*
-Based on                `Hut 1981 <https://ui.adsabs.harvard.edu/#abs/1981A&A....99..126H/abstract>`_.
-C Example               :ref:`c_example_tides_precession`.
-Python Example          `TidesPrecession.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesPrecession.ipynb>`_.
+Authors                 Stanley A. Baronett, D. Tamayo, Noah Ferich
+Implementation Paper    Baronett et al., in prep.
+Based on                `Hut 1981 <https://ui.adsabs.harvard.edu/#abs/1981A&A....99..126H/abstract>`_, `Bolmont et al., 2015 <https://ui.adsabs.harvard.edu/abs/2015A%26A...583A.116B/abstract>`_.
+C Example               :ref:`c_example_tides_constant_time_lag`.
+Python Example          `TidesConstantTimeLag.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesConstantTimeLag.ipynb>`_.
 ======================= ===============================================
 
-This adds precession from the tidal interactions between the particles in the simulation and the central body, both from tides raised on the primary and on the other bodies.
-In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' R_tides (physical radius) and k1 (apsidal motion constant, half the tidal Love number).
-You can specify the primary with a "primary" flag.
-If not set, the primary will default to the particle at the 0 index in the particles array.
+This adds constant time lag tidal interactions between orbiting bodies in the simulation and the primary, both from tides raised on the primary and on the other bodies.
+In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' physical radius particles[i].r, k1 (apsidal motion constant, half the tidal Love number), constant time lag tau, and rotation rate Omega. See Hut (1981) and Bolmont et al. 2015 above.
+
+If tau is not set, it will default to zero and yield the conservative piece of the tidal potential.
 
 **Effect Parameters**
 
@@ -356,9 +319,10 @@ None
 ============================ =========== ==================================================================
 Field (C type)               Required    Description
 ============================ =========== ==================================================================
-R_tides (float)              Yes         Physical radius (required for contribution from tides raised on the body).
-k1 (float)                   Yes         Apsidal motion constant (half the tidal Love number k2).
-primary (int)                No          Set to 1 to specify the primary.  Defaults to treating particles[0] as primary if not set.
+particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
+tctl_k1 (float)                   Yes         Apsidal motion constant (half the tidal Love number k2).
+tctl_tau (float)                  No          Constant time lag. If not set will default to 0 and give conservative tidal potential
+Omega (float)                No          Rotation rate. If not set will default to 0
 ============================ =========== ==================================================================
 
 
@@ -372,7 +336,7 @@ central_force
 
 ======================= ===============================================
 Authors                 D. Tamayo
-Implementation Paper    *In progress*
+Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
 Based on                None
 C Example               :ref:`c_example_central_force`
 Python Example          `CentralForce.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/CentralForce.ipynb>`_.
@@ -406,12 +370,13 @@ gravitational_harmonics
 
 ======================= ===============================================
 Authors                 D. Tamayo
-Implementation Paper    *In progress*
+Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_. 
 Based on                None
 C Example               :ref:`c_example_J2`
 Python Example          `J2.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/J2.ipynb>`_.
 ======================= ===============================================
 
+Adds azimuthally symmetric gravitational harmonics (J2, J4) to bodies in the simulation. Current implementation assumes everything is planar, i.e. spin pole of body aligned with z axis of simulation.
 
 **Effect Parameters**
 
@@ -424,9 +389,64 @@ Field (C type)               Required    Description
 ============================ =========== ==================================================================
 J2 (double)                  No          J2 coefficient
 J4 (double)                  No          J4 coefficient
-R_eq (double)                No         Equatorial radius of nonspherical body used for calculating Jn harmonics
+R_eq (double)                No          Equatorial radius of nonspherical body used for calculating Jn harmonics
 ============================ =========== ==================================================================
 
+
+Integration Steppers
+^^^^^^^^^^^^^^^^^^^^
+
+These are wrapper functions to taking steps with several of REBOUND's integrators in order to build custom splitting schemes.
+
+.. _steppers:
+
+steppers
+********
+
+======================= ===============================================
+Authors                 D. Tamayo, H. Rein
+Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
+Based on                `Rein and Liu, 2012 <https://ui.adsabs.harvard.edu/abs/2012A%26A...537A.128R/abstract>`_.
+C Example               None
+Python Example          `CustomSplittingIntegrationSchemes.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/CustomSplittingIntegrationSchemes.ipynb>`_.
+======================= ===============================================
+
+These are wrapper functions to taking steps with several of REBOUND's integrators in order to build custom splitting schemes.
+
+**Effect Parameters**
+
+None
+
+**Particle Parameters**
+
+None
+
+
+Parameter Interpolation
+^^^^^^^^^^^^^^^^^^^^^^^
+
+This isn't an effect that's loaded like the others, but an object that facilitates machine-independent interpolation of parameters that can be shared by both the C and Python versions. See the examples below for how to use them.
+
+.. _interpolation:
+
+interpolation
+*************
+
+======================= ===============================================
+Authors                 S.A. Baronett, D. Tamayo, N. Ferich
+Implementation Paper    Baronett et al., in prep.
+Based on                `Press et al., 1992 <https://ui.adsabs.harvard.edu/abs/1992nrca.book.....P/abstract>`_. 
+C Example               :ref:`c_example_parameter_interpolation`
+Python Example          `ParameterInterpolation.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ParameterInterpolation.ipynb>`_.
+======================= ===============================================
+
+**Effect Parameters**
+
+Not applicable. See examples.
+
+**Particle Parameters**
+
+Not applicable. See examples.
 
 Miscellaneous Utilities
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -438,7 +458,7 @@ track_min_distance
 
 ======================= ===============================================
 Authors                 D. Tamayo
-Implementation Paper    *In progress*
+Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
 Based on                None
 C Example               :ref:`c_example_track_min_distance`
 Python Example          `TrackMinDistance.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TrackMinDistance.ipynb>`_.

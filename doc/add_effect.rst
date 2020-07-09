@@ -44,7 +44,7 @@ The function prototype should always stay the same, so we just change the name
 
     void rebx_stark_force(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
 
-All forces are always passed a pointer to the simulation ``sim``, a force structure ``force``, a ``particles`` array, and the number ``N`` of particles in the array (real particles, not counting variational particles--you don't have to worry if you don't know what those are).
+All forces are always passed as a pointer to the simulation ``sim``, a force structure ``force``, a ``particles`` array, and the number ``N`` of particles in the array (real particles, not counting variational particles--you don't have to worry if you don't know what those are).
 The only thing our function needs to do is evaluate the accelerations for each particle, and add those to each particles' acceleration vector, as  we'll do below.
 Note that we should specifically update the passed ``particles`` array (NOT ``sim->particles``).
 
@@ -67,7 +67,7 @@ If evaluation of your accelerations involves the particle velocities, set ``REBX
     
     ...
     else if (strcmp(name, "stark_force") == 0){
-        force->update_accelerations = rebx_stark_force;;
+        force->update_accelerations = rebx_stark_force;
         force->force_type = REBX_FORCE_POS;
     }
     else{
@@ -109,7 +109,7 @@ Now we just modify the ``problem.c`` file in our new ``stark_force`` folder, e.g
         star.m     = 1.;   
         reb_add(sim, star); 
 
-        struct reb_particle planet = {0};  # add a planet on a circular orbit (with default units where G=1)
+        struct reb_particle planet = {0};  // add a planet on a circular orbit (with default units where G=1)
         planet.x = 1.;
         planet.vy = 1.;
         reb_add(sim, planet);
@@ -124,7 +124,6 @@ Now we just modify the ``problem.c`` file in our new ``stark_force`` folder, e.g
 
 In the terminal in the ``stark_force`` folder then just ``make clean``, ``make``  and then run it with  ``./rebound``. 
 In the visualization press 'w' to see the orbits. You should see a mess with the orbit getting more and less eccentric.
-(See Sec. 2.4 of `OpenGL Keyboard Commands <http://rebound.readthedocs.org/en/latest/c_quickstart.html>`_ for a list of the visualization keyboard commands).
 If you get an error about OpenGL or GLUT, just google `install openGL glut libraries <your OS here>` for instructions, or open your ``Makefile`` and set OPENGL=0 to turn it off.
 
 Python Example
@@ -152,7 +151,7 @@ Then, e.g. in a jupyter notebook:
 will run with our new effect. We could plot the eccentricity vs time, just like in the Custom_Effects.ipynb ipython_example where we code the effect in python (and is a factor of a few slower than our new C code).
 
 That's all there is to it. 
-If you want to make your effect more flexible, so that users can change parameters at runtime, check out :ref:`adding_parameters`, and :ref:`contribute` if you want to add your effect to REBOUNDx so others can also use it.
+If you want to make your effect more flexible, so that users can change parameters at runtime, check out :ref:`adding_parameters`, and :ref:`contributing` if you want to add your effect to REBOUNDx so others can also use it.
 
 .. _operators:
 
@@ -176,7 +175,7 @@ where ``sim`` is again a pointer to the simulation, ``operator`` is an operator 
 Adding Parameters
 ^^^^^^^^^^^^^^^^^
 
-In :ref:`add_effect` we went over how to add a simple new force, where we simply hardcoded which particles were effected, and by how much. 
+In :ref:`basic_force` we went over how to add a simple new force, where we simply hardcoded which particles were effected, and by how much. 
 REBOUNDx also makes it easy to add parameters to forces and particles so that the user can have the flexibility to choose these values at runtime, can write a script that sets parameters individually on particles, can inspect them to write output to files, change values halfway through, etc.
 This will show you how to do that with your effect.
 
@@ -227,7 +226,7 @@ Now in C we can set our particle parameter in our ``problem.c`` file:
 
 .. code-block:: c
 
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "stark_force", 0.01);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "stark_acc", 0.01);
 
 and everything will work as before.
 
@@ -256,6 +255,7 @@ Here we will take that ipython_example with a made up SPH_sim struct and show ho
 First in ``src/reboundx.h``, we need to add a new enum to ``rebx_param_type``:
 
 .. code-block:: c
+
     enum rebx_param_type{
         REBX_TYPE_NONE,
         ...
@@ -265,6 +265,7 @@ First in ``src/reboundx.h``, we need to add a new enum to ``rebx_param_type``:
 Then we need to define this struct below under 'Basic types in REBOUNDx':
 
 .. code-block:: c
+
     struct rebx_SPH_sim {
         double dt;
         int Nparticles;
@@ -389,8 +390,9 @@ For example, for the stark_force implementation we did:
 We first add the group that our effect belongs to, between dollar signs.
 This keeps different implementations of, e.g., general relativity corrections in the same place.
 Here I made up a new one called $Documentation Examples$.
-If you want to make a new category like here, you have to add it to, edit :ref:`effect_headers` (/reboundx/doc/effect_headers.rst).
-You can optionally add a description general to all implementations in the category following the format in the file, which will show up in :ref:`effects`.
+If you want to make a new category like here, you have to add it to the /reboundx/doc/effect_headers.rst file.
+
+When you create a new category in that file, you can optionally add a description general to all implementations in the category following the format in the file, which will show up in :ref:`effects`.
 
 .. code-block:: rst
 
@@ -398,6 +400,8 @@ You can optionally add a description general to all implementations in the categ
     Documentation Examples 
     ^^^^^^^^^^^^^^^^^^^^^^
     These are effects that have been added as documentation examples
+
+You can also compare with the Orbit Modifications category in that file and how it shows up in the list of effects in the documentation at :ref:`effects`.
 
 Then fill in the table:
 ``Authors`` says who wrote the code.
@@ -413,7 +417,22 @@ Underneath your table, provide a description that will inform users when it's ap
 
 Finally, if your effect requires the user to set (possibly optionally) particular effect or particle parameters, we create tables for them too. 
 
-You can check how everything looks by navigating to ``reboundx/doc`` and typing ``make clean``, then ``make html``.
+To check how everything looks the way it should, you need to 
+
+.. code-block:: bash
+
+    pip install breathe sphinx
+
+and you need to install `doxygen <http://www.doxygen.nl/manual/install.html>`_. Then
+
+.. code-block:: bash
+
+    cd reboundx/doc/doxygen
+    doxygen Doxyfile
+    cd reboundx/doc
+    make clean
+    make html
+
 Then navigate to ``reboundx/doc/_build/html`` and open ``index.html`` in your browser.
 The main effects page (with the tables) is on the left: REBx Effects & Parameters.
 The automatically included documentation will be under API Documentation (Python) and API Documentation (C).

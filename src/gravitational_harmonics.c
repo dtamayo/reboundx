@@ -28,12 +28,13 @@
  *
  * ======================= ===============================================
  * Authors                 D. Tamayo
- * Implementation Paper    *In progress*
+ * Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_. 
  * Based on                None
  * C Example               :ref:`c_example_J2`
  * Python Example          `J2.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/J2.ipynb>`_.
  * ======================= ===============================================
  * 
+ * Adds azimuthally symmetric gravitational harmonics (J2, J4) to bodies in the simulation. Current implementation assumes everything is planar, i.e. spin pole of body aligned with z axis of simulation.
  *
  * **Effect Parameters**
  * 
@@ -46,7 +47,7 @@
  * ============================ =========== ==================================================================
  * J2 (double)                  No          J2 coefficient
  * J4 (double)                  No          J4 coefficient
- * R_eq (double)                No         Equatorial radius of nonspherical body used for calculating Jn harmonics
+ * R_eq (double)                No          Equatorial radius of nonspherical body used for calculating Jn harmonics
  * ============================ =========== ==================================================================
  * 
  */

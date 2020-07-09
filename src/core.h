@@ -44,6 +44,7 @@ struct rebx_node;
 
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx); // Initializes all pointers and values.
 void rebx_register_default_params(struct rebx_extras* rebx); // Registers default params
+void rebx_init_interpolator(struct rebx_extras* const rebx, struct rebx_interpolator* const interp, const int Nvalues, const double* times, const double* values, enum rebx_interpolation_type interpolation);
 
 /**********************************************
  Functions executing forces & ptm each timestep
@@ -68,7 +69,8 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_force* const for
 void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
-void rebx_tides_precession(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_tides_constant_time_lag(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_tides_drag(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_central_force(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 
@@ -97,6 +99,7 @@ void rebx_free_operator(struct rebx_operator* operator);
 void rebx_free_step(struct rebx_step* step);
 void rebx_free_pointers(struct rebx_extras* rebx);
 void rebx_free_param(struct rebx_param* param);
+void rebx_free_interpolator_pointers(struct rebx_interpolator* const interpolator);
 
 enum rebx_param_type rebx_get_type(struct rebx_extras* rebx, const char* name);
 
