@@ -31,7 +31,7 @@ addons:
 
 before_install:
   - travis_apt_get_update
-  - if [[ $TESTPART == "C" ]]; then cd $TRAVIS_BUILD_DIR/../; git clone -b whfasttp1 https://github.com/hannorein/rebound; cd rebound; pip install -e .; fi
+  - if [[ $TESTPART == "C" ]]; then cd $TRAVIS_BUILD_DIR/../; git clone https://github.com/hannorein/rebound; cd rebound; pip install -e .; fi
   - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh -O miniconda.sh; fi; fi
   - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then chmod +x miniconda.sh; fi
   - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then ./miniconda.sh -b -p /home/travis/mc; fi
