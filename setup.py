@@ -66,7 +66,7 @@ libreboundxmodule = Extension('libreboundx',
                     include_dirs = ['src'],
                     library_dirs = [],
                     runtime_library_dirs = ["."],
-                    libraries=['rebound'+suffix[:-3]], #take off .so from the suffix
+                    libraries=['rebound'+suffix[:suffix.rfind('.')]],
                     define_macros=[ ('LIBREBOUNDX', None) ],
                     extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99', '-fPIC', '-Wpointer-arith', ghash_arg],
                     extra_link_args=extra_link_args,
