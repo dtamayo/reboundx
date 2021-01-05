@@ -1,4 +1,4 @@
-.. image:: http://img.shields.io/badge/REBOUNDx-v3.1.1-green.svg?style=flat
+.. image:: http://img.shields.io/badge/REBOUNDx-v3.2.0-green.svg?style=flat
     :target: http://reboundx.readthedocs.org
 .. image:: https://badge.fury.io/py/reboundx.svg
     :target: https://badge.fury.io/py/reboundx
