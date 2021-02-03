@@ -23,13 +23,14 @@ print("\n***INITIAL ORBITS:***")
 for orbit in sim.calculate_orbits():
     print(orbit)
 
+pi = 3.14159265358979
 tmax=50000 # in yrs
 radius = 1000   #radius of asteroid (m)
 lstar = 3.828e26 #luminosity of sun in watts
 body_density = 3000   #density of asteroid (kg/m^3)
 c = 299792458   #speed of light (m/s)  
 alph = 1  #alph constant in equation
-mass = ((4/3)*np.pi*(radius**3))*body_density #calculates mass of asteroid in kg
+asteroid_mass = (4/3)*pi*(radius**3)*body_density #calculates mass of asteroid in kg
 k = 1 #k constant in Veras Yarkovsky equation
 r_conv = 1.495978707e11 #coverts AU to m
 t_conv = 31557600 #converts yrs to sec
@@ -47,24 +48,24 @@ def yarkovsky_effect(reb_sim):
     
     distance = ((r_vector[0]**2)+(r_vector[1]**2)+(r_vector[2])**2)**(1/2) #distance of asteroid from the star
 
-
     rdotv = ((r_vector[0][0]*v_vector[0][0])+(r_vector[1][0]*v_vector[1][0])+(r_vector[2][0]*v_vector[2][0]))/(c*distance) #dot product of position and velocity vectors- the term in the denominator is needed when calculating the i vector
 
     i_vector = ((1-rdotv)*(r_vector/distance))-(v_vector/c) #calculates i vector using equation from Veras, Higuchi, Ida (2019)
-
-    yarkovsky_magnitude = ((radius**2)*lstar)/(4*mass*c*(distance**2)) #magnitude of the yarkovsky effect for the asteroid
-
-    Yark_matrix =  np.array([[1, 0, 0], [1/4, 1, 0 ], [0, 0, 1]]) #Same thing as Q in Veras, Higuchi, Ida (2019)
     
-    Direction_matrix = Yark_matrix.dot(i_vector) #vector which gives the direction of the acceleration created by the Yarkovsky effect
+    yarkovsky_magnitude = ((radius**2)*lstar)/(4*asteroid_mass*c*(distance**2)) #magnitude of the yarkovsky effect for the asteroid
+
+    yark_matrix =  np.array([[1, 0, 0], [.25, 1, 0 ], [0, 0, 1]]) #Same thing as Q in Veras, Higuchi, Ida (2019)
     
-    yarkovsky_acceleration = (yarkovsky_magnitude*Direction_matrix)/a_conv #final result for acceleration created by the Yarkovsky effect- converts it back into units for the sim
+    direction_matrix = yark_matrix.dot(i_vector) #vector which gives the direction of the acceleration created by the Yarkovsky effect
+    
+    yarkovsky_acceleration = (yarkovsky_magnitude*direction_matrix)/a_conv #final result for acceleration created by the Yarkovsky effect- converts it back into units for the sim
     
 
     #adds Yarkovsky aceleration to the asteroid's acceleration in the sim
     sp[1].ax += yarkovsky_acceleration[0][0]				
     sp[1].ay += yarkovsky_acceleration[1][0]
     sp[1].az += yarkovsky_acceleration[2][0]
+    
 
 sim.additional_forces = yarkovsky_effect  # adds force to simulation 
 sim.force_is_velocity_dependent = 1 # tells sim the force depends on particle's velocity

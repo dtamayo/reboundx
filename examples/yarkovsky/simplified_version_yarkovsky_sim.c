@@ -7,7 +7,7 @@
 
 #include "simplified_version_yarkovsky_sim.h"
 
-#include "simple_yarkovsky_sim.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -17,7 +17,9 @@
 
 void yarkovsky_effect(struct reb_simulation* const sim);
 
+
 double tmax = 50000; //in yrs
+double pi = 3.14159265358979;
 double radius = 1000; //radius of asteroid (m)
 double body_density = 3000; //density of most of the asteroid (kg/m^3)
 double lstar = 3.828e26; //luminosity of sun in watts
@@ -64,24 +66,6 @@ int main(int argc, char* argv[]) {
     
     printf("CHANGE IN SEMI-MAJOR AXIS: %1.30f\n", (final_a-a)); //prints difference between the intitial and final semi-major axes of asteroid
     
-    /*int i;
-    
-    double yark_matrix[3][3] = {{1, 2, 3},{1, 5, 3},{6, 2, 3}}; // Same thing as
-    
-    double i_vector[3][1] = {{1},{2},{3}};
-    
-    double direction_matrix[3][1];
-    
-    printf("%f\n", direction_matrix[0][0]);
-    
-    
-    for (i=0; i<3; i++){
-         direction_matrix[i][0] = (yark_matrix[i][0]*i_vector[0][0]) + (yark_matrix[i][1]*i_vector[1][0]) + (yark_matrix[i][2]*i_vector[2][0]);
-     }
-
-    
-    printf("%f\n", direction_matrix[1][0]);*/
-    
 }
 
 //following calculates yarkovsky effect for asteroid in the sim
@@ -94,7 +78,7 @@ void yarkovsky_effect(struct reb_simulation* const sim){
     
     struct reb_particle* const particles = sim->particles; //pointer for the particles in the sim
     
-    double asteroid_mass = (4/3)*M_PI*(radius*radius*radius)*body_density; //calculates mass of the asteroid from the body density and radius- assume its spherical
+    double asteroid_mass = (4*pi*radius*radius*radius*body_density)/3; //calculates mass of the asteroid from the body density and radius- assume its spherical
     
     double v_vector[3][1] = {{particles[1].vx*v_conv}, {particles[1].vy*v_conv}, {particles[1].vz*v_conv}}; //vector for velocity of asteroid
     
@@ -113,8 +97,9 @@ void yarkovsky_effect(struct reb_simulation* const sim){
     }
     
     double yarkovsky_magnitude = (radius*radius*lstar)/(4*asteroid_mass*c*distance*distance); //magnitude of the yarkovsky effect for the asteroid
+
     
-    double yark_matrix[3][3] = {{1, 0, 0},{1/4, 1, 0},{0, 0, 1}}; // Same thing as Q in Veras, Higuchi, Ida (2019)
+    double yark_matrix[3][3] = {{1, 0, 0},{.25, 1, 0},{0, 0, 1}}; // Same thing as Q in Veras, Higuchi, Ida (2019)
     
     double direction_matrix[3][1];
     
@@ -136,6 +121,7 @@ void yarkovsky_effect(struct reb_simulation* const sim){
     particles[1].ax += yarkovsky_acceleration[0][0];
     particles[1].ay += yarkovsky_acceleration[1][0];
     particles[1].az += yarkovsky_acceleration[2][0];
+    
 
 }
 

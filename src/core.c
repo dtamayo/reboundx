@@ -170,7 +170,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     rebx->registered_params=NULL;
     
     sim->free_particle_ap = rebx_free_particle_ap;
-    sim->extras_cleanup = rebx_extras_cleanup;
+    //sim->extras_cleanup = rebx_extras_cleanup;
     
     if(sim->additional_forces || sim->pre_timestep_modifications || sim->post_timestep_modifications){
         reb_warning(sim, "REBOUNDx overwrites sim->additional_forces, sim->pre_timestep_modifications and sim->post_timestep_modifications whenever forces or operators that use them get added.  If you want to use REBOUNDx together with your own custom functions that use these callbacks, you should add them through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.");

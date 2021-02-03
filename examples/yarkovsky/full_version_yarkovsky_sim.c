@@ -19,6 +19,7 @@ void additional_forces(struct reb_simulation* const sim);
 
 double tmax = 1; //in yrs
 double radius = 1000; //radius of asteroid (m)
+    double lstar = 3.828e26; //in watts
 double rotation_period = 15470.9; //how long it takes the body to rotate (sec)
 double body_density = 3000; //density of most of the asteroid (kg/m^3)
 double C = 680;    //surface heat capacity of asteroid. 832 Karin is an S-type astroid so it's main component is silicon dioxide which has this specific heat value (J/(kg-K))
@@ -85,9 +86,8 @@ void additional_forces(struct reb_simulation* const sim){
     struct reb_particle* const particles = sim->particles;
     struct reb_orbit o= reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
     
-    double lstar = 3.828e26; //in watts
     double K = (300*300)/(body_density*C);    //surface thermal conductivity (W/m-K)-ASSUMED REGOLITH_COVERED SURFACE
-     double asteroid_mass = (4/3)*M_PI*(radius*radius*radius)*body_density;
+    double asteroid_mass = (4*M_PI*(radius*radius*radius)*body_density)/3;
     
     double sx = 0.0872;
     double sy = 0;
