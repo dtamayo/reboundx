@@ -25,7 +25,7 @@ If you clone the repository at `https://github.com/dtamayo/reboundx <https://git
 In the terminal you can run the example in each folder with ``make clean && make && ./rebound``). 
 
 Also see the 'saving and loading simulations' examples for how to save a REBOUNDx binary with effects and parameters.
-For an overview of the technical details and some practical recommendations, see `Tamayo, Rein, Shi and Hernandez (2019) <http://arxiv.org/abs/1908.05634>`_.
+For an overview of the technical details and some practical recommendations, see `Tamayo, Rein, Shi and Hernandez (2019) <https://arxiv.org/abs/1908.05634>`_.
 
 
 Get Started!
@@ -52,14 +52,14 @@ REBOUNDx is a flexible framework for including new effects.
 You worry about incorporating the physics, and REBOUNDx takes care of how various effects should interact with the different integrators in REBOUND.
 :ref:`add_effect` provides a tutorial on how to do that.
 
-Please consider contributing your effects so we can continue to build up an efficient and well-tested repository.
+Please consider contributing your effects, so we can continue to build up an efficient and well-tested repository.
 The documentation structure in :ref:`effects` makes it easy for people to cite your particular implementation!
 
 Issues
 ------
 
 I am always happy to answer questions or otherwise help out.
-If you have problems, please open an issue on the github page at `https://github.com/dtamayo/reboundx <https://github.com/dtamayo/reboundx>`_
+If you have problems, please open an issue on the GitHub page at `https://github.com/dtamayo/reboundx <https://github.com/dtamayo/reboundx>`_
 
 .. toctree::
     :numbered:
