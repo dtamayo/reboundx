@@ -43,7 +43,7 @@ with open("c_examples.rst","w") as fd:
                 if line[0:3] == " */":
                     will_output = -1
                     line = ""
-                    fd.write("\n\n.. code-block:: c\n");
+                    fd.write("\n\n.. code-block:: c\n")
                 if will_output>1:
                     if will_output == 2:
                         under = "-"*(len(line.strip())-2)
@@ -60,7 +60,7 @@ with open("c_examples.rst","w") as fd:
                     will_output += 1
             fd.write("\n\nThis example is located in the directory `examples/"+problemc.split("/")[2]+"`\n\n")
             if did_output==0:
-                print "Warning: Did not find description in "+problemc
+                print("Warning: Did not find description in "+problemc)
 
 # Update effects.rst
 def cleanline(line):
@@ -88,7 +88,7 @@ with open("effects.rst", "w") as f:
                     while i < len(lines) and "$$$" not in lines[i]: # print category description
                         f.writelines(lines[i])
                         i += 1
-                       
+
                     for source in sources:
                         with open("../src/" + source + ".c", "r") as fs: # search sources that match category
                             sourcelines = fs.readlines()
@@ -118,7 +118,7 @@ with open("effects.rst", "w") as f:
                                         break
                                 else:
                                     j += 1
-                                
+
                 else:
                     f.writelines(lines[i])
                     i += 1
