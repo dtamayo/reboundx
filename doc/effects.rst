@@ -475,13 +475,13 @@ should add parameters to the particular particle whose distance should be tracke
 
 Only particles with their ``min_distance`` parameter set initially will track their minimum distance. The effect will
 update this parameter when the particle gets closer than the value of ``min_distance``, so the user has to set it
-initially.  By default distance is measured from sim->particles[0], but you can specify a different particle by setting
+initially.  By default, distance is measured from sim->particles[0], but you can specify a different particle by setting
 the ``min_distance_from`` parameter to the hash of the target particle.
 
 ================================ =========== =======================================================
 Name (C type)                    Required    Description
 ================================ =========== =======================================================
-min_distance (double)            Yes         Particle's miminimum distance.
+min_distance (double)            Yes         Particle's mininimum distance.
 min_distance_from (uint32)       No          Hash for particle from which to measure distance
 min_distance_orbit (reb_orbit)   No          Parameter to store orbital elements at moment corresponding to min_distance (heliocentric)
 ================================ =========== =======================================================

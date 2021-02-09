@@ -16,7 +16,7 @@ At this point you are done and can skip to the Quick Start Guide below.
 For a more complete installation, i.e., if you want any of the following: 
 
 * Source code
-* The example files that so you can modify them locally.
+* The example files so that you can modify them locally.
 * To also use the C version
  
 First follow the installation instructions for the C version in :ref:`c_quickstart`.
@@ -62,7 +62,7 @@ For example, let's add some mass loss to the star:
 
 Each effect will have different parameters to set, listed on the :ref:`effects` page and the examples.
 Forces, operators and particles have a params attribute that works like a dictionary.
-For example, let's add a exponential mass loss (i.e., negative) timescale to the star (index 0) of 100 time units.
+For example, let's add an exponential mass loss (i.e., negative) timescale to the star (index 0) of 100 time units.
 
 .. code:: python
 
