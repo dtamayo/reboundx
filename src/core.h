@@ -37,7 +37,6 @@ struct rebx_node;
 #include "reboundx.h"
 
 
-
 /*****************************
  Internal initialization routine.
  ****************************/
@@ -73,6 +72,7 @@ void rebx_tides_constant_time_lag(struct reb_simulation* const sim, struct rebx_
 void rebx_tides_drag(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_central_force(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_yark_max_out(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 
 /****************************************
  Operator prototypes
