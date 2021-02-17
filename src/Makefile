@@ -1,28 +1,19 @@
-ifndef REB_DIR
-	
-ifneq ($(wildcard ../../rebound/.*),) # Check for REBOUND in default location
-REB_DIR=../../rebound
-endif
 
-ifneq ($(wildcard ../../../rebound/.*),) # Check for REBOUNDx being inside the REBOUND directory
-REB_DIR=../../
-endif
+REB_DIR=/Users/nferich/GitHub/rebound
 
-endif
 
 ifndef REB_DIR # REBOUND is not in default location and REB_DIR is not set
     $(error REBOUNDx not in the same directory as REBOUND.  To use a custom location, you Must set the REB_DIR environment variable for the path to your rebound directory, e.g., export REB_DIR=/Users/dtamayo/rebound.  See reboundx.readthedocs.org)
 endif
 
-include $(REB_DIR)/src/Makefile.defs
-OPT+= -fPIC -DLIBREBOUNDX
+
 
 ifndef REBXGITHASH
 	REBXGITHASH = $(shell git rev-parse HEAD || echo '0000000000gitnotfound0000000000000000000')
 	PREDEF+= -DREBXGITHASH=$(REBXGITHASH)
 endif
 
-SOURCES=modify_mass.c integrator_euler.c modify_orbits_forces.c integrator_rk2.c track_min_distance.c rebxtools.c gravitational_harmonics.c gr_potential.c core.c integrator_rk4.c input.c central_force.c gr.c modify_orbits_direct.c tides_constant_time_lag.c gr_full.c steppers.c integrate_force.c interpolation.c output.c radiation_forces.c integrator_implicit_midpoint.c linkedlist.c 
+SOURCES=modify_mass.c integrator_euler.c modify_orbits_forces.c integrator_rk2.c track_min_distance.c rebxtools.c gravitational_harmonics.c gr_potential.c yark_max_out.c core.c integrator_rk4.c input.c central_force.c gr.c modify_orbits_direct.c tides_constant_time_lag.c gr_full.c steppers.c integrate_force.c interpolation.c output.c radiation_forces.c integrator_implicit_midpoint.c linkedlist.c 
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=rebxtools.h reboundx.h linkedlist.h
 
