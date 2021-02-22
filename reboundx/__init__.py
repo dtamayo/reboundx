@@ -23,6 +23,7 @@ __build__ = c_char_p.in_dll(clibreboundx, "rebx_build_str").value.decode('ascii'
 __githash__ = c_char_p.in_dll(clibreboundx, "rebx_githash_str").value.decode('ascii')
 
 try:
+    import pkg_resources
     moduleversion = pkg_resources.require("reboundx")[0].version
     libreboundxversion = __version__
     if moduleversion != libreboundxversion:
