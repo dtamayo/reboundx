@@ -6,9 +6,9 @@ Adding A New Effect
 Whether you're playing around with new physics in your integrations or want to contribute a new effect to REBOUNDx, the process is easy.
 
 The :ref:`basic_force` section shows you how to get your new effect working in C and python within 10 minutes. 
-The :ref:`adding_parameters` section shows you how to allow the user to set effect and particle parameters at runtime, and the :ref:`contributing` section goes over how to add your new effect to the REBOUNDx repository so others can use it and find it in the documentation.
+The :ref:`adding_parameters` section shows you how to allow the user to set effect and particle parameters at runtime, and the :ref:`contributing` section goes over how to add your new effect to the REBOUNDx repository, so others can use it and find it in the documentation.
 
-Our hope is that as people use the package and work on new problems, they will contribute their new effects so others can use (and cite!) their implementations.
+Our hope is that as people use the package and work on new problems, they will contribute their new effects, so others can use (and cite!) their implementations.
 Contributing the effects you implement (and may want to use in the future) to REBOUNDx has the added benefit of ensuring that they stay up to date as REBOUND and REBOUNDx expand.
 
 *Do I Have To Write It In C?*
@@ -36,7 +36,7 @@ Basic Force
 *effect.c*
 
 First copy an existing ``.c`` file in ``reboundx/src``, so that you have the license and right code structure to work from.
-Typically you'll be able to reuse many parts of the code.
+Typically, you'll be able to reuse many parts of the code.
 
 The function prototype should always stay the same, so we just change the name
 
@@ -245,7 +245,7 @@ That's it!
 Adding Custom Types
 *******************
 
-Most of the times you'll be using integer and double types for the paramters.
+Most of the time, you'll be using integer and double types for the parameters.
 But there may be times where you want to, e.g., use a custom struct.
 There is a catchall void pointer type (REBX_TYPE_POINTER) for such cases.
 This is convenient in C (see the bottom of the ``reboundx/examples/parameters/problem.c`` example), but in python involves casting things manually (see the bottom of ``reboundx/ipython_examples/GettingStartedParameters.ipynb``).
@@ -322,7 +322,7 @@ Now, if we follow the ``ipython_examples/GettingStartedParameters.ipynb``, rathe
 which will output 10000.
 
 Note that these custom structs will still not be written to REBOUNDx binaries.
-If this is important to you feel free to get in touch.
+If this is important to you, feel free to get in touch.
 
 .. _contributing:
 
@@ -335,7 +335,7 @@ A checklist:
 
 * Have you added a C example in ``reboundx/examples/``?
 * Have you added a python example in ``reboundx/ipython_examples/``?
-* Have you added documentation so people can find your effect? (see below)
+* Have you added documentation, so people can find your effect? (see below)
 * Is your code machine independent? (see below)
 
 I'm happy to help with any of these. Once you're ready, send me a pull request (see bottom of this page)
@@ -347,7 +347,7 @@ You add the documentation for your effect directly within your ``effect.c`` file
 It will then automatically get built into the :ref:`effects` page.
 Easiest is if you copy-paste from another effect source file.
 
-At the top of the cmoment block, you should edit the file, brief and author lines.
+At the top of the comment block, you should edit the file, brief and author lines.
 The rest of the documentation goes Below the dollar signs.
 For example, for the stark_force implementation we did: 
  
@@ -450,7 +450,7 @@ If you can find a way to write your function to only use basic operations, you c
 Putting together a Pull Request
 *******************************
 
-If you'd rather e-mail me your code, I'm happy to incorporate it, but if you'd like for github to show your account as a contributor to the project, send me a pull request! 
+If you'd rather e-mail me your code, I'm happy to incorporate it, but if you'd like for GitHub to show your account as a contributor to the project, send me a pull request! 
 
 If you've never done this before, follow the instructions at `Time to Submit Your First PR <http://www.thinkful.com/learn/github-pull-request-tutorial/Expect-a-Thorough-Review#Time-to-Submit-Your-First-PR>`_ up until "Tadaa!" to fork the REBOUNDx repository and make your own local branch.
 
@@ -458,4 +458,4 @@ Now you can modify the code as described below, and can incrementally commit cha
 As a starting point, you can check out `this guide <https://www.atlassian.com/git/tutorials/saving-changes>`_.
 
 After working through this document and making all the changes, you can then send me a pull request by following the rest of the instructions in the pull request tutorial above.
-We're always happy to help. Let us know if you have any questions or suggestions for how to improve this tutorial by opening an issue on the REBOUNDx `github page! <https://github.com/dtamayo/reboundx>`_.
+We're always happy to help. Let us know if you have any questions or suggestions for how to improve this tutorial by opening an issue on the REBOUNDx `GitHub page! <https://github.com/dtamayo/reboundx>`_.

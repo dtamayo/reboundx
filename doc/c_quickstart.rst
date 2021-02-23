@@ -38,7 +38,7 @@ Simple parameters of type double can be set like this::
 
     rebx_set_param_double(rebx, &gr->ap, "c", 3e4);
 
-Additional parmeters (ap) are stored in a linked list for each force, operator and particle, so in addition to passing
+Additional parameters (ap) are stored in a linked list for each force, operator and particle, so in addition to passing
 the rebx instance, we always pass a pointer to the head of the ap linked list (&gr->ap). We then pass the name of 
 the parameter, and the value we want to set it to.
 
