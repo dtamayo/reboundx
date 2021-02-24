@@ -1,4 +1,6 @@
 /**
+ *
+ *
  * @file    tides_constant_time_lag.c
  * @brief   Add constant time lag tides raised on primary, orbiting bodies, or both
  * @author  Stanley A. Baronett <stanley.a.baronett@gmail.com>, Dan Tamayo <tamayo.daniel@gmail.com>
@@ -54,7 +56,10 @@
  * tctl_tau (float)                  No          Constant time lag. If not set will default to 0 and give conservative tidal potential
  * Omega (float)                No          Rotation rate. If not set will default to 0
  * ============================ =========== ==================================================================
- * 
+ *
+ *
+ * CHANGE THIS^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ *
  */
 
 #include <stdio.h>
