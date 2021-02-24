@@ -75,13 +75,16 @@
 #include "rebxtools.h"
 
 static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source){
-    double tau_a = INFINITY;
-    double tau_e = INFINITY;
-    double tau_inc = INFINITY;
+    double invtau_a = 0.0;
+    double tau_e = 0.0;
+    double tau_inc = 0.0;
     
     const double* const tau_a_ptr = rebx_get_param(sim->extras, p->ap, "tau_a");
     const double* const tau_e_ptr = rebx_get_param(sim->extras, p->ap, "tau_e");
     const double* const tau_inc_ptr = rebx_get_param(sim->extras, p->ap, "tau_inc");
+    const double* const h = rebx_get_param(sim->extras, id->ap, "disc_edge_width");
+    const double* const dedge = rebx_get_param(sim->extras, id->ap, "inner_disc_edge")
+// get the h and dedge
 
     const double dvx = p->vx - source->vx;
     const double dvy = p->vy - source->vy;
@@ -93,8 +96,9 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
 
 /* maybe add a new if statement for when <a< .... to use tared */
     
+//define tau_ared as a function outside const double tau_ared(const double r,...){};
     if(tau_a_ptr != NULL){
-        tau_a = *tau_a_ptr;
+        invtau_a = tau_ared(r,h,d)/(*tau_a_ptr);
     }
     if(tau_e_ptr != NULL){
         tau_e = *tau_e_ptr;
@@ -127,8 +131,6 @@ This void function will thus set and include the new effect; an inner disc edge.
 Then I will set a value of the parameters in problem.c file as: rebx_set_param_double(rebx, &...(?).ap, "disc_edge", 0.1); and rebc_set_param_double(rebx, &...(?).ap, "width", 0.2);
 (What should I set the parameter to? It is not on the particles, it is on the whole simulation in a way). Can these parameters then be changed in the simsetup or so in python when simulating and integrating something??
         
-    double c = 10064.915; // speed of light in default units of AU, Msun and yr/2pi
-    rebx_set_param_double(rebx, &gr->ap, "c", c);
 
 The new void function, the new effect will then be added as a file of its own to reboundx when finished right and can be called and added to a simulation via simsetup?
 Lastly I need to add the new effect as else if statements in the core.c and core.h, is it where I use the if a >dedge(1+h) -> tau_a, if 
@@ -146,16 +148,16 @@ dedge(1-h) < a < dedge(1+h) -> new_tau_a, if 0 < a < dedge(1-h) -> -10 or  if a 
     rebx_set_param_double(rebx, &gr->ap, "width", h);
 
 /* For every timesetp of integration this will be run, where the first run uses initial a, the second uses the a found in the first step via this function and so on*/
-    double tau_ared = (5.5* M_PI(((rebx_get_param(rebx, gr->ap, "disc_edge") * (1 + h) - 
-                        rebx_get_param(rebx, particle[0].ap, "a" (?))) * 2 * M_PI)/(4 * rebx_get_param(rebx, gr->ap, "width") 
-                        * rebx_get_param(rebx, gr->ap, "disc_edge"))) - 4.5); 
-    
-    const double* const new_tau_a = tau_ared/tau_a;
-    rebx_set_param_double(rebx, &p->ap, "new_tau_a"); //do not think this is needed right?
+    double tau_ared = (5.5* M_PI(((rebx_get_param(rebx, id->ap, "inner_disc_edge") * (1 + h) - 
+                        double sqrt(double r2))) * 2 * M_PI)/(4 * rebx_get_param(rebx, id->ap, "disc_edge_width") 
+                        * rebx_get_param(rebx, id->ap, "inner_disc_edge"))) - 4.5); 
+
+    return tau_ared
 }
 
 
 
+// change name 
 void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
     int* ptr = rebx_get_param(sim->extras, force->ap, "coordinates");
     enum REBX_COORDINATES coordinates = REBX_COORDINATES_JACOBI; // Default

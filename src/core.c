@@ -89,6 +89,8 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "luminosity", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_Omega", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_lambda2", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "inner_disc_edge", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "disc_edge_width", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
