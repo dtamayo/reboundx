@@ -5,7 +5,7 @@
 //  Created by Noah Ferich on 12/30/20.
 //
 
-#include "simple_yarkovsky_sim.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -60,20 +60,18 @@ int main(int argc, char* argv[]) {
     
     struct reb_particle* const particles = sim->particles;
     
-    struct reb_orbit o= reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
-    
     sim->additional_forces = additional_forces;
     sim->force_is_velocity_dependent = 1;
     
-    printf("Intital semi-major axis: %3.15f AU\n", o.a);
-    
     reb_integrate(sim, tmax);
     
-    printf("Final semi-major axis: %3.15f AU\n", o.a );
+    struct reb_orbit o= reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]); //o gives orbital parameters for asteroid after sim
     
-    printf("%3.15f\n", o.P);
+    double final_a = o.a; //final semi-major axis of asteroid after sim
+    
+    printf("CHANGE IN SEMI-MAJOR AXIS: %1.30f\n", (final_a-a)); //prints difference between the intitial and final semi-major axes of asteroid
 
-    printf("%2.5f", particles[1].y);
+
     
 }
 
@@ -86,7 +84,7 @@ void additional_forces(struct reb_simulation* const sim){
     struct reb_particle* const particles = sim->particles;
     struct reb_orbit o= reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
     
-    double K = (300*300)/(body_density*C);    //surface thermal conductivity (W/m-K)-ASSUMED REGOLITH_COVERED SURFACE
+    double K = (300.0*300.0)/(body_density*C);    //surface thermal conductivity (W/m-K)-ASSUMED REGOLITH_COVERED SURFACE
     double asteroid_mass = (4*M_PI*(radius*radius*radius)*body_density)/3;
     
     double sx = 0.0872;
@@ -97,24 +95,28 @@ void additional_forces(struct reb_simulation* const sim){
     
     double a_conv= v_conv/t_conv; //converts AU/yr^2 to m/s^2
     
-    int unit_matrix[3][3] = {{1, 1, 1},{1, 1, 1},{1, 1, 1}};
+    double unit_matrix[3][3] = {{1.0, 1.0, 1.0},{1.0, 1.0, 1.0},{1.0, 1.0, 1.0}};
     
-    double distance = sqrt(((particles[1].x*particles[1].x*r_conv*r_conv))+ ((particles[1].y*particles[1].y*r_conv*r_conv)) + ((particles[1].z*particles[1].z*r_conv*r_conv)));
+    double v_vector[3][1] = {{particles[1].vx*v_conv}, {particles[1].vy*v_conv}, {particles[1].vz*v_conv}}; //vector for velocity of asteroid
     
+    double r_vector[3][1] = {{particles[1].x*r_conv}, {particles[1].y*r_conv}, {particles[1].z*r_conv}}; //vector for position of asteroid
     
-    double v_vector[3][1] = {{particles[1].vx*v_conv}, {particles[1].vy*v_conv}, {particles[1].vz*v_conv}};
+    double distance = sqrt((r_vector[0][0]*r_vector[0][0])+(r_vector[1][0]*r_vector[1][0])+(r_vector[2][0]*r_vector[2][0])); //distance of asteroid from the star
     
-    double r_vector[3][1] = {{particles[1].x*r_conv}, {particles[1].y*r_conv}, {particles[1].z*r_conv}};
     
     double hx = (r_vector[1][0]*v_vector[2][0])-(r_vector[2][0]*v_vector[1][0]);
     double hy = (r_vector[2][0]*v_vector[0][0])-(r_vector[0][0]*v_vector[2][0]);
     double hz = (r_vector[0][0]*v_vector[1][0])-(r_vector[1][0]*v_vector[0][0]);
     double Hmag = sqrt((hx*hx)+ (hy*hy) + (hz*hz));
     
-    double R1s[3][3] = {{0, -sz*(1/Smag), sy*(1/Smag)},{sz*(1/Smag), 0, -sx*(1/Smag)},{-sy*(1/Smag), sx*(1/Smag), 0}};
-    double R2s[3][3] = {{sx*sx*(1/(Smag*Smag)), sx*sy*(1/(Smag*Smag)), sx*sz*(1/(Smag*Smag))},{sx*sy*(1/(Smag*Smag)), sy*sy*(1/(Smag*Smag)), sy*sz*(1/(Smag*Smag))},{sx*sz*(1/(Smag*Smag)), sy*sz*(1/(Smag*Smag)), sz*sz*(1/(Smag*Smag))}};
-    double R1h[3][3] = {{0, -hz*(1/Hmag), hy*(1/Hmag)},{hz*(1/Hmag), 0, -hx*(1/Hmag)},{-hy*(1/Hmag), hx*(1/Hmag), 0}};
-    double R2h[3][3] = {{hx*hx*(1/(Hmag*Hmag)), hx*hy*(1/(Hmag*Hmag)), hx*hz*(1/(Hmag*Hmag))},{hx*hy*(1/(Hmag*Hmag)), hy*hy*(1/(Hmag*Hmag)), hy*hz*(1/(Hmag*Hmag))},{hx*hz*(1/(Hmag*Hmag)), hy*hz*(1/(Hmag*Hmag)), hz*hz*(1/(Hmag*Hmag))}};
+   
+    
+    double R1s[3][3] = {{0.0, -sz*(1.0/Smag), sy*(1.0/Smag)},{sz*(1.0/Smag), 0.0, -sx*(1.0/Smag)},{-sy*(1.0/Smag), sx*(1.0/Smag), 0.0}};
+    double R2s[3][3] = {{sx*sx*(1/(Smag*Smag)), sx*sy*(1/(Smag*Smag)), sx*sz*(1.0/(Smag*Smag))},{sx*sy*(1.0/(Smag*Smag)), sy*sy*(1.0/(Smag*Smag)), sy*sz*(1.0/(Smag*Smag))},{sx*sz*(1.0/(Smag*Smag)), sy*sz*(1.0/(Smag*Smag)), sz*sz*(1.0/(Smag*Smag))}};
+    double R1h[3][3] = {{0.0, -hz*(1.0/Hmag), hy*(1.0/Hmag)},{hz*(1.0/Hmag), 0.0, -hx*(1.0/Hmag)},{-hy*(1.0/Hmag), hx*(1.0/Hmag), 0.0}};
+    double R2h[3][3] = {{hx*hx*(1.0/(Hmag*Hmag)), hx*hy*(1.0/(Hmag*Hmag)), hx*hz*(1.0/(Hmag*Hmag))},{hx*hy*(1.0/(Hmag*Hmag)), hy*hy*(1.0/(Hmag*Hmag)), hy*hz*(1.0/(Hmag*Hmag))},{hx*hz*(1.0/(Hmag*Hmag)), hy*hz*(1.0/(Hmag*Hmag)), hz*hz*(1.0/(Hmag*Hmag))}};
+    
+     printf("%1.7f\n", R1h[0][2]);
     
     double rdotv = ((r_vector[0][0]*v_vector[0][0])+(r_vector[1][0]*v_vector[1][0])+(r_vector[2][0]*v_vector[2][0]))/(c*distance);
     
@@ -125,9 +127,9 @@ void additional_forces(struct reb_simulation* const sim){
         i_vector[i][0] = (((1-rdotv)/distance)*r_vector[i][0])-(v_vector[i][0]/c);
     }
     
-    double tanPhi = 1/(1+(.5*pow((stef_boltz*emissivity)/(M_PI*M_PI*M_PI*M_PI*M_PI), .25))*sqrt(rotation_period/(C*K*body_density))*pow((lstar*alph)/(distance*distance), .75));
+    double tanPhi = 1.0/(1.0+(.5*pow((stef_boltz*emissivity)/(M_PI*M_PI*M_PI*M_PI*M_PI), .25))*sqrt(rotation_period/(C*K*body_density))*pow((lstar*alph)/(distance*distance), .75));
     
-    double tanEpsilon = 1/(1+(.5*pow((stef_boltz*emissivity)/(M_PI*M_PI*M_PI*M_PI*M_PI), .25))*sqrt((o.P*t_conv)/(C*K*body_density))*pow((lstar*alph)/(distance*distance), .75));
+    double tanEpsilon = 1.0/(1.0+(.5*pow((stef_boltz*emissivity)/(M_PI*M_PI*M_PI*M_PI*M_PI), .25))*sqrt((o.P*t_conv)/(C*K*body_density))*pow((lstar*alph)/(distance*distance), .75));
     
     double Phi = atan(tanPhi);
     double Epsilon = atan(tanEpsilon);
@@ -144,7 +146,7 @@ void additional_forces(struct reb_simulation* const sim){
         Ryh[i][j] = (cos(Epsilon)*unit_matrix[i][j]) + sin(Epsilon)*R1h[i][j] + (1-cos(Epsilon))*R2h[i][j];
     }
     
-    double yarkovsky_magnitude = ((radius*radius)*lstar*alph)/(4*asteroid_mass*c*(distance*distance));
+    double yarkovsky_magnitude = ((radius*radius)*lstar*alph)/(4.0*asteroid_mass*c*(distance*distance));
     
     //printf("%1.20f\n", yarkovsky_magnitude);
     
@@ -160,9 +162,8 @@ void additional_forces(struct reb_simulation* const sim){
         direction_matrix[i][0] = yark_matrix[i][0]*i_vector[0][0] + yark_matrix[i][1]*i_vector[1][0] + yark_matrix[i][2]*i_vector[2][0];
     }
     
-    printf("%1.7f\n",direction_matrix[0][0]);
-    printf("%1.7f\n",direction_matrix[1][0]);
-    printf("%1.7f\n",direction_matrix[2][0]);
+        //printf("%1.7f\n",direction_matrix[0][0]);
+
     
     double yarkovsky_acceleration[3][1];
     

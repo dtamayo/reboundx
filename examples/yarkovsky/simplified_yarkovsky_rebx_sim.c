@@ -58,6 +58,7 @@ rebx_set_param_double(rebx, &sim->particles[1].ap, "body_density", 3000);
 rebx_set_param_double(rebx, &yark->ap, "lstar", 3.828e26);
     particles[1].r = 1000;
     
+    
 rebx_set_param_double(rebx, &sim->particles[3].ap, "body_density", 3000);
 //rebx_set_param_double(rebx, &sim->particles[3].ap, "lstar", 3.828e26);
    particles[3].r = 1000;

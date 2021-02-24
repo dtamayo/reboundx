@@ -14,7 +14,7 @@ sp = sim.particles
 sim.units = ('yr', 'AU', 'Msun') 
 sim.add(m=1, x=0, y=0, z=0, hash = 'sun')
 sim.add(a=.5)
-sim.dt = .01
+sim.dt = .1
 
 
 
@@ -41,6 +41,7 @@ sz = -0.9962
 Smag = (((sx)**2)+ ((sy)**2) + ((sz)**2))**(1/2)
 
 def yarkovsky_effect(reb_sim):
+    
     unit_matrix = np.array([[1, 1, 1], [1, 1, 1 ], [1, 1, 1]])
     
     v_vector = np.array([[(sp[1].vx*(1.495978707e11/31557600))], [(sp[1].vy*(1.495978707e11/31557600))], [(sp[1].vz*(1.495978707e11/31557600))]])
@@ -58,7 +59,7 @@ def yarkovsky_effect(reb_sim):
     R2h = (1/(Hmag**2))*np.array([[hx**2, hx*hy, hx*hz],[hx*hy, hy**2, hy*hz],[hx*hz, hy*hz, hz**2]])
     
     distance = (((sp[1].x**2)+(sp[1].y**2)+(sp[1].z**2))**(1/2))*1.495978707e11
-
+    print(R1h[0][1])
 
     rdotv = ((r_vector[0][0]*v_vector[0][0])+(r_vector[1][0]*v_vector[1][0])+(r_vector[2][0]*v_vector[2][0]))/(c*distance)
 
@@ -74,7 +75,6 @@ def yarkovsky_effect(reb_sim):
 
     yarkovsky_magnitude = (k*np.pi*(radius**2)*lsun*alph)/(4*np.pi*mass*c*((distance)**2))
     
-    print(yarkovsky_magnitude)
 
     Yark_matrix = np.dot(Ryh, Rys)
     Direction_matrix = Yark_matrix.dot(i_vector)
@@ -97,14 +97,13 @@ sim.move_to_com()
 changing_a = []
 changing_t = []
 
-while sim.t < 10:                   # Max. simulation time in years
+while sim.t < 1:                   # Max. simulation time in years
     sim.step()         # move simulation forward a time step
     changing_a.append(sp[1].a)
-    print(sp[1].x)
     changing_t.append(sim.t)
     sim.integrator_synchronize()     # synchronize all changes to particles
         
 plt.plot(changing_t, changing_a, label = 'Change in Semi-Major Axis')
 plt.show()
 print(changing_a[-1]-changing_a[0])
-print((changing_a[-1]-changing_a[0])*1.495978707e11)
+
