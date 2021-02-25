@@ -41,6 +41,8 @@
  * Additionally, eccentricity/inclination damping will induce pericenter/nodal precession.
  * Both these effects are physical, and the method is more robust for strongly perturbed systems.
  * 
+ * This is similar to the modify_orbit_force but with an added effect of an inner disc edge.
+ * 
  * **Effect Parameters**
  *
  * If coordinates not, defaults to using Jacobi coordinates.
@@ -50,6 +52,8 @@
  * ============================ =========== ==================================================================
  * coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
  *                                          See the examples for usage.
+ * h                            Yes         The width of the inner disc edge
+ * dedge                        Yes         The position of the inner disc edge
  * ============================ =========== ==================================================================
  *
  * **Particle Parameters**
@@ -57,13 +61,14 @@
  * One can pick and choose which particles have which parameters set.  
  * For each particle, any unset parameter is ignored.
  *
- * ============================ =========== ==================================================================
+ * ============================ =========== ==========================================================================
  * Field (C type)               Required    Description
- * ============================ =========== ==================================================================
+ * ============================ =========== ==========================================================================
  * tau_a (double)               No          Semimajor axis exponential growth/damping timescale
  * tau_e (double)               No          Eccentricity exponential growth/damping timescale
  * tau_inc (double)             No          Inclination axis exponential growth/damping timescale
- * ============================ =========== ==================================================================
+ * tau_a_red (double)           Yes         A factor used to revrse inward migration, illustrating an inner disc edge 
+ * ============================ =========== ==========================================================================
  * 
  */
 
@@ -74,23 +79,23 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
-const double rebx_calculate_tau_a_red(const double r, const double h, const double dedge){
+const double rebx_calculate_planet_trap(const double r2, const double h, const double dedge){
 
-    if (r > dedge*(1 + h)){
+    if (double sqrt(double r2) > dedge*(1 + h)){
         tau_a_red = 1;
     }
 
-    if (dedge*(1 - h) < r < dedge*(1 + h)){
+    if (dedge*(1 - h) < double sqrt(double r2) < dedge*(1 + h)){
         tau_a_red =  5.5 * double cos( double ((dedge * (1 + h) - double sqrt(double r2) ) * 2 * M_PI) / (4 * h * dedge) ) - 4.5;
     }
 
-    if (r < dedge*(1 - h)){
+    if (double sqrt(double r2) < dedge*(1 - h)){
         tau_a_red = -10;
     }
 
     return tau_a_red;
 }
-//with a planet trap att inner disc edge
+//with a planet trap at inner disc edge to reverse the migration and prevent migration onto the star
 
 /* 
 Then I get/call those parameters to be used in a function tau_ared is defined and calculated. tau_a is "redefined" in the other function 
@@ -116,6 +121,7 @@ For every timesetp of integration this will be run, where the first run uses ini
     rebx_set_param_double(rebx, &gr->ap, "width", h); 
 */
 
+//do I have to change the force name here??
 static struct reb_vec3d rebx_calculating_orbits_with_inner_disc_edge(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source){
     double invtau_a = 0.0;
     double tau_e = 0.0;
@@ -124,8 +130,8 @@ static struct reb_vec3d rebx_calculating_orbits_with_inner_disc_edge(struct reb_
     const double* const tau_a_ptr = rebx_get_param(sim->extras, p->ap, "tau_a");
     const double* const tau_e_ptr = rebx_get_param(sim->extras, p->ap, "tau_e");
     const double* const tau_inc_ptr = rebx_get_param(sim->extras, p->ap, "tau_inc");
-    const double* const h = rebx_get_param(sim->extras, id->ap, "disc_edge_width");
-    const double* const dedge = rebx_get_param(sim->extras, id->ap, "inner_disc_edge")
+    const double* const dedge = rebx_get_param(sim->extras, force->ap, "inner_disc_edge");
+    const double* const h = rebx_get_param(sim->extras, force->ap, "disc_edge_width");
 
     const double dvx = p->vx - source->vx;
     const double dvy = p->vy - source->vy;
@@ -137,7 +143,7 @@ static struct reb_vec3d rebx_calculating_orbits_with_inner_disc_edge(struct reb_
     
 
     if(tau_a_ptr != NULL){
-        invtau_a = rebx_calculate_tau_a_red(r, h, d)/(*tau_a_ptr);
+        invtau_a = rebx_calculate_planet_trap(r2, h, dedge)/(*tau_a_ptr);
     }
     if(tau_e_ptr != NULL){
         tau_e = *tau_e_ptr;
@@ -148,9 +154,9 @@ static struct reb_vec3d rebx_calculating_orbits_with_inner_disc_edge(struct reb_
     
     struct reb_vec3d a = {0};
 
-    a.x =  dvx/(2.*tau_a);
-    a.y =  dvy/(2.*tau_a);
-    a.z =  dvz/(2.*tau_a);
+    a.x =  dvx/(2.*invtau_a);
+    a.y =  dvy/(2.*invtau_a);
+    a.z =  dvz/(2.*invtau_a);
 
     if (tau_e < INFINITY || tau_inc < INFINITY){
         const double vdotr = dx*dvx + dy*dvy + dz*dvz;
@@ -174,3 +180,4 @@ void rebx_inner_disc_edge(struct reb_simulation* const sim, struct rebx_force* c
     const char* reference_name = "primary";
     rebx_com_force(sim, force, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_forces, particles, N);
 }
+
