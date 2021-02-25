@@ -79,17 +79,18 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
-const double rebx_calculate_planet_trap(const double r2, const double h, const double dedge){
+const double rebx_calculate_planet_trap(const double r, const double h, const double dedge){
+    const double tau_a_red;
 
-    if (double sqrt(double r2) > dedge*(1 + h)){
+    if (r > dedge*(1 + h)){
         tau_a_red = 1;
     }
 
-    if (dedge*(1 - h) < double sqrt(double r2) < dedge*(1 + h)){
-        tau_a_red =  5.5 * double cos( double ((dedge * (1 + h) - double sqrt(double r2) ) * 2 * M_PI) / (4 * h * dedge) ) - 4.5;
+    if (dedge*(1 - h) < r < dedge*(1 + h)){
+        tau_a_red =  5.5 * double cos( ((dedge * (1 + h) - r ) * 2 * M_PI) / (4 * h * dedge) ) - 4.5;
     }
 
-    if (double sqrt(double r2) < dedge*(1 - h)){
+    if (r < dedge*(1 - h)){
         tau_a_red = -10;
     }
 
@@ -140,10 +141,9 @@ static struct reb_vec3d rebx_calculating_orbits_with_inner_disc_edge(struct reb_
     const double dy = p->y-source->y;
     const double dz = p->z-source->z;
     const double r2 = dx*dx + dy*dy + dz*dz;
-    
 
     if(tau_a_ptr != NULL){
-        invtau_a = rebx_calculate_planet_trap(r2, h, dedge)/(*tau_a_ptr);
+        invtau_a = rebx_calculate_planet_trap(sqrt(r2), h, dedge)/(*tau_a_ptr);
     }
     if(tau_e_ptr != NULL){
         tau_e = *tau_e_ptr;
@@ -178,6 +178,6 @@ void rebx_inner_disc_edge(struct reb_simulation* const sim, struct rebx_force* c
     }
     const int back_reactions_inclusive = 1;
     const char* reference_name = "primary";
-    rebx_com_force(sim, force, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_forces, particles, N);
+    rebx_com_force(sim, force, coordinates, back_reactions_inclusive, reference_name, rebx_calculating_orbits_with_inner_disc_edge, particles, N);
 }
 
