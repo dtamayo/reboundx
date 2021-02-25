@@ -74,7 +74,49 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
-static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source){
+const double rebx_calculate_tau_a_red(const double r, const double h, const double dedge){
+
+    if (r > dedge*(1 + h)){
+        tau_a_red = 1;
+    }
+
+    if (dedge*(1 - h) < r < dedge*(1 + h)){
+        tau_a_red =  5.5 * double cos( double ((dedge * (1 + h) - double sqrt(double r2) ) * 2 * M_PI) / (4 * h * dedge) ) - 4.5;
+    }
+
+    if (r < dedge*(1 - h)){
+        tau_a_red = -10;
+    }
+
+    return tau_a_red;
+}
+//with a planet trap att inner disc edge
+
+/* 
+Then I get/call those parameters to be used in a function tau_ared is defined and calculated. tau_a is "redefined" in the other function 
+that is tau_ared/tau_a as described in Pichierri 2018
+This void function will thus set and include the new effect; an inner disc edge. 
+Then I will set a value of the parameters in problem.c file as: rebx_set_param_double(rebx, &...(?).ap, "disc_edge", 0.1); and 
+rebc_set_param_double(rebx, &...(?).ap, "width", 0.2);
+(What should I set the parameter to? It is not on the particles, it is on the whole simulation in a way). Can these parameters then be changed in the simsetup or so in python when simulating and integrating something??
+        
+The new void function, the new effect will then be added as a file of its own to reboundx when finished and can be called and added to a simulation via simsetup
+Lastly I need to add the new effect as else if statements in the core.c and core.h
+    else if (strcmp(name, "stark_force") == 0){
+    force->update_a = rebx_stark_force;  (not a force though right? But it will affect the position not velocity or acceleration at least)
+    force->force_type = REBX_FORCE_POS;
+    }
+For every timesetp of integration this will be run, where the first run uses initial a, the second uses the a found in the first step via this function and so on
+*/
+
+/* defining the disc inner edge as a float value and setting it to the general, maybe when registering these in the main file, the user can set the values outside when doing the simulation, such as in python in simsetup???
+    double dedge = 0.1; 
+    rebx_set_param_double(rebx, &gr->ap, "disc_edge", dedge);  
+    double h = 0.2;       // defining the width of the edge
+    rebx_set_param_double(rebx, &gr->ap, "width", h); 
+*/
+
+static struct reb_vec3d rebx_calculating_orbits_with_inner_disc_edge(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source){
     double invtau_a = 0.0;
     double tau_e = 0.0;
     double tau_inc = 0.0;
@@ -84,7 +126,6 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
     const double* const tau_inc_ptr = rebx_get_param(sim->extras, p->ap, "tau_inc");
     const double* const h = rebx_get_param(sim->extras, id->ap, "disc_edge_width");
     const double* const dedge = rebx_get_param(sim->extras, id->ap, "inner_disc_edge")
-// get the h and dedge
 
     const double dvx = p->vx - source->vx;
     const double dvy = p->vy - source->vy;
@@ -93,12 +134,10 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
     const double dy = p->y-source->y;
     const double dz = p->z-source->z;
     const double r2 = dx*dx + dy*dy + dz*dz;
-
-/* maybe add a new if statement for when <a< .... to use tared */
     
-//define tau_ared as a function outside const double tau_ared(const double r,...){};
+
     if(tau_a_ptr != NULL){
-        invtau_a = tau_ared(r,h,d)/(*tau_a_ptr);
+        invtau_a = rebx_calculate_tau_a_red(r, h, d)/(*tau_a_ptr);
     }
     if(tau_e_ptr != NULL){
         tau_e = *tau_e_ptr;
@@ -123,42 +162,9 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
     return a;
 }
 
-void rebx_inner_disc_edge(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
-
-/* Register the parameters in the src/core.c as: rebx_register_param(rebx, "disc_edge", REBX_TYPE_DOUBLE); and rebx_register_param(rebx, "width", REBX_TYPE_DOUBLE);
-Then I get/call those parameters to be used in a void function here, where tau_ared is defined and calculated and tau_a is "redefined" as a new parameter that is tau_ared/tau_a as described in Pichierri 2018
-This void function will thus set and include the new effect; an inner disc edge. 
-Then I will set a value of the parameters in problem.c file as: rebx_set_param_double(rebx, &...(?).ap, "disc_edge", 0.1); and rebc_set_param_double(rebx, &...(?).ap, "width", 0.2);
-(What should I set the parameter to? It is not on the particles, it is on the whole simulation in a way). Can these parameters then be changed in the simsetup or so in python when simulating and integrating something??
-        
-
-The new void function, the new effect will then be added as a file of its own to reboundx when finished right and can be called and added to a simulation via simsetup?
-Lastly I need to add the new effect as else if statements in the core.c and core.h, is it where I use the if a >dedge(1+h) -> tau_a, if 
-dedge(1-h) < a < dedge(1+h) -> new_tau_a, if 0 < a < dedge(1-h) -> -10 or  if a < dedge(1+h) -> tau_ared as a polynomial???
-    else if (strcmp(name, "stark_force") == 0){
-    force->update_a = rebx_stark_force;  (not a force though right? But it will affect the position not velocity or acceleration at least)
-    force->force_type = REBX_FORCE_POS;
-    }
-*/
-
-// defining the disc inner edge as a float value and setting it to the general, maybe when registering these in the main file, the user can set the values outside when doing the simulation, such as in python in simsetup???
-    double dedge = 0.1; 
-    rebx_set_param_double(rebx, &gr->ap, "disc_edge", dedge);  
-    double h = 0.2;       // defining the width of the edge
-    rebx_set_param_double(rebx, &gr->ap, "width", h);
-
-/* For every timesetp of integration this will be run, where the first run uses initial a, the second uses the a found in the first step via this function and so on*/
-    double tau_ared = (5.5* M_PI(((rebx_get_param(rebx, id->ap, "inner_disc_edge") * (1 + h) - 
-                        double sqrt(double r2))) * 2 * M_PI)/(4 * rebx_get_param(rebx, id->ap, "disc_edge_width") 
-                        * rebx_get_param(rebx, id->ap, "inner_disc_edge"))) - 4.5); 
-
-    return tau_ared
-}
-
-
 
 // change name 
-void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
+void rebx_inner_disc_edge(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
     int* ptr = rebx_get_param(sim->extras, force->ap, "coordinates");
     enum REBX_COORDINATES coordinates = REBX_COORDINATES_JACOBI; // Default
     if (ptr != NULL){
