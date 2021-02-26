@@ -266,8 +266,8 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->update_accelerations = rebx_tides_constant_time_lag;
         force->force_type = REBX_FORCE_VEL;
     }
-    else if (strcmp(name, "yark_max_out") == 0){
-        force->update_accelerations = rebx_yark_max_out;
+    else if (strcmp(name, "max_yarkovsky") == 0){
+        force->update_accelerations = rebx_max_yarkovsky;
         force->force_type = REBX_FORCE_VEL;
     }
     else{

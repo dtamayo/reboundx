@@ -53,8 +53,9 @@ reb_add(sim,asteroid_3);
 struct reb_particle* const particles = sim->particles; //pointer for the particles in the sim
 
 struct rebx_extras* rebx = rebx_attach(sim);
-struct rebx_force* yark = rebx_load_force(rebx, "yark_max_out");
+struct rebx_force* yark = rebx_load_force(rebx, "max_yarkovsky");
 rebx_set_param_double(rebx, &sim->particles[1].ap, "body_density", 3000);
+rebx_set_param_int(rebx, &sim->particles[1].ap, "direction_flag", -1);
 rebx_set_param_double(rebx, &yark->ap, "lstar", 3.828e26);
     particles[1].r = 1000;
     
