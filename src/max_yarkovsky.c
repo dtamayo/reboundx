@@ -68,7 +68,21 @@
 #include <float.h>
 #include "reboundx.h"
 
-static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, double G, double *density, double *lstar){
+static void rebx_calculate_max_yarkovsky_effect(struct reb_particle* target, double G, double *density, double *lstar, int *direction_flag){
+    
+    double yark_matrix[3][3] = {{1, 0, 0},{0, 1, 0},{0, 0, 1}};
+    
+    if (*direction_flag == 1) {
+        // outward drift matrix is {{1, 0, 0},{.25, 1, 0},{0, 0, 1}};
+        
+        yark_matrix[1][0] = .25;
+    }
+    
+    if (*direction_flag == -1){
+        // inward drift matrix is {{1, .25, 0},{0, 1, 0},{0, 0, 1}};
+        
+        yark_matrix[0][1] = .25;
+    }
     
     
     int i; //variable needed for future iteration loops
@@ -101,8 +115,6 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, double 
     
     double yarkovsky_magnitude = (radius*radius*(*lstar))/(4*mass*c*distance*distance);
     
-    double yark_matrix[3][3] = {{1, 0, 0},{.25, 1, 0},{0, 0, 1}}; // Same thing as Q in Veras, Higuchi, Ida (2019)
-    
     double direction_matrix[3][1];
     
     //loops calcuates a vector which gives the direction of the acceleration created by the Yarkovsky effect
@@ -126,7 +138,7 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, double 
 
     }
 
-void rebx_yark_max_out(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
+void rebx_max_yarkovsky(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
         
     struct rebx_extras* const rebx = sim->extras;
     double G = sim->G;
@@ -135,8 +147,9 @@ void rebx_yark_max_out(struct reb_simulation* const sim, struct rebx_force* cons
         struct reb_particle* target = &particles[i];
         double* density = rebx_get_param(rebx, target->ap, "body_density");
         double* lstar = rebx_get_param(rebx, force->ap, "lstar");
-        if (density != NULL && target->r != 0 && lstar != NULL){
-            rebx_calculate_yarkovsky_effect(target, G, density, lstar);
+        int* direction_flag = rebx_get_param(rebx, target->ap, "direction_flag");
+        if (density != NULL && target->r != 0 && lstar != NULL && direction_flag != NULL){
+            rebx_calculate_max_yarkovsky_effect(target, G, density, lstar, direction_flag);
         }
         
     }

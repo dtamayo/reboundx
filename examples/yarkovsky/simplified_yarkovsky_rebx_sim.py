@@ -25,9 +25,10 @@ for orbit in sim.calculate_orbits():
     print(orbit)
     
 rebx = reboundx.Extras(sim)
-yark = rebx.load_force("yark_max_out")
+yark = rebx.load_force("max_yarkovsky")
 
 sp[1].params["body_density"] = 3000
+sp[1].params["direction_flag"] = -1
 yark.params["lstar"] = 3.828e26
 sp[1].r = 1000 
 
@@ -36,7 +37,6 @@ rebx.add_force(yark)
 print(sp[1].params['body_density'])
 
 tmax=50000 # in yrs
-
 
 
 a = .5 #starting semi-major axis for the asteroid
