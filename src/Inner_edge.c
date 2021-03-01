@@ -67,7 +67,7 @@
  * tau_a (double)               No          Semimajor axis exponential growth/damping timescale
  * tau_e (double)               No          Eccentricity exponential growth/damping timescale
  * tau_inc (double)             No          Inclination axis exponential growth/damping timescale
- * tau_a_red (double)           Yes         A factor used to revrse inward migration, illustrating an inner disc edge 
+ * tau_a_red (double)           No         A factor used to revrse inward migration, illustrating an inner disc edge 
  * ============================ =========== ==========================================================================
  * 
  */
@@ -79,54 +79,53 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
+//with a planet trap at inner disc edge to reverse the migration and prevent migration onto the star
 const double rebx_calculate_planet_trap(const double r, const double h, const double dedge){
-    const double tau_a_red;
+    double tau_a_red;
 
-    if (r > dedge*(1 + h)){
-        tau_a_red = 1;
+    if (r > dedge*(1.0 + h)){
+        tau_a_red = 1.0;
     }
 
-    if (dedge*(1 - h) < r < dedge*(1 + h)){
-        tau_a_red =  5.5 * double cos( ((dedge * (1 + h) - r ) * 2 * M_PI) / (4 * h * dedge) ) - 4.5;
+    else if (dedge*(1.0 - h) < r){
+        tau_a_red =  5.5 * cos( ((dedge * (1.0 + h) - r ) * 2 * M_PI) / (4 * h * dedge) ) - 4.5;
     }
 
-    if (r < dedge*(1 - h)){
-        tau_a_red = -10;
+    else {
+        tau_a_red = -10.0;
     }
 
     return tau_a_red;
 }
-//with a planet trap at inner disc edge to reverse the migration and prevent migration onto the star
 
 /* 
-Then I get/call those parameters to be used in a function tau_ared is defined and calculated. tau_a is "redefined" in the other function 
-that is tau_ared/tau_a as described in Pichierri 2018
-This void function will thus set and include the new effect; an inner disc edge. 
+The function above defines and calculates the tau_a_red parameters which illustrates a planet trap, in form of migration reversal. 
+This function will be called and used in the function below. In that same function the parameters or arguments tau_a_red needs are decleared or retrieved
+The function for tau_a_red is as described in Pichierri 2018. 
+This file will then be added as a file of its own to reboundx when finished, and can be called in a simulation
+
 Then I will set a value of the parameters in problem.c file as: rebx_set_param_double(rebx, &...(?).ap, "disc_edge", 0.1); and 
 rebc_set_param_double(rebx, &...(?).ap, "width", 0.2);
-(What should I set the parameter to? It is not on the particles, it is on the whole simulation in a way). Can these parameters then be changed in the simsetup or so in python when simulating and integrating something??
-        
-The new void function, the new effect will then be added as a file of its own to reboundx when finished and can be called and added to a simulation via simsetup
+
+
 Lastly I need to add the new effect as else if statements in the core.c and core.h
     else if (strcmp(name, "stark_force") == 0){
     force->update_a = rebx_stark_force;  (not a force though right? But it will affect the position not velocity or acceleration at least)
     force->force_type = REBX_FORCE_POS;
     }
-For every timesetp of integration this will be run, where the first run uses initial a, the second uses the a found in the first step via this function and so on
 */
 
 /* defining the disc inner edge as a float value and setting it to the general, maybe when registering these in the main file, the user can set the values outside when doing the simulation, such as in python in simsetup???
     double dedge = 0.1; 
-    rebx_set_param_double(rebx, &gr->ap, "disc_edge", dedge);  
+    rebx_set_param_double(rebx, &force->ap, "disc_edge", dedge);  
     double h = 0.2;       // defining the width of the edge
-    rebx_set_param_double(rebx, &gr->ap, "width", h); 
+    rebx_set_param_double(rebx, &force->ap, "width", h); 
 */
 
-//do I have to change the force name here??
 static struct reb_vec3d rebx_calculating_orbits_with_inner_disc_edge(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source){
     double invtau_a = 0.0;
-    double tau_e = 0.0;
-    double tau_inc = 0.0;
+    double tau_e = INFINITY;
+    double tau_inc = INFINITY;
     
     const double* const tau_a_ptr = rebx_get_param(sim->extras, p->ap, "tau_a");
     const double* const tau_e_ptr = rebx_get_param(sim->extras, p->ap, "tau_e");
@@ -142,8 +141,15 @@ static struct reb_vec3d rebx_calculating_orbits_with_inner_disc_edge(struct reb_
     const double dz = p->z-source->z;
     const double r2 = dx*dx + dy*dy + dz*dz;
 
+    int err=0;
+    struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, *p, *source, &err);
+    /*if(err){        // mass of primary was 0 or p = primary.  Return same particle without doing anything.
+        return *p;
+    }*/
+    const double a0 = o.a;
+
     if(tau_a_ptr != NULL){
-        invtau_a = rebx_calculate_planet_trap(sqrt(r2), h, dedge)/(*tau_a_ptr);
+        invtau_a = rebx_calculate_planet_trap(a0, *h, *dedge)/(*tau_a_ptr);
     }
     if(tau_e_ptr != NULL){
         tau_e = *tau_e_ptr;
@@ -154,9 +160,9 @@ static struct reb_vec3d rebx_calculating_orbits_with_inner_disc_edge(struct reb_
     
     struct reb_vec3d a = {0};
 
-    a.x =  dvx/(2.*invtau_a);
-    a.y =  dvy/(2.*invtau_a);
-    a.z =  dvz/(2.*invtau_a);
+    a.x =  dvx*invtau_a/(2.);
+    a.y =  dvy*invtau_a/(2.);
+    a.z =  dvz*invtau_a/(2.);
 
     if (tau_e < INFINITY || tau_inc < INFINITY){
         const double vdotr = dx*dvx + dy*dvy + dz*dvz;
@@ -169,7 +175,6 @@ static struct reb_vec3d rebx_calculating_orbits_with_inner_disc_edge(struct reb_
 }
 
 
-// change name 
 void rebx_inner_disc_edge(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
     int* ptr = rebx_get_param(sim->extras, force->ap, "coordinates");
     enum REBX_COORDINATES coordinates = REBX_COORDINATES_JACOBI; // Default
