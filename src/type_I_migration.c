@@ -93,13 +93,39 @@ const double rebx_calculate_planet_trap(const double r, const double h, const do
     return tau_a_red;
 }
 
-    /* Parameters defined by equations */
-    /* These will be functions */
-double rebx_calculating_damping_timescale() {t_wave here
-    (m_s*m_s)/
-    };  
-    double beta = ;
-    double P = ;
+/* Calculating the aspect ratio as a varying parameter, evaluated at the position of the planet, r, with a default value of 0.02 which is
+given/found when beta=0. Ask Antoine how to work with default on C, should I do an if statement; if beta=0 or not given take Hr =0.02?? */
+
+const double rebx_calculating_the_aspect_ratio(const double r, cosnt double beta){
+    double Hr;
+    Hr = 0.02*(3**(-beta))*(r**beta);
+}
+
+/* Calculating the t_wave: damping timescale or orbital evolution timescale from Tanaka & Ward 2004 (two papers with this equation slightly 
+differently expressed) */
+const double rebx_calculating_damping_timescale(...){
+    double t_wave;
+    t_wave = ((m_s*m_s)/(m*rebx_calculating_surface_density(...)*a0**2)) * (Hr**4) * rebx_calculating_the_angular_velocity(...);
+}
+
+/* Calculating the eccentricity damping timescale, all based on t_wave, the overall migration damping timescale*/
+const double rebx_calculating_eccentricity_damping_timescale(...){
+    double t_e;
+    t_e =  (rebx_calculating_damping_timescale(...)/0.780) * (1.0 - 0.14*((e/Hr)**2) + 0.06*((e/Hr)**3));
+}
+
+/* Calculating the P(e) factor that will reverse the torque for high */
+const double rebx_calculating_Pe_factor(const double Hr){
+    double Pe;
+    Pe = (1 + (e0/(2.25*Hr))**(1.2) + (e0/(2.84*Hr))**6) / (1 - (e0/(2.02*Hr))**4);
+} 
+
+/* Calculating the damping timescale of the semi-major axis, how it is dampened as the planet moves inward */
+const double reb_calculating_semi_major_axis_damping_timescale(const double alpha, const double Hr){
+    double t_a;
+    t_a = ((2*rebx_calculating_damping_timescale(...))/(2.7 + 1.1*alpha)) * (Hr**2) * rebx_calculating_Pe_factor(...);
+}
+  
 
 static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source){
     double invtau_a = 0.0;
@@ -113,7 +139,9 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     const double* const dedge = rebx_get_param(sim->extras, force->ap, "inner_disc_edge");
     const double* const h = rebx_get_param(sim->extras, force->ap, "disc_edge_width");
     const double* const Hr = rebx_get_param(sim->extras, force->ap, "aspect ratio");
-    
+    const double* const beta = rebx_get_param(sim->extras, force->ap, "beta");
+    const double* const alpha = rebx_get_param(sim->extras, force->ap, "alpha");
+
     /* This is accessing the calculated semi-major axis, eccentricity and inclination via modify_orbits_direct where they are calculated and returned*/
     struct rebx_extras* const rebx = sim->extras;
     int err=0;
@@ -122,12 +150,7 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     const double a0 = o.a;
     const double e0 = o.e;
     const double inc0 = o.inc;
-    
 
-    /* These will be functions */
-    double t_e = (rebx_calculating_damping_timescale()/0.780) * (1 - 0.14(e0/(H/r)**2) + 0.06*(()**3) + 0.18()*(()**2));
-    double t_i = (rebx_calculating_damping_timescale()/0.544) * (1 - 0.3*(()**2) + 0.24*(()**3) + 0.14*(()**2)*());
-    double t_a = (2*rebx_calculating_damping_timescale()/(2.7 + 1.1*beta))*(()**-2)*((P + (P/|P|))*(0.700*() + 0.085*(()**4) - 0.080*()*(()**2))
 
     const double dvx = p->vx - source->vx;
     const double dvy = p->vy - source->vy;
