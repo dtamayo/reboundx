@@ -8,7 +8,7 @@ sp = sim.particles #simplifies way to access particles parameters
 
 sim.units = ('yr', 'AU', 'Msun') #changes simulation and G to units of solar masses, years, and AU  
 sim.integrator = "whfast" #integrator for sim
-sim.dt = .05 #timestep for sim
+sim.dt = .1 #timestep for sim
 
 
 #Adds Sun and outer planets to simulation

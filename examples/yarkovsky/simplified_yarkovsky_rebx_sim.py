@@ -9,7 +9,7 @@ sp = sim.particles #simplifies way to access particles parameters
 
 sim.units = ('yr', 'AU', 'Msun') #changes simulation and G to units of solar masses, years, and AU  
 sim.integrator = "whfast" #integrator for sim
-sim.dt = .05 #timestep for sim
+sim.dt = .1 #timestep for sim
 
 
 #Adds Sun and outer planets to simulation
@@ -28,7 +28,7 @@ rebx = reboundx.Extras(sim)
 yark = rebx.load_force("max_yarkovsky")
 
 sp[1].params["body_density"] = 3000
-sp[1].params["direction_flag"] = -1
+sp[1].params["direction_flag"] = 1
 yark.params["lstar"] = 3.828e26
 sp[1].r = 1000 
 

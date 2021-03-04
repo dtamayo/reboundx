@@ -13,8 +13,8 @@ sp = sim.particles
 #Changes simulation and G to units of solar masses, years, and AU
 sim.units = ('yr', 'AU', 'Msun') 
 sim.add(m=1, x=0, y=0, z=0, hash = 'sun')
-sim.add(a=.5)
-sim.dt = .1
+sim.add(a=.2)
+sim.dt = .01
 
 
 
@@ -59,30 +59,29 @@ def yarkovsky_effect(reb_sim):
     R2h = (1/(Hmag**2))*np.array([[hx**2, hx*hy, hx*hz],[hx*hy, hy**2, hy*hz],[hx*hz, hy*hz, hz**2]])
     
     distance = (((sp[1].x**2)+(sp[1].y**2)+(sp[1].z**2))**(1/2))*1.495978707e11
-    print(R1h[0][1])
+    
 
     rdotv = ((r_vector[0][0]*v_vector[0][0])+(r_vector[1][0]*v_vector[1][0])+(r_vector[2][0]*v_vector[2][0]))/(c*distance)
-
-    i_vector = (1-(rdotv))*((r_vector/(distance))-(v_vector/c)) #GONNA HAVE TO WRITE MY OWN DOT PRODUCT FUNCTION
+    
+    i_vector = ((1-rdotv)*(r_vector/distance))-(v_vector/c) #GONNA HAVE TO WRITE MY OWN DOT PRODUCT FUNCTION
 
     tanPhi = (1+(.5*(((stef_boltz*emissivity)/(np.pi**5))**(1/4))*((rotation_period/(K*C*body_density))**(1/2))*(((lsun*alph)/((distance)**2))**(3/4))))**(-1)
     tanEpsilon = (1+(.5*(((stef_boltz*emissivity)/(np.pi**5))**(1/4))*(((2*np.pi/(sp[1].n/31557600))/(K*C*body_density))**(1/2))*(((lsun*alph)/((distance)**2))**(3/4))))**(-1)
     Phi = np.arctan(tanPhi)
     Epsilon = np.arctan(tanEpsilon)
+    
 
     Rys = np.dot(np.cos(Phi), unit_matrix) + np.dot(np.sin(Phi), R1s)+(np.dot((1-np.cos(Phi)), R2s))
     Ryh = np.dot(np.cos(Epsilon), unit_matrix) - (np.dot(np.sin(Epsilon),R1h))+(np.dot((1-np.cos(Epsilon)), R2h))
-
-    yarkovsky_magnitude = (k*np.pi*(radius**2)*lsun*alph)/(4*np.pi*mass*c*((distance)**2))
     
+    
+    
+    yarkovsky_magnitude = (k*np.pi*(radius**2)*lsun*alph)/(4*np.pi*mass*c*((distance)**2))
 
     Yark_matrix = np.dot(Ryh, Rys)
     Direction_matrix = Yark_matrix.dot(i_vector)
     yarkovsky_acceleration = yarkovsky_magnitude*Direction_matrix
     yarkovsky_acceleration_corrected = yarkovsky_acceleration*((31557600**2)/1.495978707e11)
-
-
-
 
     sp[1].ax += yarkovsky_acceleration_corrected[0][0]				
     sp[1].ay += yarkovsky_acceleration_corrected[1][0]
@@ -97,13 +96,13 @@ sim.move_to_com()
 changing_a = []
 changing_t = []
 
-while sim.t < 1:                   # Max. simulation time in years
+while sim.t < 1000:                   # Max. simulation time in years
     sim.step()         # move simulation forward a time step
     changing_a.append(sp[1].a)
     changing_t.append(sim.t)
     sim.integrator_synchronize()     # synchronize all changes to particles
         
-plt.plot(changing_t, changing_a, label = 'Change in Semi-Major Axis')
-plt.show()
+#plt.plot(changing_t, changing_a, label = 'Change in Semi-Major Axis')
+#plt.show()
 print(changing_a[-1]-changing_a[0])
 
