@@ -89,9 +89,16 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "luminosity", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_Omega", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_lambda2", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "body_density", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "lstar", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "my_body_density", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "my_lstar", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "my_c", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "direction_flag", REBX_TYPE_INT);
+    rebx_register_param(rebx, "rotation_period", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "surface_heat_capacity", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "albedo", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "emissivity", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "k", REBX_TYPE_DOUBLE);
+    
     
     
 }

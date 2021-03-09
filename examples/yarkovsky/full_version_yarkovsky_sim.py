@@ -13,8 +13,8 @@ sp = sim.particles
 #Changes simulation and G to units of solar masses, years, and AU
 sim.units = ('yr', 'AU', 'Msun') 
 sim.add(m=1, x=0, y=0, z=0, hash = 'sun')
-sim.add(a=.2)
-sim.dt = .01
+sim.add(a=.5)
+sim.dt = .1
 
 
 
@@ -28,11 +28,11 @@ body_density = 3000   #density of most of asteroid (kg/m^3)
 K = (300**2)/(body_density*C)    #surface thermal conductivity (W/m-K)-ASSUMED REGOLITH_COVERED SURFACE
 c = 299792458    #speed of light   
 albedo = .017    #albedo of asteroid- ASSUMED
-alph = 1  #alph constant in equation
 stef_boltz = 5.670e-8     #stefan-boltzmann constant (W/(m^2-K^4)) 
 emissivity = .9 #Found estimate of emissivity of large grains of silicon dioxide (rough approximation)- ASSUMED
 mass = ((4/3)*np.pi*(radius**3))*body_density #mass of asteroid in kg
 k = 1
+q_yar = 1-albedo
 
 
 sx = 0.0872
@@ -65,8 +65,8 @@ def yarkovsky_effect(reb_sim):
     
     i_vector = ((1-rdotv)*(r_vector/distance))-(v_vector/c) #GONNA HAVE TO WRITE MY OWN DOT PRODUCT FUNCTION
 
-    tanPhi = (1+(.5*(((stef_boltz*emissivity)/(np.pi**5))**(1/4))*((rotation_period/(K*C*body_density))**(1/2))*(((lsun*alph)/((distance)**2))**(3/4))))**(-1)
-    tanEpsilon = (1+(.5*(((stef_boltz*emissivity)/(np.pi**5))**(1/4))*(((2*np.pi/(sp[1].n/31557600))/(K*C*body_density))**(1/2))*(((lsun*alph)/((distance)**2))**(3/4))))**(-1)
+    tanPhi = (1+(.5*(((stef_boltz*emissivity)/(np.pi**5))**(1/4))*((rotation_period/(K*C*body_density))**(1/2))*(((lsun*q_yar)/((distance)**2))**(3/4))))**(-1)
+    tanEpsilon = (1+(.5*(((stef_boltz*emissivity)/(np.pi**5))**(1/4))*(((2*np.pi/(sp[1].n/31557600))/(K*C*body_density))**(1/2))*(((lsun*q_yar)/((distance)**2))**(3/4))))**(-1)
     Phi = np.arctan(tanPhi)
     Epsilon = np.arctan(tanEpsilon)
     
@@ -76,7 +76,7 @@ def yarkovsky_effect(reb_sim):
     
     
     
-    yarkovsky_magnitude = (k*np.pi*(radius**2)*lsun*alph)/(4*np.pi*mass*c*((distance)**2))
+    yarkovsky_magnitude = (k*np.pi*(radius**2)*lsun*q_yar)/(4*np.pi*mass*c*((distance)**2))
 
     Yark_matrix = np.dot(Ryh, Rys)
     Direction_matrix = Yark_matrix.dot(i_vector)
@@ -96,7 +96,7 @@ sim.move_to_com()
 changing_a = []
 changing_t = []
 
-while sim.t < 1000:                   # Max. simulation time in years
+while sim.t < 10:                   # Max. simulation time in years
     sim.step()         # move simulation forward a time step
     changing_a.append(sp[1].a)
     changing_t.append(sim.t)

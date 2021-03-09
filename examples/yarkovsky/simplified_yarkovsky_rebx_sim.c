@@ -38,52 +38,38 @@ double f = 0;
 
 //adds asteroid to the sim
 struct reb_particle asteroid_1 = reb_tools_orbit_to_particle(sim->G, star, m, a, e, inc, Omega, omega, f);
+
 reb_add(sim,asteroid_1);
-
-double a_2 = .75;
-struct reb_particle asteroid_2 = reb_tools_orbit_to_particle(sim->G, star, m, a_2, e, inc, Omega, omega, f);
-reb_add(sim,asteroid_2);
-        
-double a_3 = 1.0;
-    
-struct reb_particle asteroid_3 = reb_tools_orbit_to_particle(sim->G, star, m, a_3, e, inc, Omega, omega, f);
-reb_add(sim,asteroid_3);
-
     
 struct reb_particle* const particles = sim->particles; //pointer for the particles in the sim
 
 struct rebx_extras* rebx = rebx_attach(sim);
 struct rebx_force* yark = rebx_load_force(rebx, "max_yarkovsky");
-rebx_set_param_double(rebx, &sim->particles[1].ap, "body_density", 3000);
-rebx_set_param_int(rebx, &sim->particles[1].ap, "direction_flag", -1);
-rebx_set_param_double(rebx, &yark->ap, "lstar", 3.828e26);
-    particles[1].r = 1000;
     
+double au_conv = 1.495978707e11;
+double msun_conv = 1.9885e30;
+double yr_conv = 31557600.0;
+
+double density = (3000.0*au_conv*au_conv*au_conv)/msun_conv;
+double c = (2.998e8*yr_conv)/au_conv;
+double lstar = (3.828e26*yr_conv*yr_conv*yr_conv)/(msun_conv*au_conv*au_conv);
     
-rebx_set_param_double(rebx, &sim->particles[3].ap, "body_density", 3000);
-//rebx_set_param_double(rebx, &sim->particles[3].ap, "lstar", 3.828e26);
-   particles[3].r = 1000;
+rebx_set_param_double(rebx, &sim->particles[1].ap, "my_body_density", density);
+rebx_set_param_int(rebx, &sim->particles[1].ap, "direction_flag", 1);
+rebx_set_param_double(rebx, &yark->ap, "my_lstar", lstar);
+rebx_set_param_double(rebx, &yark->ap, "my_c", c);
+particles[1].r = 1000/au_conv;
 
 rebx_add_force(rebx, yark);
 
-    double tmax = 50000;
+double tmax = 50000;
     
 reb_integrate(sim, tmax); //integrates system for tmax years
     
 struct reb_orbit o= reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]); //o gives orbital parameters for asteroid after sim
-struct reb_orbit p= reb_tools_particle_to_orbit(sim->G, sim->particles[2], sim->particles[0]); //o gives orbital parameters for asteroid after sim
-struct reb_orbit q= reb_tools_particle_to_orbit(sim->G, sim->particles[3], sim->particles[0]); //o gives orbital parameters for asteroid after sim
     
 double final_a = o.a; //final semi-major axis of asteroid after sim
     
-    double final_a_2 = p.a;
-    
-    double final_a_3 = q.a;
-    
 printf("CHANGE IN SEMI-MAJOR AXIS: %1.30f\n", (final_a-a)); //prints difference between the intitial and final semi-major axes of asteroid
-
-printf("CHANGE IN SEMI-MAJOR AXIS: %1.30f\n", (final_a_2-a_2));
-    
-printf("CHANGE IN SEMI-MAJOR AXIS: %1.30f\n", (final_a_3-a_3));
     
 }
