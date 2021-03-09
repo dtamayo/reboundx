@@ -68,7 +68,7 @@
 #include <float.h>
 #include "reboundx.h"
 
-static void rebx_calculate_max_yarkovsky_effect(struct reb_particle* target, double G, double *density, double *lstar, int *direction_flag){
+static void rebx_calculate_max_yarkovsky_effect(struct reb_particle* target, double G, double *density, double *lstar, double *c, int *direction_flag){
     
     double yark_matrix[3][3] = {{1, 0, 0},{0, 1, 0},{0, 0, 1}};
     
@@ -84,36 +84,22 @@ static void rebx_calculate_max_yarkovsky_effect(struct reb_particle* target, dou
         yark_matrix[0][1] = .25;
     }
     
-    
     int i; //variable needed for future iteration loops
-    double pi = 3.14159265358979;
     
     double radius = target->r;
-    double mass = (4*pi*radius*radius*radius*(*density))/3;
-    double c = 299792458;
+    double mass = (4*M_PI*radius*radius*radius*(*density))/3;
     
-    double r_conv = 1.495978707e11; //converts AU to m
-    double t_conv = 31557600; //converts yrs to seconds
-    double v_conv = r_conv/t_conv; //converts AU/yr to m/s
-    double a_conv = v_conv/t_conv; //converts AU/yr^2 to m/s^2
+    double distance = sqrt((target->x*target->x)+(target->y*target->y)+(target->z*target->z)); //distance of asteroid from the star
     
-    double r_vector[3][1] = {{target->x*r_conv}, {target->y*r_conv}, {target->z*r_conv}}; //vector for position of asteroid
-    
-    double v_vector[3][1] = {{target->vx*v_conv}, {target->vy*v_conv}, {target->vz*v_conv}}; //vector for velocity of asteroid
-    
-    double distance = sqrt((r_vector[0][0]*r_vector[0][0])+(r_vector[1][0]*r_vector[1][0])+(r_vector[2][0]*r_vector[2][0])); //distance of asteroid from the star
-    
-    double rdotv = ((r_vector[0][0]*v_vector[0][0])+(r_vector[1][0]*v_vector[1][0])+(r_vector[2][0]*v_vector[2][0]))/(c*distance); //dot product of position and velocity vectors- the term in the denominator is needed when calculating the i vector
+    double rdotv = ((target->x*target->vx)+(target->y*target->vy)+(target->z*target->vz))/((*c)*distance); //dot product of position and velocity vectors- the term in the denominator is needed when calculating the i vector
     
     double i_vector[3][1];
     
-    //loop calculates i vector using equation from Veras, Higuchi, Ida (2019)
-    for (i=0; i<3; i++){
-     
-        i_vector[i][0] = ((1-rdotv)*(r_vector[i][0]/distance))-(v_vector[i][0]/c);
-    }
+    i_vector[0][0] = ((1-rdotv)*(target->x/distance))-(target->vx/(*c));
+    i_vector[1][0] = ((1-rdotv)*(target->y/distance))-(target->vy/(*c));
+    i_vector[2][0] = ((1-rdotv)*(target->z/distance))-(target->vz/(*c));
     
-    double yarkovsky_magnitude = (radius*radius*(*lstar))/(4*mass*c*distance*distance);
+    double yarkovsky_magnitude = (radius*radius*(*lstar))/(4*mass*(*c)*distance*distance);
     
     double direction_matrix[3][1];
     
@@ -126,8 +112,7 @@ static void rebx_calculate_max_yarkovsky_effect(struct reb_particle* target, dou
     
     for (i=0; i<3; i++){
      
-        //final result for acceleration created by the Yarkovsky effect- converts it back into units for the sim
-        yarkovsky_acceleration[i][0] = (direction_matrix[i][0]*yarkovsky_magnitude)/a_conv;
+        yarkovsky_acceleration[i][0] = (direction_matrix[i][0]*yarkovsky_magnitude);
         
     }
     
@@ -145,11 +130,12 @@ void rebx_max_yarkovsky(struct reb_simulation* const sim, struct rebx_force* con
     
     for (int i=1; i<N; i++){
         struct reb_particle* target = &particles[i];
-        double* density = rebx_get_param(rebx, target->ap, "body_density");
-        double* lstar = rebx_get_param(rebx, force->ap, "lstar");
+        double* density = rebx_get_param(rebx, target->ap, "my_body_density");
+        double* lstar = rebx_get_param(rebx, force->ap, "my_lstar");
+        double* c = rebx_get_param(rebx, force->ap, "my_c");
         int* direction_flag = rebx_get_param(rebx, target->ap, "direction_flag");
-        if (density != NULL && target->r != 0 && lstar != NULL && direction_flag != NULL){
-            rebx_calculate_max_yarkovsky_effect(target, G, density, lstar, direction_flag);
+        if (density != NULL && target->r != 0 && lstar != NULL && direction_flag != NULL && c != NULL){
+            rebx_calculate_max_yarkovsky_effect(target, G, density, lstar, c, direction_flag);
         }
         
     }

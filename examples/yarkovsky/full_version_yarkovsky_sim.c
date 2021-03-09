@@ -17,7 +17,7 @@ void heartbeat(struct reb_simulation* sim);
 void additional_forces(struct reb_simulation* const sim);
 
 
-double tmax = 1000; //in yrs
+double tmax = 10; //in yrs
 double radius = 1000; //radius of asteroid (m)
     double lstar = 3.828e26; //in watts
 double rotation_period = 15470.9; //how long it takes the body to rotate (sec)
@@ -25,7 +25,6 @@ double body_density = 3000; //density of most of the asteroid (kg/m^3)
 double C = 680;    //surface heat capacity of asteroid. 832 Karin is an S-type astroid so it's main component is silicon dioxide which has this specific heat value (J/(kg-K))
 double c = 299792458;    //speed of light in m/s
 double albedo = .017;    //albedo of asteroid- ASSUMED
-double alph = 1;  //alph constant in equation
 double stef_boltz = 5.670e-8;     //stefan-boltzmann constant (W/(m^2-K^4))
 double emissivity = .9; //Found estimate of emissivity of large grains of silicon dioxide (rough approximation)- ASSUMED
 double k = 1;
@@ -39,7 +38,7 @@ int main(int argc, char* argv[]) {
 
     
     sim->G = 4*M_PI*M_PI;  // use units of AU, yr and solar masses
-    sim->dt = .01;
+    sim->dt = .1;
     sim->exact_finish_time = 1; // Finish exactly at tmax in reb_integrate(). Default is already 1.
     
     struct reb_particle sun = {0};
@@ -86,6 +85,7 @@ void additional_forces(struct reb_simulation* const sim){
     
     double K = (300.0*300.0)/(body_density*C);    //surface thermal conductivity (W/m-K)-ASSUMED REGOLITH_COVERED SURFACE
     double asteroid_mass = (4*M_PI*(radius*radius*radius)*body_density)/3;
+    double q_yar = 1-albedo;
     
     double sx = 0.0872;
     double sy = 0.0;
@@ -128,9 +128,9 @@ void additional_forces(struct reb_simulation* const sim){
         i_vector[i][0] = ((1-rdotv)*(r_vector[i][0]/distance))-(v_vector[i][0]/c);
     }
     
-    double tanPhi = 1.0/(1.0+(.5*pow((stef_boltz*emissivity)/(M_PI*M_PI*M_PI*M_PI*M_PI), .25))*sqrt(rotation_period/(C*K*body_density))*pow((lstar*alph)/(distance*distance), .75));
+    double tanPhi = 1.0/(1.0+(.5*pow((stef_boltz*emissivity)/(M_PI*M_PI*M_PI*M_PI*M_PI), .25))*sqrt(rotation_period/(C*K*body_density))*pow((lstar*q_yar)/(distance*distance), .75));
     
-    double tanEpsilon = 1.0/(1.0+(.5*pow((stef_boltz*emissivity)/(M_PI*M_PI*M_PI*M_PI*M_PI), .25))*sqrt((o.P*t_conv)/(C*K*body_density))*pow((lstar*alph)/(distance*distance), .75));
+    double tanEpsilon = 1.0/(1.0+(.5*pow((stef_boltz*emissivity)/(M_PI*M_PI*M_PI*M_PI*M_PI), .25))*sqrt((o.P*t_conv)/(C*K*body_density))*pow((lstar*q_yar)/(distance*distance), .75));
     
     double Phi = atan(tanPhi);
     double Epsilon = atan(tanEpsilon);
@@ -159,7 +159,7 @@ void additional_forces(struct reb_simulation* const sim){
     }
     
     
-    double yarkovsky_magnitude = (radius*radius*lstar*alph)/(4*asteroid_mass*c*distance*distance); //magnitude of the yarkovsky effect for the asteroid
+    double yarkovsky_magnitude = (radius*radius*lstar*q_yar)/(4*asteroid_mass*c*distance*distance); //magnitude of the yarkovsky effect for the asteroid
     
     
     double yark_matrix[3][3];
