@@ -75,15 +75,15 @@
 #include "rebxtools.h"
 
 
-const double rebx_calculate_planet_trap(const double r, const double h, const double dedge){
+const double rebx_calculate_planet_trap(const double r, const double dedge, const double hedge){
     double tau_a_red;
 
-    if (r > dedge*(1. + h)){
+    if (r > dedge*(1. + hedge)){
         tau_a_red = 1.;
     }
 
-    else if (dedge*(1. - h) < r){
-        tau_a_red =  5.5 * cos( ((dedge * (1. + h) - r ) * 2. * M_PI) / (4. * h * dedge) ) - 4.5;
+    else if (dedge*(1. - hedge) < r){
+        tau_a_red =  5.5 * cos( ((dedge * (1. + hedge) - r ) * 2. * M_PI) / (4. * hedge * dedge) ) - 4.5;
     }
 
     else {
@@ -93,78 +93,71 @@ const double rebx_calculate_planet_trap(const double r, const double h, const do
     return tau_a_red;
 }
 
-/* Calculating the aspect ratio as a varying parameter, evaluated at the position of the planet, r, with a default value of 0.02 which is
-given/found when beta=0. Ask Antoine how to work with default on C, should I do an if statement; if beta=0 or if beta = non zero ->Hr = something
-Or does it work to take beta = 0 as default in the arguments. So when user does not give beta it is taken as zero and then Hr =0.02 automatically? */
-
-const double rebx_calculating_the_aspect_ratio(const double r, const double beta = 0){
-    double Hr;
-    Hr = 0.02*(3.**(-beta))*(r**beta);
-    return Hr
-}
-
 /* Calculating the t_wave: damping timescale or orbital evolution timescale from Tanaka & Ward 2004 (two papers with this equation slightly 
-differently expressed). Also ms = 1 right? Can I put it as one or? ar = aspect ratio, so at this position we put Hr and sma = semi-major axis, sd0 = initial disc surface density*/
-const double rebx_calculating_damping_timescale(const double sd0, const double r, const double al, const double ms, const double mp, const double sma, const double ar){
+differently expressed). h = aspect ratio, so at this position we put Hr, sma = semi-major axis, sd0 = initial disc surface density, 
+al = alpha a constant, sd = surface denisty to be calculated at every r, ms = stellar mass, mp = planet mass*/
+
+const double rebx_calculating_damping_timescale(const double sd0, const double r, const double al, const double mstar, const double mplanet, const double sma, const double hsquare){
     const double G = sim->G;
     double sd;
     double t_wave;
     
-    sd = sd0 * (r**(-al));
-    t_wave = ((ms**2.)/(mp*sd*(sma**2.))) * (ar**4.) * (1./sqrt((G*ms)/(sma**3.)));
+    sd = sd0*pow(r, -al);
+    t_wave = ((mstar*mstar)/(mplanet*sd*sma*sma)) * hsquare*hsquare * (1./sqrt((G*mstar)/((sma*sma*sma)));
 
-    return t_wave
+    return t_wave;
 }
 
-/* Calculating the eccentricity damping timescale, all based on t_wave, the overall migration damping timescale*/
-const double rebx_calculating_eccentricity_damping_timescale(const double sd0, const double r, const double al, const double ms, const double mp, const double sma, const double ar, const double ecc){
-    double t_e;
-    t_e =  (rebx_calculating_damping_timescale(sd0, r, al, ms, mp, sma, ar)/0.780) * (1. - 0.14*((ecc/ar)**2.) + 0.06*((ecc/ar)**3.));
-    
-    return t_e
-}
+/* Calculating the eccentricity damping timescale, all based on t_wave, the overall migration damping timescale, eh=ecc/h*/
 
-const double rebx_calculating_eccentricity_damping_timescale(const double wave, const double ar, const double ecc){
+const double rebx_calculating_eccentricity_damping_timescale(const double wave, const double eh){
     double t_e;
-    t_e =  (wave/0.780) * (1. - 0.14*((ecc/ar)**2.) + 0.06*((ecc/ar)**3.));
+    t_e =  (wave/0.780) * (1. - 0.14*(eh*eh) + 0.06*(eh*eh*eh));
     
-    return t_e
+    return t_e;
 }
 
 /* Calculating the damping timescale of the semi-major axis, it is dampened as the planet moves inward */
-const double reb_calculating_semi_major_axis_damping_timescale(const double ecc, const double ar, const double sd0, const double r, const double al, const double ms, const double mp, const double sma){
+
+const double rebx_calculating_semi_major_axis_damping_timescale(const double wave, const double eh, const double hsquare, const double al, const double f, const double f2){
     double Pe;
     double t_a;
 
-    Pe = (1. + (ecc/(2.25*ar))**(1.2) + (ecc/(2.84*ar))**6.) / (1. - (ecc/(2.02*ar))**4.);
-    t_a = ((2.*rebx_calculating_damping_timescale(sd0, r, al, ms, mp, sma, ar))/(2.7 + 1.1*al)) * (ar**(-2.)) * Pe;
-    
-    return t_a
+    Pe = (1. + pow(eh*(1/2.25), 1.2) + f) / (1. - f2);
+    t_a = ((2.*wave)/(2.7 + 1.1*al)) * (1/hsquare) * Pe;
+
+    return t_a;
 }
 
-const double reb_calculating_semi_major_axis_damping_timescale(const double wave, const double ar, const double ecc, const double al){
-    double Pe;
-    double t_a;
+/* Calculating the inclination damping timescale */
 
-    Pe = (1. + (ecc/(2.25*ar))**(1.2) + (ecc/(2.84*ar))**6.) / (1. - (ecc/(2.02*ar))**4.);
-    t_a = ((2.*wave)/(2.7 + 1.1*al)) * (ar**(-2.)) * Pe;
+const double rebx_calculating_inclination_damping_timescale(const double wave, const double eh, const double ih){
+    double t_i;
+    t_i = (wave/0.544) * (1 - 0.30*ih*ih + 0.24*ih*ih*ih + 0.14*eh*eh*ih);
 
-    return t_a
+    return t_i;
 }
 static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source){
     double invtau_a = 0.0;
     double tau_e = INFINITY;
     double tau_inc = INFINITY;
+    double beta = 0.0;
+    double zscale = 0.01;
+    double sd0 = 0.0;
+    double alpha = 0.0;
+    double dedge = 0.0;
+    double hedge = 0.0;
 
     /* Parameters that can be changed/set in Python notebook or C outside of this */
-    const double* const tau_a_ptr = rebx_get_param(sim->extras, p->ap, "tau_a");
-    const double* const tau_e_ptr = rebx_get_param(sim->extras, p->ap, "tau_e");
-    const double* const tau_inc_ptr = rebx_get_param(sim->extras, p->ap, "tau_inc");
-    const double* const dedge = rebx_get_param(sim->extras, force->ap, "inner_disc_edge");
-    const double* const h = rebx_get_param(sim->extras, force->ap, "disc_edge_width");
-    const double* const beta = rebx_get_param(sim->extras, force->ap, "betas");
-    const double* const alpha = rebx_get_param(sim->extras, force->ap, "alpha");
-    const double* const sd0 = rebx_get_param(sim->extras, force-Zap, "initial_disc_surface_density")
+    //const double* const tau_a_ptr = rebx_get_param(sim->extras, p->ap, "tau_a");
+   // const double* const tau_e_ptr = rebx_get_param(sim->extras, p->ap, "tau_e");
+   // const double* const tau_inc_ptr = rebx_get_param(sim->extras, p->ap, "tau_inc");
+    const double* const dedge_ptr = rebx_get_param(sim->extras, force->ap, "inner_disc_edge");
+    const double* const hedge_ptr = rebx_get_param(sim->extras, force->ap, "disc_edge_width");
+    const double* const beta_ptr = rebx_get_param(sim->extras, force->ap, "flaring_index");
+    const double* const alpha_ptr = rebx_get_param(sim->extras, force->ap, "alpha");
+    const double* const sd0_ptr = rebx_get_param(sim->extras, force->ap, "initial_surface_density");
+    const double* const zscale_ptr = rebx_get_param(sim->extras, force->ap, "aspect_ratio");
 
     /* This is accessing the calculated semi-major axis, eccentricity and inclination via modify_orbits_direct where they are calculated and returned*/
     struct rebx_extras* const rebx = sim->extras;
@@ -174,8 +167,8 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     const double a0 = o.a;
     const double e0 = o.e;
     const double inc0 = o.inc;
-    const double mp = o.m;  //o.m or how can I access the planet mass here to use in twave
-    const double ms = source.m;
+    const double mp = p->m;  
+    const double ms = source->m;
 
     const double dvx = p->vx - source->vx;
     const double dvy = p->vy - source->vy;
@@ -185,30 +178,60 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     const double dz = p->z-source->z;
     const double r2 = dx*dx + dy*dy + dz*dz;
 
-    const double ar = rebx_calculating_the_aspect_ratio(sqrt(r2), *beta);
-    const double wave = rebx_calculating_damping_timescale(*sd0, sqrt(r2), *alpha, ms, mp, a0, ar);
-
-    if(tau_a_ptr != NULL){
-        invtau_a = rebx_calculate_planet_trap(a0, *h, *dedge)/(reb_calculating_semi_major_axis_damping_timescale(e0, ar, *sd0, sqrt(r2), *alpha, ms, mp, a0);
-        invtau_a = rebx_calculate_planet_trap(a0, *h, *dedge)/(reb_calculating_semi_major_axis_damping_timescale(wave, ar, e0, *alpha));
+    if (dedge_ptr != NULL){
+        dedge = *dedge_ptr;
     }
-    if(t_e != NULL){
-        tau_e = rebx_calculating_eccentricity_damping_timescale(*sd0, sqrt(r2), *alpha, ms, mp, a0, ar, e0);
-        tau_e = rebx_calculating_eccentricity_damping_timescale(wave, ar, e0);
+    if (hedge_ptr != NULL){
+        hedge = *hedge_ptr;
     }
-    if(tau_inc_ptr != NULL){
-        tau_inc = *tau_inc_ptr;
+    if (beta_ptr != NULL){
+        beta = *beta_ptr;
     }
-    
-    struct reb_vec3d am = {0};
+    if (alpha_ptr != NULL){
+        alpha = *alpha_ptr;
+    }
+    if (sd0_ptr != NULL){
+        sd0 = *sd0_ptr;
+    }
+    if (zscale_ptr != NULL){
+        zscale = *zscale_ptr;
+    }
 
-    aa.x = -dvx*(invtau_a);
-    aa.y = -dvy*(invtau_a);
-    aa.z = -dvz*(invtau_a);
+/* Calculating the aspect ratio evaluated at the position of the planet, r, with a default value of 0.01 which is
+given/found when beta=0 at r = 1 code unit which is 1AU*/
 
-    ae.x = (-2*(dvx*sqrt(r))*sqrt(r))/((sqrt(r2)**2) * tau_e);
-    ae.y = (-2*(dvy*sqrt(r))*sqrt(r))/((sqrt(r2)**2) * tau_e);
-    ae.z = (-2*(dvz*sqrt(r))*sqrt(r))/((sqrt(r2)**2) * tau_e);
+    double h;
+    double h2;
+    h = (*zscale) * pow(sqrt(r2), *beta); //In code units where r is in AU and beta can be the standard 0.25
+    h2 = h*h;
+
+    double ech;
+    double inh;
+    ech = e0/h;
+    inh = inc0/h;
+
+    double term;
+    double te;
+    double term2;
+    double te2;
+    te = (1/2.84)*ech;
+    term = te*te*te*te*te*te;
+    te2 = (1/2.02)*ech;
+    term2 = te2*te2*te2*te2;
+
+    const double wave = rebx_calculating_damping_timescale(*sd0, sqrt(r2), *alpha, ms, mp, a0, h2);
+
+    invtau_a = rebx_calculate_planet_trap(a0, *dedge, *hedge)/(reb_calculating_semi_major_axis_damping_timescale(wave, ech, h2, *alpha, term, term2));
+    tau_e = rebx_calculating_eccentricity_damping_timescale(wave, ech);
+    tau_inc = rebx_calculating_inclination_damping_timescale(wave, ech, inh);
+
+    struct reb_vec3d a = {0};
+
+    if (invtau_a != 0.0){
+        a.x = -dvx*(invtau_a);
+        a.y = -dvy*(invtau_a);
+        a.z = -dvz*(invtau_a);
+    }
 
     if (tau_e < INFINITY || tau_inc < INFINITY){
         const double vdotr = dx*dvx + dy*dvy + dz*dvz;
