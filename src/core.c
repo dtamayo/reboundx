@@ -89,6 +89,18 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "luminosity", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_Omega", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_lambda2", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "my_body_density", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "my_lstar", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "my_c", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "direction_flag", REBX_TYPE_INT);
+    rebx_register_param(rebx, "rotation_period", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "surface_heat_capacity", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "albedo", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "emissivity", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "k", REBX_TYPE_DOUBLE);
+    
+    
+    
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -170,7 +182,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     rebx->registered_params=NULL;
     
     sim->free_particle_ap = rebx_free_particle_ap;
-    sim->extras_cleanup = rebx_extras_cleanup;
+    //sim->extras_cleanup = rebx_extras_cleanup;
     
     if(sim->additional_forces || sim->pre_timestep_modifications || sim->post_timestep_modifications){
         reb_warning(sim, "REBOUNDx overwrites sim->additional_forces, sim->pre_timestep_modifications and sim->post_timestep_modifications whenever forces or operators that use them get added.  If you want to use REBOUNDx together with your own custom functions that use these callbacks, you should add them through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.");
@@ -259,6 +271,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     }
     else if (strcmp(name, "tides_constant_time_lag") == 0){
         force->update_accelerations = rebx_tides_constant_time_lag;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "max_yarkovsky") == 0){
+        force->update_accelerations = rebx_max_yarkovsky;
         force->force_type = REBX_FORCE_VEL;
     }
     else{
