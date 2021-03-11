@@ -82,7 +82,7 @@
 #include "rebxtools.h"
 
 
-const double rebx_calculate_planet_trap(const double r, const double dedge, const double hedge){
+const double rebx_calculate_planet_trap_type_I_mig(const double r, const double dedge, const double hedge){
     double tau_a_red;
 
     if (r > dedge*(1. + hedge)){
@@ -143,9 +143,9 @@ const double rebx_calculating_inclination_damping_timescale(const double wave, c
     return t_i;
 }
 static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source){
-    double invtau_a = 0.0;
-    double tau_e = INFINITY;
-    double tau_inc = INFINITY;
+    double invtau_a;
+    double tau_e;
+    double tau_inc;
 
     /* Default values for the parameters in case the user forgets to define them when using this code */
     double beta = 0.0;
@@ -228,8 +228,8 @@ given/found when beta=0 at r = 1 code unit which is 1AU */
     const double G = sim->G;
     const double wave = rebx_calculating_damping_timescale(G, sd0, sqrt(r2), alpha, ms, mp, a0, h2);
 
-    invtau_a = rebx_calculate_planet_trap(a0, dedge, hedge)/(reb_calculating_semi_major_axis_damping_timescale(wave, eh, ih, h2, alpha, term, term2));
-    tau_e = rebx_calculating_eccentricity_damping_timescale(wave, eh, ih);
+    invtau_a = rebx_calculate_planet_trap_type_I_mig(a0, dedge, hedge)/(rebx_calculating_semi_major_axis_damping_timescale(wave, eh, ih, h2, alpha, term, term2));
+    tau_e = -rebx_calculating_eccentricity_damping_timescale(wave, eh, ih);
     tau_inc = rebx_calculating_inclination_damping_timescale(wave, eh, ih);
 
     struct reb_vec3d a = {0};
