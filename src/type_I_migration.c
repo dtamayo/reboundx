@@ -125,11 +125,11 @@ const double rebx_calculating_eccentricity_damping_timescale(const double wave, 
 
 /* Calculating the damping timescale of the semi-major axis; dampened as the planet moves inward. ih = inc/h */
 
-const double rebx_calculating_semi_major_axis_damping_timescale(const double wave, const double eh, const double ih, const double h2, const double alpha, const double term, const double term2){
+const double rebx_calculating_semi_major_axis_damping_timescale(const double wave, const double eh, const double ih, const double h2, const double alpha){
     double Pe;
     double t_a;
 
-    Pe = (1. + pow(eh*(1/2.25), 1.2) + term) / (1. - term2);
+    Pe = (1. + pow(eh/2.25, 1.2) +  pow(eh/2.84, 6.)) / (1. - pow(eh/2.02, 4.));
     t_a = ((2.*wave)/(2.7 + 1.1*alpha)) * (1/h2) * (Pe + (Pe/fabs(Pe)) * ((0.070*ih) + (0.085*ih*ih*ih*ih) - (0.080*eh*ih*ih)));
 
     return t_a;
@@ -206,30 +206,18 @@ parameters must be set in order for the code to work properly */
 /* Calculating the aspect ratio evaluated at the position of the planet, r, with a default value of 0.01 which is
 given/found when beta=0 at r = 1 code unit which is 1AU */
 
-    double h;
-    double h2;
-    h = (zscale) * pow(sqrt(r2), beta); //In code units where r is in AU and beta can be the standard 0.25
-    h2 = h*h;
+    const double h = (zscale) * pow(r2, beta/2); //In code units where r is in AU and beta can be the standard 0.25
+    const double h2 = h*h;
 
 /* Defining other variables needed in the different equations for the damping timescales */
-    double eh;
-    double ih;
-    eh = e0/h;
-    ih = inc0/h;
+    const double eh = e0/h;
+    const double ih = inc0/h;
 
-    double te;
-    double term;
-    double te2;
-    double term2;
-    te = (1/2.84)*eh;
-    term = te*te*te*te*te*te;
-    te2 = (1/2.02)*eh;
-    term2 = te2*te2*te2*te2;
     const double G = sim->G;
     const double wave = rebx_calculating_damping_timescale(G, sd0, sqrt(r2), alpha, ms, mp, a0, h2);
 
-    invtau_a = rebx_calculate_planet_trap_type_I_mig(a0, dedge, hedge)/(rebx_calculating_semi_major_axis_damping_timescale(wave, eh, ih, h2, alpha, term, term2));
-    tau_e = -rebx_calculating_eccentricity_damping_timescale(wave, eh, ih);
+    invtau_a = rebx_calculate_planet_trap_type_I_mig(a0, dedge, hedge)/(rebx_calculating_semi_major_axis_damping_timescale(wave, eh, ih, h2, alpha));
+    tau_e = rebx_calculating_eccentricity_damping_timescale(wave, eh, ih);
     tau_inc = rebx_calculating_inclination_damping_timescale(wave, eh, ih);
 
     struct reb_vec3d a = {0};
@@ -242,10 +230,10 @@ given/found when beta=0 at r = 1 code unit which is 1AU */
 
     if (tau_e < INFINITY || tau_inc < INFINITY){
         const double vdotr = dx*dvx + dy*dvy + dz*dvz;
-        const double prefac = 2*vdotr/r2/tau_e;
+        const double prefac = -2*vdotr/r2/tau_e;
         a.x += prefac*dx;
         a.y += prefac*dy;
-        a.z += prefac*dz + 2.*dvz/tau_inc;
+        a.z += prefac*dz - 2.*dvz/tau_inc;
     }
     return a;
 }
