@@ -104,8 +104,7 @@ const double rebx_calculate_planet_trap(const double r, const double dedge, cons
 differently expressed). h = aspect ratio, sma = semi-major axis, sd0 = initial disc surface density, 
 alpha = alpha a constant, sd = surface denisty to be calculated at every r, ms = stellar mass, mp = planet mass*/
 
-const double rebx_calculating_damping_timescale(const double sd0, const double r, const double alpha, const double ms, const double mp, const double sma, const double h2){
-    const double G = sim->G;
+const double rebx_calculating_damping_timescale(const double G, const double sd0, const double r, const double alpha, const double ms, const double mp, const double sma, const double h2){
     double sd;
     double t_wave;
     
@@ -165,9 +164,8 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     const double* const zscale_ptr = rebx_get_param(sim->extras, force->ap, "aspect_ratio");
 
     /* This is accessing the calculated semi-major axis, eccentricity and inclination via modify_orbits_direct where they are calculated and returned*/
-    struct rebx_extras* const rebx = sim->extras;
     int err=0;
-    struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, *p, *primary, &err);
+    struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, *p, *source, &err);
   
     const double a0 = o.a;
     const double e0 = o.e;
@@ -210,7 +208,7 @@ given/found when beta=0 at r = 1 code unit which is 1AU */
 
     double h;
     double h2;
-    h = (*zscale) * pow(sqrt(r2), *beta); //In code units where r is in AU and beta can be the standard 0.25
+    h = (zscale) * pow(sqrt(r2), beta); //In code units where r is in AU and beta can be the standard 0.25
     h2 = h*h;
 
 /* Defining other variables needed in the different equations for the damping timescales */
@@ -227,10 +225,10 @@ given/found when beta=0 at r = 1 code unit which is 1AU */
     term = te*te*te*te*te*te;
     te2 = (1/2.02)*eh;
     term2 = te2*te2*te2*te2;
+    const double G = sim->G;
+    const double wave = rebx_calculating_damping_timescale(G, sd0, sqrt(r2), alpha, ms, mp, a0, h2);
 
-    const double wave = rebx_calculating_damping_timescale(*sd0, sqrt(r2), *alpha, ms, mp, a0, h2);
-
-    invtau_a = rebx_calculate_planet_trap(a0, *dedge, *hedge)/(reb_calculating_semi_major_axis_damping_timescale(wave, eh, ih, h2, *alpha, term, term2));
+    invtau_a = rebx_calculate_planet_trap(a0, dedge, hedge)/(reb_calculating_semi_major_axis_damping_timescale(wave, eh, ih, h2, alpha, term, term2));
     tau_e = rebx_calculating_eccentricity_damping_timescale(wave, eh, ih);
     tau_inc = rebx_calculating_inclination_damping_timescale(wave, eh, ih);
 
