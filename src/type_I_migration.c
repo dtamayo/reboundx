@@ -50,6 +50,12 @@
  * ============================ =========== ==================================================================
  * coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
  *                                          See the examples for usage.
+ * dedge (double)               Yes         The position of the inner disc edge in code units 
+ * hedge (double)               Yes         The aspect ratio at the inner disc edge; the disc edge width
+ * sd0 (double)                 Yes         Initial disc surface density, must be in code units
+ * zscale (double)              Yes         The aspect ratio at 1 code unit from the star
+ * alpha (double)               Yes         Surface density profile of the disc
+ * beta (double)                Yes         The flaring index; 1 means disc is irradiated by only the stellar flux
  * ============================ =========== ==================================================================
  *
  * **Particle Parameters**
@@ -63,6 +69,7 @@
  * tau_a (double)               No          Semimajor axis exponential growth/damping timescale
  * tau_e (double)               No          Eccentricity exponential growth/damping timescale
  * tau_inc (double)             No          Inclination axis exponential growth/damping timescale
+ * tau_a_red (double)           No          The planet trap to stop the migration at the inner disc edge
  * ============================ =========== ==================================================================
  * 
  */
@@ -95,20 +102,20 @@ const double rebx_calculate_planet_trap(const double r, const double dedge, cons
 
 /* Calculating the t_wave: damping timescale or orbital evolution timescale from Tanaka & Ward 2004 (two papers with this equation slightly 
 differently expressed). h = aspect ratio, sma = semi-major axis, sd0 = initial disc surface density, 
-al = alpha a constant, sd = surface denisty to be calculated at every r, mstar = stellar mass, mplanet = planet mass*/
+alpha = alpha a constant, sd = surface denisty to be calculated at every r, ms = stellar mass, mp = planet mass*/
 
-const double rebx_calculating_damping_timescale(const double sd0, const double r, const double al, const double ms, const double mp, const double sma, const double h2){
+const double rebx_calculating_damping_timescale(const double sd0, const double r, const double alpha, const double ms, const double mp, const double sma, const double h2){
     const double G = sim->G;
     double sd;
     double t_wave;
     
-    sd = sd0*pow(r, -al);
+    sd = sd0*pow(r, -alpha);
     t_wave = (sqrt(ms*ms*ms)*h2*h2)/(mp*sd*sqrt(sma*G));
 
     return t_wave;
 }
 
-/* Calculating the eccentricity damping timescale, all based on t_wave, the overall migration damping timescale, eh=e/h*/
+/* Calculating the eccentricity damping timescale, eh=e/h*/
 
 const double rebx_calculating_eccentricity_damping_timescale(const double wave, const double eh, const double ih){
     double t_e;
@@ -117,20 +124,19 @@ const double rebx_calculating_eccentricity_damping_timescale(const double wave, 
     return t_e;
 }
 
-/* Calculating the damping timescale of the semi-major axis, it is dampened as the planet moves inward */
+/* Calculating the damping timescale of the semi-major axis; dampened as the planet moves inward. ih = inc/h */
 
-const double rebx_calculating_semi_major_axis_damping_timescale(const double wave, const double eh, const double ih, const double h2, const double al, const double term, const double term2){
+const double rebx_calculating_semi_major_axis_damping_timescale(const double wave, const double eh, const double ih, const double h2, const double alpha, const double term, const double term2){
     double Pe;
     double t_a;
 
     Pe = (1. + pow(eh*(1/2.25), 1.2) + term) / (1. - term2);
-    t_a = ((2.*wave)/(2.7 + 1.1*al)) * (1/h2) * (Pe + (Pe/fabs(Pe)) * ((0.070*ih) + (0.085*ih*ih*ih*ih) - (0.080*eh*ih*ih)));
+    t_a = ((2.*wave)/(2.7 + 1.1*alpha)) * (1/h2) * (Pe + (Pe/fabs(Pe)) * ((0.070*ih) + (0.085*ih*ih*ih*ih) - (0.080*eh*ih*ih)));
 
     return t_a;
 }
 
 /* Calculating the inclination damping timescale */
-
 const double rebx_calculating_inclination_damping_timescale(const double wave, const double eh, const double ih){
     double t_i;
     t_i = (wave/0.544) * (1 - (0.30*ih*ih) + (0.24*ih*ih*ih) + (0.14*eh*eh*ih));
@@ -141,6 +147,8 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     double invtau_a = 0.0;
     double tau_e = INFINITY;
     double tau_inc = INFINITY;
+
+    /* Default values for the parameters in case the user forgets to define them when using this code */
     double beta = 0.0;
     double zscale = 0.01;
     double sd0 = 0.0;
@@ -148,10 +156,7 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     double dedge = 0.0;
     double hedge = 0.0;
 
-    /* Parameters that can be changed/set in Python notebook or C outside of this */
-    //const double* const tau_a_ptr = rebx_get_param(sim->extras, p->ap, "tau_a");
-   // const double* const tau_e_ptr = rebx_get_param(sim->extras, p->ap, "tau_e");
-   // const double* const tau_inc_ptr = rebx_get_param(sim->extras, p->ap, "tau_inc");
+    /* Parameters that should be changed/set in Python notebook or C outside of this */
     const double* const dedge_ptr = rebx_get_param(sim->extras, force->ap, "inner_disc_edge");
     const double* const hedge_ptr = rebx_get_param(sim->extras, force->ap, "disc_edge_width");
     const double* const beta_ptr = rebx_get_param(sim->extras, force->ap, "flaring_index");
@@ -178,6 +183,9 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     const double dz = p->z-source->z;
     const double r2 = dx*dx + dy*dy + dz*dz;
 
+/* Setting some if statements for all the free parameters, so that if the user does not set a value the parameter will use the
+default value given above, which is not correct (all zero) so the code will not work and the user will be able to realize why. These
+parameters must be set in order for the code to work properly */
     if (dedge_ptr != NULL){
         dedge = *dedge_ptr;
     }
@@ -198,14 +206,15 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     }
 
 /* Calculating the aspect ratio evaluated at the position of the planet, r, with a default value of 0.01 which is
-given/found when beta=0 at r = 1 code unit which is 1AU*/
+given/found when beta=0 at r = 1 code unit which is 1AU */
 
     double h;
     double h2;
     h = (*zscale) * pow(sqrt(r2), *beta); //In code units where r is in AU and beta can be the standard 0.25
     h2 = h*h;
 
-    double eh;  //do I need to declare this again since it is given in the arguments with the same name already??
+/* Defining other variables needed in the different equations for the damping timescales */
+    double eh;
     double ih;
     eh = e0/h;
     ih = inc0/h;

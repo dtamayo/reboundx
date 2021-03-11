@@ -91,9 +91,10 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "tides_lambda2", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "inner_disc_edge", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "disc_edge_width", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "initial_disc_surface_density", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "betas", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "initial_surface_density", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "flaring_index", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "alpha", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "aspect_ratio", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -268,6 +269,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     }
     else if (strcmp(name, "inner_edge") == 0){
         force->update_accelerations = rebx_inner_disc_edge;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "type_I_mig") == 0){
+        force->update_accelerations = rebx_modify_orbits_with_type_I_migration;
         force->force_type = REBX_FORCE_VEL;
     }
     else{
