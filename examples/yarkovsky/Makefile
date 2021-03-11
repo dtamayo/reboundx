@@ -1,19 +1,26 @@
 export OPENGL=1
 
-
-export REB_DIR= /Users/nferich/GitHub/rebound
+ifndef REB_DIR
+ifneq ($(wildcard ../../../rebound/.*),) # Check for REBOUND in default location
+REB_DIR=../../../rebound
+endif
+ifneq ($(wildcard ../../../../rebound/.*),) # Check for REBOUNDx being inside REBOUND directory
+REB_DIR=../../../
+endif
+endif
+ifndef REB_DIR # REBOUND is not in default location and REB_DIR is not set
+    $(error REBOUNDx not in the same directory as REBOUND.  To use a custom location, you Must set the REB_DIR environment variable for the path to your rebound directory, e.g., export REB_DIR=/Users/dtamayo/rebound.  See reboundx.readthedocs.org)
+endif
+PROBLEMDIR=$(shell basename `dirname \`pwd\``)"/"$(shell basename `pwd`)
 
 include $(REB_DIR)/src/Makefile.defs
 
-PROBLEMDIR=$(shell basename `dirname \`pwd\``)"/"$(shell basename `pwd`)
-
-export REBX_DIR= /Users/nferich/GitHub/reboundx
-
+REBX_DIR=../../
 
 all: librebound.so libreboundx.so
 	@echo ""
 	@echo "Compiling problem file ..."
-	$(CC) -I$(REBX_DIR)/src/ -I$(REB_DIR)/src/ -Wl,-rpath,./ $(OPT) $(PREDEF) simplified_yarkovsky_rebx_sim.c -L. -lreboundx -lrebound $(LIB) -o rebound
+	$(CC) -I$(REBX_DIR)/src/ -I$(REB_DIR)/src/ -Wl,-rpath,./ $(OPT) $(PREDEF) problem.c -L. -lreboundx -lrebound $(LIB) -o rebound
 	@echo ""
 	@echo "Problem file compiled successfully."
 

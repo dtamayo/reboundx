@@ -31,12 +31,12 @@ class build_ext(_build_ext):
         try:
             import rebound
         except ImportError:
-            print("REBOUNDx did not automatically install REBOUND.  Please let me know if this happens (tamayo.daniel@gmail.com), and try first installing REBOUND (http://rebound.readthedocs.org/en/latest/python_quickstart.html")
+            print("REBOUNDx did not automatically install REBOUND.  Please let me know if this happens (tamayo.daniel@gmail.com), and try first installing REBOUND (https://rebound.readthedocs.org/en/latest/python_quickstart.html")
             sys.exit(1)
         try:
             version = rebound.__version__ # Added in 2.12.1
         except AttributeError:
-            print("REBOUNDx did not automatically install a recent enough version of REBOUND.  Please let me know if this happens (tamayo.daniel@gmail.com), and try upgrading REBOUND.  See 5.3 in http://rebound.readthedocs.org/en/latest/python_quickstart.html")
+            print("REBOUNDx did not automatically install a recent enough version of REBOUND.  Please let me know if this happens (tamayo.daniel@gmail.com), and try upgrading REBOUND.  See 5.3 in https://rebound.readthedocs.org/en/latest/python_quickstart.html")
             sys.exit(1)
 
         rebdir = os.path.dirname(inspect.getfile(rebound))
@@ -80,7 +80,7 @@ setup(name='reboundx',
     version='3.2.0',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
-    url='http://github.com/dtamayo/reboundx',
+    url='https://github.com/dtamayo/reboundx',
     author='Daniel Tamayo',
     author_email='tamayo.daniel@gmail.com',
     license='GPL',
