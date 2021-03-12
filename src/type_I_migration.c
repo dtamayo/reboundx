@@ -128,8 +128,11 @@ const double rebx_calculating_eccentricity_damping_timescale(const double wave, 
 const double rebx_calculating_semi_major_axis_damping_timescale(const double wave, const double eh, const double ih, const double h2, const double alpha){
     double Pe;
     double t_a;
-
-    Pe = (1. + pow(eh/2.25, 1.2) +  pow(eh/2.84, 6.)) / (1. - pow(eh/2.02, 4.));
+    double term;
+    double term2;
+    term = (eh/2.84) * (eh/2.84);
+    term2 = (eh/2.02) * (eh/2.02);
+    Pe = (1. + sqrt(eh/2.25) +  term*term*term) / (1. - term2*term2);
     t_a = ((2.*wave)/(2.7 + 1.1*alpha)) * (1/h2) * (Pe + (Pe/fabs(Pe)) * ((0.070*ih) + (0.085*ih*ih*ih*ih) - (0.080*eh*ih*ih)));
 
     return t_a;
