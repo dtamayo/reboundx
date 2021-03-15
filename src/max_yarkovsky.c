@@ -87,7 +87,6 @@ static void rebx_calculate_max_yarkovsky_effect(struct reb_particle* target, dou
     int i; //variable needed for future iteration loops
     
     double radius = target->r;
-    double mass = (4*M_PI*radius*radius*radius*(*density))/3;
     
     double distance = sqrt((target->x*target->x)+(target->y*target->y)+(target->z*target->z)); //distance of asteroid from the star
     
@@ -99,7 +98,7 @@ static void rebx_calculate_max_yarkovsky_effect(struct reb_particle* target, dou
     i_vector[1][0] = ((1-rdotv)*(target->y/distance))-(target->vy/(*c));
     i_vector[2][0] = ((1-rdotv)*(target->z/distance))-(target->vz/(*c));
     
-    double yarkovsky_magnitude = (radius*radius*(*lstar))/(4*mass*(*c)*distance*distance);
+    double yarkovsky_magnitude = (*lstar)/(4*((4*M_PI*radius*(*density))/3)*(*c)*distance*distance);
     
     double direction_matrix[3][1];
     
