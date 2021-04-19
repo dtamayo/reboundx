@@ -31,8 +31,8 @@
  * Author                   Mohamad Ali-Dib
  * Implementation Paper    `Ali-Dib et al., 2021 AJ <https://arxiv.org/abs/2104.04271>`_.
  * Based on                `Hahn & Malhotra 2005 <https://ui.adsabs.harvard.edu/abs/2005AJ....130.2392H/abstract>`_.
- * Python Example          `Neptune_migration_exp.ipynb <>`_.
- * C Example               :ref:`exp_mig_example_c.c`
+ * C Example               :ref:`c_example_exponential_migration`
+ * Python Example          `ExponentialMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ExponentialMigration.ipynb>`_.
  * ======================= ===============================================
  * 
  * Continuous velocity kicks leading to exponential change in the object's semimajor axis. 
