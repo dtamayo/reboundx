@@ -81,7 +81,7 @@ Since this method changes osculating (i.e., two-body) elements, it can give unph
 
 **Effect Parameters**
 
-If p is not set, it defaults to 1.  If coordinates not set, defaults to using Jacobi coordinates.
+If p is not set, it defaults to 0.  If coordinates not set, defaults to using Jacobi coordinates.
 
 ============================ =========== ==================================================================
 Field (C type)               Required    Description
@@ -106,6 +106,34 @@ tau_e (double)               No          Eccentricity exponential growth/damping
 tau_inc (double)             No          Inclination axis exponential growth/damping timescale
 tau_Omega (double)           No          Period of linear nodal precession/regression
 tau_omega (double)           No          Period of linear apsidal precession/regression
+============================ =========== ==================================================================
+
+
+.. _exponential_migration:
+
+exponential_migration
+*********************
+
+======================= ===============================================
+Author                   Mohamad Ali-Dib
+Implementation Paper    `Ali-Dib et al., 2021 AJ <https://arxiv.org/abs/2104.04271>`_.
+Based on                `Hahn & Malhotra 2005 <https://ui.adsabs.harvard.edu/abs/2005AJ....130.2392H/abstract>`_.
+C Example               :ref:`c_example_exponential_migration`
+Python Example          `ExponentialMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ExponentialMigration.ipynb>`_.
+======================= ===============================================
+
+Continuous velocity kicks leading to exponential change in the object's semimajor axis. 
+One of the standard prescriptions often used in Neptune migration & Kuiper Belt formation models.
+Does not directly affect the eccentricity or inclination of the object.
+
+**Particle Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+em_tau_a (double)              Yes          Semimajor axis exponential growth/damping timescale
+em_aini (double)               Yes          Object's initial semimajor axis
+em_afin (double)               Yes          Object's final semimajor axis
 ============================ =========== ==================================================================
 
 
