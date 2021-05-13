@@ -9,6 +9,33 @@
  * (could happen e.g. with barycentric coordinates with test particles and single massive body)
  */
 
+struct reb_particle rebx_get_com_without_particle(struct reb_particle com, struct reb_particle p){
+    com.x = com.x*com.m - p.x*p.m;
+    com.y = com.y*com.m - p.y*p.m;
+    com.z = com.z*com.m - p.z*p.m;
+    com.vx = com.vx*com.m - p.vx*p.m;
+    com.vy = com.vy*com.m - p.vy*p.m;
+    com.vz = com.vz*com.m - p.vz*p.m;
+    com.ax = com.ax*com.m - p.ax*p.m;
+    com.ay = com.ay*com.m - p.ay*p.m;
+    com.az = com.az*com.m - p.az*p.m;
+    com.m -= p.m; 
+
+    if (com.m > 0.){
+        com.x /= com.m;
+        com.y /= com.m;
+        com.z /= com.m;
+        com.vx /= com.m;
+        com.vy /= com.m;
+        com.vz /= com.m;
+        com.ax /= com.m;
+        com.ay /= com.m;
+        com.az /= com.m;
+    }
+    return com;
+}
+
+
 static inline struct reb_particle rebx_particle_minus(struct reb_particle p1, struct reb_particle p2){
     struct reb_particle p = {0};
     p.m = p1.m-p2.m;
@@ -74,7 +101,7 @@ void rebx_com_force(struct reb_simulation* const sim, struct rebx_force* const f
         }
         struct reb_particle* p = &particles[i];
         if (coordinates == REBX_COORDINATES_JACOBI){
-            com = reb_get_com_without_particle(com, *p);
+            com = rebx_get_com_without_particle(com, *p);
         }
         
         struct reb_vec3d a = calculate_force(sim, force, p, &com);
@@ -167,7 +194,7 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* c
         }
         struct reb_particle* p = &sim->particles[i];
         if (coordinates == REBX_COORDINATES_JACOBI){
-            com = reb_get_com_without_particle(com, *p);
+            com = rebx_get_com_without_particle(com, *p);
         }
         
         struct reb_particle modified_particle = calculate_step(sim, operator, p, &com, dt);
