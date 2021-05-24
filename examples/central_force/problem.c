@@ -22,10 +22,12 @@ int main(int argc, char* argv[]){
     double m = 0.;
     double a = 1.; // put planet close to enhance precession so it's visible in visualization (this would put planet inside the Sun!)
     double e = 0.2;
+    double inc = 0.;
+    double Omega = 0.;
     double omega = 0.;
     double f = 0.;
     
-    struct reb_particle planet = reb_tools_orbit2d_to_particle(sim->G, star, m, a, e, omega, f);
+    struct reb_particle planet = reb_tools_orbit_to_particle(sim->G, star, m, a, e, inc, Omega, omega, f);
     reb_add(sim, planet);
     reb_move_to_com(sim);
     
