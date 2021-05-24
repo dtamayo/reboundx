@@ -44,12 +44,10 @@ int main(int argc, char* argv[]){
 
     // Set the timescales for each particle.  
     double tmax = 4.e4;
-    
-	rebx_set_param_double(rebx, &sim->particles[1].ap, "em_tau_a", 2.e3);         // add migration e-folding timescale
+
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "em_tau_a", 2.e3);         // add migration e-folding timescale
     rebx_set_param_double(rebx, &sim->particles[1].ap, "em_aini", 24.0);         // add initial semimajor axis
     rebx_set_param_double(rebx, &sim->particles[1].ap, "em_afin", 30.0);         // add final semimajor axis 
-
-
 
 	rebx_set_param_int(rebx, &em->ap, "coordinates", REBX_COORDINATES_PARTICLE);
 	rebx_set_param_int(rebx, &sim->particles[0].ap, "primary", 1);

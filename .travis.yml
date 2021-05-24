@@ -10,19 +10,14 @@ env:
 
 python:
   - "2.7"
-  - "3.4"
-  - "3.5"
+  - "3.9"
 
 matrix:
   exclude:
     - env: TESTPART=C
-      python: "3.4"
-    - env: TESTPART=C
-      python: "3.5"
+      python: "3.9"
     - env: TESTPART=CCOVERAGE
-      python: "3.4"
-    - env: TESTPART=CCOVERAGE
-      python: "3.5"
+      python: "3.9"
 
 addons:
     apt:
@@ -41,8 +36,7 @@ install:
   - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then conda update --yes conda; fi
   - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "2.7" ]]; then conda create -n testenv --yes libgfortran=1.0 numpy=1.9 scipy=0.16 matplotlib=1.4 setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
   - if [[ $TESTPART == "CCOVERAGE" ]]; then conda create -n testenv --yes numpy=1.9 matplotlib=1.4 setuptools python=$TRAVIS_PYTHON_VERSION; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "3.4" ]]; then conda create -n testenv --yes libgfortran=1.0 numpy=1.9 scipy=0.16 matplotlib=1.4 setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "3.5" ]]; then conda create -n testenv --yes numpy scipy matplotlib setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
+  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "3.9" ]]; then conda create -n testenv --yes numpy scipy matplotlib setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
   - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then source activate testenv; fi
   - if [[ $TESTPART == *"PYTHON"* ]]; then pip install coveralls; fi
   - if [[ $TESTPART == "CCOVERAGE" ]]; then pip install cpp-coveralls; fi
