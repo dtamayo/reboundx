@@ -50,6 +50,8 @@
 #include <math.h>
 #include "rebound.h"
 #include "reboundx.h"
+#include "integrator_ias15.h"
+#include "integrator_whfast.h"
 
 // will do IAS with gravity + any additional_forces
 
