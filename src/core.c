@@ -100,6 +100,9 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "emissivity", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "k", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "stef_boltz", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "spin_axis_x", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "spin_axis_y", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "spin_axis_z", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){

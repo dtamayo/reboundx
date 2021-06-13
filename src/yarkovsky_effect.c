@@ -1,16 +1,5 @@
-//
-//  rebx_yarkovsky.c
-//  
-//
-//  Created by Noah Ferich on 5/17/21.
-//
-
-//#include "rebx_yarkovsky.h"
-
 /**
- *
- *
- * @file    yarkovsky.c
+ * @file    yarkovsky_effect.c
  * @brief   Adds the perturbations from the Yarkovsky effect to one or more of the orbiting bodies
  * @author  Noah Ferich <nofe4108@colorado.edu>, Dan Tamayo <tamayo.daniel@gmail.com>
  *
@@ -36,40 +25,46 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
- * $Tides$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ * $Radiation Forces$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
  *
  * ======================= ===============================================
- * Authors                 Stanley A. Baronett, D. Tamayo, Noah Ferich
- * Implementation Paper    Baronett et al., in prep.
+ * Authors                 Noah Ferich, D. Tamayo
+ * Implementation Paper    Ferich et al., in prep.
  * Based on                `Veras et al., 2015 <https://ui.adsabs.harvard.edu/abs/2015MNRAS.451.2814V/abstract>`_, `Veras et al., 2019 <https://ui.adsabs.harvard.edu/abs/2019MNRAS.485..708V/abstract>`_.
- * C Example               :ref:`c_example_tides_constant_time_lag`.
- * Python Example          `TidesConstantTimeLag.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesConstantTimeLag.ipynb>`_.
+ * C Example               :ref:`c_example_yarkovsky_effect.
+ * Python Example          `yarkovsky_effect.ipynb <>`_.
  * ======================= ===============================================
  *
- * This adds the accelerations and orbital changes created by the Yarkovsky effect onto one or more bodies in the simulation.
- * There are two distinct versions of this effect that can be used. One version uses the full equations found in Veras et. al (2015) to accurately calculate the Yarkovsky effect on a particle. However, this version slows down simulations and requies a large amount of parameters. For these reasons, a second version of the effect is available and is described in Veras et. al (2019). While the magnitude of the acceleration created by the effect will be the same, this version artifically places values in a crucial rotation matrix to maximize the push from the Yarkovsky effect on a body. This version is faster and requires less parameters and can be used to get an upper bound on how much the Yarkovsky effect can push an object's orbit inwards or outwards. The list below describes which parameters are needed for one of both versions of this effect. For more information, please visit the papers linked above.
- *
- * As is standard with all Rebx effects, the parameters for an effect must be entered using the same units as the simulation.
+ * Adds the accelerations and orbital perturbations created by the Yarkovsky effect onto one or more bodies in the simulation. There are two distinct versions of this effect that can be used. One version uses the full equations found in Veras et al. (2015) to accurately calculate the Yarkovsky effect on a particle. However, this version slows down simulations and requies a large amount of parameters. For these reasons, a second version of the effect based on Veras et al. (2019) is available. While the magnitude of the acceleration created by the effect will be the same, this version places constant values in a crucial rotation matrix to maximize the push from the Yarkovsky effect on a body. This version is faster and requires less parameters and can be used to get an upper bound on how much the Yarkovsky effect can push an object's orbit inwards or outwards. The lists below describes which parameters are needed for one or both versions of this effect. For more information, please visit the papers and examples linked above.
  *
  * **Effect Parameters**
  *
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * lstar (float)                   Yes              Luminosity of sim's star (Required for both versions).
- * yark_c (float)                Yes             Speed of light (Required for both versions).
+ * lstar (float)                    Yes              Luminosity of sim's star (Required for both versions).
+ * yark_c (float)                 Yes             Speed of light (Required for both versions).
+ * stef_boltz (float)             No             Stefan-Boltzmann constant (Required for full version).
  * ============================ =========== ==================================================================
- *
  *
  * **Particle Parameters**
  *
  * ============================ =========== ==================================================================
- * Field (C type)               Required    Description
+ * Field (C type)                          Required    Description
  * ============================ =========== ==================================================================
- * particles[i].r (float)       Yes         Physical radius (Required for both versions).
- *
+ * particles[i].r (float)                     Yes         Physical radius of a body (Required for both versions).
+ * yark_flag (int)                            Yes        A flag (with possible values of -1, 0, and 1) that determines which version of the effect is used (Required for both versions)
+ * body_density (float)                  Yes         Density of an object (Required for both versions)
+ * rotation_period (float)               No          Rotation period of a spinning object (Required for full version)
+ * albedo (float)                             No          Albedo of an object (Reuired for full version)
+ * emissivity (float)                        No           Emissivity of an object (Required for full version)
+ * specific_heat_capacity (float)   No           Specific heat capcity of an object (Required for full version)
+ * thermal_conductivity (float)      No           Thermal conductivity of an object (Required for full version)
+ * k (float)                                     No             A constant that gets a value between 0 and 1/4 based on the object's rotation - see Veras et al. (2015) for more information on it (Required for full version)
+ * spin_axis_x (float)                    No            The x value for the spin axis vector of an object (Required for full version)
+ * spin_axis_y (float)                    No             The y value for the spin axis vector of an object (Required for full version)
+ * spin_axis_z (float)                    No             The z value for the spin axis vector of an object (Required for full version)
  * ============================ =========== ==================================================================
- *
  *
  */
 
@@ -79,15 +74,15 @@
 #include <float.h>
 #include "reboundx.h"
 
-static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct reb_particle* star, double G, double *density, double *lstar, double *rotation_period, double *C, double *K, double *albedo, double *emissivity, double *k, double *c, double *stef_boltz, int *yark_flag){
+static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct reb_particle* star, double G, double *density, double *lstar, double *rotation_period, double *C, double *K, double *albedo, double *emissivity, double *k, double *c, double *stef_boltz, int *yark_flag, double *sx, double *sy, double *sz){
     
     int i; //variable needed for future iteration loops
     int j;
-    double unit_matrix[3][3] = {{1.0, 1.0, 1.0},{1.0, 1.0, 1.0},{1.0, 1.0, 1.0}};
+    double unit_matrix[3][3] = {{1.0, 0.0, 0.0},{0.0, 1.0, 0.0},{0.0, 0.0, 1.0}};
 
     double radius = target->r;
     
-     double distance = sqrt((target->x*target->x)+(target->y*target->y)+(target->z*target->z)); //distance of asteroid from the star
+    double distance = sqrt((target->x*target->x)+(target->y*target->y)+(target->z*target->z)); //distance of asteroid from the star
     
     double rdotv = ((target->x*target->vx)+(target->y*target->vy)+(target->z*target->vz))/((*c)*distance); //dot product of position and velocity vectors- the term in the denominator is needed when calculating the i-vector
     
@@ -97,25 +92,30 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
     i_vector[1][0] = ((1-rdotv)*(target->y/distance))-(target->vy/(*c));
     i_vector[2][0] = ((1-rdotv)*(target->z/distance))-(target->vz/(*c));
     
-    double yarkovsky_magnitude = (*lstar)/(4*((4*M_PI*radius*(*density))/3)*(*c)*distance*distance); //magnitude of force created by the effect
+    double yarkovsky_magnitude; //magnitude of force created by the effect
 
-    double yark_matrix[3][3] = {{1, 0, 0},{0, 1, 0},{0, 0, 1}};
+    double yark_matrix[3][3] = {{0.0, 0.0, 0.0},{0.0, 0.0, 0.0},{0.0, 0.0, 0.0}};
     
     
     if (*yark_flag == 1) {
         
         yark_matrix[1][0] = .25; // maximizes the effect pushing outwards
+        
+        yarkovsky_magnitude = (3*(*lstar))/(16*M_PI*radius*(*density)*(*c)*distance*distance);
     }
     
     if (*yark_flag == -1) {
         
         yark_matrix[0][1] = .25; //maximizes the effect pushing inwards
+        
+        yarkovsky_magnitude = (3*(*lstar))/(16*M_PI*radius*(*density)*(*c)*distance*distance);
     }
     
     //will run through full equations to create the yark_matrix
     if (*yark_flag == 0) {
         
-        if (stef_boltz == NULL || rotation_period == NULL || C == NULL || K == NULL || albedo == NULL || emissivity == NULL || k == NULL) {
+        //makes sure all necessary parameters have been entered
+        if (stef_boltz == NULL || rotation_period == NULL || C == NULL || K == NULL || albedo == NULL || emissivity == NULL || k == NULL || sx == NULL || sy == NULL || sz == NULL) {
             
             printf("ERROR: One or more parameters missing for this version of the Yarkovsky effect in Rebx. Please make sure you've given values to all variables for this version before running simulations. If you'd rather use the simplified version of this effect (requires fewer parameters), then please set 'yark_flag' to -1 or 1.\n\n");
             
@@ -142,18 +142,24 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
             if (k == NULL){
                 printf("k\n");
             }
-            exit(0);
+            if (sx == NULL){
+                printf("spin_axis_x\n");
+            }
+            if (sy == NULL){
+                printf("spin_axis_y\n");
+            }
+            if (sz == NULL){
+                printf("spin_axis_z\n");
+            }
         }
         
         struct reb_orbit o = reb_tools_particle_to_orbit(G, *target, *star);
         
-        
         double q_yar = 1.0-(*albedo);
-    
-        double sx = 0.0872;
-        double sy = 0.0;
-        double sz = -0.9962;
-        double Smag = sqrt((sx*sx)+ (sy*sy) + (sz*sz));
+        
+        yarkovsky_magnitude = (3*(*k)*q_yar*(*lstar))/(16*M_PI*radius*(*density)*(*c)*distance*distance);
+
+        double Smag = sqrt(((*sx)*(*sx))+ (*sy)*(*sy) + (*sz)*(*sz));
     
         double hx = (target->y*target->vz)-(target->z*target->vy);
         double hy = (target->z*target->vx)-(target->x*target->vz);
@@ -165,9 +171,12 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
         double inv_hmag = 1.0/Hmag;
         double inv_hmag_sqrd = 1.0/(Hmag*Hmag);
     
-        double R1s[3][3] = {{0.0, -sz*inv_smag, sy*inv_smag},{sz*inv_smag, 0.0, -sx*inv_smag},{-sy*inv_smag, sx*inv_smag, 0.0}};
-        double R2s[3][3] = {{sx*sx*inv_mag_sqrd, sx*sy*inv_mag_sqrd, sx*sz*inv_mag_sqrd},{sx*sy*inv_mag_sqrd, sy*sy*inv_mag_sqrd, sy*sz*inv_mag_sqrd},{sx*sz*inv_mag_sqrd, sy*sz*inv_mag_sqrd, sz*sz*inv_mag_sqrd}};
+        double R1s[3][3] = {{0.0, -(*sz)*inv_smag, (*sy)*inv_smag},{(*sz)*inv_smag, 0.0, -(*sx)*inv_smag},{-(*sy)*inv_smag, (*sx)*inv_smag, 0.0}};
+        
+        double R2s[3][3] = {{(*sx)*(*sx)*inv_mag_sqrd, (*sx)*(*sy)*inv_mag_sqrd, (*sx)*(*sz)*inv_mag_sqrd},{(*sx)*(*sy)*inv_mag_sqrd, (*sy)*(*sy)*inv_mag_sqrd, (*sy)*(*sz)*inv_mag_sqrd},{(*sx)*(*sz)*inv_mag_sqrd, (*sy)*(*sz)*inv_mag_sqrd, (*sz)*(*sz)*inv_mag_sqrd}};
+        
         double R1h[3][3] = {{0.0, -hz*inv_hmag, hy*inv_hmag},{hz*inv_hmag, 0.0, -hx*inv_hmag},{-hy*inv_hmag, hx*inv_hmag, 0.0}};
+        
         double R2h[3][3] = {{hx*hx*inv_hmag_sqrd, hx*hy*inv_hmag_sqrd, hx*hz*inv_hmag_sqrd},{hx*hy*inv_hmag_sqrd, hy*hy*inv_hmag_sqrd, hy*hz*inv_hmag_sqrd},{hx*hz*inv_hmag_sqrd, hy*hz*inv_hmag_sqrd, hz*hz*inv_hmag_sqrd}};
     
         double tanPhi = 1.0/(1.0+(.5*pow(((*stef_boltz)*(*emissivity))/(M_PI*M_PI*M_PI*M_PI*M_PI), .25))*sqrt((*rotation_period)/((*C)*(*K)*(*density)))*pow((*lstar*q_yar)/(distance*distance), .75));
@@ -179,8 +188,8 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
     
         double cos_phi = cos(Phi);
         double sin_phi = sin(Phi);
-        double sin_epsilon = sin(Epsilon);
         double cos_epsilon = cos(Epsilon);
+        double sin_epsilon = sin(Epsilon);
     
         double Rys[3][3]; //diurnal conntribution for effect
     
@@ -200,10 +209,9 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
     
         for (i=0; i<3; i++){
             for(j=0; j<3; j++){
-                yark_matrix[i][j] = (Ryh[i][0]*Rys[0][j]) + (Ryh[i][1]*Rys[1][j]) + (Ryh[i][2]*Rys[2][j]);
+                yark_matrix[i][j] = (Rys[i][0]*Ryh[0][j]) + (Rys[i][1]*Ryh[1][j]) + (Rys[i][2]*Ryh[2][j]);
             }
         }
-        
     }
     
     double direction_matrix[3][1];
@@ -249,12 +257,15 @@ void rebx_yarkovsky_effect(struct reb_simulation* const sim, struct rebx_force* 
         double* emissivity = rebx_get_param(rebx, target->ap, "emissivity");
         double* k = rebx_get_param(rebx, target->ap, "k");
         double* c = rebx_get_param(rebx, force->ap, "yark_c");
-        int* yark_flag = rebx_get_param(rebx, target->ap, "yark_flag");
         double* stef_boltz = rebx_get_param(rebx, force->ap, "stef_boltz");
+        int* yark_flag = rebx_get_param(rebx, target->ap, "yark_flag");
+        double* sx = rebx_get_param(rebx, target->ap, "spin_axis_x");
+        double* sy = rebx_get_param(rebx, target->ap, "spin_axis_y");
+        double* sz = rebx_get_param(rebx, target->ap, "spin_axis_z");
         
         //if these necessary conditions are met the Yarkovsky effect will be calculated for a particle in the sim
         if (density != NULL && target->r != 0 && lstar != NULL && c != NULL && yark_flag != NULL){
-            rebx_calculate_yarkovsky_effect(target, star, G, density, lstar, rotation_period, C, K, albedo, emissivity, k, c, stef_boltz, yark_flag);
+            rebx_calculate_yarkovsky_effect(target, star, G, density, lstar, rotation_period, C, K, albedo, emissivity, k, c, stef_boltz, yark_flag, sx, sy, sz);
         }
         
     }
