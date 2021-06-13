@@ -1,5 +1,5 @@
 /**
-* Yarkovsky effect (Veras et al. 2015a and Veras et al. 2019)
+* Yarkovsky effect on a small body
 *
 * This example simulates a single asteroid at .5 AU orbiting around the Sun for 100,000 years to demonstartate how the Yarkovsky effect can change the semi-major axis of an orbiting body. Changing the value of the 'yark_flag' parameter between -1, 0, and 1 switches which version of the effect is being used. For more information on the different versions of the effect and what they're good for, please visit the ipython example and the documentation for this effect.
 */
