@@ -75,7 +75,7 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "beta", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_primary", REBX_TYPE_INT);
     rebx_register_param(rebx, "R_tides", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "tctl_k1", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tctl_k2", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tctl_tau", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "Omega", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "integrator", REBX_TYPE_INT);

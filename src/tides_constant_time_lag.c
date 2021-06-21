@@ -29,14 +29,14 @@
  *
  * ======================= ===============================================
  * Authors                 Stanley A. Baronett, D. Tamayo, Noah Ferich
- * Implementation Paper    Baronett et al., in prep.
+ * Implementation Paper    `Baronett et al., 2021 (in review) <https://arxiv.org/abs/2101.12277>`_.
  * Based on                `Hut 1981 <https://ui.adsabs.harvard.edu/#abs/1981A&A....99..126H/abstract>`_, `Bolmont et al., 2015 <https://ui.adsabs.harvard.edu/abs/2015A%26A...583A.116B/abstract>`_.
  * C Example               :ref:`c_example_tides_constant_time_lag`.
  * Python Example          `TidesConstantTimeLag.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesConstantTimeLag.ipynb>`_.
  * ======================= ===============================================
  *
  * This adds constant time lag tidal interactions between orbiting bodies in the simulation and the primary, both from tides raised on the primary and on the other bodies.
- * In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' physical radius particles[i].r, k1 (apsidal motion constant, half the tidal Love number), constant time lag tau, and rotation rate Omega. See Hut (1981) and Bolmont et al. 2015 above.
+ * In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' physical radius particles[i].r, k2 (potential Love number of degree 2), constant time lag tau, and rotation rate Omega. See Baronett et al. (2021), Hut (1981), and Bolmont et al. 2015 above.
  *
  * If tau is not set, it will default to zero and yield the conservative piece of the tidal potential.
  * 
@@ -50,9 +50,9 @@
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
  * particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
- * tctl_k1 (float)                   Yes         Apsidal motion constant (half the tidal Love number k2).
- * tctl_tau (float)                  No          Constant time lag. If not set will default to 0 and give conservative tidal potential
- * Omega (float)                No          Rotation rate. If not set will default to 0
+ * tctl_k2 (float)              Yes         Potential Love number of degree 2.
+ * tctl_tau (float)             No          Constant time lag. If not set will default to 0 and give conservative tidal potential.
+ * Omega (float)                No          Rotation rate. If not set will default to 0.
  * ============================ =========== ==================================================================
  * 
  */
@@ -63,23 +63,23 @@
 #include <float.h>
 #include "reboundx.h"
 
-static void rebx_calculate_tides(struct reb_particle* source, struct reb_particle* target, const double G, const double k1, const double tau, const double Omega){
+static void rebx_calculate_tides(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double tau, const double Omega){
     const double ms = source->m;
     const double mt = target->m;
     const double Rt = target->r;
 
     const double mratio = ms/mt; // have already checked for 0 and inf
-    const double fac = mratio*k1*Rt*Rt*Rt*Rt*Rt; 
+    const double fac = mratio*k2*Rt*Rt*Rt*Rt*Rt;
     
-    const double dx = target->x - source->x; 
+    const double dx = target->x - source->x;
     const double dy = target->y - source->y;
     const double dz = target->z - source->z;
-    const double dr2 = dx*dx + dy*dy + dz*dz; 
+    const double dr2 = dx*dx + dy*dy + dz*dz;
     const double prefac = -3*G/(dr2*dr2*dr2*dr2)*fac;
     double rfac = prefac;
 
     if (tau != 0){
-        const double dvx = target->vx - source->vx; 
+        const double dvx = target->vx - source->vx;
         const double dvy = target->vy - source->vy;
         const double dvz = target->vz - source->vz;
 
@@ -125,8 +125,8 @@ void rebx_tides_constant_time_lag(struct reb_simulation* const sim, struct rebx_
     if (target->m == 0){                        // nothing makes sense if primary has no mass
         return;
     }
-    double* k1 = rebx_get_param(rebx, target->ap, "tctl_k1");
-    if (k1 != NULL && target->r != 0){  // tides on star only nonzero if k1 and finite size are set
+    double* k2 = rebx_get_param(rebx, target->ap, "tctl_k2");
+    if (k2 != NULL && target->r != 0){  // tides on star only nonzero if k2 and finite size are set
         // We don't require time lag tau to be set. Might just want conservative piece of tidal potential
         double tau = 0.;
         double Omega = 0.;
@@ -143,7 +143,7 @@ void rebx_tides_constant_time_lag(struct reb_simulation* const sim, struct rebx_
             if (source->m == 0){
                 continue;
             }
-            rebx_calculate_tides(source, target, G, *k1, tau, Omega);
+            rebx_calculate_tides(source, target, G, *k2, tau, Omega);
         }
     }
 
@@ -151,8 +151,8 @@ void rebx_tides_constant_time_lag(struct reb_simulation* const sim, struct rebx_
     struct reb_particle* source = &particles[0]; // Source is always the star (no planet-planet tides)
     for (int i=1; i<N; i++){
         struct reb_particle* target = &particles[i]; 
-        double* k1 = rebx_get_param(rebx, target->ap, "tctl_k1");
-        if (k1 == NULL || target->r == 0 || target->m == 0){
+        double* k2 = rebx_get_param(rebx, target->ap, "tctl_k2");
+        if (k2 == NULL || target->r == 0 || target->m == 0){
             continue;
         }
         double tau = 0.;
@@ -165,18 +165,18 @@ void rebx_tides_constant_time_lag(struct reb_simulation* const sim, struct rebx_
                 Omega = *Omegaptr;
             }
         }
-        rebx_calculate_tides(source, target, G, *k1, tau, Omega);
+        rebx_calculate_tides(source, target, G, *k2, tau, Omega);
     }
 }
 
 // Calculate potential of conservative piece of tidal interaction
-static double rebx_calculate_tides_potential(struct reb_particle* source, struct reb_particle* target, const double G, const double k1){
+static double rebx_calculate_tides_potential(struct reb_particle* source, struct reb_particle* target, const double G, const double k2){
     const double ms = source->m;
     const double mt = target->m;
     const double Rt = target->r;
 
     const double mratio = ms/mt; // have already checked for 0 and inf
-    const double fac = mratio*k1*Rt*Rt*Rt*Rt*Rt; 
+    const double fac = mratio*k2*Rt*Rt*Rt*Rt*Rt; 
     
     const double dx = target->x - source->x; 
     const double dy = target->y - source->y;
@@ -202,14 +202,14 @@ double rebx_tides_constant_time_lag_potential(struct rebx_extras* const rebx){
     if (target->m == 0){                        // No potential with massless primary
         return 0.;
     }
-    double* k1 = rebx_get_param(rebx, target->ap, "tctl_k1");
-    if (k1 != NULL && target->r != 0){  // tides on star only nonzero if k1 and finite size are set
+    double* k2 = rebx_get_param(rebx, target->ap, "tctl_k2");
+    if (k2 != NULL && target->r != 0){  // tides on star only nonzero if k2 and finite size are set
         for (int i=1; i<N_real; i++){
             struct reb_particle* source = &particles[i]; // planet raising the tides on the star
             if (source->m == 0){
                 continue;
             }
-            H += rebx_calculate_tides_potential(source, target, G, *k1);
+            H += rebx_calculate_tides_potential(source, target, G, *k2);
         }
     }
 
@@ -217,11 +217,11 @@ double rebx_tides_constant_time_lag_potential(struct rebx_extras* const rebx){
     struct reb_particle* source = &particles[0]; // Source is always the star (no planet-planet tides)
     for (int i=1; i<N_real; i++){
         struct reb_particle* target = &particles[i]; 
-        double* k1 = rebx_get_param(rebx, target->ap, "tctl_k1");
-        if (k1 == NULL || target->r == 0 || target->m == 0){
+        double* k2 = rebx_get_param(rebx, target->ap, "tctl_k2");
+        if (k2 == NULL || target->r == 0 || target->m == 0){
             continue;
         }
-        H += rebx_calculate_tides_potential(source, target, G, *k1);
+        H += rebx_calculate_tides_potential(source, target, G, *k2);
     }
 
     return H;
