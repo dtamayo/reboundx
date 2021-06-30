@@ -52,7 +52,7 @@ with open("setup.py") as f:
         f.writelines(setuplines)
 
 shortversion = reboundxversion
-while shortversion[-1] is not '.':
+while shortversion[-1] != '.':
     shortversion = shortversion[:-1]
     
 shortversion = shortversion[:-1]
