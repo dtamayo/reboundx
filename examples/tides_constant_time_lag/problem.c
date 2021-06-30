@@ -35,17 +35,17 @@ int main(int argc, char* argv[]){
     // We first have to give the body being tidally distorted a physical radius, or nothing will happen
     sim->particles[0].r = 0.85;     // AU
 
-    // At a minimum, have to set tctl_k1 (apsidal precession constant) parameter, which will add the conservative potential of the equilibrium tidal distortion
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "tctl_k1", 0.03);
+    // At a minimum, have to set tctl_k2 (potential Love number of degree 2) parameter, which will add the conservative potential of the equilibrium tidal distortion
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "tctl_k2", 0.03);
 
     // We add dissipation by adding a constant time lag tctl_tau
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "tctl_tau", 0.4);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "tctl_tau", 0.04);
 
     // We also can set the angular rotation rate of bodies Omega. Here we explicitly set the star's to zero, but implementation will assume zero if not specified. 
     rebx_set_param_double(rebx, &sim->particles[0].ap, "Omega", 0.);
 
     // Run simulation
-    double tmax = 2.5e4; // years
+    double tmax = 2.5e5; // years
     reb_integrate(sim, tmax);
     rebx_free(rebx); 
     reb_free_simulation(sim);
