@@ -35,7 +35,7 @@
  * Python Example          `yarkovsky_effect.ipynb <>`_.
  * ======================= ===============================================
  *
- * Adds the accelerations and orbital perturbations created by the Yarkovsky effect onto one or more bodies in the simulation. There are two distinct versions of this effect that can be used. One version uses the full equations found in Veras et al. (2015) to accurately calculate the Yarkovsky effect on a particle. However, this version slows down simulations and requies a large amount of parameters. For these reasons, a second version of the effect based on Veras et al. (2019) is available. While the magnitude of the acceleration created by the effect will be the same, this version places constant values in a crucial rotation matrix to maximize the push from the Yarkovsky effect on a body. This version is faster and requires less parameters and can be used to get an upper bound on how much the Yarkovsky effect can push an object's orbit inwards or outwards. The lists below describes which parameters are needed for one or both versions of this effect. For more information, please visit the papers and examples linked above.
+ * Adds the accelerations and orbital perturbations created by the Yarkovsky effect onto one or more bodies in the simulation. There are two distinct versions of this effect that can be used: the 'full version' and the 'simple version'. The full version uses the full equations found in Veras et al. (2015) to accurately calculate the Yarkovsky effect on a particle. However, this version slows down simulations and requies a large amount of parameters. For these reasons, the simple version of the effect (based on Veras et al. (2019)) is available. While the magnitude of the acceleration created by the effect will be the same, this version places constant values in a crucial rotation matrix to simplify the push from the Yarkovsky effect on a body. This version is faster and requires less parameters and can be used to get an upper bound on how much the Yarkovsky effect can push an object's orbit inwards or outwards. The lists below describes which parameters are needed for one or both versions of this effect. For more information, please visit the papers and examples linked above.
  *
  * **Effect Parameters**
  *
@@ -99,16 +99,16 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
     
     if (*yark_flag == 1) {
         
-        yark_matrix[1][0] = .25; // maximizes the effect pushing outwards
+        yark_matrix[1][0] = 1.0; // maximizes the effect pushing outwards
         
-        yarkovsky_magnitude = (3*(*lstar))/(16*M_PI*radius*(*density)*(*c)*distance*distance);
+        yarkovsky_magnitude = (3*(*lstar))/(64*M_PI*radius*(*density)*(*c)*distance*distance);
     }
     
     if (*yark_flag == -1) {
         
-        yark_matrix[0][1] = .25; //maximizes the effect pushing inwards
+        yark_matrix[0][1] = 1.0; //maximizes the effect pushing inwards
         
-        yarkovsky_magnitude = (3*(*lstar))/(16*M_PI*radius*(*density)*(*c)*distance*distance);
+        yarkovsky_magnitude = (3*(*lstar))/(64*M_PI*radius*(*density)*(*c)*distance*distance);
     }
     
     //will run through full equations to create the yark_matrix
@@ -185,7 +185,7 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
     
         double Phi = atan(tanPhi);
         double Epsilon = atan(tanEpsilon);
-    
+        
         double cos_phi = cos(Phi);
         double sin_phi = sin(Phi);
         double cos_epsilon = cos(Epsilon);
@@ -216,6 +216,8 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
     
     double direction_matrix[3][1];
     
+ 
+    
     //calcuates a vector which gives the direction of the acceleration created by the effect
     for (i=0; i<3; i++){
         direction_matrix[i][0] = (yark_matrix[i][0]*i_vector[0][0]) + (yark_matrix[i][1]*i_vector[1][0]) + (yark_matrix[i][2]*i_vector[2][0]);
@@ -234,6 +236,8 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
         target->ax += yarkovsky_acceleration[0][0];
         target->ay += yarkovsky_acceleration[1][0];
         target->az += yarkovsky_acceleration[2][0];
+    
+    
     
     }
 
