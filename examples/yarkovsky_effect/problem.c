@@ -54,8 +54,7 @@ int main(int argc, char* argv[]) {
     double stef_boltz = ((5.670e-8)*yr_conv*yr_conv*yr_conv)/(msun_conv);
     double emissivity = .9;
     double k = .25;
-    double C = (680*yr_conv*yr_conv)/(au_conv*au_conv);
-    double K = (.04*yr_conv*yr_conv*yr_conv)/(au_conv*msun_conv);
+    double Gamma = (310*sqrt(yr_conv)*yr_conv*yr_conv)/msun_conv;
     double rotation_period = 15470.9/yr_conv;
     double sx = 0.0;
     double sy = 0.0;
@@ -71,8 +70,7 @@ int main(int argc, char* argv[]) {
     rebx_set_param_double(rebx, &yark->ap, "stef_boltz", stef_boltz);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "emissivity", emissivity);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k", k);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "specific_heat_capacity", C);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "thermal_conductivity", K);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "thermal_inertia", Gamma);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "rotation_period", rotation_period);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_axis_x", sx);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_axis_y", sy);
@@ -87,7 +85,10 @@ int main(int argc, char* argv[]) {
     struct reb_orbit o= reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]); //gives orbital parameters for asteroid after sim
     
     double final_a = o.a; //final semi-major axis of asteroid after sim
+    double final_e = o.e;
     
     printf("CHANGE IN SEMI-MAJOR AXIS: %1.30f\n", (final_a-a)); //prints difference between the intitial and final semi-major axes of asteroid
+    
+    printf("CHANGE IN ECCENTRICITY: %1.30f\n", (final_e-e));
     
 }

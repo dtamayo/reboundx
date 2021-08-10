@@ -58,8 +58,7 @@
  * rotation_period (float)               No          Rotation period of a spinning object (Required for full version)
  * albedo (float)                             No          Albedo of an object (Reuired for full version)
  * emissivity (float)                        No           Emissivity of an object (Required for full version)
- * specific_heat_capacity (float)   No           Specific heat capcity of an object (Required for full version)
- * thermal_conductivity (float)      No           Thermal conductivity of an object (Required for full version)
+ * thermal_inertia (float)                No           Thermal inertia of an object (Required for full version)
  * k (float)                                     No             A constant that gets a value between 0 and 1/4 based on the object's rotation - see Veras et al. (2015) for more information on it (Required for full version)
  * spin_axis_x (float)                    No            The x value for the spin axis vector of an object (Required for full version)
  * spin_axis_y (float)                    No             The y value for the spin axis vector of an object (Required for full version)
@@ -74,7 +73,7 @@
 #include <float.h>
 #include "reboundx.h"
 
-static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct reb_particle* star, double G, double *density, double *lstar, double *rotation_period, double *C, double *K, double *albedo, double *emissivity, double *k, double *c, double *stef_boltz, int *yark_flag, double *sx, double *sy, double *sz){
+static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct reb_particle* star, double G, double *density, double *lstar, double *rotation_period, double *Gamma, double *albedo, double *emissivity, double *k, double *c, double *stef_boltz, int *yark_flag, double *sx, double *sy, double *sz){
     
     int i; //variable needed for future iteration loops
     int j;
@@ -115,7 +114,7 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
     if (*yark_flag == 0) {
         
         //makes sure all necessary parameters have been entered
-        if (stef_boltz == NULL || rotation_period == NULL || C == NULL || K == NULL || albedo == NULL || emissivity == NULL || k == NULL || sx == NULL || sy == NULL || sz == NULL) {
+        if (stef_boltz == NULL || rotation_period == NULL || Gamma == NULL || albedo == NULL || emissivity == NULL || k == NULL || sx == NULL || sy == NULL || sz == NULL) {
             
             printf("ERROR: One or more parameters missing for this version of the Yarkovsky effect in Rebx. Please make sure you've given values to all variables for this version before running simulations. If you'd rather use the simplified version of this effect (requires fewer parameters), then please set 'yark_flag' to -1 or 1.\n\n");
             
@@ -127,11 +126,8 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
             if (rotation_period == NULL){
                 printf("rotation_period\n");
             }
-            if (C == NULL){
-                printf("specific_heat_capacity\n");
-            }
-            if (K == NULL){
-                printf("thermal_conductivity\n");
+            if (Gamma == NULL){
+                printf("thermal_inertia\n");
             }
             if (albedo == NULL){
                 printf("albedo\n");
@@ -178,10 +174,10 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
         double R1h[3][3] = {{0.0, -hz*inv_hmag, hy*inv_hmag},{hz*inv_hmag, 0.0, -hx*inv_hmag},{-hy*inv_hmag, hx*inv_hmag, 0.0}};
         
         double R2h[3][3] = {{hx*hx*inv_hmag_sqrd, hx*hy*inv_hmag_sqrd, hx*hz*inv_hmag_sqrd},{hx*hy*inv_hmag_sqrd, hy*hy*inv_hmag_sqrd, hy*hz*inv_hmag_sqrd},{hx*hz*inv_hmag_sqrd, hy*hz*inv_hmag_sqrd, hz*hz*inv_hmag_sqrd}};
+
+        double tanPhi = 1.0/(1.0+(.5*pow(((*stef_boltz)*(*emissivity))/(M_PI*M_PI*M_PI*M_PI*M_PI), .25))*sqrt((*rotation_period)/((*Gamma)*(*Gamma)))*pow((*lstar*q_yar)/(distance*distance), .75));
     
-        double tanPhi = 1.0/(1.0+(.5*pow(((*stef_boltz)*(*emissivity))/(M_PI*M_PI*M_PI*M_PI*M_PI), .25))*sqrt((*rotation_period)/((*C)*(*K)*(*density)))*pow((*lstar*q_yar)/(distance*distance), .75));
-    
-        double tanEpsilon = 1.0/(1.0+(.5*pow((*stef_boltz*(*emissivity))/(M_PI*M_PI*M_PI*M_PI*M_PI), .25))*sqrt((o.P)/((*C)*(*K)*(*density)))*pow((*lstar*q_yar)/(distance*distance), .75));
+        double tanEpsilon = 1.0/(1.0+(.5*pow((*stef_boltz*(*emissivity))/(M_PI*M_PI*M_PI*M_PI*M_PI), .25))*sqrt((o.P)/((*Gamma)*(*Gamma)))*pow((*lstar*q_yar)/(distance*distance), .75));
     
         double Phi = atan(tanPhi);
         double Epsilon = atan(tanEpsilon);
@@ -255,8 +251,7 @@ void rebx_yarkovsky_effect(struct reb_simulation* const sim, struct rebx_force* 
         double* density = rebx_get_param(rebx, target->ap, "body_density");
         double* lstar = rebx_get_param(rebx, force->ap, "lstar");
         double* rotation_period = rebx_get_param(rebx, target->ap, "rotation_period");
-        double* C = rebx_get_param(rebx, target->ap, "specific_heat_capacity");
-        double* K = rebx_get_param(rebx, target->ap, "thermal_conductivity");
+        double* Gamma = rebx_get_param(rebx, target->ap, "thermal_inertia");
         double* albedo = rebx_get_param(rebx, target->ap, "albedo");
         double* emissivity = rebx_get_param(rebx, target->ap, "emissivity");
         double* k = rebx_get_param(rebx, target->ap, "k");
@@ -269,7 +264,7 @@ void rebx_yarkovsky_effect(struct reb_simulation* const sim, struct rebx_force* 
         
         //if these necessary conditions are met the Yarkovsky effect will be calculated for a particle in the sim
         if (density != NULL && target->r != 0 && lstar != NULL && c != NULL && yark_flag != NULL){
-            rebx_calculate_yarkovsky_effect(target, star, G, density, lstar, rotation_period, C, K, albedo, emissivity, k, c, stef_boltz, yark_flag, sx, sy, sz);
+            rebx_calculate_yarkovsky_effect(target, star, G, density, lstar, rotation_period, Gamma, albedo, emissivity, k, c, stef_boltz, yark_flag, sx, sy, sz);
         }
         
     }

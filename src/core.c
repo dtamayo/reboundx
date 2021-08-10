@@ -94,8 +94,7 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "lstar", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "yark_flag", REBX_TYPE_INT);
     rebx_register_param(rebx, "rotation_period", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "specific_heat_capacity", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "thermal_conductivity", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "thermal_inertia", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "albedo", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "emissivity", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "k", REBX_TYPE_DOUBLE);
