@@ -96,7 +96,7 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "disc_edge_width", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "initial_surface_density", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "flaring_index", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "disk_profile_constant", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "surface_density_exponent", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "scale_height", REBX_TYPE_DOUBLE);
 }
 
@@ -275,7 +275,7 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->force_type = REBX_FORCE_VEL;
     }
     else if (strcmp(name, "inner_edge") == 0){
-        force->update_accelerations = rebx_inner_disc_edge;
+        force->update_accelerations = rebx_modify_orbits_with_inner_disc_edge;
         force->force_type = REBX_FORCE_VEL;
     }
     else if (strcmp(name, "type_I_mig") == 0){
