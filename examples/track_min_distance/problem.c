@@ -21,10 +21,12 @@ int main(int argc, char* argv[]){
     double m = 0.;
     double a = 1.;
     double e = 0.9;
+    double inc = 0.;
+    double Omega = 0.;
     double omega = 0.;
     double f = M_PI;
     
-    struct reb_particle planet = reb_tools_orbit2d_to_particle(sim->G, star, m, a, e, omega, f);
+    struct reb_particle planet = reb_tools_orbit_to_particle(sim->G, star, m, a, e, inc, Omega, omega, f);
     reb_add(sim, planet);
     reb_move_to_com(sim);
     

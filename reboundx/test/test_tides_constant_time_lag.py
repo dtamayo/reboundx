@@ -23,7 +23,7 @@ class TestTides(unittest.TestCase):
         self.force = self.rebx.load_force("tides_constant_time_lag")
         self.rebx.add_force(self.force)
         ps = self.sim.particles
-        ps[0].params['tctl_k1'] = 0.04
+        ps[0].params['tctl_k2'] = 0.04
         self.do_test_conservation()
 
     def test_conservation_planet_highmratio(self):
@@ -35,17 +35,17 @@ class TestTides(unittest.TestCase):
         self.force = self.rebx.load_force("tides_constant_time_lag")
         self.rebx.add_force(self.force)
         ps = self.sim.particles
-        ps[1].params['tctl_k1'] = 0.04
+        ps[1].params['tctl_k2'] = 0.04
         self.do_test_conservation()
     
     def test_conservation_star(self):
         ps = self.sim.particles
-        ps[0].params['tctl_k1'] = 0.04
+        ps[0].params['tctl_k2'] = 0.04
         self.do_test_conservation()
 
     def test_conservation_planet(self):
         ps = self.sim.particles
-        ps[1].params['tctl_k1'] = 0.4
+        ps[1].params['tctl_k2'] = 0.4
         self.do_test_conservation()
     
     def test_conservation_star_movecom(self):
@@ -77,18 +77,18 @@ class TestTidesAnalytic(unittest.TestCase):
         self.rebx = reboundx.Extras(self.sim)
         self.tides = self.rebx.load_force("tides_constant_time_lag")
         self.rebx.add_force(self.tides)
-        ps[0].params["tctl_k1"] = 0.023 # in AU
+        ps[0].params["tctl_k2"] = 0.023 # in AU
         ps[0].params["tctl_tau"] = 0.3
         ps[0].params["Omega"] = 0.
 
         self.q = (ps[1].m/ps[0].m)
         self.T = ps[0].r**3/self.sim.G/ps[0].m/ps[0].params["tctl_tau"]
-        self.taua = self.T/6/ps[0].params["tctl_k1"]/self.q/(1+self.q)*(ps[1].a/ps[0].r)**8
+        self.taua = self.T/6/ps[0].params["tctl_k2"]/self.q/(1+self.q)*(ps[1].a/ps[0].r)**8
 
     def test_adamping(self):
         ps = self.sim.particles
         tmax = 4e4*ps[1].P
-        apred = ps[0].r*((ps[1].a/ps[0].r)**8 - 48.*ps[0].params["tctl_k1"]*self.q*(1+self.q)*tmax/self.T)**(1./8.)
+        apred = ps[0].r*((ps[1].a/ps[0].r)**8 - 48.*ps[0].params["tctl_k2"]*self.q*(1+self.q)*tmax/self.T)**(1./8.)
 
         self.sim.integrate(tmax)
         self.assertLess(abs((ps[1].a-apred)/apred), 1.e-2) # 1%

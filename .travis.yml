@@ -10,19 +10,14 @@ env:
 
 python:
   - "2.7"
-  - "3.4"
-  - "3.5"
+  - "3.9"
 
 matrix:
   exclude:
     - env: TESTPART=C
-      python: "3.4"
-    - env: TESTPART=C
-      python: "3.5"
+      python: "3.9"
     - env: TESTPART=CCOVERAGE
-      python: "3.4"
-    - env: TESTPART=CCOVERAGE
-      python: "3.5"
+      python: "3.9"
 
 addons:
     apt:
@@ -31,8 +26,7 @@ addons:
 
 before_install:
   - travis_apt_get_update
-  - sudo -E apt-get -yq --no-install-suggests --no-install-recommends $(travis_apt_get_options) --allow-unauthenticated install libglfw3-dev
-  - if [[ $TESTPART == "C" ]]; then cd $TRAVIS_BUILD_DIR/../; git clone https://github.com/hannorein/rebound; cd rebound; pip install -e .; fi
+  - if [[ $TESTPART == "C" ]]; then cd $TRAVIS_BUILD_DIR/../; git clone https://github.com/hannorein/rebound.git; cd rebound; pip install -e .; fi
   - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh -O miniconda.sh; fi; fi
   - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then chmod +x miniconda.sh; fi
   - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then ./miniconda.sh -b -p /home/travis/mc; fi
@@ -42,13 +36,12 @@ install:
   - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then conda update --yes conda; fi
   - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "2.7" ]]; then conda create -n testenv --yes libgfortran=1.0 numpy=1.9 scipy=0.16 matplotlib=1.4 setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
   - if [[ $TESTPART == "CCOVERAGE" ]]; then conda create -n testenv --yes numpy=1.9 matplotlib=1.4 setuptools python=$TRAVIS_PYTHON_VERSION; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "3.4" ]]; then conda create -n testenv --yes libgfortran=1.0 numpy=1.9 scipy=0.16 matplotlib=1.4 setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
-  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "3.5" ]]; then conda create -n testenv --yes numpy scipy matplotlib setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
+  - if [[ $TESTPART == *"PYTHON"* ]] && [[ ${TRAVIS_PYTHON_VERSION:0:3} == "3.9" ]]; then conda create -n testenv --yes numpy scipy matplotlib setuptools coverage python=$TRAVIS_PYTHON_VERSION; fi
   - if [[ $TESTPART == *"PYTHON"* ]] || [[ $TESTPART == "CCOVERAGE" ]]; then source activate testenv; fi
   - if [[ $TESTPART == *"PYTHON"* ]]; then pip install coveralls; fi
   - if [[ $TESTPART == "CCOVERAGE" ]]; then pip install cpp-coveralls; fi
   - if [[ $TESTPART == "CCOVERAGE" ]]; then CFLAGS="-fprofile-arcs -ftest-coverage" pip install -e .; fi
-  - if [[ $TESTPART == *"PYTHON"* ]]; then python setup.py install; fi
+  - if [[ $TESTPART == *"PYTHON"* ]]; then pip install -e .; fi
 
 script:
     - if [[ $TESTPART == "CCOVERAGE" ]]; then cd $TRAVIS_BUILD_DIR/ && python setup.py test; fi

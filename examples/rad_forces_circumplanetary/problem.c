@@ -39,7 +39,9 @@ int main(int argc, char* argv[]){
     double e_sat = 0.056;               // Eccentricity of Saturn
     double pomega_sat = 0.;             // Angle from x axis to pericenter
     double f_sat = 0.;                  // True anomaly of Saturn
-    struct reb_particle saturn = reb_tools_orbit2d_to_particle(sim->G, sun, mass_sat, a_sat, e_sat, pomega_sat, f_sat);
+    double inc = 0.;
+    double Omega = 0.;
+    struct reb_particle saturn = reb_tools_orbit_to_particle(sim->G, sun, mass_sat, a_sat, e_sat, inc, Omega, pomega_sat, f_sat);
 
     reb_add(sim, saturn);
 

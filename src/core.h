@@ -69,8 +69,8 @@ void rebx_gr_full(struct reb_simulation* const sim, struct rebx_force* const for
 void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_exponential_migration(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_tides_constant_time_lag(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
-void rebx_tides_drag(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_central_force(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_inner_disc_edge(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);

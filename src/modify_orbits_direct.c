@@ -43,7 +43,7 @@
  * 
  * **Effect Parameters**
  *
- * If p is not set, it defaults to 1.  If coordinates not set, defaults to using Jacobi coordinates.
+ * If p is not set, it defaults to 0.  If coordinates not set, defaults to using Jacobi coordinates.
  *
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
