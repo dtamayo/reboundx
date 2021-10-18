@@ -28,39 +28,41 @@
  * $Inner disc edge$       // Effect category 
  * 
  * ======================= ============================================================================================
- * Authors                 Kajtazi, Kaltrina and D. Petit, Antoine
- * Implementation Paper    `Tamayo et al., 2020 <https://arxiv.org/abs/1908.05634>.
+ * Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
+ * Implementation Paper    `Kajtazi et al. in prep.
  * Based on                `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>.
  * ======================= ============================================================================================
  * 
- * This applies an inner disc edge that functions as a planet trap. Within its width the planets migration is reversed 
- * by an opposite and roughly equal magnitude torque, stopping further migration and trapping the planet within the width of the trap.
- * Otherwise the base of the code is the same as that explained above and written by D. Tamayo, H. Rein, modified orbital forces.
- * This implementation should work with any migration/effect that is not Type I migration or constant migration. 
- * Other precriptions have not been tested but should work fine, as long as that migration prescription can be given in terms of the 
- * timescales of change in orbital elements and applied through accelerations as done here.
+ * This applies an inner disc edge that functions as a planet trap. Within its width the planet's migration is reversed 
+ * by an opposite and roughly equal magnitude torque. Thus, stopping further migration and trapping the planet within 
+ * the width of the trap. The base used here is modified_orbital_forces script written by D. Tamayo, H. Rein.
+ * 
+ * This implementation should work with any migration/effect not just Type I migration or constant migration. 
+ * Other precriptions have not been tested but should work fine, as long as that migration prescription can be given 
+ * in terms of the timescales of change in orbital elements and applied through accelerations as done here. 
+ * However, the code is not machine idependent due to the use of power laws, which cannot be avoided altogether in this case. 
  * 
  * **Effect Parameters**
  * 
- * ============================ =========== ==================================================================================================================
+ * ============================ =========== ===================================================================================
  * Field (C type)               Required    Description
- * ============================ =========== ==================================================================================================================
+ * ============================ =========== ===================================================================================
  * dedge (double)               Yes         The position of the inner disk edge in code units 
  * hedge (double)               Yes         The aspect ratio at the inner disk edge; the disk edge width
- * ============================ =========== ==================================================================================================================
+ * ============================ =========== ===================================================================================
  *
  * **Particle Parameters**
  *
  * One can pick and choose which particles have which parameters set.  
  *
- * ============================ =========== ==============================================================================
+ * ============================ =========== ===================================================================================
  * Field (C type)               Required    Description
- * ============================ =========== ==============================================================================
+ * ============================ =========== ===================================================================================
  * tau_a (double)               No          Semimajor axis exponential growth/damping timescale
  * tau_e (double)               No          Eccentricity exponential growth/damping timescale
  * tau_inc (double)             No          Inclination axis exponential growth/damping timescale
- * tau_a_red (double)           No          The planet trap to stop further migration once the inner disc edge is reached
- * ============================ =========== ==============================================================================
+ * tau_a_red (double)           No          Planet trap function to stop further migration once the inner disc edge is reached
+ * ============================ =========== ===================================================================================
  * 
  */
 
@@ -71,7 +73,7 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
-/* A planet trap that only activates at the inner disc edge, to reverse the planetary migration and prevent migration onto the star */
+/* A planet trap that is active only at the inner disc edge, to reverse the planetary migration and prevent migration onto the star */
 const double rebx_calculating_planet_trap(const double r, const double hedge, const double dedge){
     double tau_a_red;
 

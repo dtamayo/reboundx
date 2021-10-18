@@ -28,17 +28,17 @@
  * $Type I migration$       // Effect category 
  * 
  * ======================= ===============================================
- * Authors                 Kajtazi, Kaltrina and D. Petit, Antoine
- * Implementation Paper    `Tamayo et al., 2020 <https://arxiv.org/abs/1908.05634>.
+ * Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
+ * Implementation Paper    `Kajtazi et al. in prep.
  * Based on                `Cresswell & Nelson 2008 <https://ui.adsabs.harvard.edu/abs/2008A%26A...482..677C/abstract>, and Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>.
  * ======================= ===============================================
  * 
  * This applies Type I migration, where eccentricity, semi-major axis and inclination are dampened during migration.
- * Otherwise the base of the code is the same as that explained above and written by D. Tamayo, H. Rein, modified orbital forces.
- * Moreover, the first part of the code below is th eimplementation of the inner disc edge, which is decribed on a file of its own in the same principle as done here with the Type I migration implementation. 
- * The inner disc edge is here included for simplicity instead of having to add both separately when using this Type I migration prescription. 
- * The file of the inner disc edge alone can instead be used when wanting to include just an inner disc edge with for example constant migration timescale or any other migration/effect that is not Type I migration.
- * 
+ * The base of the code is the same as the modified orbital forces one written by D. Tamayo, H. Rein.
+ * Moreover, the first part of the code below is the implementation of an inner disc edge, which is decribed and written in the same way in a separate file too, 
+ * because it can then be used on its own with another migration precription too, not just in connection with this Type I migration prescription. The inner disc edge is included here directly for 
+ * simplicity instead of having to add both separately when using this Type I migration prescription. 
+ *
  * **Effect Parameters**
  * 
  * ============================ =========== ==================================================================================================================
@@ -46,9 +46,9 @@
  * ============================ =========== ==================================================================================================================
  * dedge (double)               Yes         The position of the inner disc edge in code units 
  * hedge (double)               Yes         The aspect ratio at the inner disc edge; the disc edge width
- * sd0 (double)                 Yes         Initial disc surface density in code units, to be used to find the surface density at any distance froom the star
- * h0 (double)                  Yes         The scale height at 1 code unit from the star, to be used to find the aspect ratio at any distance from the star
- * s (double)                   Yes         Surface density profile of the disc
+ * sd0 (double)                 Yes         Disc surface density at one code unit from the star; used to find the surface density at any distance from the star
+ * h0 (double)                  Yes         The scale height at one code unit from the star; used to find the aspect ratio at any distance from the star
+ * s (double)                   Yes         Exponent on disc surface density, indicative of the surface density profile of the disc
  * beta (double)                Yes         The flaring index; 1 means disc is irradiated by only the stellar flux
  * ============================ =========== ==================================================================================================================
  *
@@ -56,14 +56,14 @@
  *
  * One can pick and choose which particles have which parameter set.  
  *
- * ============================ =========== ==============================================================================
+ * ============================ =========== ===================================================================================
  * Field (C type)               Required    Description
- * ============================ =========== ==============================================================================
+ * ============================ =========== ===================================================================================
  * tau_a (double)               No          Semimajor axis exponential growth/damping timescale
  * tau_e (double)               No          Eccentricity exponential growth/damping timescale
  * tau_inc (double)             No          Inclination axis exponential growth/damping timescale
- * tau_a_red (double)           No          The planet trap to stop further migration once the inner disc edge is reached
- * ============================ =========== ==============================================================================
+ * tau_a_red (double)           No          Planet trap function to stop further migration once the inner disc edge is reached
+ * ============================ =========== ===================================================================================
  * 
  */
 
@@ -74,8 +74,7 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
-/* Calculating the planet trap, to trap the planet at the inner disk edge. 
-hedge = aspect ratio at inner disk edge, dedge = inner disk edge location */
+/* Defining the function for the planet trap */
 
 const double rebx_calculating_planet_trap_type_I_mig(const double r, const double dedge, const double hedge){
     double tau_a_red;
@@ -95,10 +94,8 @@ const double rebx_calculating_planet_trap_type_I_mig(const double r, const doubl
     return tau_a_red;
 }
 
-/* Calculating the t_wave: damping timescale or orbital evolution timescale from Tanaka & Ward 2004. 
-h = aspect ratio, h2 = aspect ratio squared, sma = semi-major axis, sd0 = disc surface density at 1 code unit,
-s = a constant indicative of the disk profile, sd = surface denisty to be calculated at every r, 
-ms = stellar mass, mp = planet mass */
+/* Calculating the t_wave: damping timescale or orbital evolution timescale, from Tanaka & Ward 2004. 
+h = aspect ratio, h2 = aspect ratio squared, sma = semi-major axis, sd = surface denisty to be calculated at every r, ms = stellar mass, mp = planet mass */
 
 const double rebx_calculating_damping_timescale(const double G, const double sd0, const double r, const double s, const double ms, const double mp, const double sma, const double h2){
     double sd;
@@ -110,8 +107,8 @@ const double rebx_calculating_damping_timescale(const double G, const double sd0
     return t_wave;
 }
 
-/* Calculating the eccentricity damping timescale. 
-eh=e/h, ih = i/h, wave is a funcion variable which will be t_wave */
+/* Calculating the eccentricity damping timescale, from Cresswell & Nelson 2008. 
+eh=e/h, ih = i/h, wave is a funcion variable namne which will be the t_wave function*/
 
 const double rebx_calculating_eccentricity_damping_timescale(const double wave, const double eh, const double ih){
     double t_e;
@@ -120,22 +117,24 @@ const double rebx_calculating_eccentricity_damping_timescale(const double wave, 
     return t_e;
 }
 
-/* Calculating the damping timescale of the semi-major axis; dampened as the planet moves inward */
+/* Calculating the damping timescale of the semi-major axis; dampened as the planet moves inward, from Cresswell & Nelson 2008 */
 
 const double rebx_calculating_semi_major_axis_damping_timescale(const double wave, const double eh, const double ih, const double h2, const double s){
     double Pe;
     double t_a;
     double term;
     double term2;
-    term = (eh/2.84) * (eh/2.84);
-    term2 = (eh/2.02) * (eh/2.02);
-    Pe = (1. + sqrt(eh/2.25) +  term*term*term) / (1. - term2*term2);
+    double term3;
+    term = (eh/2.25);
+    term2 = (eh/2.84) * (eh/2.84);
+    term3 = (eh/2.02) * (eh/2.02);
+    Pe = (1. + pow(term, 1.2) +  term2*term2*term2) / (1. - term3*term3);
     t_a = ((2.*wave)/(2.7 + 1.1*s)) * (1/h2) * (Pe + (Pe/fabs(Pe)) * ((0.070*ih) + (0.085*ih*ih*ih*ih) - (0.080*eh*ih*ih)));
 
     return t_a;
 }
 
-/* Calculating the inclination damping timescale */
+/* Calculating the inclination damping timescale, from Cresswell & Nelson 2008*/
 
 const double rebx_calculating_inclination_damping_timescale(const double wave, const double eh, const double ih){
     double t_i;
@@ -144,7 +143,6 @@ const double rebx_calculating_inclination_damping_timescale(const double wave, c
     return t_i;
 }
 
-/* Setting up the vector to modify the planetary orbits with the effect in question, Type I migration */
 static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source){
     double invtau_a;
     double tau_e;
@@ -158,15 +156,15 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     double dedge = 0.0;
     double hedge = 0.0;
 
-    /* Parameters that should be changed/set in Python notebook or C outside of this */
+    /* Parameters that should be changed/set in Python notebook or in C outside of this */
     const double* const dedge_ptr = rebx_get_param(sim->extras, force->ap, "inner_disc_edge");
     const double* const hedge_ptr = rebx_get_param(sim->extras, force->ap, "disc_edge_width");
     const double* const beta_ptr = rebx_get_param(sim->extras, force->ap, "flaring_index");
-    const double* const s_ptr = rebx_get_param(sim->extras, force->ap, "disk_profile_constant");
+    const double* const s_ptr = rebx_get_param(sim->extras, force->ap, "surface_density_exponent");
     const double* const sd0_ptr = rebx_get_param(sim->extras, force->ap, "initial_surface_density");
     const double* const h0_ptr = rebx_get_param(sim->extras, force->ap, "scale_height");
 
-    /* This is accessing the calculated semi-major axis, eccentricity and inclination via modify_orbits_direct where they are calculated and returned*/
+    /* Accessing the calculated semi-major axis, eccentricity and inclination for each integration step, via modify_orbits_direct where they are calculated and returned*/
     int err=0;
     struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, *p, *source, &err);
   
@@ -183,9 +181,6 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     const double dy = p->y-source->y;
     const double dz = p->z-source->z;
     const double r2 = dx*dx + dy*dy + dz*dz;
-
-    /* Default values for the parameters in case the user forgets to define them when using this code. They are set to zero so that the code does not work 
-    and the user can easily track where the problem is. Because these values must be given at simulation setup. */
 
     if (dedge_ptr != NULL){
         dedge = *dedge_ptr;
