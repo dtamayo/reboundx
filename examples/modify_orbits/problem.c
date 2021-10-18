@@ -31,11 +31,13 @@ int main(int argc, char* argv[]){
     double a1 = 1.;
     double a2 = 2.;
     double e = 0.4;
+    double inc = 0.;
+    double Omega = 0.;
     double omega = 0.;
     double f = 0.;
 
-    struct reb_particle p1 = reb_tools_orbit2d_to_particle(sim->G, p, m, a1, e, omega, f);
-    struct reb_particle p2 = reb_tools_orbit2d_to_particle(sim->G, p, m, a2, e, omega, f);
+    struct reb_particle p1 = reb_tools_orbit_to_particle(sim->G, p, m, a1, e, inc, Omega, omega, f);
+    struct reb_particle p2 = reb_tools_orbit_to_particle(sim->G, p, m, a2, e, inc, Omega, omega, f);
     reb_add(sim,p1);
     reb_add(sim,p2);
     reb_move_to_com(sim);

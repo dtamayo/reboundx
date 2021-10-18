@@ -17,10 +17,12 @@ int main(int argc, char* argv[]){
     double m = 0.;
     double a = 1.e-4;
     double e = 0.2;
+    double inc = 0.;
+    double Omega = 0.;
     double omega = 0.;
     double f = 0.;
     
-    struct reb_particle p1 = reb_tools_orbit2d_to_particle(sim->G, p, m, a, e, omega, f);
+    struct reb_particle p1 = reb_tools_orbit_to_particle(sim->G, p, m, a, e, inc, Omega, omega, f);
     reb_add(sim, p1);
     sim->dt = 1.e-8;
     sim->integrator = REB_INTEGRATOR_WHFAST;

@@ -27,6 +27,7 @@
 #include <string.h>
 #include "reboundx.h"
 #include "core.h"
+#include "linkedlist.h"
 
 /* Binary format is meant to allow for future structure modifications and backwards compatibility.
  

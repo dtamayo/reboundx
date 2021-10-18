@@ -51,6 +51,8 @@ int main(int argc, char* argv[]){
     double amin = 100.*AU;
     double awidth = 20.*AU;
     double e = 0.1;
+    double inc = 0.;
+    double Omega = 0.;
     double Ndust = 1000;                // Number of dust particles
 
     int seed = 3;                       // random number generator seed
@@ -65,7 +67,7 @@ int main(int argc, char* argv[]){
         f = 2*M_PI*(double)rand() / (double)RAND_MAX;
         
         double m=0;                     // We treat the dust grains as massless.
-        p = reb_tools_orbit2d_to_particle(sim->G, sim->particles[0], m, a, e, pomega, f); 
+        p = reb_tools_orbit_to_particle(sim->G, sim->particles[0], m, a, e, inc, Omega, pomega, f); 
         reb_add(sim, p); 
                                         // Only particles with beta set will feel radiation forces 
         rebx_set_param_double(rebx, &sim->particles[i].ap, "beta", beta);    

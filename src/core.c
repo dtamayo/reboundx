@@ -39,7 +39,7 @@
 #define str(s) #s
 
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
-const char* rebx_version_str = "3.1.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
+const char* rebx_version_str = "3.4.1";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
 
 
@@ -67,12 +67,15 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "tau_inc", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tau_omega", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tau_Omega", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "em_tau_a", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "em_aini", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "em_afin", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "primary", REBX_TYPE_INT);
     rebx_register_param(rebx, "radiation_source", REBX_TYPE_INT);
     rebx_register_param(rebx, "beta", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_primary", REBX_TYPE_INT);
     rebx_register_param(rebx, "R_tides", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "tctl_k1", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tctl_k2", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tctl_tau", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "Omega", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "integrator", REBX_TYPE_INT);
@@ -245,6 +248,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     }
     else if (strcmp(name, "modify_orbits_forces") == 0){
         force->update_accelerations = rebx_modify_orbits_forces;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "exponential_migration") == 0){
+        force->update_accelerations = rebx_exponential_migration;
         force->force_type = REBX_FORCE_VEL;
     }
     else if (strcmp(name, "gr_full") == 0){
