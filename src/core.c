@@ -96,8 +96,8 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "disc_edge_width", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "initial_surface_density", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "flaring_index", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "alpha", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "aspect_ratio", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "disk_profile_constant", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "scale_height", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
