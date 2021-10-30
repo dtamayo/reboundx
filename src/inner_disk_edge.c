@@ -1,6 +1,6 @@
 /**
  * @file    inner_disk_edge.c
- * @brief   Apply an inner disk edge at a chosen location, when integating planetary motion
+ * @brief   Inner disk edge implemention at a chosen location, when integating planetary motion
  * @author  Kaltrina Kajtazi <1kaltrinakajtazi@gmail.com>
  * 
  * @section     LICENSE
@@ -27,18 +27,17 @@
  
  * $Inner disk edge$       // Effect category 
  * 
- * ======================= ============================================================================================
+ * ======================= ================================================================================================================
  * Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
  * Implementation Paper    `Kajtazi et al. in prep.
- * Based on                `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>`_.
+ * Based on                `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>.
  * C example               :ref: `c_examples_inner_disk_edge`
  * Python example          `InnerDiskEdge.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/InnerDiskEdge.ipynb>`_.
- * ======================= ============================================================================================
+ * ======================= ================================================================================================================
  * 
  * This applies an inner disk edge that functions as a planet trap. Within its width the planet's migration is reversed 
  * by an opposite and roughly equal magnitude torque. Thus, stopping further migration and trapping the planet within 
  * the width of the trap. The base used here is modified_orbital_forces script written by D. Tamayo, H. Rein.
- * 
  * This implementation should work with any migration/effect not just Type I migration or constant migration. 
  * Other precriptions have not been tested but should work fine, as long as that migration prescription can be given 
  * in terms of the timescales of change in orbital elements and applied through accelerations as done here. 
