@@ -9,15 +9,13 @@
 #include "reboundx.h"
 #include "core.h"
 
-//DO I need the heartbeat void function?
-
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation(); 
-    sim.units = ('yr', 'AU', 'Msun') //how do I write this in c?
+    /* sim.units = ('yr', 'AU', 'Msun') 
 
-    struct reb_particle star = {0};  //should I explicitly add a star?
+    struct reb_particle star = {0};  
     star.m     = 1.;   
-    reb_add(sim, star);
+    reb_add(sim, star); */
 
     struct reb_particle p = {0};
     p.m     = 1.;  // what is one here? Is this the star included??
