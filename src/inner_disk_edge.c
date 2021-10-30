@@ -25,22 +25,23 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  
- * $Inner disc edge$       // Effect category 
+ * $Inner disk edge$       // Effect category 
  * 
  * ======================= ============================================================================================
  * Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
  * Implementation Paper    `Kajtazi et al. in prep.
- * Based on                `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>.
+ * Based on                `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>`_.
+ * C example               :ref: `c_examples_inner_disk_edge`
+ * Python example          `InnerDiskEdge.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/InnerDiskEdge.ipynb>`_.
  * ======================= ============================================================================================
  * 
- * This applies an inner disc edge that functions as a planet trap. Within its width the planet's migration is reversed 
+ * This applies an inner disk edge that functions as a planet trap. Within its width the planet's migration is reversed 
  * by an opposite and roughly equal magnitude torque. Thus, stopping further migration and trapping the planet within 
  * the width of the trap. The base used here is modified_orbital_forces script written by D. Tamayo, H. Rein.
  * 
  * This implementation should work with any migration/effect not just Type I migration or constant migration. 
  * Other precriptions have not been tested but should work fine, as long as that migration prescription can be given 
  * in terms of the timescales of change in orbital elements and applied through accelerations as done here. 
- * However, the code is not machine idependent due to the use of power laws, which cannot be avoided altogether in this case. 
  * 
  * **Effect Parameters**
  * 
@@ -61,7 +62,7 @@
  * tau_a (double)               No          Semimajor axis exponential growth/damping timescale
  * tau_e (double)               No          Eccentricity exponential growth/damping timescale
  * tau_inc (double)             No          Inclination axis exponential growth/damping timescale
- * tau_a_red (double)           No          Planet trap function to stop further migration once the inner disc edge is reached
+ * tau_a_red (double)           No          Planet trap function to stop further migration once the inner disk edge is reached
  * ============================ =========== ===================================================================================
  * 
  */
@@ -73,7 +74,7 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
-/* A planet trap that is active only at the inner disc edge, to reverse the planetary migration and prevent migration onto the star */
+/* A planet trap that is active only at the inner disk edge, to reverse the planetary migration and prevent migration onto the star */
 const double rebx_calculating_planet_trap(const double r, const double hedge, const double dedge){
     double tau_a_red;
 
@@ -92,7 +93,7 @@ const double rebx_calculating_planet_trap(const double r, const double hedge, co
     return tau_a_red;
 }
 
-static struct reb_vec3d rebx_calculate_modify_orbits_with_inner_disc_edge(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source){
+static struct reb_vec3d rebx_calculate_modify_orbits_with_inner_disk_edge(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source){
     double invtau_a = 0.0;
     double tau_e = INFINITY;
     double tau_inc = INFINITY;
@@ -100,8 +101,8 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_inner_disc_edge(struct
     const double* const tau_a_ptr = rebx_get_param(sim->extras, p->ap, "tau_a");
     const double* const tau_e_ptr = rebx_get_param(sim->extras, p->ap, "tau_e");
     const double* const tau_inc_ptr = rebx_get_param(sim->extras, p->ap, "tau_inc");
-    const double* const dedge = rebx_get_param(sim->extras, force->ap, "inner_disc_edge");
-    const double* const hedge = rebx_get_param(sim->extras, force->ap, "disc_edge_width");
+    const double* const dedge = rebx_get_param(sim->extras, force->ap, "inner_disk_edge_position");
+    const double* const hedge = rebx_get_param(sim->extras, force->ap, "disk_edge_width");
 
     const double dvx = p->vx - source->vx;
     const double dvy = p->vy - source->vy;
@@ -143,7 +144,7 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_inner_disc_edge(struct
 }
 
 
-void rebx_modify_orbits_with_inner_disc_edge(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
+void rebx_modify_orbits_with_inner_disk_edge(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
     int* ptr = rebx_get_param(sim->extras, force->ap, "coordinates");
     enum REBX_COORDINATES coordinates = REBX_COORDINATES_JACOBI; // Default
     if (ptr != NULL){
@@ -151,6 +152,6 @@ void rebx_modify_orbits_with_inner_disc_edge(struct reb_simulation* const sim, s
     }
     const int back_reactions_inclusive = 1;
     const char* reference_name = "primary";
-    rebx_com_force(sim, force, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_with_inner_disc_edge, particles, N);
+    rebx_com_force(sim, force, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_with_inner_disk_edge, particles, N);
 }
 
