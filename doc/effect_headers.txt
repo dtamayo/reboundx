@@ -45,6 +45,14 @@ $$$$$$$$$$$$$$$$$$$$
 Integration Steppers
 ^^^^^^^^^^^^^^^^^^^^
 
+$$$$$$$$$$$$$$$$$$
+Type I migration
+^^^^^^^^^^^^^^^^^^
+
+$$$$$$$$$$$$$$$$$$
+Inner disk edge
+^^^^^^^^^^^^^^^^^
+
 These are wrapper functions to taking steps with several of REBOUND's integrators in order to build custom splitting schemes.
 
 $$$$$$$$$$$$$$$$$$$$$$$

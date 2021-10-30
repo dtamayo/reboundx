@@ -92,8 +92,8 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "luminosity", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_Omega", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_lambda2", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "inner_disc_edge", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "disc_edge_width", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "inner_disk_edge_position", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "disk_edge_width", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "initial_surface_density", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "flaring_index", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "surface_density_exponent", REBX_TYPE_DOUBLE);
@@ -274,11 +274,11 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->update_accelerations = rebx_tides_constant_time_lag;
         force->force_type = REBX_FORCE_VEL;
     }
-    else if (strcmp(name, "inner_edge") == 0){
-        force->update_accelerations = rebx_modify_orbits_with_inner_disc_edge;
+    else if (strcmp(name, "inner_disk_edge") == 0){
+        force->update_accelerations = rebx_modify_orbits_with_inner_disk_edge;
         force->force_type = REBX_FORCE_VEL;
     }
-    else if (strcmp(name, "type_I_mig") == 0){
+    else if (strcmp(name, "type_I_migration") == 0){
         force->update_accelerations = rebx_modify_orbits_with_type_I_migration;
         force->force_type = REBX_FORCE_VEL;
     }
