@@ -11,7 +11,7 @@
 
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation(); 
-    /* sim.units = ('yr', 'AU', 'Msun') */
+    /* sim units are ('yr', 'AU', 'Msun') */
     sim->G = 4*M_PI*M_PI;
 
     struct reb_particle star = {0};  
@@ -39,15 +39,15 @@ int main(int argc, char* argv[]){
     struct rebx_extras* rebx = rebx_attach(sim);
 
     struct rebx_force* type_I_mig = rebx_load_force(rebx, "type_I_migration");
-    rebx_set_param_double(rebx, &type_I_mig->ap, "inner_disk_edge_position", 0.1); //DO I need to say that it is a double?
-    rebx_set_param_double(rebx, &type_I_mig->ap, "disk_edge_width", 0.02); //calculated using the scale height value given below
+    rebx_set_param_double(rebx, &type_I_mig->ap, "inner_disk_edge_position", 0.1); 
+    rebx_set_param_double(rebx, &type_I_mig->ap, "disk_edge_width", 0.02); //Calculated using the scale height value given below
     rebx_set_param_double(rebx, &type_I_mig->ap, "flaring_index", 0.25);
     rebx_set_param_double(rebx, &type_I_mig->ap, "surface_density_exponent", 1);
-    rebx_set_param_double(rebx, &type_I_mig->ap, "initial_surface_density", 0.00011255); //in units of Msun/AU^2 which is roughly 1000g/cm^2
+    rebx_set_param_double(rebx, &type_I_mig->ap, "initial_surface_density", 0.00011255); //In units of solarmass/(AU^2) which is roughly 1000g/cm^2
     rebx_set_param_double(rebx, &type_I_mig->ap, "scale_height", 0.03);
     rebx_add_force(rebx, type_I_mig);
 
-    double tmax = 1.e4;  // note that one can calculate the timescale of semi-major axis of the outer planet then set the integration time to twice this value 
+    double tmax = 1.e4;  // Note that one can calculate the timescale of the semi-major axis of the outer planet then set the integration time to twice this value 
 
     reb_integrate(sim, tmax);
     rebx_free(rebx);

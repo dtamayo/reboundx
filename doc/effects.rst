@@ -424,6 +424,8 @@ R_eq (double)                No          Equatorial radius of nonspherical body 
 Integration Steppers
 ^^^^^^^^^^^^^^^^^^^^
 
+These are wrapper functions to taking steps with several of REBOUND's integrators in order to build custom splitting schemes.
+
 .. _steppers:
 
 steppers
@@ -446,61 +448,6 @@ None
 **Particle Parameters**
 
 None
-
-
-Inner disk edge
-^^^^^^^^^^^^^^^^^
-
-Type I migration
-^^^^^^^^^^^^^^^^^^
-
-These are wrapper functions to taking steps with several of REBOUND's integrators in order to build custom splitting schemes.
-
-.. _type_I_migration:
-
-type_I_migration
-****************
-
-======================= ========================================================================================================================================================================================
-Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
-Implementation Paper    `Kajtazi et al. in prep.
-Based on                `Cresswell & Nelson 2008 <https://ui.adsabs.harvard.edu/abs/2008A%26A...482..677C/abstract>, and Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>.
-C example               :ref: `c_examples_type_I_migration`
-Python example          `TypeIMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TypeIMigration.ipynb>`_.
-======================= ========================================================================================================================================================================================
-
-This applies Type I migration, where eccentricity, semi-major axis and inclination are dampened during migration.
-The base of the code is the same as the modified orbital forces one written by D. Tamayo, H. Rein.
-Moreover, the first part of the code below is the implementation of an inner disc edge, which is decribed and written in the same way in a separate file too, 
-because it can then be used on its own with another migration precription too, not just in connection with this Type I migration prescription. The inner disc edge is included here directly for 
-simplicity instead of having to add both separately when using this Type I migration prescription. 
-Note that this code is not machine independent since power laws were not possible to avoid all together.
-
-**Effect Parameters**
-
-============================ =========== ==================================================================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================================================================
-dedge (double)               Yes         The position of the inner disk edge in code units 
-hedge (double)               Yes         The aspect ratio at the inner disk edge; the disk edge width
-sd0 (double)                 Yes         Disk surface density at one code unit from the star; used to find the surface density at any distance from the star
-h0 (double)                  Yes         The scale height at one code unit from the star; used to find the aspect ratio at any distance from the star
-s (double)                   Yes         Exponent of disk surface density, indicative of the surface density profile of the disk
-beta (double)                Yes         The flaring index; 1 means disk is irradiated by only the stellar flux
-============================ =========== ==================================================================================================================
-
-**Particle Parameters**
-
-One can pick and choose which particles have which parameter set.  
-
-============================ =========== ===================================================================================
-Field (C type)               Required    Description
-============================ =========== ===================================================================================
-tau_a (double)               No          Semimajor axis exponential growth/damping timescale
-tau_e (double)               No          Eccentricity exponential growth/damping timescale
-tau_inc (double)             No          Inclination axis exponential growth/damping timescale
-tau_a_red (double)           No          Planet trap function to stop further migration once the inner disk edge is reached
-============================ =========== ===================================================================================
 
 
 Parameter Interpolation
@@ -566,6 +513,57 @@ min_distance (double)            Yes         Particle's mininimum distance.
 min_distance_from (uint32)       No          Hash for particle from which to measure distance
 min_distance_orbit (reb_orbit)   No          Parameter to store orbital elements at moment corresponding to min_distance (heliocentric)
 ================================ =========== =======================================================
+
+
+Inner disk edge
+^^^^^^^^^^^^^^^^^
+
+Type I migration
+^^^^^^^^^^^^^^^^^^.. _type_I_migration:
+
+type_I_migration
+****************
+
+======================= ========================================================================================================================================================================================
+Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
+Implementation Paper    `Kajtazi et al. in prep.
+Based on                `Cresswell & Nelson 2008 <https://ui.adsabs.harvard.edu/abs/2008A%26A...482..677C/abstract>, and Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>.
+C example               :ref: `c_examples_type_I_migration`
+Python example          `TypeIMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TypeIMigration.ipynb>`_.
+======================= ========================================================================================================================================================================================
+
+This applies Type I migration, where eccentricity, semi-major axis and inclination are dampened during migration.
+The base of the code is the same as the modified orbital forces one written by D. Tamayo, H. Rein.
+Moreover, the first part of the code below is the implementation of an inner disc edge, which is decribed and written in the same way in a separate file too, 
+because it can then be used on its own with another migration precription too, not just in connection with this Type I migration prescription. The inner disc edge is included here directly for 
+simplicity instead of having to add both separately when using this Type I migration prescription. 
+Note that this code is not machine independent since power laws were not possible to avoid all together.
+
+**Effect Parameters**
+
+============================ =========== ==================================================================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================================================================
+dedge (double)               Yes         The position of the inner disk edge in code units 
+hedge (double)               Yes         The aspect ratio at the inner disk edge; the disk edge width
+sd0 (double)                 Yes         Disk surface density at one code unit from the star; used to find the surface density at any distance from the star
+h0 (double)                  Yes         The scale height at one code unit from the star; used to find the aspect ratio at any distance from the star
+s (double)                   Yes         Exponent of disk surface density, indicative of the surface density profile of the disk
+beta (double)                Yes         The flaring index; 1 means disk is irradiated by only the stellar flux
+============================ =========== ==================================================================================================================
+
+**Particle Parameters**
+
+One can pick and choose which particles have which parameter set.  
+
+============================ =========== ===================================================================================
+Field (C type)               Required    Description
+============================ =========== ===================================================================================
+tau_a (double)               No          Semimajor axis exponential growth/damping timescale
+tau_e (double)               No          Eccentricity exponential growth/damping timescale
+tau_inc (double)             No          Inclination axis exponential growth/damping timescale
+tau_a_red (double)           No          Planet trap function to stop further migration once the inner disk edge is reached
+============================ =========== ===================================================================================
 
 
 inner_disk_edge
