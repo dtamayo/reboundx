@@ -77,6 +77,8 @@
 #include <math.h>
 #include "rebound.h"
 #include "reboundx.h"
+#include "rebxtools.h"
+
 
 static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_operator* const operator, struct reb_particle* p, struct reb_particle* primary, const double dt){
     struct rebx_extras* const rebx = sim->extras;
@@ -84,19 +86,29 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
     struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, *p, *primary, &err);
     if(err){        // mass of primary was 0 or p = primary.  Return same particle without doing anything.
         return *p;
-    }
-    const double* const tau_a = rebx_get_param(rebx, p->ap, "tau_a");
+    } 
+
+    const double* const tau_a_ptr = rebx_get_param(rebx, p->ap, "tau_a");
     const double* const tau_e = rebx_get_param(rebx, p->ap, "tau_e");
     const double* const tau_inc = rebx_get_param(rebx, p->ap, "tau_inc");
     const double* const tau_omega = rebx_get_param(rebx, p->ap, "tau_omega");
     const double* const tau_Omega = rebx_get_param(rebx, p->ap, "tau_Omega");
+
+    //Implement the planet trap
+    double invtau_a = 0.0;   
+    const double* const dedge = rebx_get_param(sim->extras, operator->ap, "inner_disk_edge_position");
+    const double* const hedge = rebx_get_param(sim->extras, operator->ap, "disk_edge_width");
     
     const double a0 = o.a;
     const double e0 = o.e;
     const double inc0 = o.inc;
 
-	if(tau_a != NULL){
-    	o.a += a0*dt/(*tau_a);
+	if(tau_a_ptr != NULL){
+        invtau_a = 1.0/(*tau_a_ptr);
+        if ((dedge!=NULL)&(hedge!=NULL)){
+            invtau_a *= rebx_calculate_planet_trap(a0, *dedge, *hedge);
+        }
+    	o.a += a0*dt*invtau_a;
 	}
 	if(tau_e != NULL){
     	o.e += e0*dt/(*tau_e);
