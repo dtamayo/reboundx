@@ -77,30 +77,11 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
-/* Defining the function for the planet trap */
-
-const double rebx_calculating_planet_trap_type_I_mig(const double r, const double dedge, const double hedge){
-    double tau_a_red;
-
-    if (r > dedge*(1. + hedge)){
-        tau_a_red = 1.;
-    }
-
-    else if (dedge*(1. - hedge) < r){
-        tau_a_red =  5.5 * cos( ((dedge * (1. + hedge) - r ) * 2. * M_PI) / (4. * hedge * dedge) ) - 4.5;
-    }
-
-    else {
-        tau_a_red = -10.;
-    }
-
-    return tau_a_red;
-}
 
 /* Calculating the t_wave: damping timescale or orbital evolution timescale, from Tanaka & Ward 2004. 
 h = aspect ratio, h2 = aspect ratio squared, sma = semi-major axis, sd = disk surface denisty to be calculated at every r, ms = stellar mass, mp = planet mass */
 
-const double rebx_calculating_damping_timescale(const double G, const double sd0, const double r, const double s, const double ms, const double mp, const double sma, const double h2){
+const double rebx_calculate_damping_timescale(const double G, const double sd0, const double r, const double s, const double ms, const double mp, const double sma, const double h2){
     double sd;
     double t_wave;
     
@@ -113,7 +94,7 @@ const double rebx_calculating_damping_timescale(const double G, const double sd0
 /* Calculating the eccentricity damping timescale, from Cresswell & Nelson 2008. 
 eh=e/h, ih = i/h, wave is a funcion variable namne which will be the t_wave function*/
 
-const double rebx_calculating_eccentricity_damping_timescale(const double wave, const double eh, const double ih){
+const double rebx_calculate_eccentricity_damping_timescale(const double wave, const double eh, const double ih){
     double t_e;
     t_e =  (wave/0.780) * (1. - (0.14*eh*eh) + (0.06*eh*eh*eh) + (0.18*eh*ih*ih)) ;
     
@@ -122,7 +103,7 @@ const double rebx_calculating_eccentricity_damping_timescale(const double wave, 
 
 /* Calculating the damping timescale of the semi-major axis; dampened as the planet moves inward, from Cresswell & Nelson 2008 */
 
-const double rebx_calculating_semi_major_axis_damping_timescale(const double wave, const double eh, const double ih, const double h2, const double s){
+const double rebx_calculate_semi_major_axis_damping_timescale(const double wave, const double eh, const double ih, const double h2, const double s){
     double Pe;
     double t_a;
     double term;
@@ -139,7 +120,7 @@ const double rebx_calculating_semi_major_axis_damping_timescale(const double wav
 
 /* Calculating the inclination damping timescale, from Cresswell & Nelson 2008*/
 
-const double rebx_calculating_inclination_damping_timescale(const double wave, const double eh, const double ih){
+const double rebx_calculate_inclination_damping_timescale(const double wave, const double eh, const double ih){
     double t_i;
     t_i = (wave/0.544) * (1 - (0.30*ih*ih) + (0.24*ih*ih*ih) + (0.14*eh*eh*ih));
 
@@ -213,11 +194,11 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     const double ih = inc0/h;
 
     const double G = sim->G;
-    const double wave = rebx_calculating_damping_timescale(G, sd0, sqrt(r2), s, ms, mp, a0, h2);
+    const double wave = rebx_calculate_damping_timescale(G, sd0, sqrt(r2), s, ms, mp, a0, h2);
 
-    invtau_a = rebx_calculating_planet_trap_type_I_mig(a0, dedge, hedge)/(rebx_calculating_semi_major_axis_damping_timescale(wave, eh, ih, h2, s));
-    tau_e = rebx_calculating_eccentricity_damping_timescale(wave, eh, ih);
-    tau_inc = rebx_calculating_inclination_damping_timescale(wave, eh, ih);
+    invtau_a = rebx_calculate_planet_trap(a0, dedge, hedge)/(rebx_calculate_semi_major_axis_damping_timescale(wave, eh, ih, h2, s));
+    tau_e = rebx_calculate_eccentricity_damping_timescale(wave, eh, ih);
+    tau_inc = rebx_calculate_inclination_damping_timescale(wave, eh, ih);
 
     struct reb_vec3d a = {0};
 

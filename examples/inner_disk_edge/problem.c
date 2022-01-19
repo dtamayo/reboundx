@@ -34,7 +34,7 @@ int main(int argc, char* argv[]){
 
     struct rebx_extras* rebx = rebx_attach(sim);
 
-    struct rebx_force* inner_edge = rebx_load_force(rebx, "inner_disk_edge");
+    struct rebx_force* inner_edge = rebx_load_force(rebx, "modify_orbits_forces");
     rebx_set_param_double(rebx, &inner_edge->ap, "inner_disk_edge_position", 0.1); 
     rebx_set_param_double(rebx, &inner_edge->ap, "disk_edge_width", 0.02); //Calculated using a scale height value of 0.03. See Pichierri et al. 2018 for the equation
     rebx_add_force(rebx, inner_edge);

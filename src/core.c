@@ -274,10 +274,6 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->update_accelerations = rebx_tides_constant_time_lag;
         force->force_type = REBX_FORCE_VEL;
     }
-    else if (strcmp(name, "inner_disk_edge") == 0){
-        force->update_accelerations = rebx_modify_orbits_with_inner_disk_edge;
-        force->force_type = REBX_FORCE_VEL;
-    }
     else if (strcmp(name, "type_I_migration") == 0){
         force->update_accelerations = rebx_modify_orbits_with_type_I_migration;
         force->force_type = REBX_FORCE_VEL;
