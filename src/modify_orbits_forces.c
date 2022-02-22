@@ -97,12 +97,13 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
     
     if(tau_a_ptr != NULL){
         invtau_a = 1.0/(*tau_a_ptr);
+        /*
         if ((dedge!=NULL)&(hedge!=NULL)){
             int err=0;
             struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, *p, *source, &err);
             const double a0 = o.a;
             invtau_a *= rebx_calculate_planet_trap(a0, *dedge, *hedge);
-        }
+        }*/
     }
     if(tau_e_ptr != NULL){
         tau_e = *tau_e_ptr;
