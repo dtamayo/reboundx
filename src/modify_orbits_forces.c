@@ -84,8 +84,8 @@ static struct reb_vec3d rebx_calculate_modify_orbits_forces(struct reb_simulatio
     const double* const tau_inc_ptr = rebx_get_param(sim->extras, p->ap, "tau_inc");
 
     //Implement the planet trap
-    const double* const dedge = rebx_get_param(sim->extras, force->ap, "inner_disk_edge_position");
-    const double* const hedge = rebx_get_param(sim->extras, force->ap, "disk_edge_width");
+    const double* const dedge = rebx_get_param(sim->extras, force->ap, "ide_position");
+    const double* const hedge = rebx_get_param(sim->extras, force->ap, "ide_width");
 
     const double dvx = p->vx - source->vx;
     const double dvy = p->vy - source->vy;

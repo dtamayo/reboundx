@@ -60,34 +60,6 @@ tau_inc (double)             No          Inclination axis exponential growth/dam
 ============================ =========== ==================================================================
 
 
-.. _exponential_migration:
-
-exponential_migration
-*********************
-
-======================= ===============================================
-Author                   Mohamad Ali-Dib
-Implementation Paper    `Ali-Dib et al., 2021 AJ <https://arxiv.org/abs/2104.04271>`_.
-Based on                `Hahn & Malhotra 2005 <https://ui.adsabs.harvard.edu/abs/2005AJ....130.2392H/abstract>`_.
-C Example               :ref:`c_example_exponential_migration`
-Python Example          `ExponentialMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ExponentialMigration.ipynb>`_.
-======================= ===============================================
-
-Continuous velocity kicks leading to exponential change in the object's semimajor axis. 
-One of the standard prescriptions often used in Neptune migration & Kuiper Belt formation models.
-Does not directly affect the eccentricity or inclination of the object.
-
-**Particle Parameters**
-
-============================ =========== ==================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================
-em_tau_a (double)              Yes          Semimajor axis exponential growth/damping timescale
-em_aini (double)               Yes          Object's initial semimajor axis
-em_afin (double)               Yes          Object's final semimajor axis
-============================ =========== ==================================================================
-
-
 .. _modify_orbits_direct:
 
 modify_orbits_direct
@@ -134,6 +106,34 @@ tau_e (double)               No          Eccentricity exponential growth/damping
 tau_inc (double)             No          Inclination axis exponential growth/damping timescale
 tau_Omega (double)           No          Period of linear nodal precession/regression
 tau_omega (double)           No          Period of linear apsidal precession/regression
+============================ =========== ==================================================================
+
+
+.. _exponential_migration:
+
+exponential_migration
+*********************
+
+======================= ===============================================
+Author                   Mohamad Ali-Dib
+Implementation Paper    `Ali-Dib et al., 2021 AJ <https://arxiv.org/abs/2104.04271>`_.
+Based on                `Hahn & Malhotra 2005 <https://ui.adsabs.harvard.edu/abs/2005AJ....130.2392H/abstract>`_.
+C Example               :ref:`c_example_exponential_migration`
+Python Example          `ExponentialMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ExponentialMigration.ipynb>`_.
+======================= ===============================================
+
+Continuous velocity kicks leading to exponential change in the object's semimajor axis. 
+One of the standard prescriptions often used in Neptune migration & Kuiper Belt formation models.
+Does not directly affect the eccentricity or inclination of the object.
+
+**Particle Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+em_tau_a (double)              Yes          Semimajor axis exponential growth/damping timescale
+em_aini (double)               Yes          Object's initial semimajor axis
+em_afin (double)               Yes          Object's final semimajor axis
 ============================ =========== ==================================================================
 
 
@@ -577,20 +577,20 @@ inner_disk_edge
 
 $Inner disk edge$       // Effect category 
 
-======================= ============================================================================================
+======================= ================================================================================================================
 Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
 Implementation Paper    `Kajtazi et al. in prep.
-Based on                `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>`_.
+Based on                `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>.
 C example               :ref: `c_examples_inner_disk_edge`
 Python example          `InnerDiskEdge.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/InnerDiskEdge.ipynb>`_.
-======================= ============================================================================================
+======================= ================================================================================================================
 
 This applies an inner disk edge that functions as a planet trap. Within its width the planet's migration is reversed 
 by an opposite and roughly equal magnitude torque. Thus, stopping further migration and trapping the planet within 
-the width of the trap. The base used here is modified_orbital_forces script written by D. Tamayo, H. Rein.
-This implementation should work with any migration/effect not just Type I migration or constant migration. 
-Other precriptions have not been tested but should work fine, as long as that migration prescription can be given 
-in terms of the timescales of change in orbital elements and applied through accelerations as done here. 
+the width of the trap. 
+The functions here provide a way to modify the tau_a timescale in modify_orbital_forces and modify_orbit_direct.
+Note that the present prescription is very good to run simple simulation when an inner trap is needed during the migration
+ but it shouldn't be considered as a realistic model of the inner edge of a disk.
 
 **Effect Parameters**
 
@@ -599,18 +599,5 @@ Field (C type)               Required    Description
 ============================ =========== ===================================================================================
 dedge (double)               Yes         The position of the inner disk edge in code units 
 hedge (double)               Yes         The aspect ratio at the inner disk edge; the disk edge width
-============================ =========== ===================================================================================
-
-**Particle Parameters**
-
-One can pick and choose which particles have which parameters set.  
-
-============================ =========== ===================================================================================
-Field (C type)               Required    Description
-============================ =========== ===================================================================================
-tau_a (double)               No          Semimajor axis exponential growth/damping timescale
-tau_e (double)               No          Eccentricity exponential growth/damping timescale
-tau_inc (double)             No          Inclination axis exponential growth/damping timescale
-tau_a_red (double)           No          Planet trap function to stop further migration once the inner disk edge is reached
 ============================ =========== ===================================================================================
 

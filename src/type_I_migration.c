@@ -47,8 +47,7 @@
  * ============================ =========== ==================================================================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================================================================
- * dedge (double)               Yes         The position of the inner disk edge in code units 
- * hedge (double)               Yes         The aspect ratio at the inner disk edge; the disk edge width
+ * dedge (double)               No          The position of the inner disk edge in code units 
  * sd0 (double)                 Yes         Disk surface density at one code unit from the star; used to find the surface density at any distance from the star
  * h0 (double)                  Yes         The scale height at one code unit from the star; used to find the aspect ratio at any distance from the star
  * s (double)                   Yes         Exponent of disk surface density, indicative of the surface density profile of the disk
@@ -141,12 +140,11 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     double hedge = 0.0;
 
     /* Parameters that should be changed/set in Python notebook or in C outside of this */
-    const double* const dedge_ptr = rebx_get_param(sim->extras, force->ap, "inner_disk_edge_position");
-    const double* const hedge_ptr = rebx_get_param(sim->extras, force->ap, "disk_edge_width");
-    const double* const beta_ptr = rebx_get_param(sim->extras, force->ap, "flaring_index");
-    const double* const s_ptr = rebx_get_param(sim->extras, force->ap, "surface_density_exponent");
-    const double* const sd0_ptr = rebx_get_param(sim->extras, force->ap, "initial_surface_density");
-    const double* const h0_ptr = rebx_get_param(sim->extras, force->ap, "scale_height");
+    const double* const dedge_ptr = rebx_get_param(sim->extras, force->ap, "ide_position");
+    const double* const beta_ptr = rebx_get_param(sim->extras, force->ap, "tIm_flaring_index");
+    const double* const s_ptr = rebx_get_param(sim->extras, force->ap, "tIm_surface_density_exponent");
+    const double* const sd0_ptr = rebx_get_param(sim->extras, force->ap, "tIm_surface_density_1");
+    const double* const h0_ptr = rebx_get_param(sim->extras, force->ap, "tIm_scale_height_1");
 
     /* Accessing the calculated semi-major axis, eccentricity and inclination for each integration step, via modify_orbits_direct where they are calculated and returned*/
     int err=0;
@@ -166,12 +164,6 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     const double dz = p->z-source->z;
     const double r2 = dx*dx + dy*dy + dz*dz;
 
-    if (dedge_ptr != NULL){
-        dedge = *dedge_ptr;
-    }
-    if (hedge_ptr != NULL){
-        hedge = *hedge_ptr;
-    }
     if (beta_ptr != NULL){
         beta = *beta_ptr;
     }
@@ -184,6 +176,10 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     if (h0_ptr != NULL){
         h0 = *h0_ptr;
     }
+    if (dedge_ptr != NULL){
+        dedge = *dedge_ptr;
+        hedge = h0 * pow(dedge, beta)
+    }
 
     /* Calculating the aspect ratio evaluated at the position of the planet, r and defining other variables */
 
@@ -195,7 +191,6 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
 
     const double G = sim->G;
     const double wave = rebx_calculate_damping_timescale(G, sd0, sqrt(r2), s, ms, mp, a0, h2);
-
     invtau_a = rebx_calculate_planet_trap(a0, dedge, hedge)/(rebx_calculate_semi_major_axis_damping_timescale(wave, eh, ih, h2, s));
     tau_e = rebx_calculate_eccentricity_damping_timescale(wave, eh, ih);
     tau_inc = rebx_calculate_inclination_damping_timescale(wave, eh, ih);

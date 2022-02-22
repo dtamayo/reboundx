@@ -90,14 +90,12 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "min_distance_from", REBX_TYPE_UINT32);
     rebx_register_param(rebx, "min_distance_orbit", REBX_TYPE_ORBIT);
     rebx_register_param(rebx, "luminosity", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "tides_Omega", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "tides_lambda2", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "inner_disk_edge_position", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "disk_edge_width", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "initial_surface_density", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "flaring_index", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "surface_density_exponent", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "scale_height", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ide_position", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ide_width", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tIm_flaring_index", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tIm_scale_height_1", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tIm_surface_density_1", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tIm_surface_density_exponent", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
