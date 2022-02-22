@@ -1,6 +1,6 @@
 /**
  * @file    type_I_migration.c
- * @brief   Type I migration prescription applied to a planetary system.
+ * @brief   Type I migration 
  * @author  Kaltrina Kajtazi <1kaltrinakajtazi@gmail.com>
  * 
  * @section     LICENSE
@@ -25,48 +25,34 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  * 
- * $Type I migration$       // Effect category 
+ * $Orbit Modifications$       // Effect category 
  * 
- * ======================= ========================================================================================================================================================================================
+ * ======================= ===============================================
  * Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
- * Implementation Paper    `Kajtazi et al. in prep.
- * Based on                `Cresswell & Nelson 2008 <https://ui.adsabs.harvard.edu/abs/2008A%26A...482..677C/abstract>, and Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>.
- * C example               :ref: `c_examples_type_I_migration`
+ * Implementation Paper    Kajtazi et al. in prep.
+ * Based on                `Cresswell & Nelson 2008 <https://ui.adsabs.harvard.edu/abs/2008A%26A...482..677C/abstract>`_, and `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>`_.
+ * C example               :ref:`c_examples_type_I_migration`
  * Python example          `TypeIMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TypeIMigration.ipynb>`_.
- * ======================= ========================================================================================================================================================================================
+ * ======================= ===============================================
  * 
- * This applies Type I migration, where eccentricity, semi-major axis and inclination are dampened during migration.
+ * This applies Type I migration, damping eccentricity, semi-major axis and inclination.
  * The base of the code is the same as the modified orbital forces one written by D. Tamayo, H. Rein.
- * Moreover, the first part of the code below is the implementation of an inner disc edge, which is decribed and written in the same way in a separate file too, 
- * because it can then be used on its own with another migration precription too, not just in connection with this Type I migration prescription. The inner disc edge is included here directly for 
- * simplicity instead of having to add both separately when using this Type I migration prescription. 
+ * It also allows for parameters describing an inner disc edge, modeled using the implementation in inner_disk_edge.c.
  * Note that this code is not machine independent since power laws were not possible to avoid all together.
  *
  * **Effect Parameters**
  * 
- * ============================ =========== ==================================================================================================================
- * Field (C type)               Required    Description
- * ============================ =========== ==================================================================================================================
- * dedge (double)               No          The position of the inner disk edge in code units 
- * sd0 (double)                 Yes         Disk surface density at one code unit from the star; used to find the surface density at any distance from the star
- * h0 (double)                  Yes         The scale height at one code unit from the star; used to find the aspect ratio at any distance from the star
- * s (double)                   Yes         Exponent of disk surface density, indicative of the surface density profile of the disk
- * beta (double)                Yes         The flaring index; 1 means disk is irradiated by only the stellar flux
- * ============================ =========== ==================================================================================================================
+ * ===================================== =========== ==================================================================================================================
+ * Field (C type)                        Required    Description
+ * ===================================== =========== ==================================================================================================================
+ * ide_position (double)                 No          The position of the inner disk edge in code units 
+ * ide_width (double)                    No          The disk edge width (planet will stop within ide_width of ide_position)
+ * tIm_surface_density_1 (double)        Yes         Disk surface density at one code unit from the star; used to find the surface density at any distance from the star
+ * tIm_scale_height_1 (double)           Yes         The scale height at one code unit from the star; used to find the aspect ratio at any distance from the star
+ * tIm_surface_density_exponent (double) Yes         Exponent of disk surface density, indicative of the surface density profile of the disk
+ * tIm_flaring_index (double)            Yes         The flaring index; 1 means disk is irradiated by only the stellar flux
+ * ===================================== =========== ==================================================================================================================
  *
- * **Particle Parameters**
- *
- * One can pick and choose which particles have which parameter set.  
- *
- * ============================ =========== ===================================================================================
- * Field (C type)               Required    Description
- * ============================ =========== ===================================================================================
- * tau_a (double)               No          Semimajor axis exponential growth/damping timescale
- * tau_e (double)               No          Eccentricity exponential growth/damping timescale
- * tau_inc (double)             No          Inclination axis exponential growth/damping timescale
- * tau_a_red (double)           No          Planet trap function to stop further migration once the inner disk edge is reached
- * ============================ =========== ===================================================================================
- * 
  */
 
 #include <stdio.h>
@@ -141,6 +127,7 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
 
     /* Parameters that should be changed/set in Python notebook or in C outside of this */
     const double* const dedge_ptr = rebx_get_param(sim->extras, force->ap, "ide_position");
+    const double* const hedge_ptr = rebx_get_param(sim->extras, force->ap, "ide_width");
     const double* const beta_ptr = rebx_get_param(sim->extras, force->ap, "tIm_flaring_index");
     const double* const s_ptr = rebx_get_param(sim->extras, force->ap, "tIm_surface_density_exponent");
     const double* const sd0_ptr = rebx_get_param(sim->extras, force->ap, "tIm_surface_density_1");
@@ -178,7 +165,9 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
     }
     if (dedge_ptr != NULL){
         dedge = *dedge_ptr;
-        hedge = h0 * pow(dedge, beta)
+    }
+    if (hedge_ptr != NULL){
+        hedge = *hedge_ptr;
     }
 
     /* Calculating the aspect ratio evaluated at the position of the planet, r and defining other variables */

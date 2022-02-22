@@ -60,6 +60,33 @@ tau_inc (double)             No          Inclination axis exponential growth/dam
 ============================ =========== ==================================================================
 
 
+.. _inner_disk_edge:
+
+inner_disk_edge
+***************
+
+======================= ================================================================================================================
+Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
+Implementation Paper    Kajtazi et al. in prep.
+Based on                `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>`_.
+C example               :ref:`c_examples_inner_disk_edge`
+Python example          `InnerDiskEdge.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/InnerDiskEdge.ipynb>`_.
+======================= ================================================================================================================
+
+This applies an inner disk edge that functions as a planet trap. Within its width the planet's migration is reversed by an opposite and roughly equal magnitude torque. Thus, stopping further migration and trapping the planet within the width of the trap. 
+The functions here provide a way to modify the tau_a timescale in modify_orbits_forces, modify_orbit_direct, and type_I_migration.
+Note that the present prescription is very useful for simple simulations when an inner trap is needed during the migration but it shouldn't be considered as a realistic model of the inner edge of a disk.
+
+**Effect Parameters**
+
+============================ =========== ===================================================================================
+Field (C type)               Required    Description
+============================ =========== ===================================================================================
+ide_position (double)        Yes         The position of the inner disk edge in code units 
+ide_width (double)           Yes         The disk edge width (planet will stop within ide_width of ide_position)
+============================ =========== ===================================================================================
+
+
 .. _modify_orbits_direct:
 
 modify_orbits_direct
@@ -107,6 +134,38 @@ tau_inc (double)             No          Inclination axis exponential growth/dam
 tau_Omega (double)           No          Period of linear nodal precession/regression
 tau_omega (double)           No          Period of linear apsidal precession/regression
 ============================ =========== ==================================================================
+
+
+.. _type_I_migration:
+
+type_I_migration
+****************
+
+======================= ===============================================
+Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
+Implementation Paper    Kajtazi et al. in prep.
+Based on                `Cresswell & Nelson 2008 <https://ui.adsabs.harvard.edu/abs/2008A%26A...482..677C/abstract>`_, and `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>`_.
+C example               :ref:`c_examples_type_I_migration`
+Python example          `TypeIMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TypeIMigration.ipynb>`_.
+======================= ===============================================
+
+This applies Type I migration, damping eccentricity, semi-major axis and inclination.
+The base of the code is the same as the modified orbital forces one written by D. Tamayo, H. Rein.
+It also allows for parameters describing an inner disc edge, modeled using the implementation in inner_disk_edge.c.
+Note that this code is not machine independent since power laws were not possible to avoid all together.
+
+**Effect Parameters**
+
+===================================== =========== ==================================================================================================================
+Field (C type)                        Required    Description
+===================================== =========== ==================================================================================================================
+ide_position (double)                 No          The position of the inner disk edge in code units 
+ide_width (double)                    No          The disk edge width (planet will stop within ide_width of ide_position)
+tIm_surface_density_1 (double)        Yes         Disk surface density at one code unit from the star; used to find the surface density at any distance from the star
+tIm_scale_height_1 (double)           Yes         The scale height at one code unit from the star; used to find the aspect ratio at any distance from the star
+tIm_surface_density_exponent (double) Yes         Exponent of disk surface density, indicative of the surface density profile of the disk
+tIm_flaring_index (double)            Yes         The flaring index; 1 means disk is irradiated by only the stellar flux
+===================================== =========== ==================================================================================================================
 
 
 .. _exponential_migration:
@@ -519,85 +578,4 @@ Inner disk edge
 ^^^^^^^^^^^^^^^^^
 
 Type I migration
-^^^^^^^^^^^^^^^^^^.. _type_I_migration:
-
-type_I_migration
-****************
-
-======================= ========================================================================================================================================================================================
-Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
-Implementation Paper    `Kajtazi et al. in prep.
-Based on                `Cresswell & Nelson 2008 <https://ui.adsabs.harvard.edu/abs/2008A%26A...482..677C/abstract>, and Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>.
-C example               :ref: `c_examples_type_I_migration`
-Python example          `TypeIMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TypeIMigration.ipynb>`_.
-======================= ========================================================================================================================================================================================
-
-This applies Type I migration, where eccentricity, semi-major axis and inclination are dampened during migration.
-The base of the code is the same as the modified orbital forces one written by D. Tamayo, H. Rein.
-Moreover, the first part of the code below is the implementation of an inner disc edge, which is decribed and written in the same way in a separate file too, 
-because it can then be used on its own with another migration precription too, not just in connection with this Type I migration prescription. The inner disc edge is included here directly for 
-simplicity instead of having to add both separately when using this Type I migration prescription. 
-Note that this code is not machine independent since power laws were not possible to avoid all together.
-
-**Effect Parameters**
-
-============================ =========== ==================================================================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================================================================
-dedge (double)               Yes         The position of the inner disk edge in code units 
-hedge (double)               Yes         The aspect ratio at the inner disk edge; the disk edge width
-sd0 (double)                 Yes         Disk surface density at one code unit from the star; used to find the surface density at any distance from the star
-h0 (double)                  Yes         The scale height at one code unit from the star; used to find the aspect ratio at any distance from the star
-s (double)                   Yes         Exponent of disk surface density, indicative of the surface density profile of the disk
-beta (double)                Yes         The flaring index; 1 means disk is irradiated by only the stellar flux
-============================ =========== ==================================================================================================================
-
-**Particle Parameters**
-
-One can pick and choose which particles have which parameter set.  
-
-============================ =========== ===================================================================================
-Field (C type)               Required    Description
-============================ =========== ===================================================================================
-tau_a (double)               No          Semimajor axis exponential growth/damping timescale
-tau_e (double)               No          Eccentricity exponential growth/damping timescale
-tau_inc (double)             No          Inclination axis exponential growth/damping timescale
-tau_a_red (double)           No          Planet trap function to stop further migration once the inner disk edge is reached
-============================ =========== ===================================================================================
-
-
-inner_disk_edge
-^^^^^^^^^^^^^^^
-
-.. _inner_disk_edge:
-
-inner_disk_edge
-***************
-
-
-$Inner disk edge$       // Effect category 
-
-======================= ================================================================================================================
-Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
-Implementation Paper    `Kajtazi et al. in prep.
-Based on                `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>.
-C example               :ref: `c_examples_inner_disk_edge`
-Python example          `InnerDiskEdge.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/InnerDiskEdge.ipynb>`_.
-======================= ================================================================================================================
-
-This applies an inner disk edge that functions as a planet trap. Within its width the planet's migration is reversed 
-by an opposite and roughly equal magnitude torque. Thus, stopping further migration and trapping the planet within 
-the width of the trap. 
-The functions here provide a way to modify the tau_a timescale in modify_orbital_forces and modify_orbit_direct.
-Note that the present prescription is very good to run simple simulation when an inner trap is needed during the migration
- but it shouldn't be considered as a realistic model of the inner edge of a disk.
-
-**Effect Parameters**
-
-============================ =========== ===================================================================================
-Field (C type)               Required    Description
-============================ =========== ===================================================================================
-dedge (double)               Yes         The position of the inner disk edge in code units 
-hedge (double)               Yes         The aspect ratio at the inner disk edge; the disk edge width
-============================ =========== ===================================================================================
-
+^^^^^^^^^^^^^^^^^^
