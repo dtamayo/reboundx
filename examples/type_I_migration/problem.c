@@ -2,6 +2,8 @@
  * Type I migration.
  * 
  * This example shows how to add Type I migration.
+ * See detailed annotations and explanations for the parameters in the TypeIMigration ipython example and 
+ * Implemented Effects documentation for REBOUNDx.
  */
 #include <stdio.h>
 #include <string.h>
@@ -39,12 +41,12 @@ int main(int argc, char* argv[]){
     struct rebx_extras* rebx = rebx_attach(sim);
 
     struct rebx_force* type_I_mig = rebx_load_force(rebx, "type_I_migration");
-    rebx_set_param_double(rebx, &type_I_mig->ap, "inner_disk_edge_position", 0.1); 
-    rebx_set_param_double(rebx, &type_I_mig->ap, "disk_edge_width", 0.02); //Calculated using the scale height value given below
-    rebx_set_param_double(rebx, &type_I_mig->ap, "flaring_index", 0.25);
-    rebx_set_param_double(rebx, &type_I_mig->ap, "surface_density_exponent", 1);
-    rebx_set_param_double(rebx, &type_I_mig->ap, "initial_surface_density", 0.00011255); //In units of solarmass/(AU^2) which is roughly 1000g/cm^2
-    rebx_set_param_double(rebx, &type_I_mig->ap, "scale_height", 0.03);
+    rebx_set_param_double(rebx, &type_I_mig->ap, "ide_position", 0.3); 
+    rebx_set_param_double(rebx, &type_I_mig->ap, "ide_width", 0.02); //Calculated using the scale height value given below
+    rebx_set_param_double(rebx, &type_I_mig->ap, "tIm_flaring_index", 0.25);
+    rebx_set_param_double(rebx, &type_I_mig->ap, "tIm_surface_density_exponent", 1);
+    rebx_set_param_double(rebx, &type_I_mig->ap, "tIm_surface_density_1", 0.00011255); //In units of solarmass/(AU^2) which is roughly 1000g/cm^2
+    rebx_set_param_double(rebx, &type_I_mig->ap, "tIm_scale_height_1", 0.03);
     rebx_add_force(rebx, type_I_mig);
 
     double tmax = 1.e4;  // Note that one can calculate the timescale of the semi-major axis of the outer planet then set the integration time to twice this value 
