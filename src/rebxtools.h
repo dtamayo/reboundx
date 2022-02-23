@@ -41,6 +41,12 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* c
 double rebx_Edot(struct reb_particle* const ps, const int N);
 
 void rebx_calculate_jacobi_masses(const struct reb_particle* const ps, double* const m_j, const int N);
+
+/****************************************
+Effect helper functions
+****************************************/
+const double rebx_calculate_planet_trap(const double r, const double dedge, const double hedge);
+
 /*
 struct reb_orbit rebxtools_particle_to_orbit_err(double G, struct reb_particle* p, struct reb_particle* primary, int* err);
 
