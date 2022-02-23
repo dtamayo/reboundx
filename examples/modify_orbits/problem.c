@@ -20,6 +20,7 @@ void heartbeat(struct reb_simulation* sim);
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
     // Setup constants
+    sim->integrator = REB_INTEGRATOR_WHFAST;
     sim->dt             = 0.012;        // initial timestep.
     sim->heartbeat = heartbeat;
 

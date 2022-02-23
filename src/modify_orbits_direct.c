@@ -96,8 +96,8 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 
     //Implement the planet trap
     double invtau_a = 0.0;   
-    const double* const dedge = rebx_get_param(sim->extras, operator->ap, "inner_disk_edge_position");
-    const double* const hedge = rebx_get_param(sim->extras, operator->ap, "disk_edge_width");
+    const double* const dedge = rebx_get_param(sim->extras, operator->ap, "ide_position");
+    const double* const hedge = rebx_get_param(sim->extras, operator->ap, "ide_width");
     
     const double a0 = o.a;
     const double e0 = o.e;
