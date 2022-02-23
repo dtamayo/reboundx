@@ -189,6 +189,9 @@ That will depend on the physics you're trying to put in--let's add the parameter
 
 The first thing to do is register the parameter name in ``rebx_register_default_params`` in ``src/core.c``.
 You cannot use particle parameter names that are in use by other effects, so search first for the name you are planning to add.
+In order to avoid clashes, we have implemented a convention for new effects that any parameters must start with the acronym for the effect.
+So for example the tau parameter for ``tides_constant_time_lag`` is ``tctl_tau``.
+
 You also have to specify the type.
 The vast majority of parameters will be integers (REBX_TYPE_INT) or doubles (REBX_TYPE_DOUBLE). 
 We go through what to do with new custom types below.
