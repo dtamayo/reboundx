@@ -16,32 +16,75 @@ Positive timescales correspond to growth / progression, negative timescales corr
 Semimajor axes, eccentricities and inclinations grow / damp exponentially.  
 Pericenters and nodes progress/regress linearly.
 
-.. _exponential_migration:
+.. _modify_orbits_forces:
 
-exponential_migration
-*********************
+modify_orbits_forces
+********************
 
 ======================= ===============================================
-Author                   Mohamad Ali-Dib
-Implementation Paper    `Ali-Dib et al., 2021 AJ <https://arxiv.org/abs/2104.04271>`_.
-Based on                `Hahn & Malhotra 2005 <https://ui.adsabs.harvard.edu/abs/2005AJ....130.2392H/abstract>`_.
-C Example               :ref:`c_example_exponential_migration`
-Python Example          `ExponentialMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ExponentialMigration.ipynb>`_.
+Authors                 D. Tamayo, H. Rein
+Implementation Paper    `Kostov et al., 2016 <https://ui.adsabs.harvard.edu/abs/2016ApJ...832..183K/abstract>`_.
+Based on                `Papaloizou & Larwood 2000 <http://labs.adsabs.harvard.edu/adsabs/abs/2000MNRAS.315..823P/>`_.
+C Example               :ref:`c_example_modify_orbits`
+Python Example          `Migration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Migration.ipynb>`_
+                        `EccAndIncDamping.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/EccAndIncDamping.ipynb>`_.
 ======================= ===============================================
 
-Continuous velocity kicks leading to exponential change in the object's semimajor axis. 
-One of the standard prescriptions often used in Neptune migration & Kuiper Belt formation models.
-Does not directly affect the eccentricity or inclination of the object.
+This applies physical forces that orbit-average to give exponential growth/decay of the semimajor axis, eccentricity and inclination.
+The eccentricity damping keeps the angular momentum constant (corresponding to `p=1` in modify_orbits_direct), which means that eccentricity damping will induce some semimajor axis evolution.
+Additionally, eccentricity/inclination damping will induce pericenter/nodal precession.
+Both these effects are physical, and the method is more robust for strongly perturbed systems.
 
-**Particle Parameters**
+**Effect Parameters**
+
+If coordinates not, defaults to using Jacobi coordinates.
 
 ============================ =========== ==================================================================
 Field (C type)               Required    Description
 ============================ =========== ==================================================================
-em_tau_a (double)              Yes          Semimajor axis exponential growth/damping timescale
-em_aini (double)               Yes          Object's initial semimajor axis
-em_afin (double)               Yes          Object's final semimajor axis
+coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
+                                         See the examples for usage.
 ============================ =========== ==================================================================
+
+**Particle Parameters**
+
+One can pick and choose which particles have which parameters set.  
+For each particle, any unset parameter is ignored.
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+tau_a (double)               No          Semimajor axis exponential growth/damping timescale
+tau_e (double)               No          Eccentricity exponential growth/damping timescale
+tau_inc (double)             No          Inclination axis exponential growth/damping timescale
+============================ =========== ==================================================================
+
+
+.. _inner_disk_edge:
+
+inner_disk_edge
+***************
+
+======================= ================================================================================================================
+Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
+Implementation Paper    Kajtazi et al. in prep.
+Based on                `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>`_.
+C example               :ref:`c_examples_inner_disk_edge`
+Python example          `InnerDiskEdge.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/InnerDiskEdge.ipynb>`_.
+======================= ================================================================================================================
+
+This applies an inner disk edge that functions as a planet trap. Within its width the planet's migration is reversed by an opposite and roughly equal magnitude torque. Thus, stopping further migration and trapping the planet within the width of the trap. 
+The functions here provide a way to modify the tau_a timescale in modify_orbits_forces, modify_orbit_direct, and type_I_migration.
+Note that the present prescription is very useful for simple simulations when an inner trap is needed during the migration but it shouldn't be considered as a realistic model of the inner edge of a disk.
+
+**Effect Parameters**
+
+============================ =========== ===================================================================================
+Field (C type)               Required    Description
+============================ =========== ===================================================================================
+ide_position (double)        Yes         The position of the inner disk edge in code units 
+ide_width (double)           Yes         The disk edge width (planet will stop within ide_width of ide_position)
+============================ =========== ===================================================================================
 
 
 .. _modify_orbits_direct:
@@ -93,47 +136,63 @@ tau_omega (double)           No          Period of linear apsidal precession/reg
 ============================ =========== ==================================================================
 
 
-.. _modify_orbits_forces:
+.. _type_I_migration:
 
-modify_orbits_forces
-********************
+type_I_migration
+****************
 
 ======================= ===============================================
-Authors                 D. Tamayo, H. Rein
-Implementation Paper    `Kostov et al., 2016 <https://ui.adsabs.harvard.edu/abs/2016ApJ...832..183K/abstract>`_.
-Based on                `Papaloizou & Larwood 2000 <http://labs.adsabs.harvard.edu/adsabs/abs/2000MNRAS.315..823P/>`_.
-C Example               :ref:`c_example_modify_orbits`
-Python Example          `Migration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Migration.ipynb>`_
-                        `EccAndIncDamping.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/EccAndIncDamping.ipynb>`_.
+Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
+Implementation Paper    Kajtazi et al. in prep.
+Based on                `Cresswell & Nelson 2008 <https://ui.adsabs.harvard.edu/abs/2008A%26A...482..677C/abstract>`_, and `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>`_.
+C example               :ref:`c_examples_type_I_migration`
+Python example          `TypeIMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TypeIMigration.ipynb>`_.
 ======================= ===============================================
 
-This applies physical forces that orbit-average to give exponential growth/decay of the semimajor axis, eccentricity and inclination.
-The eccentricity damping keeps the angular momentum constant (corresponding to `p=1` in modify_orbits_direct), which means that eccentricity damping will induce some semimajor axis evolution.
-Additionally, eccentricity/inclination damping will induce pericenter/nodal precession.
-Both these effects are physical, and the method is more robust for strongly perturbed systems.
+This applies Type I migration, damping eccentricity, semi-major axis and inclination.
+The base of the code is the same as the modified orbital forces one written by D. Tamayo, H. Rein.
+It also allows for parameters describing an inner disc edge, modeled using the implementation in inner_disk_edge.c.
+Note that this code is not machine independent since power laws were not possible to avoid all together.
 
 **Effect Parameters**
 
-If coordinates not, defaults to using Jacobi coordinates.
+===================================== =========== ==================================================================================================================
+Field (C type)                        Required    Description
+===================================== =========== ==================================================================================================================
+ide_position (double)                 No          The position of the inner disk edge in code units 
+ide_width (double)                    No          The disk edge width (planet will stop within ide_width of ide_position)
+tIm_surface_density_1 (double)        Yes         Disk surface density at one code unit from the star; used to find the surface density at any distance from the star
+tIm_scale_height_1 (double)           Yes         The scale height at one code unit from the star; used to find the aspect ratio at any distance from the star
+tIm_surface_density_exponent (double) Yes         Exponent of disk surface density, indicative of the surface density profile of the disk
+tIm_flaring_index (double)            Yes         The flaring index; 1 means disk is irradiated by only the stellar flux
+===================================== =========== ==================================================================================================================
 
-============================ =========== ==================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================
-coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
-                                         See the examples for usage.
-============================ =========== ==================================================================
+
+.. _exponential_migration:
+
+exponential_migration
+*********************
+
+======================= ===============================================
+Author                   Mohamad Ali-Dib
+Implementation Paper    `Ali-Dib et al., 2021 AJ <https://arxiv.org/abs/2104.04271>`_.
+Based on                `Hahn & Malhotra 2005 <https://ui.adsabs.harvard.edu/abs/2005AJ....130.2392H/abstract>`_.
+C Example               :ref:`c_example_exponential_migration`
+Python Example          `ExponentialMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ExponentialMigration.ipynb>`_.
+======================= ===============================================
+
+Continuous velocity kicks leading to exponential change in the object's semimajor axis. 
+One of the standard prescriptions often used in Neptune migration & Kuiper Belt formation models.
+Does not directly affect the eccentricity or inclination of the object.
 
 **Particle Parameters**
 
-One can pick and choose which particles have which parameters set.  
-For each particle, any unset parameter is ignored.
-
 ============================ =========== ==================================================================
 Field (C type)               Required    Description
 ============================ =========== ==================================================================
-tau_a (double)               No          Semimajor axis exponential growth/damping timescale
-tau_e (double)               No          Eccentricity exponential growth/damping timescale
-tau_inc (double)             No          Inclination axis exponential growth/damping timescale
+em_tau_a (double)              Yes          Semimajor axis exponential growth/damping timescale
+em_aini (double)               Yes          Object's initial semimajor axis
+em_afin (double)               Yes          Object's final semimajor axis
 ============================ =========== ==================================================================
 
 
@@ -515,3 +574,8 @@ min_distance_orbit (reb_orbit)   No          Parameter to store orbital elements
 ================================ =========== =======================================================
 
 
+Inner disk edge
+^^^^^^^^^^^^^^^^^
+
+Type I migration
+^^^^^^^^^^^^^^^^^^

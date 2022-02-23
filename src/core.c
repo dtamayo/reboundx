@@ -90,8 +90,12 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "min_distance_from", REBX_TYPE_UINT32);
     rebx_register_param(rebx, "min_distance_orbit", REBX_TYPE_ORBIT);
     rebx_register_param(rebx, "luminosity", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "tides_Omega", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "tides_lambda2", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ide_position", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ide_width", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tIm_flaring_index", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tIm_scale_height_1", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tIm_surface_density_1", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tIm_surface_density_exponent", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -266,6 +270,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     }
     else if (strcmp(name, "tides_constant_time_lag") == 0){
         force->update_accelerations = rebx_tides_constant_time_lag;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "type_I_migration") == 0){
+        force->update_accelerations = rebx_modify_orbits_with_type_I_migration;
         force->force_type = REBX_FORCE_VEL;
     }
     else{

@@ -43,7 +43,7 @@ class build_ext(_build_ext):
         # get site-packages dir to add to paths in case reb & rebx installed simul in tmp dir
         rebdirsp = get_python_lib()+'/'#[p for p in sys.path if p.endswith('site-packages')][0]+'/'
         self.include_dirs.append(rebdir)
-        sources = [ 'src/exponential_migration.c', 'src/core.c', 'src/gr_potential.c', 'src/modify_orbits_direct.c', 'src/integrator_euler.c', 'src/central_force.c', 'src/gravitational_harmonics.c', 'src/output.c', 'src/linkedlist.c', 'src/rebxtools.c', 'src/gr.c', 'src/integrate_force.c', 'src/radiation_forces.c', 'src/interpolation.c', 'src/integrator_rk2.c', 'src/gr_full.c', 'src/modify_mass.c', 'src/steppers.c', 'src/modify_orbits_forces.c', 'src/integrator_implicit_midpoint.c', 'src/tides_constant_time_lag.c', 'src/integrator_rk4.c', 'src/track_min_distance.c', 'src/input.c'],
+        sources = [ 'src/inner_disk_edge.c', 'src/modify_orbits_forces.c', 'src/gr_potential.c', 'src/integrator_implicit_midpoint.c', 'src/radiation_forces.c', 'src/central_force.c', 'src/linkedlist.c', 'src/modify_mass.c', 'src/gr.c', 'src/core.c', 'src/exponential_migration.c', 'src/integrator_rk4.c', 'src/integrator_rk2.c', 'src/rebxtools.c', 'src/gr_full.c', 'src/integrator_euler.c', 'src/output.c', 'src/tides_constant_time_lag.c', 'src/input.c', 'src/steppers.c', 'src/track_min_distance.c', 'src/type_I_migration.c', 'src/integrate_force.c', 'src/interpolation.c', 'src/gravitational_harmonics.c', 'src/modify_orbits_direct.c'],
         self.library_dirs.append(rebdir+'/../')
         self.library_dirs.append(rebdirsp)
         for ext in self.extensions:
@@ -62,7 +62,7 @@ if sys.platform == 'darwin':
     extra_link_args.append('-Wl,-install_name,@rpath/libreboundx'+suffix)
 
 libreboundxmodule = Extension('libreboundx',
-        sources = [ 'src/exponential_migration.c', 'src/core.c', 'src/gr_potential.c', 'src/modify_orbits_direct.c', 'src/integrator_euler.c', 'src/central_force.c', 'src/gravitational_harmonics.c', 'src/output.c', 'src/linkedlist.c', 'src/rebxtools.c', 'src/gr.c', 'src/integrate_force.c', 'src/radiation_forces.c', 'src/interpolation.c', 'src/integrator_rk2.c', 'src/gr_full.c', 'src/modify_mass.c', 'src/steppers.c', 'src/modify_orbits_forces.c', 'src/integrator_implicit_midpoint.c', 'src/tides_constant_time_lag.c', 'src/integrator_rk4.c', 'src/track_min_distance.c', 'src/input.c'],
+        sources = [ 'src/inner_disk_edge.c', 'src/modify_orbits_forces.c', 'src/gr_potential.c', 'src/integrator_implicit_midpoint.c', 'src/radiation_forces.c', 'src/central_force.c', 'src/linkedlist.c', 'src/modify_mass.c', 'src/gr.c', 'src/core.c', 'src/exponential_migration.c', 'src/integrator_rk4.c', 'src/integrator_rk2.c', 'src/rebxtools.c', 'src/gr_full.c', 'src/integrator_euler.c', 'src/output.c', 'src/tides_constant_time_lag.c', 'src/input.c', 'src/steppers.c', 'src/track_min_distance.c', 'src/type_I_migration.c', 'src/integrate_force.c', 'src/interpolation.c', 'src/gravitational_harmonics.c', 'src/modify_orbits_direct.c'],
                     include_dirs = ['src'],
                     library_dirs = [],
                     runtime_library_dirs = ["."],
