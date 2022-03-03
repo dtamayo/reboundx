@@ -56,7 +56,7 @@
  * yark_flag (int)                            Yes        A flag (with possible values of -1, 0, and 1) that determines which version of the effect is used (Required for both versions)
  * body_density (float)                  Yes         Density of an object (Required for both versions)
  * rotation_period (float)               No          Rotation period of a spinning object (Required for full version)
- * albedo (float)                             No          Albedo of an object (Reuired for full version)
+ * albedo (float)                            Yes          Albedo of an object (Reuired for both versions)
  * emissivity (float)                        No           Emissivity of an object (Required for full version)
  * thermal_inertia (float)                No           Thermal inertia of an object (Required for full version)
  * k (float)                                     No             A constant that gets a value between 0 and 1/4 based on the object's rotation - see Veras et al. (2015) for more information on it (Required for full version)
@@ -81,6 +81,8 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
 
     double radius = target->r;
     
+    double q_yar = 1.0-(*albedo);
+    
     double distance = sqrt((target->x*target->x)+(target->y*target->y)+(target->z*target->z)); //distance of asteroid from the star
     
     double rdotv = ((target->x*target->vx)+(target->y*target->vy)+(target->z*target->vz))/((*c)*distance); //dot product of position and velocity vectors- the term in the denominator is needed when calculating the i-vector
@@ -100,14 +102,14 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
         
         yark_matrix[1][0] = 1.0; // maximizes the effect pushing outwards
         
-        yarkovsky_magnitude = (3*(*lstar))/(64*M_PI*radius*(*density)*(*c)*distance*distance);
+        yarkovsky_magnitude = (3*q_yar*(*lstar))/(64*M_PI*radius*(*density)*(*c)*distance*distance);
     }
     
     if (*yark_flag == -1) {
         
         yark_matrix[0][1] = 1.0; //maximizes the effect pushing inwards
         
-        yarkovsky_magnitude = (3*(*lstar))/(64*M_PI*radius*(*density)*(*c)*distance*distance);
+        yarkovsky_magnitude = (3*q_yar*(*lstar))/(64*M_PI*radius*(*density)*(*c)*distance*distance);
     }
     
     //will run through full equations to create the yark_matrix
@@ -150,8 +152,6 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
         }
         
         struct reb_orbit o = reb_tools_particle_to_orbit(G, *target, *star);
-        
-        double q_yar = 1.0-(*albedo);
         
         yarkovsky_magnitude = (3*(*k)*q_yar*(*lstar))/(16*M_PI*radius*(*density)*(*c)*distance*distance);
 
@@ -263,7 +263,7 @@ void rebx_yarkovsky_effect(struct reb_simulation* const sim, struct rebx_force* 
         double* sz = rebx_get_param(rebx, target->ap, "spin_axis_z");
         
         //if these necessary conditions are met the Yarkovsky effect will be calculated for a particle in the sim
-        if (density != NULL && target->r != 0 && lstar != NULL && c != NULL && yark_flag != NULL){
+        if (density != NULL && target->r != 0 && albedo != NULL && lstar != NULL && c != NULL && yark_flag != NULL){
             rebx_calculate_yarkovsky_effect(target, star, G, density, lstar, rotation_period, Gamma, albedo, emissivity, k, c, stef_boltz, yark_flag, sx, sy, sz);
         }
         
