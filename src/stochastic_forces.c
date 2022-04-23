@@ -42,13 +42,13 @@
  *
  * **Particle Parameters**
  *
- * All particles which have the field stochastic_D set, will experience stochastic forces.
+ * All particles which have the field D set, will experience stochastic forces.
  * The particle with index 0 cannot experience stochastic forces.
  *
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * stochastic_D (float)         Yes         Diffusion coefficient
+ * D (double)                   Yes         Diffusion coefficient, 
  * ============================ =========== ==================================================================
  * 
  */
@@ -58,53 +58,83 @@
 #include <stdlib.h>
 #include "reboundx.h"
 
-static void rebx_calculate_stochastic_forces(struct rebx_extras* const rebx, struct reb_simulation* const sim, const double c, const int source_index, struct reb_particle* const particles, const int N){
-    const struct reb_particle source = particles[source_index];
-    const double mu = sim->G*source.m;
 
-    for (int i=0;i<N;i++){
-        
-        if(i == source_index) continue;
-        
-        const double* beta = rebx_get_param(rebx, particles[i].ap, "beta");
-        if(beta == NULL) continue; // only particles with beta set feel radiation forces
-        
-        const struct reb_particle p = particles[i];
-        const double dx = p.x - source.x; 
-        const double dy = p.y - source.y;
-        const double dz = p.z - source.z;
-        const double dr = sqrt(dx*dx + dy*dy + dz*dz); // distance to star
-        
-        const double dvx = p.vx - source.vx;
-        const double dvy = p.vy - source.vy;
-        const double dvz = p.vz - source.vz;
-        const double rdot = (dx*dvx + dy*dvy + dz*dvz)/dr; // radial velocity
-        const double a_rad = *beta*mu/(dr*dr);
-
-        // Equation (5) of Burns, Lamy & Soter (1979)
-
-        particles[i].ax += a_rad*((1.-rdot/c)*dx/dr - dvx/c);
-        particles[i].ay += a_rad*((1.-rdot/c)*dy/dr - dvy/c);
-        particles[i].az += a_rad*((1.-rdot/c)*dz/dr - dvz/c);
+static void rebx_random_normal2(struct reb_simulation* r, double* n0, double* n1){
+	double v1,v2,rsq=1.;
+	while(rsq>=1. || rsq<1.0e-12){
+		v1=2.*((double)rand_r(&(r->rand_seed)))/((double)(RAND_MAX))-1.0;
+		v2=2.*((double)rand_r(&(r->rand_seed)))/((double)(RAND_MAX))-1.0;
+		rsq=v1*v1+v2*v2;
 	}
+	*n0 = v1*sqrt(-2.*log(rsq)/rsq);
+	*n1 = v2*sqrt(-2.*log(rsq)/rsq);
 }
+
 
 void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force* const radiation_forces, struct reb_particle* const particles, const int N){
     struct rebx_extras* const rebx = sim->extras;
-    double* c = rebx_get_param(rebx, radiation_forces->ap, "c");
-    if (c == NULL){
-        reb_error(sim, "Need to set speed of light in radiation_forces effect.  See examples in documentation.\n");
-    }
+    struct reb_particle star = particles[0];
     
-    int source_found=0;
-    for (int i=0; i<N; i++){
-        if (rebx_get_param(rebx, particles[i].ap, "radiation_source") != NULL){
-            source_found = 1;
-            rebx_calculate_radiation_forces(rebx, sim, *c, i, particles, N);
+    for (int i=1; i<N; i++){
+        double* D = rebx_get_param(rebx, particles[i].ap, "D");
+        if (D != NULL){
+            double* stochastic_force_r = rebx_get_param(rebx, particles[i].ap, "stochastic_force_r");
+            if (stochastic_force_r == NULL) { // First run?
+                rebx_set_param_double(rebx, particles[i].ap, "stochastic_force_r", 0.);
+                stochastic_force_r = rebx_get_param(rebx, particles[i].ap, "stochastic_force_r");
+            }
+            double* stochastic_force_phi = rebx_get_param(rebx, particles[i].ap, "stochastic_force_phi");
+            if (stochastic_force_phi == NULL) { // First run?
+                rebx_set_param_double(rebx, particles[i].ap, "stochastic_force_phi", 0.);
+                stochastic_force_phi = rebx_get_param(rebx, particles[i].ap, "stochastic_force_phi");
+            }
+
+            const struct reb_particle p = particles[i];
+            int err=0;
+            struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, particles[i], particles[0], &err);
+            if (err){
+                reb_error(sim, "An error occured during the orbit calculation in rebx_stochastic_forces.\n");
+                return;
+            }
+
+            double tau = o.P;
+            double dt = sim->dt_last_done;
+            
+            double prefac = exp(-dt/tau);
+
+            // Decay
+            *stochastic_force_r = (*stochastic_force_r) * prefac;
+            *stochastic_force_phi = (*stochastic_force_phi) * prefac;
+
+            double variance = 1.- prefac*prefac;
+            if (variance <=0.){
+                reb_error(sim, "Timestep is larger than the correlation time for stochastic forces.\n");
+                return;
+            }
+            double std = sqrt(variance);
+
+            double n0, n1;
+            rebx_random_normal2(sim, &n0, &n1);
+            
+            // Excitation
+            *stochastic_force_r = (*stochastic_force_r) + n0*std;
+            *stochastic_force_phi = (*stochastic_force_phi) + n1*std;
+
+            const double dx = p.x - star.x; 
+            const double dy = p.y - star.y;
+            const double dz = p.z - star.z;
+            const double dr = sqrt(dx*dx + dy*dy + dz*dz);
+            
+            const double dvx = p.vx - star.vx; 
+            const double dvy = p.vy - star.vy;
+            const double dvz = p.vz - star.vz;
+            const double dv = sqrt(dvx*dvx + dvy*dvy + dvz*dvz);
+
+            const double force_prefac = (*D) *sim->G/(dr*dr*dr)*(star.m + p.m);
+            particles[i].ax += force_prefac*(*stochastic_force_r*dx/dr + *stochastic_force_phi*dvx/dv);
+            particles[i].ay += force_prefac*(*stochastic_force_r*dy/dr + *stochastic_force_phi*dvy/dv);
+            particles[i].az += force_prefac*(*stochastic_force_r*dz/dr + *stochastic_force_phi*dvz/dv);
         }
-    }
-    if (!source_found){
-        rebx_calculate_radiation_forces(rebx, sim, *c, 0, particles, N);    // default source to index 0 if "radiation_source" not found on any particle
     }
 }
 
