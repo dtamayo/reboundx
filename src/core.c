@@ -72,6 +72,7 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "em_afin", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "primary", REBX_TYPE_INT);
     rebx_register_param(rebx, "radiation_source", REBX_TYPE_INT);
+    rebx_register_param(rebx, "stochastic_D", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "beta", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_primary", REBX_TYPE_INT);
     rebx_register_param(rebx, "R_tides", REBX_TYPE_DOUBLE);
@@ -267,6 +268,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     else if (strcmp(name, "radiation_forces") == 0){
         force->update_accelerations = rebx_radiation_forces;
         force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "stochastic_forces") == 0){
+        force->update_accelerations = rebx_stochastic_forces;
+        force->force_type = REBX_FORCE_POS;
     }
     else if (strcmp(name, "tides_constant_time_lag") == 0){
         force->update_accelerations = rebx_tides_constant_time_lag;
