@@ -42,14 +42,15 @@
  *
  * **Particle Parameters**
  *
- * All particles which have the field D set, will experience stochastic forces.
+ * All particles which have the field kappa set, will experience stochastic forces.
  * The particle with index 0 cannot experience stochastic forces.
  *
- * ============================ =========== ==================================================================
+ * ============================ =========== ==================================================================================
  * Field (C type)               Required    Description
- * ============================ =========== ==================================================================
- * D (double)                   Yes         Diffusion coefficient, 
- * ============================ =========== ==================================================================
+ * ============================ =========== ==================================================================================
+ * kappa (double)               Yes         Strength of stochastic forces relative to gravity from central object 
+ * tau_kappa (double)           No          Auto-correlation time of stochastic forces. Defaults to orbital period if not set.
+ * ============================ =========== ==================================================================================
  * 
  */
 
@@ -76,28 +77,37 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
     struct reb_particle com = particles[0];
     
     for (int i=1; i<N; i++){
-        double* D = rebx_get_param(rebx, particles[i].ap, "D");
-        if (D != NULL){
+        double* kappa = rebx_get_param(rebx, particles[i].ap, "kappa");
+        if (kappa != NULL){
             double* stochastic_force_r = rebx_get_param(rebx, particles[i].ap, "stochastic_force_r");
             if (stochastic_force_r == NULL) { // First run?
-                rebx_set_param_double(rebx, particles[i].ap, "stochastic_force_r", 0.);
+                rebx_set_param_double(rebx, &particles[i].ap, "stochastic_force_r", 0.);
                 stochastic_force_r = rebx_get_param(rebx, particles[i].ap, "stochastic_force_r");
             }
             double* stochastic_force_phi = rebx_get_param(rebx, particles[i].ap, "stochastic_force_phi");
             if (stochastic_force_phi == NULL) { // First run?
-                rebx_set_param_double(rebx, particles[i].ap, "stochastic_force_phi", 0.);
+                rebx_set_param_double(rebx, &particles[i].ap, "stochastic_force_phi", 0.);
                 stochastic_force_phi = rebx_get_param(rebx, particles[i].ap, "stochastic_force_phi");
             }
 
             const struct reb_particle p = particles[i];
-            int err=0;
-            struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, particles[i], particles[0], &err);
-            if (err){
-                reb_error(sim, "An error occured during the orbit calculation in rebx_stochastic_forces.\n");
-                return;
+
+            // Get auto-correlation time
+            double tau;
+            double* tau_kappa = rebx_get_param(rebx, particles[i].ap, "tau_kappa");
+            if (tau_kappa != NULL){
+                tau = *tau_kappa;
+            }else{
+                // Default is current orbital period.
+                int err=0;
+                struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, particles[i], com, &err);
+                if (err){
+                    reb_error(sim, "An error occured during the orbit calculation in rebx_stochastic_forces.\n");
+                    return;
+                }
+                tau = o.P;
             }
 
-            double tau = o.P;
             double dt = sim->dt_last_done;
             
             double prefac = exp(-dt/tau);
@@ -107,7 +117,7 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
             *stochastic_force_phi = (*stochastic_force_phi) * prefac;
 
             double variance = 1.- prefac*prefac;
-            if (variance <=0.){
+            if (variance <0.){
                 reb_error(sim, "Timestep is larger than the correlation time for stochastic forces.\n");
                 return;
             }
@@ -130,7 +140,7 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
             const double dvz = p.vz - com.vz;
             const double dv = sqrt(dvx*dvx + dvy*dvy + dvz*dvz);
 
-            const double force_prefac = (*D) *sim->G/(dr*dr*dr)*(com.m + p.m);
+            const double force_prefac = (*kappa) *sim->G/(dr*dr*dr)*(com.m + p.m);
             particles[i].ax += force_prefac*(*stochastic_force_r*dx/dr + *stochastic_force_phi*dvx/dv);
             particles[i].ay += force_prefac*(*stochastic_force_r*dy/dr + *stochastic_force_phi*dvy/dv);
             particles[i].az += force_prefac*(*stochastic_force_r*dz/dr + *stochastic_force_phi*dvz/dv);
