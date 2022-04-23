@@ -50,6 +50,7 @@
  * ============================ =========== ==================================================================================
  * kappa (double)               Yes         Strength of stochastic forces relative to gravity from central object 
  * tau_kappa (double)           No          Auto-correlation time of stochastic forces. Defaults to orbital period if not set.
+ *                                          The units are relative to the current orbital period.
  * ============================ =========== ==================================================================================
  * 
  */
@@ -93,19 +94,17 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
             const struct reb_particle p = particles[i];
 
             // Get auto-correlation time
-            double tau;
+            int err=0;
+            struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, particles[i], com, &err);
+            if (err){
+                reb_error(sim, "An error occured during the orbit calculation in rebx_stochastic_forces.\n");
+                return;
+            }
+            double tau = o.P; // Default is current orbital period.
+            
             double* tau_kappa = rebx_get_param(rebx, particles[i].ap, "tau_kappa");
             if (tau_kappa != NULL){
-                tau = *tau_kappa;
-            }else{
-                // Default is current orbital period.
-                int err=0;
-                struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, particles[i], com, &err);
-                if (err){
-                    reb_error(sim, "An error occured during the orbit calculation in rebx_stochastic_forces.\n");
-                    return;
-                }
-                tau = o.P;
+                tau *= *tau_kappa;
             }
 
             double dt = sim->dt_last_done;
