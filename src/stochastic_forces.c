@@ -73,7 +73,7 @@ static void rebx_random_normal2(struct reb_simulation* r, double* n0, double* n1
 
 void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force* const radiation_forces, struct reb_particle* const particles, const int N){
     struct rebx_extras* const rebx = sim->extras;
-    struct reb_particle star = particles[0];
+    struct reb_particle com = particles[0];
     
     for (int i=1; i<N; i++){
         double* D = rebx_get_param(rebx, particles[i].ap, "D");
@@ -120,20 +120,23 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
             *stochastic_force_r = (*stochastic_force_r) + n0*std;
             *stochastic_force_phi = (*stochastic_force_phi) + n1*std;
 
-            const double dx = p.x - star.x; 
-            const double dy = p.y - star.y;
-            const double dz = p.z - star.z;
+            const double dx = p.x - com.x; 
+            const double dy = p.y - com.y;
+            const double dz = p.z - com.z;
             const double dr = sqrt(dx*dx + dy*dy + dz*dz);
             
-            const double dvx = p.vx - star.vx; 
-            const double dvy = p.vy - star.vy;
-            const double dvz = p.vz - star.vz;
+            const double dvx = p.vx - com.vx; 
+            const double dvy = p.vy - com.vy;
+            const double dvz = p.vz - com.vz;
             const double dv = sqrt(dvx*dvx + dvy*dvy + dvz*dvz);
 
-            const double force_prefac = (*D) *sim->G/(dr*dr*dr)*(star.m + p.m);
+            const double force_prefac = (*D) *sim->G/(dr*dr*dr)*(com.m + p.m);
             particles[i].ax += force_prefac*(*stochastic_force_r*dx/dr + *stochastic_force_phi*dvx/dv);
             particles[i].ay += force_prefac*(*stochastic_force_r*dy/dr + *stochastic_force_phi*dvy/dv);
             particles[i].az += force_prefac*(*stochastic_force_r*dz/dr + *stochastic_force_phi*dvz/dv);
+
+
+		    com = reb_get_com_of_pair(com, p);
         }
     }
 }
