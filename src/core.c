@@ -72,7 +72,7 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "em_afin", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "primary", REBX_TYPE_INT);
     rebx_register_param(rebx, "radiation_source", REBX_TYPE_INT);
-    rebx_register_param(rebx, "D", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "kappa", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "stochastic_force_r", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "stochastic_force_phi", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "beta", REBX_TYPE_DOUBLE);
