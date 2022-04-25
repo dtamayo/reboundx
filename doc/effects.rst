@@ -342,6 +342,41 @@ beta (float)                 Yes         Ratio of radiation pressure force to gr
 ============================ =========== ==================================================================
 
 
+Stochastic Forces
+^^^^^^^^^^^^^^^^
+
+.. _stochastic_forces:
+
+stochastic_forces
+*****************
+
+======================= ===============================================
+Authors                 H. Rein
+Based on                `Rein and Papaloizou 2009 <https://ui.adsabs.harvard.edu/abs/2009A%26A...497..595R/abstract>`_.
+C Example               :ref:`c_example_stochastic_forces`
+Python Example          `StochasticForces.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/StochasticForces.ipynb>`_,
+======================= ===============================================
+
+This applies stochastic forces to particles in the simulation.  
+
+**Effect Parameters**
+
+None
+
+**Particle Parameters**
+
+All particles which have the field kappa set, will experience stochastic forces.
+The particle with index 0 cannot experience stochastic forces.
+
+============================ =========== ==================================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================================
+kappa (double)               Yes         Strength of stochastic forces relative to gravity from central object 
+tau_kappa (double)           No          Auto-correlation time of stochastic forces. Defaults to orbital period if not set.
+                                         The units are relative to the current orbital period.
+============================ =========== ==================================================================================
+
+
 Mass Modifications
 ^^^^^^^^^^^^^^^^^^
 
