@@ -1,5 +1,5 @@
 /**
- * Stochastic forces on a single planetk
+ * Stochastic forces on a single planet
  * 
  * This example shows how to add a stochastic force to a single planet. 
  * As a result, the planet will undergo a random walk in its orbital
