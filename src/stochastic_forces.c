@@ -139,7 +139,7 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
             const double dvz = p.vz - com.vz;
             const double dv = sqrt(dvx*dvx + dvy*dvy + dvz*dvz);
 
-            const double force_prefac = (*kappa) *sim->G/(dr*dr*dr)*(com.m + p.m);
+            const double force_prefac = (*kappa) *sim->G/(dr*dr)*com.m;
             particles[i].ax += force_prefac*(*stochastic_force_r*dx/dr + *stochastic_force_phi*dvx/dv);
             particles[i].ay += force_prefac*(*stochastic_force_r*dy/dr + *stochastic_force_phi*dvy/dv);
             particles[i].az += force_prefac*(*stochastic_force_r*dz/dr + *stochastic_force_phi*dvz/dv);
