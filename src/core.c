@@ -73,9 +73,18 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "primary", REBX_TYPE_INT);
     rebx_register_param(rebx, "radiation_source", REBX_TYPE_INT);
     rebx_register_param(rebx, "kappa", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "kappa_x", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "kappa_y", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "kappa_z", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tau_kappa", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tau_kappa_x", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tau_kappa_y", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tau_kappa_z", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "stochastic_force_r", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "stochastic_force_phi", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "stochastic_force_x", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "stochastic_force_y", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "stochastic_force_z", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "beta", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_primary", REBX_TYPE_INT);
     rebx_register_param(rebx, "R_tides", REBX_TYPE_DOUBLE);
