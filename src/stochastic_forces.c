@@ -77,17 +77,17 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
     struct rebx_extras* const rebx = sim->extras;
     struct reb_particle com = particles[0];
     
-    for (int i=1; i<N; i++){
+    for (int i=0; i<N; i++){
         double* kappa = rebx_get_param(rebx, particles[i].ap, "kappa");
-        if (kappa != NULL){
+        if (i>0 && kappa != NULL){
             double* stochastic_force_r = rebx_get_param(rebx, particles[i].ap, "stochastic_force_r");
             if (stochastic_force_r == NULL) { // First run?
-                rebx_set_param_double(rebx, &particles[i].ap, "stochastic_force_r", 0.);
+                rebx_set_param_double(rebx, (struct rebx_node**)&particles[i].ap, "stochastic_force_r", 0.);
                 stochastic_force_r = rebx_get_param(rebx, particles[i].ap, "stochastic_force_r");
             }
             double* stochastic_force_phi = rebx_get_param(rebx, particles[i].ap, "stochastic_force_phi");
             if (stochastic_force_phi == NULL) { // First run?
-                rebx_set_param_double(rebx, &particles[i].ap, "stochastic_force_phi", 0.);
+                rebx_set_param_double(rebx, (struct rebx_node**)&particles[i].ap, "stochastic_force_phi", 0.);
                 stochastic_force_phi = rebx_get_param(rebx, particles[i].ap, "stochastic_force_phi");
             }
 
@@ -146,6 +146,105 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
 
 
 		    com = reb_get_com_of_pair(com, p);
+        }
+        double* kappa_x = rebx_get_param(rebx, particles[i].ap, "kappa_x");
+        if (kappa_x != NULL){
+            double* stochastic_force_x = rebx_get_param(rebx, particles[i].ap, "stochastic_force_x");
+            if (stochastic_force_x == NULL) { // First run?
+                rebx_set_param_double(rebx, (struct rebx_node**)&particles[i].ap, "stochastic_force_x", 0.);
+                stochastic_force_x = rebx_get_param(rebx, particles[i].ap, "stochastic_force_x");
+            }
+            
+            double* tau_kappa_x = rebx_get_param(rebx, particles[i].ap, "tau_kappa_x");
+            if (tau_kappa_x == NULL){
+                reb_error(sim, "Need to set tau_kappa_x to enable stochastic forces.\n");
+                return;
+            }
+
+            double dt = sim->dt_last_done;
+            double prefac = exp(-dt/ (*tau_kappa_x));
+
+            // Decay
+            *stochastic_force_x = (*stochastic_force_x) * prefac;
+
+            // Excitation
+            double variance = 1.- prefac*prefac;
+            if (variance <0.){
+                reb_error(sim, "Timestep is larger than the correlation time for stochastic forces.\n");
+                return;
+            }
+            double std = (*kappa_x)*sqrt(variance);
+            double n0, n1;
+            rebx_random_normal2(sim, &n0, &n1);
+            *stochastic_force_x = (*stochastic_force_x) + n0*std;
+            
+            particles[i].ax += *stochastic_force_x;
+        }
+        double* kappa_y = rebx_get_param(rebx, particles[i].ap, "kappa_y");
+        if (kappa_y != NULL){
+            double* stochastic_force_y = rebx_get_param(rebx, particles[i].ap, "stochastic_force_y");
+            if (stochastic_force_y == NULL) { // First run?
+                rebx_set_param_double(rebx, (struct rebx_node**)&particles[i].ap, "stochastic_force_y", 0.);
+                stochastic_force_y = rebx_get_param(rebx, particles[i].ap, "stochastic_force_y");
+            }
+            
+            double* tau_kappa_y = rebx_get_param(rebx, particles[i].ap, "tau_kappa_y");
+            if (tau_kappa_y == NULL){
+                reb_error(sim, "Need to set tau_kappa_y to enable stochastic forces.\n");
+                return;
+            }
+
+            double dt = sim->dt_last_done;
+            double prefac = exp(-dt/ (*tau_kappa_y));
+
+            // Decay
+            *stochastic_force_y = (*stochastic_force_y) * prefac;
+
+            // Excitation
+            double variance = 1.- prefac*prefac;
+            if (variance <0.){
+                reb_error(sim, "Timestep is larger than the correlation time for stochastic forces.\n");
+                return;
+            }
+            double std = (*kappa_y)*sqrt(variance);
+            double n0, n1;
+            rebx_random_normal2(sim, &n0, &n1);
+            *stochastic_force_y = (*stochastic_force_y) + n0*std;
+            
+            particles[i].ay += *stochastic_force_y;
+        }
+        double* kappa_z = rebx_get_param(rebx, particles[i].ap, "kappa_z");
+        if (kappa_z != NULL){
+            double* stochastic_force_z = rebx_get_param(rebx, particles[i].ap, "stochastic_force_z");
+            if (stochastic_force_z == NULL) { // First run?
+                rebx_set_param_double(rebx, (struct rebx_node**)&particles[i].ap, "stochastic_force_z", 0.);
+                stochastic_force_z = rebx_get_param(rebx, particles[i].ap, "stochastic_force_z");
+            }
+            
+            double* tau_kappa_z = rebx_get_param(rebx, particles[i].ap, "tau_kappa_z");
+            if (tau_kappa_z == NULL){
+                reb_error(sim, "Need to set tau_kappa_z to enable stochastic forces.\n");
+                return;
+            }
+
+            double dt = sim->dt_last_done;
+            double prefac = exp(-dt/ (*tau_kappa_z));
+
+            // Decay
+            *stochastic_force_z = (*stochastic_force_z) * prefac;
+
+            // Excitation
+            double variance = 1.- prefac*prefac;
+            if (variance <0.){
+                reb_error(sim, "Timestep is larger than the correlation time for stochastic forces.\n");
+                return;
+            }
+            double std = (*kappa_z)*sqrt(variance);
+            double n0, n1;
+            rebx_random_normal2(sim, &n0, &n1);
+            *stochastic_force_z = (*stochastic_force_z) + n0*std;
+            
+            particles[i].az += *stochastic_force_z;
         }
     }
 }
