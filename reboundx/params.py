@@ -1,5 +1,9 @@
 import rebound
-from collections import MutableMapping
+import sys
+if sys.version_info[:2] >= (3, 8):
+    from collections.abc import MutableMapping
+else:
+    from collections import MutableMapping
 from .extras import Param, Node, Force, Operator, Extras, REBX_CTYPES
 from . import clibreboundx
 from ctypes import byref, c_double, c_int, c_int32, c_int64, c_uint, c_uint32, c_longlong, c_char_p, POINTER, cast
