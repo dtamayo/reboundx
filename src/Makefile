@@ -22,7 +22,7 @@ ifndef REBXGITHASH
 	PREDEF+= -DREBXGITHASH=$(REBXGITHASH)
 endif
 
-SOURCES=inner_disk_edge.c modify_orbits_forces.c gr_potential.c integrator_implicit_midpoint.c radiation_forces.c central_force.c linkedlist.c modify_mass.c gr.c core.c exponential_migration.c integrator_rk4.c integrator_rk2.c rebxtools.c gr_full.c integrator_euler.c output.c tides_constant_time_lag.c input.c steppers.c track_min_distance.c type_I_migration.c integrate_force.c interpolation.c gravitational_harmonics.c modify_orbits_direct.c 
+SOURCES=inner_disk_edge.c modify_orbits_forces.c gr_potential.c integrator_implicit_midpoint.c stochastic_forces.c radiation_forces.c central_force.c linkedlist.c modify_mass.c gr.c core.c exponential_migration.c integrator_rk4.c integrator_rk2.c rebxtools.c gr_full.c integrator_euler.c output.c tides_constant_time_lag.c input.c steppers.c track_min_distance.c type_I_migration.c integrate_force.c interpolation.c gravitational_harmonics.c modify_orbits_direct.c 
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=rebxtools.h reboundx.h linkedlist.h
 
