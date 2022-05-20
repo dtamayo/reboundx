@@ -42,9 +42,9 @@
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * lstar (float)                    Yes              Luminosity of sim's star (Required for both versions).
- * yark_c (float)                 Yes             Speed of light (Required for both versions).
- * stef_boltz (float)             No             Stefan-Boltzmann constant (Required for full version).
+ * ye_lstar (float)                    Yes              Luminosity of sim's star (Required for both versions).
+ * ye_c (float)                         Yes             Speed of light (Required for both versions).
+ * ye_stef_boltz (float)            No             Stefan-Boltzmann constant (Required for full version).
  * ============================ =========== ==================================================================
  *
  * **Particle Parameters**
@@ -52,17 +52,17 @@
  * ============================ =========== ==================================================================
  * Field (C type)                          Required    Description
  * ============================ =========== ==================================================================
- * particles[i].r (float)                     Yes         Physical radius of a body (Required for both versions).
- * yark_flag (int)                            Yes        A flag (with possible values of -1, 0, and 1) that determines which version of the effect is used (Required for both versions)
- * body_density (float)                  Yes         Density of an object (Required for both versions)
- * rotation_period (float)               No          Rotation period of a spinning object (Required for full version)
- * albedo (float)                            Yes          Albedo of an object (Reuired for both versions)
- * emissivity (float)                        No           Emissivity of an object (Required for full version)
- * thermal_inertia (float)                No           Thermal inertia of an object (Required for full version)
- * k (float)                                     No             A constant that gets a value between 0 and 1/4 based on the object's rotation - see Veras et al. (2015) for more information on it (Required for full version)
- * spin_axis_x (float)                    No            The x value for the spin axis vector of an object (Required for full version)
- * spin_axis_y (float)                    No             The y value for the spin axis vector of an object (Required for full version)
- * spin_axis_z (float)                    No             The z value for the spin axis vector of an object (Required for full version)
+ * particles[i].r (float)                    Yes           Physical radius of a body (Required for both versions).
+ * ye_flag (int)                               Yes           A flag (with possible values of -1, 0, and 1) that determines which version of the effect is used (Required for both versions)
+ * ye_body_density (float)             Yes          Density of an object (Required for both versions)
+ * ye_rotation_period (float)           No          Rotation period of a spinning object (Required for full version)
+ * ye_albedo (float)                        Yes          Albedo of an object (Reuired for both versions)
+ * ye_emissivity (float)                    No           Emissivity of an object (Required for full version)
+ * ye_thermal_inertia (float)            No           Thermal inertia of an object (Required for full version)
+ * ye_k (float)                                  No           A constant that gets a value between 0 and 1/4 based on the object's rotation - see Veras et al. (2015) for more information on it (Required for full version)
+ * ye_spin_axis_x (float)                 No           The x value for the spin axis vector of an object (Required for full version)
+ * ye_spin_axis_y (float)                 No           The y value for the spin axis vector of an object (Required for full version)
+ * ye_spin_axis_z (float)                  No           The z value for the spin axis vector of an object (Required for full version)
  * ============================ =========== ==================================================================
  *
  */
@@ -248,19 +248,19 @@ void rebx_yarkovsky_effect(struct reb_simulation* const sim, struct rebx_force* 
         struct reb_particle* target = &particles[i];
         struct reb_particle* star = &particles[0];
         
-        double* density = rebx_get_param(rebx, target->ap, "body_density");
-        double* lstar = rebx_get_param(rebx, force->ap, "lstar");
-        double* rotation_period = rebx_get_param(rebx, target->ap, "rotation_period");
-        double* Gamma = rebx_get_param(rebx, target->ap, "thermal_inertia");
-        double* albedo = rebx_get_param(rebx, target->ap, "albedo");
-        double* emissivity = rebx_get_param(rebx, target->ap, "emissivity");
-        double* k = rebx_get_param(rebx, target->ap, "k");
-        double* c = rebx_get_param(rebx, force->ap, "yark_c");
-        double* stef_boltz = rebx_get_param(rebx, force->ap, "stef_boltz");
-        int* yark_flag = rebx_get_param(rebx, target->ap, "yark_flag");
-        double* sx = rebx_get_param(rebx, target->ap, "spin_axis_x");
-        double* sy = rebx_get_param(rebx, target->ap, "spin_axis_y");
-        double* sz = rebx_get_param(rebx, target->ap, "spin_axis_z");
+        double* density = rebx_get_param(rebx, target->ap, "ye_body_density");
+        double* lstar = rebx_get_param(rebx, force->ap, "ye_lstar");
+        double* rotation_period = rebx_get_param(rebx, target->ap, "ye_rotation_period");
+        double* Gamma = rebx_get_param(rebx, target->ap, "ye_thermal_inertia");
+        double* albedo = rebx_get_param(rebx, target->ap, "ye_albedo");
+        double* emissivity = rebx_get_param(rebx, target->ap, "ye_emissivity");
+        double* k = rebx_get_param(rebx, target->ap, "ye_k");
+        double* c = rebx_get_param(rebx, force->ap, "ye_c");
+        double* stef_boltz = rebx_get_param(rebx, force->ap, "ye_stef_boltz");
+        int* yark_flag = rebx_get_param(rebx, target->ap, "ye_flag");
+        double* sx = rebx_get_param(rebx, target->ap, "ye_spin_axis_x");
+        double* sy = rebx_get_param(rebx, target->ap, "ye_spin_axis_y");
+        double* sz = rebx_get_param(rebx, target->ap, "ye_spin_axis_z");
         
         //if these necessary conditions are met the Yarkovsky effect will be calculated for a particle in the sim
         if (density != NULL && target->r != 0 && albedo != NULL && lstar != NULL && c != NULL && yark_flag != NULL){

@@ -89,19 +89,19 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "luminosity", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_Omega", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tides_lambda2", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "yark_c", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "body_density", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "lstar", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "yark_flag", REBX_TYPE_INT);
-    rebx_register_param(rebx, "rotation_period", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "thermal_inertia", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "albedo", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "emissivity", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "k", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "stef_boltz", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "spin_axis_x", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "spin_axis_y", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "spin_axis_z", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_c", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_body_density", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_lstar", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_flag", REBX_TYPE_INT);
+    rebx_register_param(rebx, "ye_rotation_period", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_thermal_inertia", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_albedo", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_emissivity", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_k", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_stef_boltz", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_spin_axis_x", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_spin_axis_y", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_spin_axis_z", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){

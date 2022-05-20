@@ -60,21 +60,21 @@ int main(int argc, char* argv[]) {
     double sy = 0.0;
     double sz = 1.0;
     
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "body_density", density);
-    rebx_set_param_int(rebx, &sim->particles[1].ap, "yark_flag", 0);
-    rebx_set_param_double(rebx, &yark->ap, "lstar", lstar);
-    rebx_set_param_double(rebx, &yark->ap, "yark_c", c);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "ye_body_density", density);
+    rebx_set_param_int(rebx, &sim->particles[1].ap, "ye_flag", 0);
+    rebx_set_param_double(rebx, &yark->ap, "ye_lstar", lstar);
+    rebx_set_param_double(rebx, &yark->ap, "ye_c", c);
     particles[1].r = 1000/au_conv;
 
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "albedo", albedo);
-    rebx_set_param_double(rebx, &yark->ap, "stef_boltz", stef_boltz);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "emissivity", emissivity);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "k", k);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "thermal_inertia", Gamma);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "rotation_period", rotation_period);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_axis_x", sx);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_axis_y", sy);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_axis_z", sz);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "ye_albedo", albedo);
+    rebx_set_param_double(rebx, &yark->ap, "ye_stef_boltz", stef_boltz);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "ye_emissivity", emissivity);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "ye_k", k);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "ye_thermal_inertia", Gamma);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "ye_rotation_period", rotation_period);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "ye_spin_axis_x", sx);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "ye_spin_axis_y", sy);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "ye_spin_axis_z", sz);
 
     rebx_add_force(rebx, yark);
 
