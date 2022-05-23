@@ -109,6 +109,19 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "tIm_scale_height_1", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tIm_surface_density_1", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tIm_surface_density_exponent", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_c", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_body_density", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_lstar", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_flag", REBX_TYPE_INT);
+    rebx_register_param(rebx, "ye_rotation_period", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_thermal_inertia", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_albedo", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_emissivity", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_k", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_stef_boltz", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_spin_axis_x", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_spin_axis_y", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_spin_axis_z", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -291,6 +304,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     }
     else if (strcmp(name, "type_I_migration") == 0){
         force->update_accelerations = rebx_modify_orbits_with_type_I_migration;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "yarkovsky_effect") == 0){
+        force->update_accelerations = rebx_yarkovsky_effect;
         force->force_type = REBX_FORCE_VEL;
     }
     else{
