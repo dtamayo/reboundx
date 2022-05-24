@@ -27,7 +27,7 @@ Radiation Forces
 
 $$$$$$$$$$$$
 Stochastic Forces
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 
 $$$$$$$$$$$$
 Mass Modifications
