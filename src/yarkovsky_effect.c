@@ -75,7 +75,7 @@
 
 static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct reb_particle* star, double G, double *density, double *lstar, double *rotation_period, double *Gamma, double *albedo, double *emissivity, double *k, double *c, double *stef_boltz, int *yark_flag, double *sx, double *sy, double *sz){
     
-    int i; //variable needed for future iteration loops
+    int i; //variables needed for future iteration loops
     int j;
     double unit_matrix[3][3] = {{1.0, 0.0, 0.0},{0.0, 1.0, 0.0},{0.0, 0.0, 1.0}};
 
@@ -83,15 +83,23 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
     
     double q_yar = 1.0-(*albedo);
     
-    double distance = sqrt((target->x*target->x)+(target->y*target->y)+(target->z*target->z)); //distance of asteroid from the star
+    double dx = target->x - star->x;
+    double dy = target->y - star->y;
+    double dz = target->z - star->z;
     
-    double rdotv = ((target->x*target->vx)+(target->y*target->vy)+(target->z*target->vz))/((*c)*distance); //dot product of position and velocity vectors- the term in the denominator is needed when calculating the i-vector
+    double dvx = target->vx - star->vx;
+    double dvy = target->vy - star->vy;
+    double dvz = target->vz - star->vz;
+    
+    double distance = sqrt((dx*dx)+(dy*dy)+(dz*dz)); //distance of asteroid from the star
+    
+    double rdotv = ((dx*dvx)+(dy*dvy)+(dz*dvz))/((*c)*distance); //dot product of position and velocity vectors- the term in the denominator is needed when calculating the i-vector
     
     double i_vector[3][1];
     
-    i_vector[0][0] = ((1-rdotv)*(target->x/distance))-(target->vx/(*c));
-    i_vector[1][0] = ((1-rdotv)*(target->y/distance))-(target->vy/(*c));
-    i_vector[2][0] = ((1-rdotv)*(target->z/distance))-(target->vz/(*c));
+    i_vector[0][0] = ((1-rdotv)*(dx/distance))-(dvx/(*c));
+    i_vector[1][0] = ((1-rdotv)*(dy/distance))-(dvy/(*c));
+    i_vector[2][0] = ((1-rdotv)*(dz/distance))-(dvz/(*c));
     
     double yarkovsky_magnitude; //magnitude of force created by the effect
 
@@ -157,9 +165,9 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
 
         double Smag = sqrt(((*sx)*(*sx))+ (*sy)*(*sy) + (*sz)*(*sz));
     
-        double hx = (target->y*target->vz)-(target->z*target->vy);
-        double hy = (target->z*target->vx)-(target->x*target->vz);
-        double hz = (target->x*target->vy)-(target->y*target->vx);
+        double hx = (dy*dvz)-(dz*dvy);
+        double hy = (dz*dvx)-(dx*dvz);
+        double hz = (dx*dvy)-(dy*dvx);
         double Hmag = sqrt((hx*hx)+ (hy*hy) + (hz*hz));
     
         double inv_smag = 1.0/Smag;
