@@ -31,8 +31,8 @@
  * Authors                 Noah Ferich, D. Tamayo
  * Implementation Paper    Ferich et al., in prep.
  * Based on                `Veras et al., 2015 <https://ui.adsabs.harvard.edu/abs/2015MNRAS.451.2814V/abstract>`_, `Veras et al., 2019 <https://ui.adsabs.harvard.edu/abs/2019MNRAS.485..708V/abstract>`_.
- * C Example               :ref:`c_example_yarkovsky_effect.
- * Python Example          `yarkovsky_effect.ipynb <>`_.
+ * C Example               :ref:`c_example_yarkovsky_effect`.
+ * Python Example          `YarkovskyEffect.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/YarkovskyEffect.ipynb>`_.
  * ======================= ===============================================
  *
  * Adds the accelerations and orbital perturbations created by the Yarkovsky effect onto one or more bodies in the simulation. There are two distinct versions of this effect that can be used: the 'full version' and the 'simple version'. The full version uses the full equations found in Veras et al. (2015) to accurately calculate the Yarkovsky effect on a particle. However, this version slows down simulations and requies a large amount of parameters. For these reasons, the simple version of the effect (based on Veras et al. (2019)) is available. While the magnitude of the acceleration created by the effect will be the same, this version places constant values in a crucial rotation matrix to simplify the push from the Yarkovsky effect on a body. This version is faster and requires less parameters and can be used to get an upper bound on how much the Yarkovsky effect can push an object's orbit inwards or outwards. The lists below describes which parameters are needed for one or both versions of this effect. For more information, please visit the papers and examples linked above.
@@ -42,27 +42,27 @@
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * ye_lstar (float)                    Yes              Luminosity of sim's star (Required for both versions).
- * ye_c (float)                         Yes             Speed of light (Required for both versions).
- * ye_stef_boltz (float)            No             Stefan-Boltzmann constant (Required for full version).
+ * ye_lstar (float)             Yes         Luminosity of sim's star (Required for both versions).
+ * ye_c (float)                 Yes         Speed of light (Required for both versions).
+ * ye_stef_boltz (float)        No          Stefan-Boltzmann constant (Required for full version).
  * ============================ =========== ==================================================================
  *
  * **Particle Parameters**
  *
  * ============================ =========== ==================================================================
- * Field (C type)                          Required    Description
+ * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * particles[i].r (float)                    Yes           Physical radius of a body (Required for both versions).
- * ye_flag (int)                               Yes           A flag (with possible values of -1, 0, and 1) that determines which version of the effect is used (Required for both versions)
- * ye_body_density (float)             Yes          Density of an object (Required for both versions)
- * ye_rotation_period (float)           No          Rotation period of a spinning object (Required for full version)
- * ye_albedo (float)                        Yes          Albedo of an object (Reuired for both versions)
- * ye_emissivity (float)                    No           Emissivity of an object (Required for full version)
- * ye_thermal_inertia (float)            No           Thermal inertia of an object (Required for full version)
- * ye_k (float)                                  No           A constant that gets a value between 0 and 1/4 based on the object's rotation - see Veras et al. (2015) for more information on it (Required for full version)
- * ye_spin_axis_x (float)                 No           The x value for the spin axis vector of an object (Required for full version)
- * ye_spin_axis_y (float)                 No           The y value for the spin axis vector of an object (Required for full version)
- * ye_spin_axis_z (float)                  No           The z value for the spin axis vector of an object (Required for full version)
+ * particles[i].r (float)       Yes         Physical radius of a body (Required for both versions).
+ * ye_flag (int)                Yes         0 sets full version of effect. 1 uses simple version with outward migration. -1 uses the simple version with inward migration (see examples and paper).
+ * ye_body_density (float)      Yes         Density of an object (Required for both versions)
+ * ye_rotation_period (float)   No          Rotation period of a spinning object (Required for full version)
+ * ye_albedo (float)            Yes         Albedo of an object (Reuired for both versions)
+ * ye_emissivity (float)        No          Emissivity of an object (Required for full version)
+ * ye_thermal_inertia (float)   No          Thermal inertia of an object (Required for full version)
+ * ye_k (float)                 No          A constant that gets a value between 0 and 1/4 based on the object's rotation - see Veras et al. (2015) for more information on it (Required for full version)
+ * ye_spin_axis_x (float)       No          The x value for the spin axis vector of an object (Required for full version)
+ * ye_spin_axis_y (float)       No          The y value for the spin axis vector of an object (Required for full version)
+ * ye_spin_axis_z (float)       No          The z value for the spin axis vector of an object (Required for full version)
  * ============================ =========== ==================================================================
  *
  */
