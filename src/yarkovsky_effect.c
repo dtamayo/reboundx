@@ -73,7 +73,7 @@
 #include <float.h>
 #include "reboundx.h"
 
-static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct reb_particle* star, double G, double *density, double *lstar, double *rotation_period, double *Gamma, double *albedo, double *emissivity, double *k, double *c, double *stef_boltz, int *yark_flag, double *sx, double *sy, double *sz){
+static void rebx_calculate_yarkovsky_effect(struct reb_simulation* sim, struct reb_particle* target, struct reb_particle* star, double G, double *density, double *lstar, double *rotation_period, double *Gamma, double *albedo, double *emissivity, double *k, double *c, double *stef_boltz, int *yark_flag, double *sx, double *sy, double *sz){
     
     int i; //variables needed for future iteration loops
     int j;
@@ -125,38 +125,8 @@ static void rebx_calculate_yarkovsky_effect(struct reb_particle* target, struct 
         
         //makes sure all necessary parameters have been entered
         if (stef_boltz == NULL || rotation_period == NULL || Gamma == NULL || albedo == NULL || emissivity == NULL || k == NULL || sx == NULL || sy == NULL || sz == NULL) {
-            
-            printf("ERROR: One or more parameters missing for this version of the Yarkovsky effect in Rebx. Please make sure you've given values to all variables for this version before running simulations. If you'd rather use the simplified version of this effect (requires fewer parameters), then please set 'yark_flag' to -1 or 1.\n\n");
-            
-            printf("MISSING PARAMETERS: \n");
-            
-            if (stef_boltz == NULL){
-                printf("stef_boltz\n");
-            }
-            if (rotation_period == NULL){
-                printf("rotation_period\n");
-            }
-            if (Gamma == NULL){
-                printf("thermal_inertia\n");
-            }
-            if (albedo == NULL){
-                printf("albedo\n");
-            }
-            if (emissivity == NULL){
-                printf("emissivity\n");
-            }
-            if (k == NULL){
-                printf("k\n");
-            }
-            if (sx == NULL){
-                printf("spin_axis_x\n");
-            }
-            if (sy == NULL){
-                printf("spin_axis_y\n");
-            }
-            if (sz == NULL){
-                printf("spin_axis_z\n");
-            }
+            reb_error(sim, "REBOUNDx Error: One or more parameters missing for this version of the Yarkovsky effect in Rebx. Please make sure you've given values to all variables for this version before running simulations. See documentation and YarkovskyEffect.ipynb. If you'd rather use the simplified version of this effect (requires fewer parameters), then please set 'yark_flag' to -1 or 1.\n\n");
+            return;
         }
         
         struct reb_orbit o = reb_tools_particle_to_orbit(G, *target, *star);
@@ -272,8 +242,7 @@ void rebx_yarkovsky_effect(struct reb_simulation* const sim, struct rebx_force* 
         
         //if these necessary conditions are met the Yarkovsky effect will be calculated for a particle in the sim
         if (density != NULL && target->r != 0 && albedo != NULL && lstar != NULL && c != NULL && yark_flag != NULL){
-            rebx_calculate_yarkovsky_effect(target, star, G, density, lstar, rotation_period, Gamma, albedo, emissivity, k, c, stef_boltz, yark_flag, sx, sy, sz);
+            rebx_calculate_yarkovsky_effect(sim, target, star, G, density, lstar, rotation_period, Gamma, albedo, emissivity, k, c, stef_boltz, yark_flag, sx, sy, sz);
         }
-        
     }
 }
