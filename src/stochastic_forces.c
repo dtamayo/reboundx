@@ -30,7 +30,7 @@
  * ======================= ===============================================
  * Authors                 H. Rein
  * Based on                `Rein and Papaloizou 2009 <https://ui.adsabs.harvard.edu/abs/2009A%26A...497..595R/abstract>`_.
- * Implementation Paper    `Rein and Choksi 2022 <https://iopscience.iop.org/article/10.3847/2515-5172/ac6e41>``_.
+ * Implementation Paper    `Rein and Choksi 2022 <https://iopscience.iop.org/article/10.3847/2515-5172/ac6e41>`_.
  * C Example               :ref:`c_example_stochastic_forces`
  * Python Example          `StochasticForces.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/StochasticForces.ipynb>`_, `StochasticForcesCartesian.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/StochasticForcesCartesian.ipynb>`_,
  * ======================= ===============================================

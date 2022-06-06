@@ -31,7 +31,7 @@
  * Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
  * Implementation Paper    Kajtazi et al. in prep.
  * Based on                `Cresswell & Nelson 2008 <https://ui.adsabs.harvard.edu/abs/2008A%26A...482..677C/abstract>`_, and `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>`_.
- * C example               :ref:`c_examples_type_I_migration`
+ * C example               :ref:`c_example_type_I_migration`
  * Python example          `TypeIMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TypeIMigration.ipynb>`_.
  * ======================= ===============================================
  * 
