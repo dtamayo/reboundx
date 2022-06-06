@@ -49,6 +49,7 @@ const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line 
  ****************************/
 
 void rebx_register_default_params(struct rebx_extras* rebx){
+    rebx_register_param(rebx, "ode", REBX_TYPE_ODE);
     rebx_register_param(rebx, "c", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "gr_source", REBX_TYPE_INT);
     rebx_register_param(rebx, "tau_mass", REBX_TYPE_DOUBLE);
