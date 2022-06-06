@@ -56,6 +56,7 @@ enum rebx_param_type{
     REBX_TYPE_FORCE,
     REBX_TYPE_UINT32,
     REBX_TYPE_ORBIT,
+    REBX_TYPE_ODE,
 };
 
 /**

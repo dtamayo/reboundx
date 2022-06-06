@@ -62,15 +62,17 @@ class Params(MutableMapping):
             clibreboundx.rebx_set_param_int(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), c_int(value))
         if ctype == c_uint32:
             clibreboundx.rebx_set_param_uint32(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), value)
-
         if ctype == Force:
             if not isinstance(value, Force):
                 raise AttributeError("REBOUNDx Error: Parameter '{0}' must be assigned a Force object.".format(key))
             clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))
-
         if ctype == rebound.Orbit:
             if not isinstance(value, rebound.Orbit):
                 raise AttributeError("REBOUNDx Error: Parameter '{0}' must be assigned an Orbit object.".format(key))
+            clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))
+        if ctype == rebound.ODE:
+            if not isinstance(value, rebound.ODE):
+                raise AttributeError("REBOUNDx Error: Parameter '{0}' must be assigned a rebound.ODE object.".format(key))
             clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))
         if ctype == c_void_p:
             clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))
