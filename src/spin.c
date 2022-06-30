@@ -63,7 +63,7 @@
 #include <float.h>
 #include "reboundx.h"
 
-static void rebx_calculate_spin(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double tau, const double Omega){
+static void rebx_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double tau, const double Omega){
     const double ms = source->m;
     const double mt = target->m;
     const double Rt = target->r;
@@ -117,7 +117,93 @@ static void rebx_calculate_spin(struct reb_particle* source, struct reb_particle
     
 }
 
-void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const spin, struct reb_particle* const particles, const int N){
+static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot, const double* const y, const double t){
+    struct reb_simulation* sim = ode->ref;
+    struct rebx_extras* const rebx = sim->extras;
+    unsigned int Nspins = 0;
+    const int N_real = sim->N - sim->N_var;
+    for (int i=0; i<N_real; i++){
+        struct reb_particle* p = &sim->particles[i];
+        double* k2 = rebx_get_param(rebx, p->ap, "tctl_k2");
+        if (k2 != NULL){
+            yDot[6*Nspins+2] = y[6*Nspins+5];
+            yDot[6*Nspins+5] = -(*k2)*y[6*i+2];
+            Nspins += 1;
+        }
+    }
+    if (ode->length != Nspins*6){
+        reb_error(sim, "rebx_spin ODE is not of the expected length.\n");
+    }
+}
+
+static void rebx_spin_sync_pre(struct reb_ode* const ode, const double* const y0){
+    struct reb_simulation* sim = ode->ref;
+    struct rebx_extras* const rebx = sim->extras;
+    unsigned int Nspins = 0;
+    const int N_real = sim->N - sim->N_var;
+    for (int i=0; i<N_real; i++){
+        struct reb_particle* p = &sim->particles[i];
+        double* k2 = rebx_get_param(rebx, p->ap, "tctl_k2");
+        if (k2 != NULL){
+            double* sx = rebx_get_param(rebx, p->ap, "spin_sx");
+            double* sy = rebx_get_param(rebx, p->ap, "spin_sy");
+            double* sz = rebx_get_param(rebx, p->ap, "spin_sz");
+            ode->y[6*Nspins] = *sx;
+            ode->y[6*Nspins+1] = *sy;
+            ode->y[6*Nspins+2] = *sz;
+            Nspins += 1;
+        }
+    }
+    if (ode->length != Nspins*6){
+        reb_error(sim, "rebx_spin ODE is not of the expected length.\n");
+    }
+}
+
+static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y0){
+    struct reb_simulation* sim = ode->ref;
+    struct rebx_extras* const rebx = sim->extras;
+    unsigned int Nspins = 0;
+    const int N_real = sim->N - sim->N_var;
+    for (int i=0; i<N_real; i++){
+        struct reb_particle* p = &sim->particles[i];
+        double* k2 = rebx_get_param(rebx, p->ap, "tctl_k2");
+        if (k2 != NULL){
+            rebx_set_param_double(rebx, &p->ap, "spin_sx", y0[6*Nspins]);
+            rebx_set_param_double(rebx, &p->ap, "spin_sy", y0[6*Nspins+1]);
+            rebx_set_param_double(rebx, &p->ap, "spin_sz", y0[6*Nspins+2]);
+            Nspins += 1;
+        }
+    }
+    if (ode->length != Nspins*6){
+        reb_error(sim, "rebx_spin ODE is not of the expected length.\n");
+    }
+}
+
+
+void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* const effect){
+    struct rebx_extras* const rebx = sim->extras;
+    unsigned int Nspins = 0;
+    const int N_real = sim->N - sim->N_var;
+    for (int i=0; i<N_real; i++){
+        struct reb_particle* p = &sim->particles[i];
+        double* k2 = rebx_get_param(rebx, p->ap, "tctl_k2");
+        if (k2 != NULL){
+            Nspins += 1;
+        }
+    }
+
+    if (Nspins > 0){
+        struct reb_ode* spin_ode = reb_create_ode(sim, Nspins*6);
+        printf("%d\n", spin_ode->length);
+        spin_ode->ref = sim;
+        spin_ode->derivatives = rebx_spin_derivatives;
+        spin_ode->pre_timestep = rebx_spin_sync_pre;
+        spin_ode->post_timestep = rebx_spin_sync_post;
+        rebx_set_param_pointer(rebx, &effect->ap, "ode", spin_ode);
+    }
+}
+
+void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const effect, struct reb_particle* const particles, const int N){
     struct rebx_extras* const rebx = sim->extras;
     const double G = sim->G;
 
@@ -147,7 +233,7 @@ void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const spin, 
             if (source->m == 0){
                 continue;
             }
-            rebx_calculate_spin(source, target, G, *k2, tau, Omega);
+            rebx_spin_orbit_accelerations(source, target, G, *k2, tau, Omega);
         }
     }
 }
