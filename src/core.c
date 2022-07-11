@@ -2,7 +2,7 @@
  * @file    core.c
  * @brief   Central internal functions for REBOUNDx (not called by user)
  * @author  Dan Tamayo <tamayo.daniel@gmail.com>
- * 
+ *
  * @section     LICENSE
  * Copyright (c) 2015 Dan Tamayo, Hanno Rein
  *
@@ -38,7 +38,7 @@
 #define STRINGIFY(s) str(s)
 #define str(s) #s
 
-const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
+const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string.
 const char* rebx_version_str = "3.6.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
 
@@ -93,6 +93,9 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "tides_primary", REBX_TYPE_INT);
     rebx_register_param(rebx, "R_tides", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tctl_k2", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "k2", REBX_TYPE_DOUBLE); // TLu: add k2
+    rebx_register_param(rebx, "q", REBX_TYPE_DOUBLE); // TLu: add tidal
+    rebx_register_param(rebx, "moi", REBX_TYPE_DOUBLE); // TLu: add moment of inertia
     rebx_register_param(rebx, "tctl_tau", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "Omega", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "integrator", REBX_TYPE_INT);
@@ -116,17 +119,17 @@ void rebx_register_default_params(struct rebx_extras* rebx){
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
-    
+
     // check registered_params for entry
     enum rebx_param_type reg_type = rebx_get_type(rebx, name);
-    
+
     if (reg_type != REBX_TYPE_NONE){
         char str[300];
         sprintf(str, "REBOUNDx Error: Parameter name '%s' already in registered list. Cannot add duplicates.\n", name);
         rebx_error(rebx, str);
         return;
     }
-    
+
     // Create new entry. These are just rebx_param structs without value populated
     struct rebx_param* param = rebx_create_param(rebx, name, type);
     if (param == NULL){
@@ -136,7 +139,7 @@ void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum 
     if(!success){
         rebx_free_param(param);
     }
-    
+
     return;
 }
 
@@ -161,7 +164,7 @@ void rebx_detach(struct reb_simulation* sim, struct rebx_extras* rebx){
         return;
     }
     rebx->sim = NULL;
-    
+
     if (sim->extras == rebx){
         if (sim->additional_forces == rebx_additional_forces){
             sim->additional_forces = NULL;
@@ -192,10 +195,10 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     rebx->allocated_forces=NULL;
     rebx->allocated_operators=NULL;
     rebx->registered_params=NULL;
-    
+
     sim->free_particle_ap = rebx_free_particle_ap;
     sim->extras_cleanup = rebx_extras_cleanup;
-    
+
     if(sim->additional_forces || sim->pre_timestep_modifications || sim->post_timestep_modifications){
         reb_warning(sim, "REBOUNDx overwrites sim->additional_forces, sim->pre_timestep_modifications and sim->post_timestep_modifications whenever forces or operators that use them get added.  If you want to use REBOUNDx together with your own custom functions that use these callbacks, you should add them through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.");
     }
@@ -235,7 +238,7 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
             strcpy(force->name, name);
         }
     }
-    
+
     // Add force to allocated_forces list for later freeing
     struct rebx_node* node = rebx_create_node(rebx);
     if (node == NULL){
@@ -244,7 +247,7 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
     }
     node->object = force;
     rebx_add_node(&rebx->allocated_forces, node);
-    
+
     return force;
 }
 
@@ -308,7 +311,7 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         rebx_remove_force(rebx, force); // Not free_force. Must remove from allocated_forces
         return NULL;
     }
-    
+
     return force;
 }
 
@@ -336,7 +339,7 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
             strcpy(operator->name, name);
         }
     }
-    
+
     // Add operator to allocated_operators list for later freeing
     struct rebx_node* node = rebx_create_node(rebx);
     if (node == NULL){
@@ -345,7 +348,7 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
     }
     node->object = operator;
     rebx_add_node(&rebx->allocated_operators, node);
-    
+
     return operator;
 }
 
@@ -409,26 +412,26 @@ int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force){
         rebx_error(rebx, ""); // rebx_error gives meaningful err
         return 0;
     }
-    
+
     if (force == NULL){
         rebx_error(rebx, "REBOUNDx error: Passed NULL pointer to rebx_add_force.\n");
         return 0;
     }
-    
+
     if (force->update_accelerations == NULL){
         rebx_error(rebx, "REBOUNDx error: Need to set update_accelerations function pointer on force before calling rebx_add_force. See custom effects example.\n");
         return 0;
     }
-    
+
     if (force->force_type == REBX_FORCE_NONE){
         rebx_error(rebx, "REBOUNDx error: Need to set force_type field on force before calling rebx_add_force. See custom effects example.\n");
         return 0;
     }
-    
+
     if (force->force_type == REBX_FORCE_VEL){
         rebx->sim->force_is_velocity_dependent = 1;
     }
-    
+
     // Could add logic based on different integrators
     struct rebx_node* node = rebx_create_node(rebx);
     if (node == NULL){
@@ -440,7 +443,7 @@ int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force){
         reb_warning(rebx->sim, "REBOUNDx Warning: additional_forces was set and is being overwritten by REBOUNDx. To incorporate both, you can add your own custom effects through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.\n");
     }
     rebx->sim->additional_forces = rebx_additional_forces;
-    
+
     return 1;
 }
 
@@ -457,25 +460,25 @@ int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* opera
         rebx_error(rebx, "REBOUNDx error: Need to set step_function pointer on operator before adding to simulation. See custom effects example.\n");
         return 0;
     }
-    
+
     if (operator->operator_type == REBX_OPERATOR_NONE){
         rebx_error(rebx, "REBOUNDx error: Need to set operator_type field on operator before adding to simulation. See custom effects example.\n");
         return 0;
     }
-    
+
     struct rebx_step* step = rebx_malloc(rebx, sizeof(*step));
     if(step == NULL){
         return 0;
     }
     step->operator = operator;
     step->dt_fraction = dt_fraction;
-    
+
     struct rebx_node* node = rebx_create_node(rebx);
     if (node == NULL){
         return 0;
     }
     node->object = step;
-    
+
     if (timing == REBX_TIMING_PRE){
         rebx_add_node(&rebx->pre_timestep_modifications, node);
         if (rebx->sim->pre_timestep_modifications != NULL && rebx->sim->pre_timestep_modifications != rebx_pre_timestep_modifications){
@@ -494,7 +497,7 @@ int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* opera
     }
     return 0;
 }
-    
+
 int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
     if (rebx->sim == NULL){
         rebx_error(rebx, ""); // rebx_error gives meaningful err
@@ -504,7 +507,7 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
         rebx_error(rebx, "REBOUNDx error: Passed NULL pointer to rebx_add_operator.\n");
         return 0;
     }
-    
+
     struct reb_simulation* const sim = rebx->sim;
     double dt_fraction;
     if (operator->operator_type == REBX_OPERATOR_RECORDER){
@@ -513,7 +516,7 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
         int success = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST);
         return success;
     }
-    
+
     switch(sim->integrator){
         case REB_INTEGRATOR_IAS15:
         // don't add pre-timestep b/c don't know what IAS will choose as dt
@@ -550,7 +553,7 @@ static struct rebx_param* rebx_get_or_add_param(struct rebx_extras* const rebx, 
         rebx_error(rebx, "REBOUNDx Error: Passed NULL apptr to rebx_add_param. See examples.\n");
         return NULL;
     }
-    
+
     enum rebx_param_type type = rebx_get_type(rebx, param_name);
     if (type == REBX_TYPE_NONE){
         char str[300];
@@ -558,10 +561,10 @@ static struct rebx_param* rebx_get_or_add_param(struct rebx_extras* const rebx, 
         rebx_error(rebx, str);
         return NULL;
     }
-    
+
     // Check whether it already exists in linked list
     struct rebx_param* param = rebx_get_param_struct(rebx, *apptr, param_name);
-    
+
     if(param == NULL){
         param = rebx_create_param(rebx, param_name, type);
         if (param == NULL){ // adding new param failed
@@ -596,7 +599,7 @@ void rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** ap
     // Update new or existing param value
     double* valptr = param->value;
     *valptr = val;
-    
+
     return;
 }
 
@@ -611,7 +614,7 @@ void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr
     // Update new or existing param value
     int* valptr = param->value;
     *valptr = val;
-    
+
     return;
 }
 
@@ -626,7 +629,7 @@ void rebx_set_param_uint32(struct rebx_extras* const rebx, struct rebx_node** ap
     // Update new or existing param value
     uint32_t* valptr = param->value;
     *valptr = val;
-    
+
     return;
 }
 
@@ -643,7 +646,7 @@ struct rebx_param* rebx_get_param_struct(struct rebx_extras* rebx, struct rebx_n
         }
         current = current->next;
     }
-    
+
     return NULL;   // name not found. Don't want warnings for optional parameters so don't reb_error
 }
 
@@ -666,7 +669,7 @@ struct rebx_force* rebx_get_force(struct rebx_extras* const rebx, const char* co
         }
         current = current->next;
     }
-    
+
     return NULL;
 }
 
@@ -679,7 +682,7 @@ struct rebx_operator* rebx_get_operator(struct rebx_extras* const rebx, const ch
         }
         current = current->next;
     }
-    
+
     return NULL;
 }
 
@@ -704,7 +707,7 @@ static int rebx_remove_step_node(struct rebx_node** head, struct rebx_operator* 
     if (*head == NULL){
         return 0;
     }
-    
+
     struct rebx_node* current = *head;
     struct rebx_step* step = current->object;
     if(step->operator == operator){ // edge case where step is first in list
@@ -713,7 +716,7 @@ static int rebx_remove_step_node(struct rebx_node** head, struct rebx_operator* 
         free(current);
         return 1;
     }
-    
+
     struct rebx_node* prev = current;
     current = current->next;
     while (current != NULL){
@@ -734,9 +737,9 @@ int rebx_remove_operator(struct rebx_extras* rebx, struct rebx_operator* operato
     int allocated = rebx_remove_node(&rebx->allocated_operators, operator);
     if(allocated){
         rebx_free_operator(operator);
-        
+
     }
-    
+
     // success only cares about removal from lists that actually do
     // something to sim below. Success if EITHER one successful.
     int success = 0;
@@ -755,7 +758,7 @@ int rebx_remove_operator(struct rebx_extras* rebx, struct rebx_operator* operato
             success = 1;
         }
     }
-    
+
     return success;
 }
 
@@ -769,7 +772,7 @@ void* rebx_malloc(struct rebx_extras* const rebx, size_t memsize){
         rebx_error(rebx, "REBOUNDx Error: Could not allocate memory.\n");
         return NULL;
     }
-    
+
     return ptr;
 }
 
@@ -839,7 +842,7 @@ void rebx_free_pointers(struct rebx_extras* rebx){
     rebx_detach(rebx->sim, rebx);
     struct rebx_node* current;
     struct rebx_node* next;
-    
+
     current = rebx->allocated_forces;
     while (current != NULL){
         next = current->next;
@@ -847,7 +850,7 @@ void rebx_free_pointers(struct rebx_extras* rebx){
         free(current);
         current = next;
     }
-    
+
     current = rebx->allocated_operators;
     while (current != NULL){
         next = current->next;
@@ -855,15 +858,15 @@ void rebx_free_pointers(struct rebx_extras* rebx){
         free(current);
         current = next;
     }
-    
+
     current = rebx->additional_forces;
     while (current != NULL){
         next = current->next;
         free(current);
         current = next;
     }
-    
-    
+
+
     current = rebx->pre_timestep_modifications;
     while (current != NULL){
         next = current->next;
@@ -871,7 +874,7 @@ void rebx_free_pointers(struct rebx_extras* rebx){
         free(current);
         current = next;
     }
-    
+
     current = rebx->post_timestep_modifications;
     while (current != NULL){
         next = current->next;
@@ -879,7 +882,7 @@ void rebx_free_pointers(struct rebx_extras* rebx){
         free(current);
         current = next;
     }
-    
+
     current = rebx->registered_params;
     while (current != NULL){
         next = current->next;
@@ -919,7 +922,7 @@ void rebx_pre_timestep_modifications(struct reb_simulation* sim){
     struct rebx_extras* rebx = sim->extras;
     struct rebx_node* current = rebx->pre_timestep_modifications;
     const double dt = sim->dt;
-    
+
     while(current != NULL){
         struct rebx_step* step = current->object;
         struct rebx_operator* operator = step->operator;
@@ -935,7 +938,7 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
     struct rebx_extras* rebx = sim->extras;
     struct rebx_node* current = rebx->post_timestep_modifications;
     const double dt = sim->dt;
-    
+
     while(current != NULL){
         struct rebx_step* step = current->object;
         struct rebx_operator* operator = step->operator;
@@ -976,7 +979,7 @@ struct rebx_param* rebx_create_param(struct rebx_extras* rebx, const char* name,
     else{
         strcpy(param->name, name);
     }
-    
+
     return param;
 }
 
@@ -993,11 +996,11 @@ int rebx_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, str
 // needed from Python
 enum rebx_param_type rebx_get_type(struct rebx_extras* rebx, const char* name){
     struct rebx_param* param = rebx_get_param_struct(rebx, rebx->registered_params, name);
-    
+
     if (param == NULL){ // param not found
         return REBX_TYPE_NONE;
     }
-    
+
     return param->type;
 }
 
