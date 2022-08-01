@@ -27,6 +27,8 @@ except:
 class build_ext(_build_ext):
     def finalize_options(self):
         _build_ext.finalize_options(self)
+        if "PYODIDE" in os.environ:
+            return None
 
         try:
             import rebound
