@@ -27,6 +27,8 @@ except:
 class build_ext(_build_ext):
     def finalize_options(self):
         _build_ext.finalize_options(self)
+        if "PYODIDE" in os.environ:
+            return None
 
         try:
             import rebound
@@ -68,7 +70,7 @@ libreboundxmodule = Extension('libreboundx',
                     runtime_library_dirs = ["."],
                     libraries=['rebound'+suffix[:suffix.rfind('.')]],
                     define_macros=[ ('LIBREBOUNDX', None) ],
-                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99', '-fPIC', '-Wpointer-arith', ghash_arg],
+                    extra_compile_args=['-fstrict-aliasing', '-D_GNU_SOURCE', '-O3','-std=c99', '-fPIC', '-Wpointer-arith', ghash_arg],
                     extra_link_args=extra_link_args,
                     )
 
