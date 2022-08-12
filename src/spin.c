@@ -64,11 +64,7 @@
 #include "reboundx.h"
 
 struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double q, const double sx, const double sy, const double sz, struct reb_particle* primary){
-  //printf("LOCATIONS: %f %f\n", source->x, target->x);
-  //printf("Spin orbit Calc: %f %f\n", source->x, target->x);
-  //if (source->x != source->x){ // NaN check
-    //exit(1);
-  //}
+  
   const double ms = source->m;
   const double mt = target->m;
   const double Rt = target->r;
@@ -126,9 +122,6 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
     const double a = ((G * pm * dr_t) / (2 * G * pm - dr_t * vel2_t));
     const double n = sqrt(G * (pm + tidal->m) / (a * a * a));
 
-    if (n != n){
-      printf("n: %f %f %f %f %f %f %f %f \n", G, ms, mt, pm, a, dr_t, vel2_t, G * (ms + mt) / (a * a * a));
-    }
     const double dvx = source->vx - target->vx;
     const double dvy = source->vy - target->vy;
     const double dvz = source->vz - target->vz;
@@ -167,13 +160,8 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
 }
 
 static void rebx_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double q, const double sx, const double sy, const double sz, struct reb_particle* primary){
-    // Source - pj. target - pi
-    // k2, q, sx, sy, sz all associated with TARGET
-    //printf("Spin orbit: %f %f\n", source->x, target->x);
-    //if (source->x != source->x){ // NaN check
-    //  exit(1);
-    //}
 
+    // Input params all associated with target
     struct reb_vec3d tot_force = rebx_calculate_spin_orbit_accelerations(source, target, G, k2, q, sx, sy, sz, primary);
 
     const double ms = source->m;
@@ -197,14 +185,11 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
     struct reb_particle* primary = &sim->particles[0];
     for (int i=0; i<N_real; i++){
         struct reb_particle* pi = &sim->particles[i]; // target particle
-        //printf("%d %f %f\n", i, pi->m, pi->x);
         double* k2 = rebx_get_param(rebx, pi->ap, "k2");
         double* q = rebx_get_param(rebx, pi->ap, "q");
         double* moi = rebx_get_param(rebx, pi->ap, "moi");
-        //double* sx = rebx_get_param(rebx, pi->ap, "spin_sx");
-        //double* sy = rebx_get_param(rebx, pi->ap, "spin_sy");
-        //double* sz = rebx_get_param(rebx, pi->ap, "spin_sz");
-        // Set initial spin accelerations to 0
+        
+	// Set initial spin accelerations to 0
         yDot[3*Nspins] = 0;
         yDot[3*Nspins+1] = 0;
         yDot[3*Nspins+2] = 0;
@@ -213,10 +198,8 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
         const double sy = y[3 * Nspins + 1];
         const double sz = y[3 * Nspins + 2];
 
-        //printf("TARGET: %f\n", pi->x);
-
         for (int j=0; j<N_real; j++){
-          if (k2 != NULL && i != j){ // Look into this conditional more
+          if (k2 != NULL && q != NULL && i != j){ // Look into this conditional more
               struct reb_particle* pj = &sim->particles[j];
 
               double dx = pj->x - pi->x;
@@ -227,21 +210,13 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
               double mj = pj->m;
               double mu_ij = -(mi * mj) / ((mi + mj));
 
-              //printf("Spin ODE: %f %d %d %f %f\n", sim ->t, i, j, pi->x, pj->x);
-              if (pi->x != pi->x){ // NaN check
-                printf("Oh dear lord %f %f\n", pi->x, pj->x);
-                exit(1);
-              }
-
               struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pj, pi, sim->G, *k2, *q, sx, sy, sz, primary);
               yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) * (mu_ij / *moi));
               yDot[3*Nspins+1] += ((dz * tf.x - dx * tf.z) * (mu_ij / *moi));
               yDot[3*Nspins+2] += ((dx * tf.y - dy * tf.x) * (mu_ij / *moi));
-
           }
         }
         Nspins += 1;
-        //printf("yDots: %d %f %f %f\n", Nspins, yDot[6*Nspins+3], yDot[6*Nspins+4], yDot[6*Nspins+5]);
     }
     if (ode->length != Nspins*3){
         reb_error(sim, "rebx_spin ODE is not of the expected length.\n");
@@ -253,7 +228,6 @@ static void rebx_spin_sync_pre(struct reb_ode* const ode, const double* const y0
     struct rebx_extras* const rebx = sim->extras;
     unsigned int Nspins = 0;
     const int N_real = sim->N - sim->N_var;
-    //printf("Nreal: %d\n", N_real);
     for (int i=0; i<N_real; i++){
         struct reb_particle* p = &sim->particles[i];
         double* k2 = rebx_get_param(rebx, p->ap, "k2");
@@ -268,7 +242,6 @@ static void rebx_spin_sync_pre(struct reb_ode* const ode, const double* const y0
         }
     }
 
-    //printf("ODE: %f %f %f %f %f %f\n", ode->y[0], ode->y[1], ode->y[2], ode->y[3], ode->y[4], ode->y[5]);
     if (ode->length != Nspins*3){
         reb_error(sim, "rebx_spin ODE is not of the expected length.\n");
     }
@@ -290,7 +263,6 @@ static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y
         }
     }
     if (ode->length != Nspins*3){
-        //printf("kinda cringe %d %d\n", ode->length, Nspins*6);
         reb_error(sim, "rebx_spin ODE is not of the expected length.\n");
     }
 }
@@ -343,15 +315,13 @@ void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const effect
             if (source->m == 0){
                 continue;
             }
-            //printf("LOCATIONS PRE: %f %f\n", source->x, target->x);
             rebx_spin_orbit_accelerations(source, target, G, *k2, *q, *sx, *sy, *sz, primary);
-            //printf("LOCATIONS POST: %f %f\n", source->x, target->x);
         }
     }
 }
 
 // Calculate potential of conservative piece of tidal interaction
-static double rebx_calculateculate_spin_potential(struct reb_particle* source, struct reb_particle* target, const double G, const double k2){
+static double rebx_calculate_spin_potential(struct reb_particle* source, struct reb_particle* target, const double G, const double k2){
     const double ms = source->m;
     const double mt = target->m;
     const double Rt = target->r;
@@ -393,7 +363,7 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
             if (source->m == 0){
                 continue;
             }
-            H += rebx_calculateculate_spin_potential(source, target, G, *k2);
+            H += rebx_calculate_spin_potential(source, target, G, *k2);
         }
     }
 
