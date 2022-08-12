@@ -63,7 +63,8 @@ void align_simulation(struct reb_simulation* sim){
         struct reb_particle* p = &sim->particles[i];
 	struct reb_vec3d pos = {p->x, p->y, p->z};
 	struct reb_vec3d vel = {p->vx, p->vy, p->vz};
-
+  }
+}
 
 struct reb_vec3d transform(double inc, double omega, struct reb_vec3d spin_inv){
     // This ts a vector from the INVARIANT frame to the PLANET frame
@@ -102,8 +103,8 @@ int main(int argc, char* argv[]){
     const double p1_rad = 2.5 * 4.26e-5; // in Earth rad * 1 Earth rad / 1 AU
     reb_add_fmt(sim, "m a e r inc Omega pomega M", p1_mass, 0.17308688, 0.01, p1_rad, 0.5 * (M_PI / 180.), 0.0 * (M_PI / 180.), 0.0 * (M_PI / 180.), 0.0 * (M_PI / 180.)); // Planet 1
 
-    const double p2_mass = 5. * 3.0e-6; 
-    const double p2_rad = 2.5 * 4.26e-5; 
+    const double p2_mass = 5. * 3.0e-6;
+    const double p2_rad = 2.5 * 4.26e-5;
     reb_add_fmt(sim, "m a e r inc Omega pomega M", p2_mass, 0.23290608, 0.01, p2_rad, -0.431 * (M_PI / 180.), 0.0 * (M_PI / 180.), 0.0 * (M_PI / 180.), 0.0 * (M_PI / 180.)); // Planet 2
     reb_move_to_com(sim);
     sim->N_active = 3;
