@@ -1,7 +1,7 @@
 /**
  * @file    type_I_migration.c
  * @brief   Type I migration 
- * @author  Kaltrina Kajtazi <1kaltrinakajtazi@gmail.com>
+ * @author  Kaltrina Kajtazi <1kaltrinakajtazi@gmail.com>, Gabriele Pichierri <gabrielepichierri@gmail.com>
  * 
  * @section     LICENSE
  * Copyright (c) 2015 Dan Tamayo, Hanno Rein
@@ -35,7 +35,7 @@
  * Python example          `TypeIMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TypeIMigration.ipynb>`_.
  * ======================= ===============================================
  * 
- * This applies Type I migration, damping eccentricity, semi-major axis and inclination.
+ * This applies Type I migration, damping eccentricity, angular momentum and inclination.
  * The base of the code is the same as the modified orbital forces one written by D. Tamayo, H. Rein.
  * It also allows for parameters describing an inner disc edge, modeled using the implementation in inner_disk_edge.c.
  * Note that this code is not machine independent since power laws were not possible to avoid all together.
@@ -76,8 +76,8 @@ const double rebx_calculate_damping_timescale(const double G, const double sd0, 
     return t_wave;
 }
 
-/* Calculating the eccentricity damping timescale, from Cresswell & Nelson 2008. 
-eh=e/h, ih = i/h, wave is a funcion variable namne which will be the t_wave function*/
+/* Calculating the eccentricity damping timescale t_e = -e/(de/dt), from Cresswell & Nelson 2008. 
+eh=e/h, ih = i/h, wave is a funcion variable name which will be the t_wave function*/
 
 const double rebx_calculate_eccentricity_damping_timescale(const double wave, const double eh, const double ih){
     double t_e;
@@ -86,11 +86,11 @@ const double rebx_calculate_eccentricity_damping_timescale(const double wave, co
     return t_e;
 }
 
-/* Calculating the damping timescale of the semi-major axis; dampened as the planet moves inward, from Cresswell & Nelson 2008 */
+/* Calculating the migration timescale t_mig = - angmom/torque, from Cresswell & Nelson 2008*/
 
-const double rebx_calculate_semi_major_axis_damping_timescale(const double wave, const double eh, const double ih, const double h2, const double s){
+const double rebx_calculate_migration_timescale(const double wave, const double eh, const double ih, const double h2, const double s){
     double Pe;
-    double t_a;
+    double t_mig;
     double term;
     double term2;
     double term3;
@@ -98,12 +98,12 @@ const double rebx_calculate_semi_major_axis_damping_timescale(const double wave,
     term2 = (eh/2.84) * (eh/2.84);
     term3 = (eh/2.02) * (eh/2.02);
     Pe = (1. + pow(term, 1.2) +  term2*term2*term2) / (1. - term3*term3);
-    t_a = ((2.*wave)/(2.7 + 1.1*s)) * (1/h2) * (Pe + (Pe/fabs(Pe)) * ((0.070*ih) + (0.085*ih*ih*ih*ih) - (0.080*eh*ih*ih)));
+    t_mig = ((2.*wave)/(2.7 + 1.1*s)) * (1/h2) * (Pe + (Pe/fabs(Pe)) * ((0.070*ih) + (0.085*ih*ih*ih*ih) - (0.080*eh*ih*ih)));
 
-    return t_a;
+    return t_mig;
 }
 
-/* Calculating the inclination damping timescale, from Cresswell & Nelson 2008*/
+/* Calculating the inclination damping timescale t_i = -i/(di/dt), from Cresswell & Nelson 2008*/
 
 const double rebx_calculate_inclination_damping_timescale(const double wave, const double eh, const double ih){
     double t_i;
@@ -113,7 +113,7 @@ const double rebx_calculate_inclination_damping_timescale(const double wave, con
 }
 
 static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source){
-    double invtau_a;
+    double invtau_mig;
     double tau_e;
     double tau_inc;
 
@@ -180,16 +180,16 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
 
     const double G = sim->G;
     const double wave = rebx_calculate_damping_timescale(G, sd0, sqrt(r2), s, ms, mp, a0, h2);
-    invtau_a = rebx_calculate_planet_trap(a0, dedge, hedge)/(rebx_calculate_semi_major_axis_damping_timescale(wave, eh, ih, h2, s));
+    invtau_mig = rebx_calculate_planet_trap(a0, dedge, hedge)/(rebx_calculate_migration_timescale(wave, eh, ih, h2, s));
     tau_e = rebx_calculate_eccentricity_damping_timescale(wave, eh, ih);
     tau_inc = rebx_calculate_inclination_damping_timescale(wave, eh, ih);
 
     struct reb_vec3d a = {0};
 
-    if (invtau_a != 0.0){
-        a.x = -dvx*(invtau_a);
-        a.y = -dvy*(invtau_a);
-        a.z = -dvz*(invtau_a);
+    if (invtau_mig != 0.0){
+        a.x = -dvx*(invtau_mig);
+        a.y = -dvy*(invtau_mig);
+        a.z = -dvz*(invtau_mig);
     }
 
     if (tau_e < INFINITY || tau_inc < INFINITY){
@@ -197,7 +197,7 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
         const double prefac = -2*vdotr/r2/tau_e;
         a.x += prefac*dx;
         a.y += prefac*dy;
-        a.z += prefac*dz - 2.*dvz/tau_inc;
+        a.z += prefac*dz - 2*dvz/tau_inc;
     }
     return a;
 }
