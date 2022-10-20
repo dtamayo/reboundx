@@ -122,6 +122,24 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "ye_spin_axis_x", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "ye_spin_axis_y", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "ye_spin_axis_z", REBX_TYPE_DOUBLE);
+
+    /* For triaxial_torque.c */
+    rebx_register_param(rebx, "tt_Ii", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_omega", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_Ij", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_Ik", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_ix", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_iy", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_iz", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_jx", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_jy", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_jz", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_kx", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_ky", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_kz", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_si", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_sj", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tt_sk", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -310,6 +328,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->update_accelerations = rebx_yarkovsky_effect;
         force->force_type = REBX_FORCE_VEL;
     }
+    else if (strcmp(name, "stark_force") == 0){
+        force->update_accelerations = rebx_stark_force;
+        force->force_type = REBX_FORCE_POS;
+    }
     else{
         char str[300];
         sprintf(str, "REBOUNDx error: Force '%s' not found in REBOUNDx library.\n", name);
@@ -401,6 +423,10 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
     }
     else if (strcmp(name, "track_min_distance") == 0){
         operator->step_function = rebx_track_min_distance;
+        operator->operator_type = REBX_OPERATOR_RECORDER;
+    }
+    else if (strcmp(name, "triaxial_torque") == 0){
+        operator->step_function = rebx_triaxial_torque;
         operator->operator_type = REBX_OPERATOR_RECORDER;
     }
     else{
