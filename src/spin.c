@@ -63,93 +63,65 @@
 #include <float.h>
 #include "reboundx.h"
 
-struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double q, const double sx, const double sy, const double sz, struct reb_particle* primary){
-  
+struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double sigma, const double sx, const double sy, const double sz){
+
   const double ms = source->m;
   const double mt = target->m;
   const double Rt = target->r;
   const double mratio = ms / mt; // have already checked for 0 and inf
+  const double mu_ij = ms * mt / (ms + mt);
 
+  // distance vector FROM j TO i
   const double dx = source->x - target->x;
   const double dy = source->y - target->y;
   const double dz = source->z - target->z;
-  const double dr2 = dx*dx + dy*dy + dz*dz;
-  const double dr = sqrt(dr2);
-  const double dx_hat = dx / dr;
-  const double dy_hat = dy / dr;
-  const double dz_hat = dz / dr;
+  const double d2 = dx * dx + dy * dy + dz * dz;
+  const double dr = sqrt(d2);
 
   struct reb_vec3d tot_force = {0};
 
   if (k2 != 0){
-    const double quad_prefactor = (Rt * Rt * Rt * Rt * Rt * (1. + mratio) * (k2 / 2.)) / (dr2 * dr2);
-    const double omega_dot_rhat = sx * dx_hat + sy * dy_hat + sz * dz_hat;
+    const double quad_prefactor = ms * k2 * (Rt * Rt * Rt * Rt * Rt) / mu_ij;
+    const double omega_dot_d = sx * dx + sy * dy + sz * dz;
     const double omega_squared = sx * sx + sy * sy + sz * sz;
 
-    const double term1 = 5 * omega_dot_rhat * omega_dot_rhat - omega_squared - (12. * G * ms / (dr * dr * dr));
+    const double t1 = 5. * omega_dot_d * omega_dot_d / (2 * (dr * dr * dr * dr * dr * dr * dr));
+    const double t2 = omega_squared / (2 * (dr * dr * dr * dr * dr));
+    const double t3 = omega_dot_d / (dr * dr * dr * dr * dr);
+    const double t4 = 6. * G * ms / (dr * dr * dr * dr * dr * dr * dr * dr);
 
-    tot_force.x += quad_prefactor * (term1 * dx_hat - (2. * omega_dot_rhat * sx));
-    tot_force.y += quad_prefactor * (term1 * dy_hat - (2. * omega_dot_rhat * sy));
-    tot_force.z += quad_prefactor * (term1 * dz_hat - (2. * omega_dot_rhat * sz));
+    tot_force.x += quad_prefactor * ((t1 - t2 - t4) * dx - t3 * sx);
+    tot_force.y += quad_prefactor * ((t1 - t2 - t4) * dy - t3 * sy);
+    tot_force.z += quad_prefactor * ((t1 - t2 - t4) * dz - t3 * sz);
 
   }
 
-  if (q != 0){
-    // For now determine mutual orbit assuming most massive particle is the primary
-    // Determine semimajor axis from the vis-viva equation: maybe change this if more accuracy is needed?
-    // Just b/c the rebound orbit method is slow
-    const double pm = primary->m;
-    struct reb_particle* tidal;
+  if (sigma != 0){
+    // EKH FRAMEWORK
+    const double a2 = k2 * k2 * Rt * Rt * Rt * Rt * Rt * Rt * Rt * Rt * Rt * Rt;
 
-    // Need to check if the star is the perturber
-    if (source == primary){ // star is the perturber
-      tidal = target;
-    }
-    else{
-      tidal = source;
-    }
-    const double dx_t = primary->x - tidal->x;
-    const double dy_t = primary->y - tidal->y;
-    const double dz_t = primary->z - tidal->z;
-    const double dr2_t = dx_t*dx_t + dy_t*dy_t + dz_t*dz_t;
-    const double dr_t = sqrt(dr2_t);
-
-    const double dvx_t = primary->vx - tidal->vx;
-    const double dvy_t = primary->vy - tidal->vy;
-    const double dvz_t = primary->vz - tidal->vz;
-    const double vel2_t = dvx_t*dvx_t + dvy_t*dvy_t + dvz_t*dvz_t;
-
-    const double a = ((G * pm * dr_t) / (2 * G * pm - dr_t * vel2_t));
-    const double n = sqrt(G * (pm + tidal->m) / (a * a * a));
-
+    // Velocity vector: j to i
     const double dvx = source->vx - target->vx;
     const double dvy = source->vy - target->vy;
     const double dvz = source->vz - target->vz;
     const double vel2 = dvx*dvx + dvy*dvy + dvz*dvz;
 
-    // relevant dot and cross products
-    const double rhat_dot_vel = dx_hat * dvx + dy_hat * dvy + dz_hat * dvz;
-    const double rhat_cross_v_x = dy_hat * dvz - dz_hat * dvy;
-    const double rhat_cross_v_y = dz_hat * dvx - dx_hat * dvz;
-    const double rhat_cross_v_z = dx_hat * dvy - dy_hat * dvx;
+    // h vector - EKH
+    const double hx = dy * dvz - dz * dvy;
+    const double hy = dz * dvx - dx * dvz;
+    const double hz = dx * dvy - dy * dvx;
 
-    // first bracketed vector
-    const double vec1_x = 3 * rhat_dot_vel * dx_hat;
-    const double vec1_y = 3 * rhat_dot_vel * dy_hat;
-    const double vec1_z = 3 * rhat_dot_vel * dz_hat;
+    // h - r^2 Omega
+    const double vec1_x = hx - d2 * sx;
+    const double vec1_y = hy - d2 * sy;
+    const double vec1_z = hz - d2 * sz;
 
-    // Tidal damping on i due to j
-    const double rratio = Rt / a;
-    const double aratio = a / dr;
-    const double prefactor = -((3. * n * k2) / q) * mratio * rratio * rratio * rratio * rratio * rratio * aratio * aratio * aratio * aratio * aratio * aratio * aratio * aratio;
-    // Build vector 2 - this is the parenthesis term in (4)
-    const double temp_x = rhat_cross_v_x - dr * sx;
-    const double temp_y = rhat_cross_v_y - dr * sy;
-    const double temp_z = rhat_cross_v_z - dr * sz;
+    // second vector
+    const double vec2_x = vec1_y * dz - vec1_z * dy;
+    const double vec2_y = vec1_z * dx - vec1_x * dz;
+    const double vec2_z = vec1_x * dy - vec1_y * dx;
 
-    const double vec2_x = temp_y * dz_hat - temp_z * dy_hat;
-    const double vec2_y = temp_z * dx_hat - temp_x * dz_hat;
-    const double vec2_z = temp_x * dy_hat - temp_y * dx_hat;
+    const double prefactor = (-9 * sigma * ms * ms * a2) / (2 * mu_ij * (d2 * d2 * d2 * d2 * d2));
 
     tot_force.x += prefactor * (vec1_x + vec2_x);
     tot_force.y += prefactor * (vec1_y + vec2_y);
@@ -159,10 +131,10 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
   return tot_force;
 }
 
-static void rebx_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double q, const double sx, const double sy, const double sz, struct reb_particle* primary){
+static void rebx_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double sigma, const double sx, const double sy, const double sz){
 
     // Input params all associated with target
-    struct reb_vec3d tot_force = rebx_calculate_spin_orbit_accelerations(source, target, G, k2, q, sx, sy, sz, primary);
+    struct reb_vec3d tot_force = rebx_calculate_spin_orbit_accelerations(source, target, G, k2, sigma, sx, sy, sz);
 
     const double ms = source->m;
     const double mt = target->m;
@@ -186,9 +158,9 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
     for (int i=0; i<N_real; i++){
         struct reb_particle* pi = &sim->particles[i]; // target particle
         double* k2 = rebx_get_param(rebx, pi->ap, "k2");
-        double* q = rebx_get_param(rebx, pi->ap, "q");
+        double* sigma = rebx_get_param(rebx, pi->ap, "sigma");
         double* moi = rebx_get_param(rebx, pi->ap, "moi");
-        
+
 	// Set initial spin accelerations to 0
         yDot[3*Nspins] = 0;
         yDot[3*Nspins+1] = 0;
@@ -199,7 +171,7 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
         const double sz = y[3 * Nspins + 2];
 
         for (int j=0; j<N_real; j++){
-          if (k2 != NULL && q != NULL && i != j){ // Look into this conditional more
+          if (k2 != NULL && sigma != NULL && i != j){ // Look into this conditional more
               struct reb_particle* pj = &sim->particles[j];
 
               double dx = pj->x - pi->x;
@@ -210,7 +182,7 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
               double mj = pj->m;
               double mu_ij = -(mi * mj) / ((mi + mj));
 
-              struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pj, pi, sim->G, *k2, *q, sx, sy, sz, primary);
+              struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pj, pi, sim->G, *k2, *sigma, sx, sy, sz);
               yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) * (mu_ij / *moi));
               yDot[3*Nspins+1] += ((dz * tf.x - dx * tf.z) * (mu_ij / *moi));
               yDot[3*Nspins+2] += ((dx * tf.y - dy * tf.x) * (mu_ij / *moi));
@@ -274,8 +246,12 @@ void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* con
     const int N_real = sim->N - sim->N_var;
     for (int i=0; i<N_real; i++){
         struct reb_particle* p = &sim->particles[i];
-        double* k2 = rebx_get_param(rebx, p->ap, "k2");
-        if (k2 != NULL){
+        // Only track spin if particle has moment of inertia and valid spin axisset
+        double* moi = rebx_get_param(rebx, p->ap, "moi");
+        double* sx = rebx_get_param(rebx, p->ap, "spin_sx");
+        double* sy = rebx_get_param(rebx, p->ap, "spin_sy");
+        double* sz = rebx_get_param(rebx, p->ap, "spin_sz");
+        if (moi != NULL && sx != NULL && sy != NULL && sz != NULL){
             Nspins += 1;
         }
     }
@@ -294,17 +270,17 @@ void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* con
 void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const effect, struct reb_particle* const particles, const int N){
     struct rebx_extras* const rebx = sim->extras;
     const double G = sim->G;
-    struct reb_particle* primary = &particles[0];
 
     for (int i=0; i<N; i++){
         struct reb_particle* target = &particles[i];
         // Particle must have a k2 set, otherwise we treat this body as a point particle
         double* k2 = rebx_get_param(rebx, target->ap, "k2");
-        double* q = rebx_get_param(rebx, target->ap, "q");
+        double* sigma = rebx_get_param(rebx, target->ap, "sigma");
         double* sx = rebx_get_param(rebx, target->ap, "spin_sx");
         double* sy = rebx_get_param(rebx, target->ap, "spin_sy");
         double* sz = rebx_get_param(rebx, target->ap, "spin_sz");
         if (sx == 0 && sy == 0 && sz == 0){
+            // Particle needs at least one component of spin to exert additional forces
             continue;
         }
         for (int j=0; j<N; j++){
@@ -315,7 +291,7 @@ void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const effect
             if (source->m == 0){
                 continue;
             }
-            rebx_spin_orbit_accelerations(source, target, G, *k2, *q, *sx, *sy, *sz, primary);
+            rebx_spin_orbit_accelerations(source, target, G, *k2, *sigma, *sx, *sy, *sz);
         }
     }
 }

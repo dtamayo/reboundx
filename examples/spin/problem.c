@@ -26,7 +26,7 @@ void compute_transformation_angles(struct reb_simulation* sim, double* theta1, d
     *theta2 = M_PI / 2 - atan2(ghat_z, ghat_perp);
 }
 
-struct reb_vec3d EulerAnglesTransform(struct reb_vec3d xyz, double Omega, double I, double omega){
+struct reb_vec3d EulerAnglesTransform(struct reb_vec3d xyz, const double Omega, const double I, const double omega){
     // celmech line 341
     double x = xyz.x;
     double y = xyz.y;
@@ -61,8 +61,66 @@ void align_simulation(struct reb_simulation* sim){
     compute_transformation_angles(sim, &theta1, &theta2);
     for (int i = 0; i <= N_real; i++){
         struct reb_particle* p = &sim->particles[i];
-	struct reb_vec3d pos = {p->x, p->y, p->z};
-	struct reb_vec3d vel = {p->vx, p->vy, p->vz};
+	      struct reb_vec3d pos = {p->x, p->y, p->z};
+	      struct reb_vec3d vel = {p->vx, p->vy, p->vz};
+        struct reb_vec3d ps = EulerAnglesTransform(pos, 0, theta2, theta1);
+      	struct reb_vec3d vs = EulerAnglesTransform(vel, 0, theta2, theta1);
+
+      	p->x = ps.x;
+      	p->y = ps.y;
+      	p->z = ps.z;
+
+      	p->vx = vs.x;
+      	p->vy = vs.y;
+      	p->vz = vs.z;
+  }
+}
+
+// HELPER FUNCTIONS
+// Would be nice to a) put these functions in the src code and b) have them set sigma directly instead of returning a double...
+double set_time_lag(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, const double tau){
+  const double* k2 = rebx_get_param(rebx, body->ap, "k2");
+  const double r = body->r;
+
+  if (k2 != NULL){
+    const double sigma = *k2 * 4 * sim->G / (3 * r);
+    return sigma;
+  }
+
+  else{
+    printf("Could not set sigma because Love number was not set for this particle");
+    return 0.0;
+  }
+}
+
+double set_planet_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* primary, const double q, const int synchronized){
+  // CALL THIS AFTER OTHER PARAMETERS ARE SET
+  struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, *body, *primary);
+  const double r = body->r;
+  const double n = orb.n;
+
+  const double* k2 = rebx_get_param(rebx, body->ap, "k2");
+
+  if (k2 != NULL){
+    const double sigma = 4. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
+    //printf("%f %f %f %10e\n", r, n, *k2, sigma);
+    return sigma;
+  }
+}
+
+double set_star_planet_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* star, const double q, struct reb_particle* body){
+  // First calculate f_dot
+  // CALL THIS AFTER OTHER PARAMETERS ARE SET
+  struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, *body, *star);
+  const double r = star->r;
+  const double n = orb.n;
+
+  const double* k2 = rebx_get_param(rebx, star->ap, "k2");
+
+  if (k2 != NULL){
+    const double sigma = 4. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
+    printf("%f %f %f %10e\n", r, n, *k2, sigma);
+    return sigma;
   }
 }
 
@@ -109,42 +167,57 @@ int main(int argc, char* argv[]){
     reb_move_to_com(sim);
     sim->N_active = 3;
     sim->integrator = REB_INTEGRATOR_WHFAST;
-    sim->dt = 1e-2;
+    sim->dt = 1e-3;
 
     // Add REBOUNDx Additional effects
     // First Spin
+
     struct rebx_extras* rebx = rebx_attach(sim);
+
     struct rebx_force* effect = rebx_load_force(rebx, "spin");
     rebx_add_force(rebx, effect);
     // Sun
-    double solar_spin_period = 20 * 2 * M_PI / 365;
-    double solar_spin = (2 * M_PI) / solar_spin_period;
+    const double solar_spin_period = 20 * 2 * M_PI / 365;
+    const double solar_spin = (2 * M_PI) / solar_spin_period;
+    const double solar_q = 100000000.;
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", 0.07);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "q", 100000.);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", 6303.);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "moi", 0.07 * solar_mass * solar_rad * solar_rad);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sx", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sy", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sz", solar_spin * 1.0);
 
+//    const double sigma_star = set_star_planet_q(sim, rebx, &sim->particles[0], solar_q, &sim->particles[1]);
+//    rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", sigma_star);
+//    printf("%f\n",sigma_star);
     // P1
-    double spin_period_1 = 5. * 2. * M_PI / 365.; // 5 days in reb years
-    double spin_1 = (2. * M_PI) / spin_period_1;
+    const double spin_period_1 = 5. * 2. * M_PI / 365.; // 5 days in reb years
+    const double spin_1 = (2. * M_PI) / spin_period_1;
+    const double planet_q = 10000.;
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k2", 0.4);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "q", 10000.);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", 1.75e15);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "moi", 0.25 * p1_mass * p1_rad * p1_rad);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sx", spin_1 * 0.0);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sy", spin_1 * -0.0261769);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sz", spin_1 * 0.99965732);
 
+//    const double sigma_p1 = set_planet_q(sim, rebx, &sim->particles[1], &sim->particles[0], planet_q, 1);
+
     // P2
     double spin_period_2 = 3. * 2. * M_PI / 365.; // 3 days in reb years
     double spin_2 = (2. * M_PI) / spin_period_2;
     rebx_set_param_double(rebx, &sim->particles[2].ap, "k2", 0.4);
-    rebx_set_param_double(rebx, &sim->particles[2].ap, "q", 10000.);
+    rebx_set_param_double(rebx, &sim->particles[2].ap, "sigma", 2.73e15);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "moi", 0.25 * p2_mass * p2_rad * p2_rad);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sx", spin_2 * 0.0);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sy", spin_2 * 0.0249736);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sz", spin_2 * 0.99968811);
+
+//    const double sigma_p2 = set_planet_q(sim, rebx, &sim->particles[2], &sim->particles[0], planet_q, 1);
+//    rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", sigma_p2);
+//    rebx_set_param_double(rebx, &sim->particles[2].ap, "sigma", sigma_p1);
+
+//    printf("%f %f\n", sigma_p1, sigma_p2);
 
     // And migration
     struct rebx_force* mo = rebx_load_force(rebx, "modify_orbits_forces");
@@ -157,8 +230,8 @@ int main(int argc, char* argv[]){
     // Run simulation
     rebx_spin_initialize_ode(sim, effect);
 
-    FILE* f = fopen("8_11_sm_test.txt","w");
-    fprintf(f, "t,a1,i1,e1,sx1,sy1,sz1,S1,pomega1,Omega1,f1,x1,y1,z1,a2,i2,e2,sx2,sy2,sz2,S2,pomega2,Omega2,f2,x2,y2,z2\n");
+    FILE* f = fopen("10_24_sm_sigma_synced.txt","w");
+    fprintf(f, "t,a1,i1,e1, s1x, s1y, s1z, mag1, pom1, Om1, f1, p1x,p1y,p1z,a2, i2, e2, s2x, s2y, s2z, mag2, pom2, Om2, f2, p2x,p2y,p2z\n");
     int cond = 0;
      for (int i=0; i<100000; i++){
 
@@ -166,12 +239,12 @@ int main(int argc, char* argv[]){
          struct reb_particle* p1 = &sim->particles[1];
          struct reb_particle* p2 = &sim->particles[2];
 
-	 if (sim->t > 2e6 * 2 * M_PI && cond == 0){
-		printf("Migration Switching Off\n");
-		rebx_set_param_double(rebx, &sim->particles[1].ap, "tau_a", INFINITY);
-    		rebx_set_param_double(rebx, &sim->particles[2].ap, "tau_a", INFINITY);
-	 	cond = 1;
-	 }
+  	 if (sim->t > 2e6 * 2 * M_PI && cond == 0){
+  		printf("Migration Switching Off\n");
+  		    rebx_set_param_double(rebx, &sim->particles[1].ap, "tau_a", INFINITY);
+      		rebx_set_param_double(rebx, &sim->particles[2].ap, "tau_a", INFINITY);
+  	 	cond = 1;
+  	 }
 
          double* sx1 = rebx_get_param(rebx, p1->ap, "spin_sx");
          double* sy1 = rebx_get_param(rebx, p1->ap, "spin_sy");
@@ -197,14 +270,14 @@ int main(int argc, char* argv[]){
          double f2 = o2.f;
          double e2 = o2.e;
 
-         struct reb_vec3d s1_inv = {*sx1, *sy1, *sz1};
-         struct reb_vec3d s2_inv = {*sx2, *sy2, *sz2};
+         struct reb_vec3d s1 = {*sx1, *sy1, *sz1};
+         struct reb_vec3d s2 = {*sx2, *sy2, *sz2};
 
 	 //printf("%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n", sim->t, a1, i1, e1, s1_inv.x, s1_inv.y, s1_inv.z, sqrt(s1_inv.x * s1_inv.x + s1_inv.y * s1_inv.y + s1_inv.z * s1_inv.z), pom1, Om1, p1->x, p1->y, p1->z, a2, i2, e2, s2_inv.x, s2_inv.y, s2_inv.z, sqrt(s2_inv.x * s2_inv.x + s2_inv.y * s2_inv.y + s2_inv.z * s2_inv.z), pom2, Om2, p2->x, p2->y, p2->z);
 
 
-         struct reb_vec3d s1 = transform(i1, Om1, s1_inv);
-         struct reb_vec3d s2 = transform(i2, Om2, s2_inv);
+  //       struct reb_vec3d s1 = transform(i1, Om1, s1_inv);
+  //       struct reb_vec3d s2 = transform(i2, Om2, s2_inv);
 
          // Interpret in the planet frame
          double mag1 = sqrt(s1.x * s1.x + s1.y * s1.y + s1.z * s1.z);
