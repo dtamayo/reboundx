@@ -77,23 +77,22 @@ void align_simulation(struct reb_simulation* sim){
 }
 
 // HELPER FUNCTIONS
-// Would be nice to a) put these functions in the src code and b) have them set sigma directly instead of returning a double...
-double set_time_lag(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, const double tau){
+// Would be nice to put these functions in the src code
+void set_time_lag(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, const double tau){
   const double* k2 = rebx_get_param(rebx, body->ap, "k2");
   const double r = body->r;
 
-  if (k2 != NULL){
+  if (k2 != NULL || r != 0.0){
     const double sigma = *k2 * 4 * sim->G / (3 * r);
-    return sigma;
+    rebx_set_param_double(rebx, &body->ap, "sigma", sigma);
   }
 
   else{
-    printf("Could not set sigma because Love number was not set for this particle");
-    return 0.0;
+    reb_error(sim, "Could not set sigma because Love number and/or radius was not set for this particle\n");
   }
 }
 
-double set_planet_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* primary, const double q, const int synchronized){
+void set_planet_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* primary, const double q, const int synchronized){
   // CALL THIS AFTER OTHER PARAMETERS ARE SET
   struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, *body, *primary);
   const double r = body->r;
@@ -101,15 +100,18 @@ double set_planet_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct
 
   const double* k2 = rebx_get_param(rebx, body->ap, "k2");
 
-  if (k2 != NULL){
+  if (k2 != NULL || r != 0.0){
     const double sigma = 4. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
-    //printf("%f %f %f %10e\n", r, n, *k2, sigma);
-    return sigma;
+    //printf("sigma = %10e\n", sigma);
+    rebx_set_param_double(rebx, &body->ap, "sigma", sigma);
+  }
+
+  else{
+    reb_error(sim, "Could not set sigma because Love number and/or radius was not set for this particle\n");
   }
 }
 
-double set_star_planet_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* star, const double q, struct reb_particle* body){
-  // First calculate f_dot
+void set_star_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* star, struct reb_particle* body, const double q, const int synchronized){
   // CALL THIS AFTER OTHER PARAMETERS ARE SET
   struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, *body, *star);
   const double r = star->r;
@@ -117,10 +119,14 @@ double set_star_planet_q(struct reb_simulation* sim, struct rebx_extras* rebx, s
 
   const double* k2 = rebx_get_param(rebx, star->ap, "k2");
 
-  if (k2 != NULL){
+  if (k2 != NULL || r != 0.0){
     const double sigma = 4. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
-    printf("%f %f %f %10e\n", r, n, *k2, sigma);
-    return sigma;
+    //printf("sigma = %10e\n", sigma);
+    rebx_set_param_double(rebx, &star->ap, "sigma", sigma);
+  }
+
+  else{
+    reb_error(sim, "Could not set sigma because Love number and/or radius was not set for this particle\n");
   }
 }
 
@@ -181,27 +187,24 @@ int main(int argc, char* argv[]){
     const double solar_spin = (2 * M_PI) / solar_spin_period;
     const double solar_q = 100000000.;
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", 0.07);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", 6303.);
+    //rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", 6303.);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "moi", 0.07 * solar_mass * solar_rad * solar_rad);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sx", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sy", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sz", solar_spin * 1.0);
+    set_star_q(sim, rebx, &sim->particles[0], &sim->particles[1], solar_q, 1);
 
-//    const double sigma_star = set_star_planet_q(sim, rebx, &sim->particles[0], solar_q, &sim->particles[1]);
-//    rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", sigma_star);
-//    printf("%f\n",sigma_star);
     // P1
     const double spin_period_1 = 5. * 2. * M_PI / 365.; // 5 days in reb years
     const double spin_1 = (2. * M_PI) / spin_period_1;
     const double planet_q = 10000.;
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k2", 0.4);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", 1.75e15);
+    //rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", 1.75e15);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "moi", 0.25 * p1_mass * p1_rad * p1_rad);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sx", spin_1 * 0.0);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sy", spin_1 * -0.0261769);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sz", spin_1 * 0.99965732);
-
-//    const double sigma_p1 = set_planet_q(sim, rebx, &sim->particles[1], &sim->particles[0], planet_q, 1);
+    set_planet_q(sim, rebx, &sim->particles[1], &sim->particles[0], planet_q, 1);
 
     // P2
     double spin_period_2 = 3. * 2. * M_PI / 365.; // 3 days in reb years
@@ -212,12 +215,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sx", spin_2 * 0.0);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sy", spin_2 * 0.0249736);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sz", spin_2 * 0.99968811);
-
-//    const double sigma_p2 = set_planet_q(sim, rebx, &sim->particles[2], &sim->particles[0], planet_q, 1);
-//    rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", sigma_p2);
-//    rebx_set_param_double(rebx, &sim->particles[2].ap, "sigma", sigma_p1);
-
-//    printf("%f %f\n", sigma_p1, sigma_p2);
+    set_planet_q(sim, rebx, &sim->particles[2], &sim->particles[0], planet_q, 1);
 
     // And migration
     struct rebx_force* mo = rebx_load_force(rebx, "modify_orbits_forces");
