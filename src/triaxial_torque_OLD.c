@@ -145,7 +145,7 @@ static void rebx_update_spin(struct reb_simulation* const sim, int index, double
     M_ijk[0] = 0.0;
     M_ijk[1] = 0.0;
     M_ijk[2] = 0.0;
-    rebx_calc_torques_old(sim,index,M_ijk,Ii,Ij,Ik,*ix,*iy,*iz,*jx,*jy,*jz,*kx,*ky,*kz);
+    // rebx_calc_torques_old(sim,index,M_ijk,Ii,Ij,Ik,*ix,*iy,*iz,*jx,*jy,*jz,*kx,*ky,*kz);
 
     // change sx sy sz to ijk basis
     // double det_ijk = *ix*(*jy**kz-*ky**jz) + *jx*(*ky**iz-*iy**kz) + *kx*(*iy**jz-*jy**iz); // determinant of ijk unit vector matrix
@@ -399,147 +399,147 @@ static void rebx_calc_torques(struct reb_simulation* const sim, int index, doubl
 }
 
 // updates spin vector, omega, and ijk in lockstep using 4th order Runge Kutta
-static void rebx_update_spin_ijk(struct reb_simulation* const sim, int index, double* const ix, double* const iy, double* const iz, 
-    double* const jx, double* const jy, double* const jz, double* const kx, double* const ky, double* const kz, double* const si, 
-    double* const sj, double* const sk, double* const omega, const double Ii, const double Ij, const double Ik, const double dt){
+// static void rebx_update_spin_ijk(struct reb_simulation* const sim, int index, double* const ix, double* const iy, double* const iz, 
+//     double* const jx, double* const jy, double* const jz, double* const kx, double* const ky, double* const kz, double* const si, 
+//     double* const sj, double* const sk, double* const omega, const double Ii, const double Ij, const double Ik, const double dt){
 
-    double I_ijk[3];
-    I_ijk[0] = Ii;
-    I_ijk[1] = Ij;
-    I_ijk[2] = Ik;
+//     double I_ijk[3];
+//     I_ijk[0] = Ii;
+//     I_ijk[1] = Ij;
+//     I_ijk[2] = Ik;
 
-    // initialize matrices for all R-K calculations
-    double rk_xyz[4][3]; // xyz of particle
-    double rk_M_ijk[4][3]; // ijk components of torque on body
-    double rk_omega_ijk[4][3]; // ijk components of spin vector (total omega vector)
-    double rk_ijk_xyz[4][3][3]; // xyz components of each ijk vector
+//     // initialize matrices for all R-K calculations
+//     double rk_xyz[4][3]; // xyz of particle
+//     double rk_M_ijk[4][3]; // ijk components of torque on body
+//     double rk_omega_ijk[4][3]; // ijk components of spin vector (total omega vector)
+//     double rk_ijk_xyz[4][3][3]; // xyz components of each ijk vector
 
-    struct reb_particle* p = &sim->particles[index];
-    rk_xyz[0][0] = p->x;
-    rk_xyz[0][1] = p->y;
-    rk_xyz[0][2] = p->z;
+//     struct reb_particle* p = &sim->particles[index];
+//     rk_xyz[0][0] = p->x;
+//     rk_xyz[0][1] = p->y;
+//     rk_xyz[0][2] = p->z;
 
-    rk_omega_ijk[0][0] = *omega**si;
-    rk_omega_ijk[0][1] = *omega**sj;
-    rk_omega_ijk[0][2] = *omega**sk;
+//     rk_omega_ijk[0][0] = *omega**si;
+//     rk_omega_ijk[0][1] = *omega**sj;
+//     rk_omega_ijk[0][2] = *omega**sk;
 
-    rk_ijk_xyz[0][0][0] = *ix;
-    rk_ijk_xyz[0][0][1] = *iy;
-    rk_ijk_xyz[0][0][2] = *iz;
+//     rk_ijk_xyz[0][0][0] = *ix;
+//     rk_ijk_xyz[0][0][1] = *iy;
+//     rk_ijk_xyz[0][0][2] = *iz;
 
-    rk_ijk_xyz[0][1][0] = *jx;
-    rk_ijk_xyz[0][1][1] = *jy;
-    rk_ijk_xyz[0][1][2] = *jz;
+//     rk_ijk_xyz[0][1][0] = *jx;
+//     rk_ijk_xyz[0][1][1] = *jy;
+//     rk_ijk_xyz[0][1][2] = *jz;
 
-    rk_ijk_xyz[0][2][0] = *kx;
-    rk_ijk_xyz[0][2][1] = *ky;
-    rk_ijk_xyz[0][2][2] = *kz;
+//     rk_ijk_xyz[0][2][0] = *kx;
+//     rk_ijk_xyz[0][2][1] = *ky;
+//     rk_ijk_xyz[0][2][2] = *kz;
 
-    for (int i=0; i < 4; i++) {
-        for (int j=0; j < 3; j++) {
-            M_ijk[i][j] = 0.0;
-        }
-    }
+//     for (int i=0; i < 4; i++) {
+//         for (int j=0; j < 3; j++) {
+//             M_ijk[i][j] = 0.0;
+//         }
+//     }
 
-    // First lockstep Runge-Kutta calculations
-    rebx_calc_torques(sim,index,rk_xyz[0],M_ijk[0],I_ijk,rk_ijk_xyz[0][0],rk_ijk_xyz[0][1],rk_ijk_xyz[0][2]);
+//     // First lockstep Runge-Kutta calculations
+//     rebx_calc_torques(sim,index,rk_xyz[0],M_ijk[0],I_ijk,rk_ijk_xyz[0][0],rk_ijk_xyz[0][1],rk_ijk_xyz[0][2]);
 
-    // Continue editing here
+//     // Continue editing here
 
-    /* matrix for all calculations of slope
-    first dimension: which RK derivation calculation (1-4) 
-    dsecond dimension: component of omega vector (i,j,k) */
-    double domega_dts[4][3];
+//     /* matrix for all calculations of slope
+//     first dimension: which RK derivation calculation (1-4) 
+//     dsecond dimension: component of omega vector (i,j,k) */
+//     double domega_dts[4][3];
 
-    // Four Runge Kutta calculations
-    rebx_domega_dt(omega_i,omega_j,omega_k,M_ijk,Ii,Ij,Ik,domega_dts[0]);
-    rebx_domega_dt(omega_i + (domega_dts[0][0] * dt * 0.5),omega_j + (domega_dts[0][1] * dt * 0.5),omega_k + (domega_dts[0][2] * dt * 0.5),M_ijk,Ii,Ij,Ik,domega_dts[1]);
-    rebx_domega_dt(omega_i + (domega_dts[1][0] * dt * 0.5),omega_j + (domega_dts[1][1] * dt * 0.5),omega_k + (domega_dts[1][2] * dt * 0.5),M_ijk,Ii,Ij,Ik,domega_dts[2]);
-    rebx_domega_dt(omega_i + (domega_dts[2][0] * dt),omega_j + (domega_dts[2][1] * dt),omega_k + (domega_dts[2][2] * dt),M_ijk,Ii,Ij,Ik,domega_dts[3]);
+//     // Four Runge Kutta calculations
+//     rebx_domega_dt(omega_i,omega_j,omega_k,M_ijk,Ii,Ij,Ik,domega_dts[0]);
+//     rebx_domega_dt(omega_i + (domega_dts[0][0] * dt * 0.5),omega_j + (domega_dts[0][1] * dt * 0.5),omega_k + (domega_dts[0][2] * dt * 0.5),M_ijk,Ii,Ij,Ik,domega_dts[1]);
+//     rebx_domega_dt(omega_i + (domega_dts[1][0] * dt * 0.5),omega_j + (domega_dts[1][1] * dt * 0.5),omega_k + (domega_dts[1][2] * dt * 0.5),M_ijk,Ii,Ij,Ik,domega_dts[2]);
+//     rebx_domega_dt(omega_i + (domega_dts[2][0] * dt),omega_j + (domega_dts[2][1] * dt),omega_k + (domega_dts[2][2] * dt),M_ijk,Ii,Ij,Ik,domega_dts[3]);
 
-    // calculate domega
-    double domega[3];
-    for (int i = 0; i < 3; i++){
-        domega[i] = (domega_dts[0][i] + 2*domega_dts[1][i] + 2*domega_dts[2][i] + domega_dts[3][i]) * dt / 6;
-    }
+//     // calculate domega
+//     double domega[3];
+//     for (int i = 0; i < 3; i++){
+//         domega[i] = (domega_dts[0][i] + 2*domega_dts[1][i] + 2*domega_dts[2][i] + domega_dts[3][i]) * dt / 6;
+//     }
 
-    omega_i += domega[0];
-    omega_j += domega[1];
-    omega_k += domega[2];
+//     omega_i += domega[0];
+//     omega_j += domega[1];
+//     omega_k += domega[2];
 
-    *omega = sqrt(omega_i*omega_i + omega_j*omega_j + omega_k*omega_k);
-    *si = omega_i / *omega;
-    *sj = omega_j / *omega;
-    *sk = omega_k / *omega;
+//     *omega = sqrt(omega_i*omega_i + omega_j*omega_j + omega_k*omega_k);
+//     *si = omega_i / *omega;
+//     *sj = omega_j / *omega;
+//     *sk = omega_k / *omega;
 
-    // double si = omega_i / *omega;
-    // double sj = omega_j / *omega;
-    // double sk = omega_k / *omega;
+//     // double si = omega_i / *omega;
+//     // double sj = omega_j / *omega;
+//     // double sk = omega_k / *omega;
 
-    // convert back to xyz, update sx, sy, sz
-    // *sx = *ix*si + *jx*sj + *kx*sk;
-    // *sy = *iy*si + *jy*sj + *ky*sk;
-    // *sz = *iz*si + *jz*sj + *kz*sk;
+//     // convert back to xyz, update sx, sy, sz
+//     // *sx = *ix*si + *jx*sj + *kx*sk;
+//     // *sy = *iy*si + *jy*sj + *ky*sk;
+//     // *sz = *iz*si + *jz*sj + *kz*sk;
 
-    /* matrix for all calculations of slope
-    first dimension: which RK derivation calculation (1-4)
-    second dimension: vector (i_hat,j_hat,k_hat)
-    third dimension: component of vector (i,j,k) */
-    double dijk_dts[4][3][3];
+//     /* matrix for all calculations of slope
+//     first dimension: which RK derivation calculation (1-4)
+//     second dimension: vector (i_hat,j_hat,k_hat)
+//     third dimension: component of vector (i,j,k) */
+//     double dijk_dts[4][3][3];
 
-    // first Runge Kutta calculation
-    rebx_dijk_dt(1.0,0.0,0.0,*si,*sj,*sk,*omega,dijk_dts[0][0]); // i_hat
-    rebx_dijk_dt(0.0,1.0,0.0,*si,*sj,*sk,*omega,dijk_dts[0][1]); // j_hat
-    rebx_dijk_dt(0.0,0.0,1.0,*si,*sj,*sk,*omega,dijk_dts[0][2]); // k_hat
+//     // first Runge Kutta calculation
+//     rebx_dijk_dt(1.0,0.0,0.0,*si,*sj,*sk,*omega,dijk_dts[0][0]); // i_hat
+//     rebx_dijk_dt(0.0,1.0,0.0,*si,*sj,*sk,*omega,dijk_dts[0][1]); // j_hat
+//     rebx_dijk_dt(0.0,0.0,1.0,*si,*sj,*sk,*omega,dijk_dts[0][2]); // k_hat
 
-    // second Runge Kutta calculation
-    rebx_dijk_dt(1.0+(dijk_dts[0][0][0]*dt*0.5),0.0+(dijk_dts[0][0][1]*dt*0.5),0.0+(dijk_dts[0][0][2]*dt*0.5),*si,*sj,*sk,*omega,dijk_dts[1][0]); // i_hat
-    rebx_dijk_dt(0.0+(dijk_dts[0][1][0]*dt*0.5),1.0+(dijk_dts[0][1][1]*dt*0.5),0.0+(dijk_dts[0][1][2]*dt*0.5),*si,*sj,*sk,*omega,dijk_dts[1][1]); // j_hat
-    rebx_dijk_dt(0.0+(dijk_dts[0][2][0]*dt*0.5),0.0+(dijk_dts[0][2][1]*dt*0.5),1.0+(dijk_dts[0][2][2]*dt*0.5),*si,*sj,*sk,*omega,dijk_dts[1][2]); // k_hat
+//     // second Runge Kutta calculation
+//     rebx_dijk_dt(1.0+(dijk_dts[0][0][0]*dt*0.5),0.0+(dijk_dts[0][0][1]*dt*0.5),0.0+(dijk_dts[0][0][2]*dt*0.5),*si,*sj,*sk,*omega,dijk_dts[1][0]); // i_hat
+//     rebx_dijk_dt(0.0+(dijk_dts[0][1][0]*dt*0.5),1.0+(dijk_dts[0][1][1]*dt*0.5),0.0+(dijk_dts[0][1][2]*dt*0.5),*si,*sj,*sk,*omega,dijk_dts[1][1]); // j_hat
+//     rebx_dijk_dt(0.0+(dijk_dts[0][2][0]*dt*0.5),0.0+(dijk_dts[0][2][1]*dt*0.5),1.0+(dijk_dts[0][2][2]*dt*0.5),*si,*sj,*sk,*omega,dijk_dts[1][2]); // k_hat
 
-    // third Runge Kutta calculation
-    rebx_dijk_dt(1.0+(dijk_dts[1][0][0]*dt*0.5),0.0+(dijk_dts[1][0][1]*dt*0.5),0.0+(dijk_dts[1][0][2]*dt*0.5),*si,*sj,*sk,*omega,dijk_dts[2][0]); // i_hat
-    rebx_dijk_dt(0.0+(dijk_dts[1][1][0]*dt*0.5),1.0+(dijk_dts[1][1][1]*dt*0.5),0.0+(dijk_dts[1][1][2]*dt*0.5),*si,*sj,*sk,*omega,dijk_dts[2][1]); // j_hat
-    rebx_dijk_dt(0.0+(dijk_dts[1][2][0]*dt*0.5),0.0+(dijk_dts[1][2][1]*dt*0.5),1.0+(dijk_dts[1][2][2]*dt*0.5),*si,*sj,*sk,*omega,dijk_dts[2][2]); // k_hat
+//     // third Runge Kutta calculation
+//     rebx_dijk_dt(1.0+(dijk_dts[1][0][0]*dt*0.5),0.0+(dijk_dts[1][0][1]*dt*0.5),0.0+(dijk_dts[1][0][2]*dt*0.5),*si,*sj,*sk,*omega,dijk_dts[2][0]); // i_hat
+//     rebx_dijk_dt(0.0+(dijk_dts[1][1][0]*dt*0.5),1.0+(dijk_dts[1][1][1]*dt*0.5),0.0+(dijk_dts[1][1][2]*dt*0.5),*si,*sj,*sk,*omega,dijk_dts[2][1]); // j_hat
+//     rebx_dijk_dt(0.0+(dijk_dts[1][2][0]*dt*0.5),0.0+(dijk_dts[1][2][1]*dt*0.5),1.0+(dijk_dts[1][2][2]*dt*0.5),*si,*sj,*sk,*omega,dijk_dts[2][2]); // k_hat
     
-    // fourth Runge Kutta calculation
-    rebx_dijk_dt(1.0+(dijk_dts[2][0][0]*dt),0.0+(dijk_dts[2][0][1]*dt),0.0+(dijk_dts[2][0][2]*dt),*si,*sj,*sk,*omega,dijk_dts[3][0]); // i_hat
-    rebx_dijk_dt(0.0+(dijk_dts[2][1][0]*dt),1.0+(dijk_dts[2][1][1]*dt),0.0+(dijk_dts[2][1][2]*dt),*si,*sj,*sk,*omega,dijk_dts[3][1]); // j_hat
-    rebx_dijk_dt(0.0+(dijk_dts[2][2][0]*dt),0.0+(dijk_dts[2][2][1]*dt),1.0+(dijk_dts[2][2][2]*dt),*si,*sj,*sk,*omega,dijk_dts[3][2]); // k_hat
+//     // fourth Runge Kutta calculation
+//     rebx_dijk_dt(1.0+(dijk_dts[2][0][0]*dt),0.0+(dijk_dts[2][0][1]*dt),0.0+(dijk_dts[2][0][2]*dt),*si,*sj,*sk,*omega,dijk_dts[3][0]); // i_hat
+//     rebx_dijk_dt(0.0+(dijk_dts[2][1][0]*dt),1.0+(dijk_dts[2][1][1]*dt),0.0+(dijk_dts[2][1][2]*dt),*si,*sj,*sk,*omega,dijk_dts[3][1]); // j_hat
+//     rebx_dijk_dt(0.0+(dijk_dts[2][2][0]*dt),0.0+(dijk_dts[2][2][1]*dt),1.0+(dijk_dts[2][2][2]*dt),*si,*sj,*sk,*omega,dijk_dts[3][2]); // k_hat
 
-    // calculate dijk
-    double dijks[3][3];
-    for (int i = 0; i < 3; i++){
-        for (int j = 0; j < 3; j++){
-            dijks[i][j] = (dijk_dts[0][i][j] + 2*dijk_dts[1][i][j] + 2*dijk_dts[2][i][j] + dijk_dts[3][i][j]) * dt / 6;
-        }
-    }
+//     // calculate dijk
+//     double dijks[3][3];
+//     for (int i = 0; i < 3; i++){
+//         for (int j = 0; j < 3; j++){
+//             dijks[i][j] = (dijk_dts[0][i][j] + 2*dijk_dts[1][i][j] + 2*dijk_dts[2][i][j] + dijk_dts[3][i][j]) * dt / 6;
+//         }
+//     }
 
-    double ix_ = *ix + dijks[0][0]**ix + dijks[0][1]**jx + dijks[0][2]**kx;
-    double iy_ = *iy + dijks[0][0]**iy + dijks[0][1]**jy + dijks[0][2]**ky;
-    double iz_ = *iz + dijks[0][0]**iz + dijks[0][1]**jz + dijks[0][2]**kz;
-    double jx_ = *jx + dijks[1][0]**ix + dijks[1][1]**jx + dijks[1][2]**kx;
-    double jy_ = *jy + dijks[1][0]**iy + dijks[1][1]**jy + dijks[1][2]**ky;
-    double jz_ = *jz + dijks[1][0]**iz + dijks[1][1]**jz + dijks[1][2]**kz;
-    double kx_ = *kx + dijks[2][0]**ix + dijks[2][1]**jx + dijks[2][2]**kx;
-    double ky_ = *ky + dijks[2][0]**iy + dijks[2][1]**jy + dijks[2][2]**ky;
-    double kz_ = *kz + dijks[2][0]**iz + dijks[2][1]**jz + dijks[2][2]**kz;
+//     double ix_ = *ix + dijks[0][0]**ix + dijks[0][1]**jx + dijks[0][2]**kx;
+//     double iy_ = *iy + dijks[0][0]**iy + dijks[0][1]**jy + dijks[0][2]**ky;
+//     double iz_ = *iz + dijks[0][0]**iz + dijks[0][1]**jz + dijks[0][2]**kz;
+//     double jx_ = *jx + dijks[1][0]**ix + dijks[1][1]**jx + dijks[1][2]**kx;
+//     double jy_ = *jy + dijks[1][0]**iy + dijks[1][1]**jy + dijks[1][2]**ky;
+//     double jz_ = *jz + dijks[1][0]**iz + dijks[1][1]**jz + dijks[1][2]**kz;
+//     double kx_ = *kx + dijks[2][0]**ix + dijks[2][1]**jx + dijks[2][2]**kx;
+//     double ky_ = *ky + dijks[2][0]**iy + dijks[2][1]**jy + dijks[2][2]**ky;
+//     double kz_ = *kz + dijks[2][0]**iz + dijks[2][1]**jz + dijks[2][2]**kz;
 
-    // re-normalize
-    double i_mag = sqrt(ix_*ix_ + iy_*iy_ + iz_*iz_);
-    double j_mag = sqrt(jx_*jx_ + jy_*jy_ + jz_*jz_);
-    double k_mag = sqrt(kx_*kx_ + ky_*ky_ + kz_*kz_);
+//     // re-normalize
+//     double i_mag = sqrt(ix_*ix_ + iy_*iy_ + iz_*iz_);
+//     double j_mag = sqrt(jx_*jx_ + jy_*jy_ + jz_*jz_);
+//     double k_mag = sqrt(kx_*kx_ + ky_*ky_ + kz_*kz_);
 
-    *ix = ix_ / i_mag;
-    *iy = iy_ / i_mag;
-    *iz = iz_ / i_mag;
-    *jx = jx_ / j_mag;
-    *jy = jy_ / j_mag;
-    *jz = jz_ / j_mag;
-    *kx = kx_ / k_mag;
-    *ky = ky_ / k_mag;
-    *kz = kz_ / k_mag;
-}
+//     *ix = ix_ / i_mag;
+//     *iy = iy_ / i_mag;
+//     *iz = iz_ / i_mag;
+//     *jx = jx_ / j_mag;
+//     *jy = jy_ / j_mag;
+//     *jz = jz_ / j_mag;
+//     *kx = kx_ / k_mag;
+//     *ky = ky_ / k_mag;
+//     *kz = kz_ / k_mag;
+// }
 
 // runs checks on parameters. Returns 1 if error, 0 otherwise.
 static int rebx_validate_params(struct reb_simulation* const sim, double* const ix, double* const iy, double* const iz, double* const jx, double* const jy,
@@ -575,7 +575,7 @@ static int rebx_validate_params(struct reb_simulation* const sim, double* const 
     }
 }
 
-void rebx_triaxial_torque(struct reb_simulation* const sim, struct rebx_operator* const triaxial_torque, const double dt){
+void rebx_triaxial_torque_OLD(struct reb_simulation* const sim, struct rebx_operator* const triaxial_torque, const double dt){
     const int _N_real = sim->N - sim->N_var;
 	for(int i=0; i<_N_real; i++){
 		struct reb_particle* const p = &sim->particles[i];
@@ -653,9 +653,9 @@ void rebx_triaxial_torque(struct reb_simulation* const sim, struct rebx_operator
             }
         }
         
-        rebx_update_spin_ijk(sim,i,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,*Ii,*Ij,*Ik,dt);
+        // rebx_update_spin_ijk(sim,i,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,*Ii,*Ij,*Ik,dt);
 
-        // rebx_update_ijk(ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,dt);
-        // rebx_update_spin(sim,i,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,*Ii,*Ij,*Ik,dt);
+        rebx_update_ijk(ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,dt);
+        rebx_update_spin(sim,i,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,*Ii,*Ij,*Ik,dt);
     }
 }

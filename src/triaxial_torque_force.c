@@ -180,9 +180,8 @@ static void rebx_calc_torques(struct reb_simulation* const sim, int index, doubl
     }
 }
 
-/* updates spin vector, omega, and ijk in lockstep using 4th order Runge Kutta.
-If calc_torque_bool = 0, torque NOT calculated, otherwise torque calculated */
-static void rebx_update_spin_ijk(struct reb_simulation* const sim, int calc_torque_bool, int index, double* const ix, double* const iy, double* const iz, 
+// updates spin vector, omega, and ijk in lockstep using 4th order Runge Kutta
+static void rebx_update_spin_ijk(struct reb_simulation* const sim, int index, double* const ix, double* const iy, double* const iz, 
     double* const jx, double* const jy, double* const jz, double* const kx, double* const ky, double* const kz, double* const si, 
     double* const sj, double* const sk, double* const omega, const double Ii, const double Ij, const double Ik, const double dt){
 
@@ -245,9 +244,7 @@ static void rebx_update_spin_ijk(struct reb_simulation* const sim, int calc_torq
         }
 
         // Calcs
-        if (calc_torque_bool != 0) {
-            rebx_calc_torques(sim,index,rk_M_ijk[i],I_ijk,rk_ijk_xyz[i],rk_dts[i]); // [DEBUG]
-        }
+        rebx_calc_torques(sim,index,rk_M_ijk[i],I_ijk,rk_ijk_xyz[i],rk_dts[i]); // [DEBUG]
         rebx_domega_dt(rk_omega_ijk[i],rk_M_ijk[i],I_ijk,rk_domega_dts[i]);
         rebx_dijk_dt(rk_ijk_ijk[i],rk_omega_ijk[i],rk_dijk_dts[i]);
     }
@@ -372,9 +369,8 @@ static int rebx_validate_params(struct reb_simulation* const sim, double* const 
     }
 }
 
-void rebx_triaxial_torque(struct reb_simulation* const sim, struct rebx_operator* const triaxial_torque, const double dt){
-    const int _N_real = sim->N - sim->N_var;
-	for(int i=0; i<_N_real; i++){
+void rebx_triaxial_torque_force(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
+	for(int i=0; i<N; i++){
 		struct reb_particle* const p = &sim->particles[i];
 
         // check required params
@@ -444,14 +440,12 @@ void rebx_triaxial_torque(struct reb_simulation* const sim, struct rebx_operator
         }
 
         // check validity of parameters if first timestep
-        if (sim->t <= dt){
+        if (sim->t <= sim->dt){
             if (rebx_validate_params(sim,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk) == 1) {
                 return;
             }
-            // extra timestep with no torque
-            rebx_update_spin_ijk(sim,0,i,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,*Ii,*Ij,*Ik,dt);
         }
         
-        rebx_update_spin_ijk(sim,1,i,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,*Ii,*Ij,*Ik,dt);
+        rebx_update_spin_ijk(sim,i,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,*Ii,*Ij,*Ik,sim->dt);
     }
 }
