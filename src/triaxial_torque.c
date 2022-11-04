@@ -2,8 +2,8 @@
  * @file    triaxial_torque.c
  * @brief   Torque on triaxial bodies
  * @author  Henry Yuan
- * 
- * 
+ *
+ *
  * *** COMMENT SECTION BELOW THIS HAS NOT BEEN CHANGED FROM COPIED GRAVITATIONAL_HARMONICS.C
  * @section     LICENSE
  * Copyright (c) 2015 Dan Tamayo, Hanno Rein
@@ -31,27 +31,27 @@
  *
  * ======================= ===============================================
  * Authors                 D. Tamayo
- * Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_. 
+ * Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
  * Based on                None
  * C Example               :ref:`c_example_J2`
  * Python Example          `J2.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/J2.ipynb>`_.
  * ======================= ===============================================
- * 
+ *
  * * *** COMMENT SECTION ABOVE THIS HAS NOT BEEN CHANGED FROM COPIED GRAVITATIONAL_HARMONICS.C
- * 
- * Adds the effects of a particle having 3 differing moments of inertia (triaxial particle) on the spin vector 
- * of the particle. Assumes that changes to the spin angular momentum are negligible compared to the orbital 
+ *
+ * Adds the effects of a particle having 3 differing moments of inertia (triaxial particle) on the spin vector
+ * of the particle. Assumes that changes to the spin angular momentum are negligible compared to the orbital
  * angular momentum; i.e., the particle's orbit is not affected by the changes to the spin vector.
  *
- * 
+ *
  * **Effect Parameters**
- * 
+ *
  * None
  *
  * **Particle Parameters**
- * 
+ *
  * x,y,z: refers to the x,y,z coordinate system underlying rebound
- * 
+ *
  * I define a new coordinate system in addition to the one used by rebound (described above):
  * -> i,j,k: principal axes corresponding to the particle's principal moments of inertia. axis i has the
  *    lowest moment of inertia and axis k has the highest moment of inertia
@@ -76,16 +76,16 @@
  * tt_sj (double)                  Yes         j component of spin unit vector
  * tt_sk (double)                  Yes         k component of spin unit vector
  * ============================ =========== ==================================================================
- * 
+ *
  * Parameter reuqirements:
  * ============================
  * i, j, k, and s must be unit vectors (e.g. such that ix^2 + iy^2 + iz^2 = 1)
- * 
+ *
  */
 
 /* DEBUGGING CHANGES:
 - commented out torque calc
-- domega_dts all 0 
+- domega_dts all 0
 - print statements
 - only using first derivative calc
 */
@@ -140,8 +140,8 @@ static void rebx_dijk_dt(double ijk_ijk[3][3], double omega_ijk[3], double dijk_
 }
 
 // calculates the triaxial torque from all other bodies on the 'index'th particle
-static void rebx_calc_torques(struct reb_simulation* const sim, int index, double M_ijk[3], double I_ijk[3], double ijk_xyz[3][3], const double dt){
-    
+static void rebx_calc_torques(struct reb_simulation* const sim, int index, double M_ijk[3], double I_ijk[3], double ijk_xyz[3][3], const double dt, const double dt_tot){
+
     struct reb_particle* p = &sim->particles[index];
     struct reb_particle* torquer;
     double p_xyz[3];
@@ -155,15 +155,15 @@ static void rebx_calc_torques(struct reb_simulation* const sim, int index, doubl
     double r_dot_k;
     double prefac;
 
-    rebx_interpolate_xyz(p,p_xyz,dt);
+    rebx_interpolate_xyz(p,p_xyz,dt - dt_tot);
 
     const int _N_real = sim->N - sim->N_var;
-	for(int i=0; i<_N_real; i++){
+    for(int i=0; i<_N_real; i++){
         if (i == index) {
             continue;
         }
         torquer = &sim->particles[i];
-        rebx_interpolate_xyz(torquer,torquer_xyz,dt);
+        rebx_interpolate_xyz(torquer,torquer_xyz,dt - dt_tot);
         rx = p_xyz[0] - torquer_xyz[0];
         ry = p_xyz[1] - torquer_xyz[1];
         rz = p_xyz[2] - torquer_xyz[2];
@@ -182,8 +182,8 @@ static void rebx_calc_torques(struct reb_simulation* const sim, int index, doubl
 
 /* updates spin vector, omega, and ijk in lockstep using 4th order Runge Kutta.
 If calc_torque_bool = 0, torque NOT calculated, otherwise torque calculated */
-static void rebx_update_spin_ijk(struct reb_simulation* const sim, int calc_torque_bool, int index, double* const ix, double* const iy, double* const iz, 
-    double* const jx, double* const jy, double* const jz, double* const kx, double* const ky, double* const kz, double* const si, 
+static void rebx_update_spin_ijk(struct reb_simulation* const sim, int calc_torque_bool, int index, double* const ix, double* const iy, double* const iz,
+    double* const jx, double* const jy, double* const jz, double* const kx, double* const ky, double* const kz, double* const si,
     double* const sj, double* const sk, double* const omega, const double Ii, const double Ij, const double Ik, const double dt){
 
     // Array for principal moments
@@ -246,12 +246,12 @@ static void rebx_update_spin_ijk(struct reb_simulation* const sim, int calc_torq
 
         // Calcs
         if (calc_torque_bool != 0) {
-            rebx_calc_torques(sim,index,rk_M_ijk[i],I_ijk,rk_ijk_xyz[i],rk_dts[i]); // [DEBUG]
+            rebx_calc_torques(sim,index,rk_M_ijk[i],I_ijk,rk_ijk_xyz[i],rk_dts[i], dt); // [DEBUG]
         }
         rebx_domega_dt(rk_omega_ijk[i],rk_M_ijk[i],I_ijk,rk_domega_dts[i]);
         rebx_dijk_dt(rk_ijk_ijk[i],rk_omega_ijk[i],rk_dijk_dts[i]);
     }
-    
+
     /****************************************************************************************/
     /****************************************************************************************/
     // // First Runge-Kutta calculations
@@ -276,7 +276,7 @@ static void rebx_update_spin_ijk(struct reb_simulation* const sim, int calc_torq
     // Continue editing here
     /****************************************************************************************/
     /****************************************************************************************/
-    
+
     // calculate domega, d{ijk}
     double domega[3];
     double dijk[3][3];
@@ -311,7 +311,7 @@ static void rebx_update_spin_ijk(struct reb_simulation* const sim, int calc_torq
         }
         rebx_ijk_to_xyz(ijk_ijk[i],ijk_xyz[i],rk_ijk_xyz[0]);
     }
-    
+
     double ix_ = ijk_xyz[0][0];
     double iy_ = ijk_xyz[0][1];
     double iz_ = ijk_xyz[0][2];
@@ -374,8 +374,8 @@ static int rebx_validate_params(struct reb_simulation* const sim, double* const 
 
 void rebx_triaxial_torque(struct reb_simulation* const sim, struct rebx_operator* const triaxial_torque, const double dt){
     const int _N_real = sim->N - sim->N_var;
-	for(int i=0; i<_N_real; i++){
-		struct reb_particle* const p = &sim->particles[i];
+    for(int i=0; i<_N_real; i++){
+        struct reb_particle* const p = &sim->particles[i];
 
         // check required params
         const double* const Ii = rebx_get_param(sim->extras, p->ap, "tt_Ii");
@@ -451,7 +451,7 @@ void rebx_triaxial_torque(struct reb_simulation* const sim, struct rebx_operator
             // extra timestep with no torque
             rebx_update_spin_ijk(sim,0,i,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,*Ii,*Ij,*Ik,dt);
         }
-        
+
         rebx_update_spin_ijk(sim,1,i,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,*Ii,*Ij,*Ik,dt);
     }
 }
