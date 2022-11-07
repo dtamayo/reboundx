@@ -173,11 +173,27 @@ static void rebx_calc_torques(struct reb_simulation* const sim, int index, doubl
         r_dot_i = rx*ijk_xyz[0][0] + ry*ijk_xyz[0][1] + rz*ijk_xyz[0][2];
         r_dot_j = rx*ijk_xyz[1][0] + ry*ijk_xyz[1][1] + rz*ijk_xyz[1][2];
         r_dot_k = rx*ijk_xyz[2][0] + ry*ijk_xyz[2][1] + rz*ijk_xyz[2][2];
+        /* printf("rdoti, rdotj, %.10f, %.10f\n", r_dot_i, r_dot_j); */
+        /* printf("\tidotj, %.10f\n", */
+        /*         ijk_xyz[0][0] * rx*ijk_xyz[1][0] + */
+        /*         ijk_xyz[0][1] * rx*ijk_xyz[1][1] + */
+        /*         ijk_xyz[0][2] * rx*ijk_xyz[1][2] */
+        /*     ); */
+        /* printf("inorm, jnorm, rnorm, %.10f, %.10f, %.10f\n", */
+        /*         ijk_xyz[0][0] * ijk_xyz[0][0] + */
+        /*         ijk_xyz[0][1] * ijk_xyz[0][1] + */
+        /*         ijk_xyz[0][2] * ijk_xyz[0][2], */
+        /*         ijk_xyz[1][0] * ijk_xyz[1][0] + */
+        /*         ijk_xyz[1][1] * ijk_xyz[1][1] + */
+        /*         ijk_xyz[1][2] * ijk_xyz[1][2], */
+        /*         rx*rx + ry * ry + rz*rz */
+        /*     ); */
 
         M_ijk[0] += prefac*(I_ijk[2]-I_ijk[1])*r_dot_j*r_dot_k;
         M_ijk[1] += prefac*(I_ijk[0]-I_ijk[2])*r_dot_k*r_dot_i;
         M_ijk[2] += prefac*(I_ijk[1]-I_ijk[0])*r_dot_i*r_dot_j;
     }
+    // printf("%f, %f, %f\n", M_ijk[0], M_ijk[1], M_ijk[2]);
 }
 
 /* updates spin vector, omega, and ijk in lockstep using 4th order Runge Kutta.
@@ -338,6 +354,109 @@ static void rebx_update_spin_ijk(struct reb_simulation* const sim, int calc_torq
     *kz = kz_ / k_mag;
 }
 
+/* START YS CHANGES */
+static void rebx_update_spin_ijk_euler(struct reb_simulation* const sim, int index, double* const ix, double* const iy, double* const iz,
+    double* const jx, double* const jy, double* const jz, double* const kx, double* const ky, double* const kz, double* const si,
+    double* const sj, double* const sk, double* const omega, const double Ii, const double Ij, const double Ik, const double dt){
+    // Array for principal moments
+    double I_ijk[3];
+    I_ijk[0] = Ii;
+    I_ijk[1] = Ij;
+    I_ijk[2] = Ik;
+
+    double M_ijk[3] = {}; // ijk components of torque on body, Needs all values initialized to zero because multiple functions add to the values
+    double ijk_xyz[3][3]; // xyz components of each ijk vector
+    double ijk_ijk[3][3]; // components of each ijk vector in the old ijk basis
+    double domega_dts[3]; // matrix for all calculations of domega/dt
+    double dijk_dts[3][3]; // matrix for all calculations of d{ijk}/dt
+    double omega_ijk[3];
+
+    // initialize xyz components of i,j,k
+    ijk_xyz[0][0] = *ix;
+    ijk_xyz[0][1] = *iy;
+    ijk_xyz[0][2] = *iz;
+    ijk_xyz[1][0] = *jx;
+    ijk_xyz[1][1] = *jy;
+    ijk_xyz[1][2] = *jz;
+    ijk_xyz[2][0] = *kx;
+    ijk_xyz[2][1] = *ky;
+    ijk_xyz[2][2] = *kz;
+
+    // initialize ijk components of i,j,k
+    ijk_ijk[0][0] = 1.0;
+    ijk_ijk[0][1] = 0.0;
+    ijk_ijk[0][2] = 0.0;
+    ijk_ijk[1][0] = 0.0;
+    ijk_ijk[1][1] = 1.0;
+    ijk_ijk[1][2] = 0.0;
+    ijk_ijk[2][0] = 0.0;
+    ijk_ijk[2][1] = 0.0;
+    ijk_ijk[2][2] = 1.0;
+
+    omega_ijk[0] = *omega**si;
+    omega_ijk[1] = *omega**sj;
+    omega_ijk[2] = *omega**sk;
+
+    /****************************************************************************************/
+    rebx_calc_torques(sim,index,M_ijk,I_ijk,ijk_xyz,0, dt);
+    rebx_domega_dt(omega_ijk,M_ijk,I_ijk,domega_dts);
+    rebx_dijk_dt(ijk_ijk,omega_ijk,dijk_dts);
+
+    // calculate domega, d{ijk}
+    double omega_new[3];
+    double dijk[3][3];
+    for (int i = 0; i < 3; i++){
+        omega_new[i] = omega_ijk[i] + domega_dts[i] * dt;
+        for (int j = 0; j < 3; j++){
+            dijk[i][j] = dijk_dts[i][j] * dt;
+        }
+    }
+
+    double omega_new_mag = sqrt(
+            omega_new[0] * omega_new[0] +
+            omega_new[1] * omega_new[1] +
+            omega_new[2] * omega_new[2]);
+    *omega = omega_new_mag;
+    *si = omega_new[0] / omega_new_mag;
+    *sj = omega_new[1] / omega_new_mag;
+    *sk = omega_new[2] / omega_new_mag;
+
+    double new_ijk_ijk[3][3];
+    double new_ijk_xyz[3][3];
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            new_ijk_ijk[i][j] = ijk_ijk[i][j] + dijk[i][j];
+        }
+        rebx_ijk_to_xyz(new_ijk_ijk[i],new_ijk_xyz[i],ijk_xyz);
+    }
+
+    double ix_ = new_ijk_xyz[0][0];
+    double iy_ = new_ijk_xyz[0][1];
+    double iz_ = new_ijk_xyz[0][2];
+    double jx_ = new_ijk_xyz[1][0];
+    double jy_ = new_ijk_xyz[1][1];
+    double jz_ = new_ijk_xyz[1][2];
+    double kx_ = new_ijk_xyz[2][0];
+    double ky_ = new_ijk_xyz[2][1];
+    double kz_ = new_ijk_xyz[2][2];
+
+    // re-normalize
+    double i_mag = sqrt(ix_*ix_ + iy_*iy_ + iz_*iz_);
+    double j_mag = sqrt(jx_*jx_ + jy_*jy_ + jz_*jz_);
+    double k_mag = sqrt(kx_*kx_ + ky_*ky_ + kz_*kz_);
+
+    *ix = ix_ / i_mag;
+    *iy = iy_ / i_mag;
+    *iz = iz_ / i_mag;
+    *jx = jx_ / j_mag;
+    *jy = jy_ / j_mag;
+    *jz = jz_ / j_mag;
+    *kx = kx_ / k_mag;
+    *ky = ky_ / k_mag;
+    *kz = kz_ / k_mag;
+}
+
 // runs checks on parameters. Returns 1 if error, 0 otherwise.
 static int rebx_validate_params(struct reb_simulation* const sim, double* const ix, double* const iy, double* const iz, double* const jx, double* const jy,
     double* const jz, double* const kx, double* const ky, double* const kz, double* const si,
@@ -448,10 +567,9 @@ void rebx_triaxial_torque(struct reb_simulation* const sim, struct rebx_operator
             if (rebx_validate_params(sim,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk) == 1) {
                 return;
             }
-            // extra timestep with no torque
-            rebx_update_spin_ijk(sim,0,i,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,*Ii,*Ij,*Ik,dt);
         }
 
-        rebx_update_spin_ijk(sim,1,i,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,*Ii,*Ij,*Ik,dt);
+        // rebx_update_spin_ijk(sim,1,i,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,*Ii,*Ij,*Ik,dt);
+        rebx_update_spin_ijk_euler(sim,i,ix,iy,iz,jx,jy,jz,kx,ky,kz,si,sj,sk,omega,*Ii,*Ij,*Ik,dt);
     }
 }
