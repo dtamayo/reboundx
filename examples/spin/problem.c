@@ -83,7 +83,7 @@ void set_time_lag(struct reb_simulation* sim, struct rebx_extras* rebx, struct r
   const double r = body->r;
 
   if (k2 != NULL || r != 0.0){
-    const double sigma = *k2 * 4 * sim->G / (3 * r);
+    const double sigma = 4 * tau * sim->G / (3 * r * r * r * r * r * (*k2));
     rebx_set_param_double(rebx, &body->ap, "sigma", sigma);
   }
 
@@ -101,9 +101,21 @@ void set_planet_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct r
   const double* k2 = rebx_get_param(rebx, body->ap, "k2");
 
   if (k2 != NULL || r != 0.0){
-    const double sigma = 4. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
-    //printf("sigma = %10e\n", sigma);
-    rebx_set_param_double(rebx, &body->ap, "sigma", sigma);
+      if (synchronized == 1){
+        const double sigma = 4. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
+        //printf("sigma = %10e\n", sigma);
+        rebx_set_param_double(rebx, &body->ap, "sigma", sigma);
+      }
+
+      else if (synchronized == 0){
+        const double* sx = rebx_get_param(rebx, body->ap, "spin_sx");
+        const double* sy = rebx_get_param(rebx, body->ap, "spin_sy");
+        const double* sz = rebx_get_param(rebx, body->ap, "spin_sz");
+        const double omega = sqrt((*sx) * (*sx) * (*sy) * (*sy) * (*sz) * (*sz));
+
+        const double sigma = 3. * q * (*k2) * r * r * r * r * r * fabs(omega - n) / (2 * sim->G);
+        rebx_set_param_double(rebx, &body->ap, "sigma", sigma);
+      }
   }
 
   else{
@@ -120,9 +132,20 @@ void set_star_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb
   const double* k2 = rebx_get_param(rebx, star->ap, "k2");
 
   if (k2 != NULL || r != 0.0){
-    const double sigma = 4. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
-    //printf("sigma = %10e\n", sigma);
-    rebx_set_param_double(rebx, &star->ap, "sigma", sigma);
+    if (synchronized == 1){
+      const double sigma = 4. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
+      //printf("sigma = %10e\n", sigma);
+      rebx_set_param_double(rebx, &star->ap, "sigma", sigma);
+    }  
+    else if (synchronized == 0){
+      const double* sx = rebx_get_param(rebx, star->ap, "spin_sx");
+      const double* sy = rebx_get_param(rebx, star->ap, "spin_sy");
+      const double* sz = rebx_get_param(rebx, star->ap, "spin_sz");
+      const double omega = sqrt((*sx) * (*sx) * (*sy) * (*sy) * (*sz) * (*sz));
+
+      const double sigma = 3. * q * (*k2) * r * r * r * r * r * fabs(omega - n) / (2 * sim->G);
+      rebx_set_param_double(rebx, &star->ap, "sigma", sigma);
+    }
   }
 
   else{
@@ -228,8 +251,8 @@ int main(int argc, char* argv[]){
     // Run simulation
     rebx_spin_initialize_ode(sim, effect);
 
-    FILE* f = fopen("10_24_sm_sigma_synced.txt","w");
-    fprintf(f, "t,a1,i1,e1, s1x, s1y, s1z, mag1, pom1, Om1, f1, p1x,p1y,p1z,a2, i2, e2, s2x, s2y, s2z, mag2, pom2, Om2, f2, p2x,p2y,p2z\n");
+    FILE* f = fopen("10_27_sm_sigma_synced.txt","w");
+    fprintf(f, "t,starx,stary,starz,starvx,starvy,starvz,star_sx, star_sy, star_sz, a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1,f1,p1x,p1y,p1z,p1vx,p1vy,p1vz,a2,i2,e2,s2x,s2y,s2z,mag2,pom2,Om2,f2,p2x,p2y,p2z,p2vx,p2vy,p2vz\n");
     int cond = 0;
      for (int i=0; i<100000; i++){
 
@@ -244,6 +267,10 @@ int main(int argc, char* argv[]){
   	 	cond = 1;
   	 }
 
+         double* star_sx = rebx_get_param(rebx, sun->ap, "spin_sx");
+         double* star_sy = rebx_get_param(rebx, sun->ap, "spin_sy");
+         double* star_sz = rebx_get_param(rebx, sun->ap, "spin_sz");
+         
          double* sx1 = rebx_get_param(rebx, p1->ap, "spin_sx");
          double* sy1 = rebx_get_param(rebx, p1->ap, "spin_sy");
          double* sz1 = rebx_get_param(rebx, p1->ap, "spin_sz");
@@ -286,7 +313,7 @@ int main(int argc, char* argv[]){
          if (i % 100 == 0){
              printf("t=%f\t a1=%.6f\t a2=%.6f\t o1=%0.5f\t o2=%0.5f\n", sim->t / (2 * M_PI), a1, a2, ob1, ob2);
          }
-         fprintf(f, "%f,%f,%f,%f,%0.10f,%0.10f,%0.10f,%0.10f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%0.10f,%0.10f,%0.10f,%0.10f,%f,%f,%f,%f,%f,%f\n", sim->t / (2 * M_PI), a1, i1, e1, s1.x, s1.y, s1.z, mag1, pom1, Om1, f1, p1->x,p1->y,p1->z,a2, i2, e2, s2.x, s2.y, s2.z, mag2, pom2, Om2, f2, p2->x,p2->y,p2->z);
+         fprintf(f, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%0.10f,%0.10f,%0.10f,%0.10f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%0.10f,%0.10f,%0.10f,%0.10f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n", sim->t / (2 * M_PI), sun->x, sun->y, sun->z, sun->vx, sun->vy, sun->vz, *star_sx, *star_sy, *star_sz, a1, i1, e1, s1.x, s1.y, s1.z, mag1, pom1, Om1, f1, p1->x,p1->y,p1->z, p1->vx, p1->vy, p1->vz, a2, i2, e2, s2.x, s2.y, s2.z, mag2, pom2, Om2, f2, p2->x,p2->y,p2->z, p2->vx, p2->vy, p2->vz);
          reb_integrate(sim,sim->t+(40 * 2 * M_PI));
      }
     rebx_free(rebx);
