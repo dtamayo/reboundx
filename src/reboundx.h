@@ -2,7 +2,7 @@
  * @file    reboundx.h
  * @brief   REBOUNDx API definition.
  * @author  Dan Tamayo <tamayo.daniel@gmail.com>, Hanno Rein
- * 
+ *
  * @section     LICENSE
  * Copyright (c) 2019 Dan Tamayo, Hanno Rein
  *
@@ -25,7 +25,7 @@
 #ifndef _REBX_REBOUNDX_H
 #define _REBX_REBOUNDX_H
 
-#ifndef M_PI 
+#ifndef M_PI
 #define M_PI 3.1415926535879323846
 #endif
 
@@ -34,7 +34,7 @@
 #include "rebound.h"
 #include "rebxtools.h"
 #ifndef REBXGITHASH
-#define REBXGITHASH notavailable0000000000000000000000000001 
+#define REBXGITHASH notavailable0000000000000000000000000001
 #endif // REBXGITHASH
 
 extern const char* rebx_build_str;      ///< Date and time build string.
@@ -42,7 +42,7 @@ extern const char* rebx_version_str;    ///< Version string.
 extern const char* rebx_githash_str;    ///< Current git hash.
 
 /******************************************
-  REBOUNDx Enums 
+  REBOUNDx Enums
 *******************************************/
 
 /**
@@ -247,13 +247,13 @@ struct rebx_interpolator{
  * @brief Main REBOUNDx structure.
  * @details These fields are used internally by REBOUNDx and generally should not be changed manually by the user. Use the API instead.
  */
-struct rebx_extras {	
+struct rebx_extras {
 	struct reb_simulation* sim;					    ///< Pointer to the simulation REBOUNDx is linked to.
-    
+
     struct rebx_node* additional_forces;            ///< Linked list of extra forces
     struct rebx_node* pre_timestep_modifications;   ///< Linked list of rebx_steps to apply before each timestep
 	struct rebx_node* post_timestep_modifications;  ///< Linked list of rebx_steps to apply after each timestep
-	
+
     struct rebx_node* registered_params;            ///< Linked list of rebx_params with all the parameter names registered with their type (for type safety)
     struct rebx_node* allocated_forces;             ///< For memory management
     struct rebx_node* allocated_operators;          ///< For memory management
@@ -267,7 +267,7 @@ struct rebx_extras {
  * @{
  */
 /**
- * @defgroup MainRebxFunctions 
+ * @defgroup MainRebxFunctions
  * @details These are the top level routines that one needs when using REBOUNDx.
  * @{
  */
@@ -314,7 +314,7 @@ struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, c
  * @brief Similar to rebx_create_extras_from_binary(), but takes an extras instance (must be attached to a simulation) and allows for manual message handling.
  * @param rebx Pointer to a rebx_extras instance to be updated.
  * @param filename Filename of the saved binary file.
- * @param warnings Pointer to an array of warnings to be populated during loading. 
+ * @param warnings Pointer to an array of warnings to be populated during loading.
  */
 void rebx_init_extras_from_binary(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings);
 /** @} */
@@ -451,7 +451,7 @@ void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* con
  * @param radius Particle physical radius.
  * @param density density of particle.
  * @param Q_pr Radiation pressure coefficient (Burns et al. 1979).
- * @return Beta parameter (double). 
+ * @return Beta parameter (double).
  */
 double rebx_rad_calc_beta(const double G, const double c, const double source_mass, const double source_luminosity, const double radius, const double density, const double Q_pr);
 /**
@@ -557,6 +557,10 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
  * @return Void pointer to the parameter. NULL if not found or type does not match (will write error to stderr).
  */
 void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
+void rebx_set_time_lag(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, const double tau);
+void rebx_set_planet_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* primary, const double q, const int synchronized);
+void rebx_set_star_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* star, struct reb_particle* body, const double q, const int synchronized);
+
 
 /****************************************
  Stepper Functions

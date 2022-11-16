@@ -19,7 +19,7 @@ struct reb_particle rebx_get_com_without_particle(struct reb_particle com, struc
     com.ax = com.ax*com.m - p.ax*p.m;
     com.ay = com.ay*com.m - p.ay*p.m;
     com.az = com.az*com.m - p.az*p.m;
-    com.m -= p.m; 
+    com.m -= p.m;
 
     if (com.m > 0.){
         com.x /= com.m;
@@ -72,7 +72,7 @@ double rebx_Edot(struct reb_particle* const ps, const int N){
 void rebx_com_force(struct reb_simulation* const sim, struct rebx_force* const force, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_vec3d (*calculate_force) (struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source), struct reb_particle* const particles, const int N){
     struct rebx_extras* const rebx = sim->extras;
     struct reb_particle com = reb_get_com(sim); // Start with full com for jacobi and barycentric coordinates.
-  
+
     int refindex = -1;
     if(coordinates == REBX_COORDINATES_JACOBI){
         refindex = 0;                           // There is no jacobi coordinate for the 0th particle, so set refindex to skip it in loop below.
@@ -94,7 +94,7 @@ void rebx_com_force(struct reb_simulation* const sim, struct rebx_force* const f
         }
     }
 
-    
+
     for(int i=N-1; i>=0; i--){ // Run through backwards so each iteration does not depend on previous ones in Jacobi coordinates.
         if (i==refindex){
             continue;
@@ -103,7 +103,7 @@ void rebx_com_force(struct reb_simulation* const sim, struct rebx_force* const f
         if (coordinates == REBX_COORDINATES_JACOBI){
             com = rebx_get_com_without_particle(com, *p);
         }
-        
+
         struct reb_vec3d a = calculate_force(sim, force, p, &com);
         p->ax += a.x;
         p->ay += a.y;
@@ -165,7 +165,7 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* c
     struct rebx_extras* const rebx = sim->extras;
     const int N_real = sim->N - sim->N_var;
     struct reb_particle com = reb_get_com(sim); // Start with full com for jacobi and barycentric coordinates.
-  
+
     int refindex = -1;
     if(coordinates == REBX_COORDINATES_JACOBI){
         refindex = 0;                           // There is no jacobi coordinate for the 0th particle, so should skip index 0
@@ -179,7 +179,7 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* c
                 refindex = i;
                 break;
             }
-            if (i == N_real-1){                 
+            if (i == N_real-1){
                 char str[200];
                 sprintf(str, "Coordinates set to REBX_COORDINATES_PARTICLE, but %s param was not found in any particle.  Need to set parameter.\n", reference_name);
                 reb_error(sim, str);
@@ -187,7 +187,7 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* c
         }
     }
 
-    
+
     for(int i=N_real-1; i>=0; i--){ // Run through backwards so each iteration does not depend on previous ones in Jacobi coordinates.
         if (i==refindex){
             continue;
@@ -196,7 +196,7 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* c
         if (coordinates == REBX_COORDINATES_JACOBI){
             com = rebx_get_com_without_particle(com, *p);
         }
-        
+
         struct reb_particle modified_particle = calculate_step(sim, operator, p, &com, dt);
         struct reb_particle diff = rebx_particle_minus(modified_particle, *p);
         p->x = modified_particle.x;
@@ -241,15 +241,163 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* c
     }
 }
 
+// TLu 11/8/22 FROM CELMECH
+
+struct reb_vec3d rebx_tools_spin_and_orbital_angular_momentum(const struct reb_simulation* const r, const struct rebx_extras* const rebx){
+  // USE THIS FUNCTION IF PARTICLES HAVE SIGNIFICANT SPIN
+	const int N = r->N;
+	const struct reb_particle* restrict const particles = r->particles;
+	const int N_var = r->N_var;
+    struct reb_vec3d L = {0};
+    for (int i=0;i<N-N_var;i++){
+		struct reb_particle pi = particles[i];
+        // This is the orbital component
+        L.x += pi.m*(pi.y*pi.vz - pi.z*pi.vy);
+        L.y += pi.m*(pi.z*pi.vx - pi.x*pi.vz);
+        L.z += pi.m*(pi.x*pi.vy - pi.y*pi.vx);
+
+        // This is the spin component
+        const double* sx = rebx_get_param(rebx, pi.ap, "spin_sx");
+        const double* sy = rebx_get_param(rebx, pi.ap, "spin_sy");
+        const double* sz = rebx_get_param(rebx, pi.ap, "spin_sz");
+        const double* moi = rebx_get_param(rebx, pi.ap, "moi");
+
+        if (sx != NULL && sy != NULL && sz != NULL && moi != NULL){
+          L.x += (*moi) * (*sx);
+          L.y += (*moi) * (*sy);
+          L.z += (*moi) * (*sz);
+        }
+
+	}
+	return L;
+}
+
+void compute_transformation_angles(struct reb_simulation* sim, struct rebx_extras* rebx, double* theta1, double* theta2){
+    // From celmech line 330
+    // MODIFIED TO INCLUDE SPIN ANGULAR MOMENTUM
+    struct reb_vec3d gtot_vec = rebx_tools_spin_and_orbital_angular_momentum(sim, rebx);
+    double gtot = sqrt(gtot_vec.x * gtot_vec.x + gtot_vec.y * gtot_vec.y + gtot_vec.z * gtot_vec.z);
+    double ghat_x = gtot_vec.x / gtot;
+    double ghat_y = gtot_vec.y / gtot;
+    double ghat_z = gtot_vec.z / gtot;
+    double ghat_perp = sqrt(1 - ghat_z * ghat_z);
+    *theta1 = M_PI / 2 - atan2(ghat_y, ghat_x);
+    *theta2 = M_PI / 2 - atan2(ghat_z, ghat_perp);
+}
+
+struct reb_vec3d EulerAnglesTransform(struct reb_vec3d xyz, const double Omega, const double I, const double omega){
+    // celmech line 341
+    double x = xyz.x;
+    double y = xyz.y;
+    double z = xyz.z;
+
+    double s1 = sin(omega);
+    double c1 = cos(omega);
+    double x1 = c1 * x - s1 * y;
+    double y1 = s1 * x + c1 * y;
+    double z1 = z;
+
+    double s2 = sin(I);
+    double c2 = cos(I);
+    double x2 = x1;
+    double y2 = c2 * y1 - s2 * z1;
+    double z2 = s2 * y1 + c2 * z1;
+
+    double s3 = sin(Omega);
+    double c3 = cos(Omega);
+    double x3 = c3 * x2 - s3 * y2;
+    double y3 = s3 * x2 + c3 * y2;
+    double z3 = z2;
+
+    struct reb_vec3d shifted = {x3, y3, z3};
+    return shifted;
+}
+
+void align_simulation(struct reb_simulation* sim, struct rebx_extras* rebx){
+    // celmech line 360
+    // CHANGED TO INCLUDE SPIN ANGMOM
+    const int N_real = sim->N - sim->N_var;
+    double theta1, theta2;
+    compute_transformation_angles(sim, rebx, &theta1, &theta2);
+    for (int i = 0; i < N_real; i++){
+        struct reb_particle* p = &sim->particles[i];
+	      struct reb_vec3d pos = {p->x, p->y, p->z};
+	      struct reb_vec3d vel = {p->vx, p->vy, p->vz};
+        struct reb_vec3d ps = EulerAnglesTransform(pos, 0, theta2, theta1);
+      	struct reb_vec3d vs = EulerAnglesTransform(vel, 0, theta2, theta1);
+
+        // Try this for the spin
+        const double* sx = rebx_get_param(rebx, p->ap, "spin_sx");
+        const double* sy = rebx_get_param(rebx, p->ap, "spin_sy");
+        const double* sz = rebx_get_param(rebx, p->ap, "spin_sz");
+        struct reb_vec3d spin = {*sx, *sy, *sz};
+        struct reb_vec3d ss = EulerAnglesTransform(spin, 0, theta2, theta1);
+
+      	p->x = ps.x;
+      	p->y = ps.y;
+      	p->z = ps.z;
+
+      	p->vx = vs.x;
+      	p->vy = vs.y;
+      	p->vz = vs.z;
+
+        rebx_set_param_double(rebx, &p->ap, "spin_sx", ss.x);
+        rebx_set_param_double(rebx, &p->ap, "spin_sy", ss.y);
+        rebx_set_param_double(rebx, &p->ap, "spin_sz", ss.z);
+  }
+}
+
+// TLu transformation matrix
+struct reb_vec3d rebx_transform_inv_to_planet(double inc, double omega, struct reb_vec3d spin_inv){
+    // This ts a vector from the INVARIANT frame to the PLANET frame
+    double sx = spin_inv.x;
+    double sy = spin_inv.y;
+    double sz = spin_inv.z;
+
+    double t[3][3];
+
+    t[0][0] = cos(omega);
+    t[0][1] = sin(omega);
+    t[0][2] = 0;
+    t[1][0] = -cos(inc) * sin(omega);
+    t[1][1] = cos(inc) * cos(omega);
+    t[1][2] = sin(inc);
+    t[2][0] = sin(inc) * sin(omega);
+    t[2][1] = -sin(inc) * cos(omega);
+    t[2][2] = cos(inc);
+
+    struct reb_vec3d spin_planet = {0};
+
+    spin_planet.x = sx * t[0][0] + sy * t[0][1] + sz * t[0][2];
+    spin_planet.y = sx * t[1][0] + sy * t[1][1] + sz * t[1][2];
+    spin_planet.z = sx * t[2][0] + sy * t[2][1] + sz * t[2][2];
+
+    return spin_planet;
+}
+
+struct reb_vec3d rebx_cross_product(struct reb_vec3d v1, struct reb_vec3d v2){
+    const double px = v1.y*v2.z - v1.z*v2.y;
+    const double py = v1.z*v2.x - v1.x*v2.z;
+    const double pz = v1.x*v2.y - v1.y*v2.x;
+
+    struct reb_vec3d product = {px, py, pz};
+
+    return product;
+}
+
+double rebx_dot_product(struct reb_vec3d v1, struct reb_vec3d v2){
+    return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
+}
+
 /*static const struct reb_orbit reb_orbit_nan = {.d = NAN, .v = NAN, .h = NAN, .P = NAN, .n = NAN, .a = NAN, .e = NAN, .inc = NAN, .Omega = NAN, .omega = NAN, .pomega = NAN, .f = NAN, .M = NAN, .l = NAN};
 
 #define MIN_REL_ERROR 1.0e-12   ///< Close to smallest relative floating point number, used for orbit calculation
 #define TINY 1.E-308        ///< Close to smallest representable floating point number, used for orbit calculation
-#define MIN_INC 1.e-8       ///< Below this inclination, the broken angles pomega and theta equal the corresponding 
+#define MIN_INC 1.e-8       ///< Below this inclination, the broken angles pomega and theta equal the corresponding
                             ///< unbroken angles to within machine precision, so a practical boundary for planar orbits
                             //
 
-// returns acos(num/denom), using disambiguator to tell which quadrant to return.  
+// returns acos(num/denom), using disambiguator to tell which quadrant to return.
 // will return 0 or pi appropriately if num is larger than denom by machine precision
 // and will return 0 if denom is exactly 0.
 
@@ -285,23 +433,23 @@ struct reb_orbit rebxtools_particle_to_orbit_err(double g, struct reb_particle* 
     dvy = p->vy - primary->vy;
     dvz = p->vz - primary->vz;
     o.d = sqrt ( dx*dx + dy*dy + dz*dz );
-    
+
     vsquared = dvx*dvx + dvy*dvy + dvz*dvz;
     o.v = sqrt(vsquared);
-    vcircsquared = mu/o.d;  
+    vcircsquared = mu/o.d;
     o.a = -mu/( vsquared - 2.*vcircsquared );   // semi major axis
-    
+
     hx = (dy*dvz - dz*dvy);                     //angular momentum vector
     hy = (dz*dvx - dx*dvz);
     hz = (dx*dvy - dy*dvx);
     o.h = sqrt ( hx*hx + hy*hy + hz*hz );       // abs value of angular momentum
 
-    vdiffsquared = vsquared - vcircsquared; 
-    if(o.d <= tiny){                            
+    vdiffsquared = vsquared - vcircsquared;
+    if(o.d <= tiny){
         *err = 2;                                   // particle is on top of primary
         return reb_orbit_nan;
     }
-    vr = (dx*dvx + dy*dvy + dz*dvz)/o.d;    
+    vr = (dx*dvx + dy*dvy + dz*dvz)/o.d;
     rvr = o.d*vr;
     muinv = 1./mu;
 
@@ -316,12 +464,12 @@ struct reb_orbit rebxtools_particle_to_orbit_err(double g, struct reb_particle* 
                                         // will = 0 if h is 0.
 
     nx = -hy;                           // vector pointing along the ascending node = zhat cross h
-    ny =  hx;       
+    ny =  hx;
     n = sqrt( nx*nx + ny*ny );
 
     // omega, pomega and theta are measured from x axis, so we can always use y component to disambiguate if in the range [0,pi] or [pi,2pi]
     o.omega = acos2(nx, n, ny);         // cos omega is dot product of x and n unit vectors. will = 0 if i=0.
-    
+
     ea = acos2(1.-o.d/o.a, o.e, vr);    // from definition of eccentric anomaly.  if vr < 0, must be going from apo to peri, so ea = [pi, 2pi] so ea = -acos(cosea)
     o.m = ea - o.e*sin(ea);                     // mean anomaly (kepler's equation)
 
@@ -393,7 +541,7 @@ void rebxtools_orbit_to_particle(double G, struct reb_particle* p, struct reb_pa
     }
     if(e > 1.){
         if(a > 0.){
-            *err = 3;   // Bound orbit (a > 0) must have e < 1. 
+            *err = 3;   // Bound orbit (a > 0) must have e < 1.
             *p = reb_particle_nan();
             return;
         }
@@ -422,7 +570,7 @@ void rebxtools_orbit_to_particle(double G, struct reb_particle* p, struct reb_pa
     double sf = sin(f);
     double ci = cos(inc);
     double si = sin(inc);
-    
+
     // Murray & Dermott Eq 2.122
     p->x = primary->x + r*(cO*(co*cf-so*sf) - sO*(so*cf+co*sf)*ci);
     p->y = primary->y + r*(sO*(co*cf-so*sf) + cO*(so*cf+co*sf)*ci);

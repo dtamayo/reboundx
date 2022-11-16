@@ -2,7 +2,7 @@
  * @file    rebxtools.h
  * @brief   Helper functions for reboundx
  * @author  Dan Tamayo <tamayo.daniel@gmail.com>
- * 
+ *
  * @section     LICENSE
  * Copyright (c) 2015 Dan Tamayo, Hanno Rein
  *
@@ -27,6 +27,7 @@
 #define _REBXTOOLS_H
 
 struct reb_simulation;
+struct rebx_extras;
 struct reb_particle;
 struct reb_orbit;
 struct reb_vec3d;
@@ -47,6 +48,14 @@ Effect helper functions
 ****************************************/
 const double rebx_calculate_planet_trap(const double r, const double dedge, const double hedge);
 
+// TLu 11/8/22
+struct reb_vec3d rebx_tools_spin_and_orbital_angular_momentum(const struct reb_simulation* const r, const struct rebx_extras* const rebx);
+void compute_transformation_angles(struct reb_simulation* sim, struct rebx_extras* rebx, double* theta1, double* theta2);
+struct reb_vec3d EulerAnglesTransform(struct reb_vec3d xyz, const double Omega, const double I, const double omega);
+void align_simulation(struct reb_simulation* sim, struct rebx_extras* rebx);
+struct reb_vec3d rebx_transform_inv_to_planet(double inc, double omega, struct reb_vec3d spin_inv);
+struct reb_vec3d rebx_cross_product(struct reb_vec3d v1, struct reb_vec3d v2);
+double rebx_dot_product(struct reb_vec3d v1, struct reb_vec3d v2);
 /*
 struct reb_orbit rebxtools_particle_to_orbit_err(double G, struct reb_particle* p, struct reb_particle* primary, int* err);
 
