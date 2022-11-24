@@ -22,7 +22,7 @@ try:
     ghash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii")
     ghash_arg = "-DREBXGITHASH="+ghash
 except:
-    ghash_arg = "-DREBXGITHASH=4191e263e14054883710d296c3b8ca03a7b81381" #GITHASHAUTOUPDATE
+    ghash_arg = "-DREBXGITHASH=c48bfa17c862c8a91fe03b1cc9a514df27e0524e" #GITHASHAUTOUPDATE
 
 class build_ext(_build_ext):
     def finalize_options(self):
@@ -79,7 +79,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='reboundx',
-    version='3.7.2',
+    version='3.8.0',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
     url='https://github.com/dtamayo/reboundx',
@@ -110,8 +110,8 @@ setup(name='reboundx',
     keywords='astronomy astrophysics nbody integrator',
     packages=['reboundx'],
     cmdclass={'build_ext':build_ext},
-    setup_requires=['rebound>=3.10.0', 'numpy'],
-    install_requires=['rebound>=3.10.0', 'numpy'],
+    setup_requires=['rebound>=3.22.0', 'numpy'],
+    install_requires=['rebound>=3.22.0', 'numpy'],
     tests_require=["numpy","matplotlib"],
     test_suite="reboundx.test",
     ext_modules = [libreboundxmodule],
