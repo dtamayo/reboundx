@@ -87,8 +87,8 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
     const double omega_dot_d = sx * dx + sy * dy + sz * dz;
     const double omega_squared = sx * sx + sy * sy + sz * sz;
 
-    const double t1 = 5. * omega_dot_d * omega_dot_d / (2 * (dr * dr * dr * dr * dr * dr * dr));
-    const double t2 = omega_squared / (2 * (dr * dr * dr * dr * dr));
+    const double t1 = 5. * omega_dot_d * omega_dot_d / (2. * (dr * dr * dr * dr * dr * dr * dr));
+    const double t2 = omega_squared / (2. * (dr * dr * dr * dr * dr));
     const double t3 = omega_dot_d / (dr * dr * dr * dr * dr);
     const double t4 = 6. * G * mt / (dr * dr * dr * dr * dr * dr * dr * dr);
 
@@ -103,12 +103,12 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
       const double dvy = source->vy - target->vy;
       const double dvz = source->vz - target->vz;
 
-      const double d_dot_vel = 3 * (dx*dvx + dy*dvy + dz*dvz);
+      const double d_dot_vel = dx*dvx + dy*dvy + dz*dvz;
 
       // first vector
-      const double vec1_x = d_dot_vel * dx;
-      const double vec1_y = d_dot_vel * dy;
-      const double vec1_z = d_dot_vel * dz;
+      const double vec1_x = 3. * d_dot_vel * dx;
+      const double vec1_y = 3. * d_dot_vel * dy;
+      const double vec1_z = 3. * d_dot_vel * dz;
 
       // h vector - EKH
       const double hx = dy * dvz - dz * dvy;
@@ -125,7 +125,7 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
       const double vec2_y = comp_2_z * dx - comp_2_x * dz;
       const double vec2_z = comp_2_x * dy - comp_2_y * dx;
 
-      const double prefactor = (-9 * sigma * mt * mt * big_a * big_a) / (2 * mu_ij * (d2 * d2 * d2 * d2 * d2));
+      const double prefactor = (-9. * sigma * mt * mt * big_a * big_a) / (2. * mu_ij * (d2 * d2 * d2 * d2 * d2));
 
       tot_force.x += (prefactor * (vec1_x + vec2_x));
       tot_force.y += (prefactor * (vec1_y + vec2_y));
@@ -404,7 +404,7 @@ void rebx_set_planet_q(struct reb_simulation* sim, struct rebx_extras* rebx, str
 
   if (k2 != NULL || r != 0.0){
       if (synchronized == 1){
-        const double sigma = 4. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
+        const double sigma = 2. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
         //printf("sigma = %10e\n", sigma);
         rebx_set_param_double(rebx, &body->ap, "sigma", sigma);
       }
@@ -415,7 +415,7 @@ void rebx_set_planet_q(struct reb_simulation* sim, struct rebx_extras* rebx, str
         const double* sz = rebx_get_param(rebx, body->ap, "spin_sz");
         const double omega = sqrt((*sx) * (*sx) * (*sy) * (*sy) * (*sz) * (*sz));
 
-        const double sigma = 3. * q * (*k2) * r * r * r * r * r * fabs(omega - n) / (2 * sim->G);
+        const double sigma = 3. * q * (*k2) * r * r * r * r * r * fabs(omega - n) / (4. * sim->G);
         rebx_set_param_double(rebx, &body->ap, "sigma", sigma);
       }
   }
@@ -435,17 +435,18 @@ void rebx_set_star_q(struct reb_simulation* sim, struct rebx_extras* rebx, struc
 
   if (k2 != NULL || r != 0.0){
     if (synchronized == 1){
-      const double sigma = 4. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
+      const double sigma = 2. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
       //printf("sigma = %10e\n", sigma);
       rebx_set_param_double(rebx, &star->ap, "sigma", sigma);
     }
+
     else if (synchronized == 0){
       const double* sx = rebx_get_param(rebx, star->ap, "spin_sx");
       const double* sy = rebx_get_param(rebx, star->ap, "spin_sy");
       const double* sz = rebx_get_param(rebx, star->ap, "spin_sz");
       const double omega = sqrt((*sx) * (*sx) * (*sy) * (*sy) * (*sz) * (*sz));
 
-      const double sigma = 3. * q * (*k2) * r * r * r * r * r * fabs(omega - n) / (2 * sim->G);
+      const double sigma = 3. * q * (*k2) * r * r * r * r * r * fabs(omega - n) / (4. * sim->G);
       rebx_set_param_double(rebx, &star->ap, "sigma", sigma);
     }
   }

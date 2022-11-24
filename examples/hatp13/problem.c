@@ -44,7 +44,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sx", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sy", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sz", solar_spin * 1.0);
-    // rebx_set_star_q(sim, rebx, &sim->particles[0], &sim->particles[1], solar_q, 1);
+    rebx_set_star_q(sim, rebx, &sim->particles[0], &sim->particles[1], solar_q, 1);
 
     // P1
     const double spin_period_1 = 0.5 * 2. * M_PI / 365.; // 0.5 days in reb years
@@ -58,13 +58,13 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sx", spin_1 * sin(theta_1) * sin(phi_1));
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sy", spin_1 * sin(theta_1) * cos(phi_1));
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sz", spin_1 * cos(theta_1));
-    // rebx_set_planet_q(sim, rebx, &sim->particles[1], &sim->particles[0], planet_q, 1);
+    rebx_set_planet_q(sim, rebx, &sim->particles[1], &sim->particles[0], planet_q, 1);
 
 
     // Run simulation
     rebx_spin_initialize_ode(sim, effect);
 
-    FILE* f = fopen("11_14_simple_test_no_star_tides_target_source_switch.txt","w");
+    FILE* f = fopen("11_23_simple_test_no_star_tides.txt","w");
     fprintf(f, "t,starx,stary,starz,starvx,starvy,starvz,star_sx,star_sy,star_sz,a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1,f1,p1x,p1y,p1z,p1vx,p1vy,p1vz\n");
     //int cond = 0;
     align_simulation(sim, rebx);
