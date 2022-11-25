@@ -26,7 +26,6 @@ int main(int argc, char* argv[]){
       p1_e = atof(argv[1]);
     }
 
-    printf("e: %f\n", p1_e);
     reb_add_fmt(sim, "m a e r", p1_mass, 0.04072, p1_e, p1_rad); // Planet 1
 
     reb_move_to_com(sim);
@@ -70,8 +69,9 @@ int main(int argc, char* argv[]){
     // Run simulation
     rebx_spin_initialize_ode(sim, effect);
 
-    FILE* f = fopen("11_23_simple_test_no_star_tides.txt","w");
-    fprintf(f, "t,starx,stary,starz,starvx,starvy,starvz,star_sx,star_sy,star_sz,a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1,f1,p1x,p1y,p1z,p1vx,p1vy,p1vz\n");
+    //FILE* f = fopen("11_23_simple_test_no_star_tides.txt","w");
+    //fprintf(f, "t,starx,stary,starz,starvx,starvy,starvz,star_sx,star_sy,star_sz,a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1,f1,p1x,p1y,p1z,p1vx,p1vy,p1vz\n");
+    printf("t,starx,stary,starz,starvx,starvy,starvz,star_sx,star_sy,star_sz,a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1,f1,p1x,p1y,p1z,p1vx,p1vy,p1vz\n");
     //int cond = 0;
     align_simulation(sim, rebx);
 
@@ -93,7 +93,6 @@ int main(int argc, char* argv[]){
     rebx_set_time_lag(sim, rebx, &sim->particles[0], 1 / (mm * solar_q));
     rebx_set_time_lag(sim, rebx, &sim->particles[1], 1 / (mm * planet_q));
 
-    printf("sx, sy, sz, a, Om, i, pom, e, n: %f %f %f %f %f %f %f %f %f\n", *sx, *sy, *sz, a, Om, i, pom, e, mm);
      for (int i=0; i<100000; i++){
 
          struct reb_particle* sun = &sim->particles[0];
@@ -126,13 +125,15 @@ int main(int argc, char* argv[]){
          // Interpret in the planet frame
          double mag1 = sqrt(s1.x * s1.x + s1.y * s1.y + s1.z * s1.z);
          double ob1 = acos(s1.z / mag1) * (180 / M_PI);
-
+/*
          if (i % 1000 == 0){
              printf("t=%f\t a1=%.6f\t o1=%0.5f\t", sim->t / (2 * M_PI), a1, ob1);
              struct reb_vec3d gv = rebx_tools_spin_and_orbital_angular_momentum(sim, rebx);
              printf("Tot orbital and spin ang mom: %0.10f %0.10f %0.10f %0.10f\n", gv.x, gv.y, gv.z, sqrt(gv.x*gv.x+gv.y*gv.y+gv.z*gv.z));
          }
-         fprintf(f, "%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f\n", sim->t / (2 * M_PI), sun->x, sun->y, sun->z, sun->vx, sun->vy, sun->vz, *star_sx, *star_sy, *star_sz, a1, i1, e1, s1.x, s1.y, s1.z, mag1, pom1, Om1, f1, p1->x,p1->y,p1->z, p1->vx, p1->vy, p1->vz);
+
+         */
+         printf("%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f\n", sim->t / (2 * M_PI), sun->x, sun->y, sun->z, sun->vx, sun->vy, sun->vz, *star_sx, *star_sy, *star_sz, a1, i1, e1, s1.x, s1.y, s1.z, mag1, pom1, Om1, f1, p1->x,p1->y,p1->z, p1->vx, p1->vy, p1->vz);
          reb_integrate(sim, sim->t+(1 * 2 * M_PI));
      }
     rebx_free(rebx);
