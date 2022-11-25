@@ -21,7 +21,13 @@ int main(int argc, char* argv[]){
 
     const double p1_mass = 1. * 9.55e-4; // in Jupiter masses * 1 Jupiter Mass / 1 Solar Mass
     const double p1_rad = 1. * 4.676e-4; // in Jupiter rad * 1 jupiter rad / 1 AU
-    reb_add_fmt(sim, "m a e r", p1_mass, 0.04072, 0.01, p1_rad); // Planet 1
+    double p1_e = 0.01;
+    if (argc == 2){
+      p1_e = atof(argv[1]);
+    }
+
+    printf("e: %f\n", p1_e);
+    reb_add_fmt(sim, "m a e r", p1_mass, 0.04072, p1_e, p1_rad); // Planet 1
 
     reb_move_to_com(sim);
     sim->N_active = 2;
