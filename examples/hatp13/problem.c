@@ -90,10 +90,10 @@ int main(int argc, char* argv[]){
     double e = o.e;
     double mm = o.n;
 
-    rebx_set_time_lag(sim, rebx, &sim->particles[0], 1 / (mm * solar_q));
-    rebx_set_time_lag(sim, rebx, &sim->particles[1], 1 / (mm * planet_q));
+    //rebx_set_time_lag(sim, rebx, &sim->particles[0], 1 / (mm * solar_q));
+    //rebx_set_time_lag(sim, rebx, &sim->particles[1], 1 / (mm * planet_q));
 
-    printf("sx, sy, sz, a, Om, i, pom, e, n: %f %f %f %f %f %f %f %f %f\n", *sx, *sy, *sz, a, Om, i, pom, e, mm);
+    //printf("sx, sy, sz, a, Om, i, pom, e, n: %f %f %f %f %f %f %f %f %f\n", *sx, *sy, *sz, a, Om, i, pom, e, mm);
      for (int i=0; i<100000; i++){
 
          struct reb_particle* sun = &sim->particles[0];
