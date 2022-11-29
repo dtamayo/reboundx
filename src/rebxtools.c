@@ -330,8 +330,14 @@ void align_simulation(struct reb_simulation* sim, struct rebx_extras* rebx){
         const double* sx = rebx_get_param(rebx, p->ap, "spin_sx");
         const double* sy = rebx_get_param(rebx, p->ap, "spin_sy");
         const double* sz = rebx_get_param(rebx, p->ap, "spin_sz");
-        struct reb_vec3d spin = {*sx, *sy, *sz};
-        struct reb_vec3d ss = EulerAnglesTransform(spin, 0, theta2, theta1);
+        if (sx != NULL && sy != NULL && sz != NULL){
+          struct reb_vec3d spin = {*sx, *sy, *sz};
+          struct reb_vec3d ss = EulerAnglesTransform(spin, 0, theta2, theta1);
+
+          rebx_set_param_double(rebx, &p->ap, "spin_sx", ss.x);
+          rebx_set_param_double(rebx, &p->ap, "spin_sy", ss.y);
+          rebx_set_param_double(rebx, &p->ap, "spin_sz", ss.z);
+        }
 
       	p->x = ps.x;
       	p->y = ps.y;
@@ -340,10 +346,6 @@ void align_simulation(struct reb_simulation* sim, struct rebx_extras* rebx){
       	p->vx = vs.x;
       	p->vy = vs.y;
       	p->vz = vs.z;
-
-        rebx_set_param_double(rebx, &p->ap, "spin_sx", ss.x);
-        rebx_set_param_double(rebx, &p->ap, "spin_sy", ss.y);
-        rebx_set_param_double(rebx, &p->ap, "spin_sz", ss.z);
   }
 }
 
@@ -373,20 +375,6 @@ struct reb_vec3d rebx_transform_inv_to_planet(double inc, double omega, struct r
     spin_planet.z = sx * t[2][0] + sy * t[2][1] + sz * t[2][2];
 
     return spin_planet;
-}
-
-struct reb_vec3d rebx_cross_product(struct reb_vec3d v1, struct reb_vec3d v2){
-    const double px = v1.y*v2.z - v1.z*v2.y;
-    const double py = v1.z*v2.x - v1.x*v2.z;
-    const double pz = v1.x*v2.y - v1.y*v2.x;
-
-    struct reb_vec3d product = {px, py, pz};
-
-    return product;
-}
-
-double rebx_dot_product(struct reb_vec3d v1, struct reb_vec3d v2){
-    return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
 }
 
 /*static const struct reb_orbit reb_orbit_nan = {.d = NAN, .v = NAN, .h = NAN, .P = NAN, .n = NAN, .a = NAN, .e = NAN, .inc = NAN, .Omega = NAN, .omega = NAN, .pomega = NAN, .f = NAN, .M = NAN, .l = NAN};

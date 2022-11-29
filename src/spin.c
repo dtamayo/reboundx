@@ -69,8 +69,7 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
   const double ms = source->m;
   const double Rs = source->r;
   const double mt = target->m;
-  // const double mratio = ms / mt; // have already checked for 0 and inf
-  const double mu_ij = ms * mt / (ms + mt);
+  const double mu_ij = ms * mt / (ms + mt); // have already checked for 0 and inf
   const double big_a = k2 * (Rs * Rs * Rs * Rs * Rs);
 
   // distance vector FROM j TO i
@@ -145,7 +144,6 @@ static void rebx_spin_orbit_accelerations(struct reb_particle* source, struct re
 
     struct reb_vec3d tot_force = rebx_calculate_spin_orbit_accelerations(source, target, G, k2, sigma, sx, sy, sz);
 
-    // DIRECTION???? UNCLEAR ATM
     target->ax -= ((ms / mtot) * tot_force.x);
     target->ay -= ((ms / mtot) * tot_force.y);
     target->az -= ((ms / mtot) * tot_force.z);
@@ -161,56 +159,48 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
     struct rebx_extras* const rebx = sim->extras;
     unsigned int Nspins = 0;
     const int N_real = sim->N - sim->N_var;
-    //struct reb_particle* primary = &sim->particles[0];
     for (int i=0; i<N_real; i++){
         struct reb_particle* pi = &sim->particles[i]; // target particle
-        double* k2 = rebx_get_param(rebx, pi->ap, "k2");
-        double* sigma = rebx_get_param(rebx, pi->ap, "sigma");
-        double* moi = rebx_get_param(rebx, pi->ap, "moi");
-        double sigma_in;
+        const double* k2 = rebx_get_param(rebx, pi->ap, "k2");
+        const double* sigma = rebx_get_param(rebx, pi->ap, "sigma");
+        const double* moi = rebx_get_param(rebx, pi->ap, "moi");
 
+        // Particle MUST have k2, sigma and moment of inertia to feel effects
+        if (k2 != NULL && sigma != NULL && moi != NULL){
 	       // Set initial spin accelerations to 0
-        yDot[3*Nspins] = 0;
-        yDot[3*Nspins + 1] = 0;
-        yDot[3*Nspins + 2] = 0;
+          yDot[3*Nspins] = 0;
+          yDot[3*Nspins + 1] = 0;
+          yDot[3*Nspins + 2] = 0;
 
-        const double sx = y[3*Nspins];
-        const double sy = y[3*Nspins + 1];
-        const double sz = y[3*Nspins + 2];
+          const double sx = y[3*Nspins];
+          const double sy = y[3*Nspins + 1];
+          const double sz = y[3*Nspins + 2];
 
-        for (int j=0; j<N_real; j++){
-          // Particle MUST have k2 to feel effects
-          if (k2 != NULL && i != j){ // Look into this conditional more
-            // It is possible to set k2 but not sigma to be set: check here
-              if (sigma == NULL){
-                sigma_in = 0.0;
-              }
+          for (int j=0; j<N_real; j++){
+            if (i != j){
+                struct reb_particle* pj = &sim->particles[j];
 
-              else{
-                sigma_in = *sigma;
-              }
+                // di - dj
+                const double dx = pi->x - pj->x;
+                const double dy = pi->y - pj->y;
+                const double dz = pi->z - pj->z;
 
-              struct reb_particle* pj = &sim->particles[j];
+                const double mi = pi->m;
+                const double mj = pj->m;
+                const double mu_ij = (mi * mj) / (mi + mj);
 
-              // di - dj
-              const double dx = pi->x - pj->x;
-              const double dy = pi->y - pj->y;
-              const double dz = pi->z - pj->z;
-
-              const double mi = pi->m;
-              const double mj = pj->m;
-              const double mu_ij = (mi * mj) / (mi + mj);
-
-              struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, sigma_in, sx, sy, sz);
-              yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) * (-mu_ij / *moi));
-              yDot[3*Nspins + 1] += ((dz * tf.x - dx * tf.z) * (-mu_ij / *moi));
-              yDot[3*Nspins + 2] += ((dx * tf.y - dy * tf.x) * (-mu_ij / *moi));
+                struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, *sigma, sx, sy, sz);
+                yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) * (-mu_ij / *moi));
+                yDot[3*Nspins + 1] += ((dz * tf.x - dx * tf.z) * (-mu_ij / *moi));
+                yDot[3*Nspins + 2] += ((dx * tf.y - dy * tf.x) * (-mu_ij / *moi));
+            }
           }
-        }
-        Nspins += 1;
+          Nspins += 1;
+      }
     }
     if (ode->length != Nspins*3){
         reb_error(sim, "rebx_spin ODE is not of the expected length.\n");
+        exit(1);
     }
 }
 
@@ -221,11 +211,12 @@ static void rebx_spin_sync_pre(struct reb_ode* const ode, const double* const y0
     const int N_real = sim->N - sim->N_var;
     for (int i=0; i<N_real; i++){
         struct reb_particle* p = &sim->particles[i];
-        double* k2 = rebx_get_param(rebx, p->ap, "k2");
-        if (k2 != NULL){
-            double* sx = rebx_get_param(rebx, p->ap, "spin_sx");
-            double* sy = rebx_get_param(rebx, p->ap, "spin_sy");
-            double* sz = rebx_get_param(rebx, p->ap, "spin_sz");
+        const double* k2 = rebx_get_param(rebx, p->ap, "k2");
+        const double* sigma = rebx_get_param(rebx, p->ap, "sigma");
+        if (k2 != NULL && sigma != NULL){
+            const double* sx = rebx_get_param(rebx, p->ap, "spin_sx");
+            const double* sy = rebx_get_param(rebx, p->ap, "spin_sy");
+            const double* sz = rebx_get_param(rebx, p->ap, "spin_sz");
             ode->y[3*Nspins] = *sx;
             ode->y[3*Nspins+1] = *sy;
             ode->y[3*Nspins+2] = *sz;
@@ -235,6 +226,7 @@ static void rebx_spin_sync_pre(struct reb_ode* const ode, const double* const y0
 
     if (ode->length != Nspins*3){
         reb_error(sim, "rebx_spin ODE is not of the expected length.\n");
+        exit(1);
     }
 }
 
@@ -245,8 +237,9 @@ static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y
     const int N_real = sim->N - sim->N_var;
     for (int i=0; i<N_real; i++){
         struct reb_particle* p = &sim->particles[i];
-        double* k2 = rebx_get_param(rebx, p->ap, "k2");
-        if (k2 != NULL){
+        const double* k2 = rebx_get_param(rebx, p->ap, "k2");
+        const double* sigma = rebx_get_param(rebx, p->ap, "sigma");
+        if (k2 != NULL && sigma != NULL){
             rebx_set_param_double(rebx, &p->ap, "spin_sx", y0[3*Nspins]);
             rebx_set_param_double(rebx, &p->ap, "spin_sy", y0[3*Nspins+1]);
             rebx_set_param_double(rebx, &p->ap, "spin_sz", y0[3*Nspins+2]);
@@ -255,6 +248,7 @@ static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y
     }
     if (ode->length != Nspins*3){
         reb_error(sim, "rebx_spin ODE is not of the expected length.\n");
+        exit(0);
     }
 }
 
@@ -289,43 +283,30 @@ void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* con
 void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const effect, struct reb_particle* const particles, const int N){
     struct rebx_extras* const rebx = sim->extras;
     const double G = sim->G;
-    double sigma_in;
 
     for (int i=0; i<N; i++){
         struct reb_particle* source = &particles[i];
         // Particle must have a k2 set, otherwise we treat this body as a point particle
-        double* k2 = rebx_get_param(rebx, source->ap, "k2");
-        double* sigma = rebx_get_param(rebx, source->ap, "sigma");
-        double* sx = rebx_get_param(rebx, source->ap, "spin_sx");
-        double* sy = rebx_get_param(rebx, source->ap, "spin_sy");
-        double* sz = rebx_get_param(rebx, source->ap, "spin_sz");
+        const double* k2 = rebx_get_param(rebx, source->ap, "k2");
+        const double* sigma = rebx_get_param(rebx, source->ap, "sigma");
+        const double* sx = rebx_get_param(rebx, source->ap, "spin_sx");
+        const double* sy = rebx_get_param(rebx, source->ap, "spin_sy");
+        const double* sz = rebx_get_param(rebx, source->ap, "spin_sz");
 
-        if (sx == NULL || sy == NULL || sz == NULL || k2 == NULL){
-            // Particle needs all three spin components and k2 to feel additional forces
-            continue;
+        // Particle needs all three spin components and k2 to feel additional forces
+        if (sx != NULL && sy != NULL && sz != NULL && k2 != NULL && sigma != NULL){
+          for (int j=0; j<N; j++){
+              if (i==j){
+                  continue;
+              }
+              struct reb_particle* target = &particles[j]; // j raises tides on i
+              if (source->m == 0 || target->m == 0){
+                  continue;
+              }
+
+              rebx_spin_orbit_accelerations(source, target, G, *k2, *sigma, *sx, *sy, *sz);
           }
-
-        for (int j=0; j<N; j++){
-            if (i==j){
-                continue;
-            }
-            struct reb_particle* target = &particles[j]; // j raises tides on i
-            if (source->m == 0){
-                continue;
-            }
-
-            // It is possible to set k2 but not sigma to be set: check here
-
-            if (sigma == NULL){
-              sigma_in = 0.0;
-            }
-
-            else{
-              sigma_in = *sigma;
-            }
-
-            rebx_spin_orbit_accelerations(source, target, G, *k2, sigma_in, *sx, *sy, *sz);
-        }
+      }
     }
 }
 
@@ -358,18 +339,19 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
     double H=0.;
 
     for (int i=0; i<N_real; i++){
-        struct reb_particle* target = &particles[i];
-        // Particle must have a k2 set, otherwise we treat this body as a point particle
-        double* k2 = rebx_get_param(rebx, target->ap, "k2");
-        if (k2 == NULL || target->r == 0 || target->m == 0){
+        struct reb_particle* source = &particles[i];
+        // Particle must have a k2 and sigma set, otherwise we treat this body as a point particle
+        const double* k2 = rebx_get_param(rebx, source->ap, "k2");
+        const double* sigma = rebx_get_param(rebx, source->ap, "sigma");
+        if (k2 == NULL || sigma == NULL || source->r == 0 || source->m == 0){
             continue;
         }
         for (int j=0; j<N_real; j++){
             if (i==j){
                 continue;
             }
-            struct reb_particle* source = &particles[j]; // planet raising the tides on the star
-            if (source->m == 0){
+            struct reb_particle* target = &particles[j]; // planet raising the tides on the star
+            if (source->m == 0 || target->m == 0){
                 continue;
             }
             H += rebx_calculate_spin_potential(source, target, G, *k2);
@@ -405,7 +387,6 @@ void rebx_set_planet_q(struct reb_simulation* sim, struct rebx_extras* rebx, str
   if (k2 != NULL || r != 0.0){
       if (synchronized == 1){
         const double sigma = 2. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
-        //printf("sigma = %10e\n", sigma);
         rebx_set_param_double(rebx, &body->ap, "sigma", sigma);
       }
 
@@ -436,7 +417,6 @@ void rebx_set_star_q(struct reb_simulation* sim, struct rebx_extras* rebx, struc
   if (k2 != NULL || r != 0.0){
     if (synchronized == 1){
       const double sigma = 2. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
-      //printf("sigma = %10e\n", sigma);
       rebx_set_param_double(rebx, &star->ap, "sigma", sigma);
     }
 
