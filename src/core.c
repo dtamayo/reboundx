@@ -274,6 +274,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->update_accelerations = rebx_modify_orbits_forces;
         force->force_type = REBX_FORCE_VEL;
     }
+    else if (strcmp(name, "modify_orbits_forces_ema") == 0){
+        force->update_accelerations = rebx_modify_orbits_forces_ema;
+        force->force_type = REBX_FORCE_VEL;
+    }
     else if (strcmp(name, "exponential_migration") == 0){
         force->update_accelerations = rebx_exponential_migration;
         force->force_type = REBX_FORCE_VEL;
