@@ -97,7 +97,6 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "q", REBX_TYPE_DOUBLE); // TLu: add tidal
     rebx_register_param(rebx, "moi", REBX_TYPE_DOUBLE); // TLu: add moment of inertia
     rebx_register_param(rebx, "sigma", REBX_TYPE_DOUBLE); //TLu: add dissipation constant from EKH
-    rebx_register_param(rebx, "gr_spin", REBX_TYPE_INT); // TLu post-newtonian correction M&L
     rebx_register_param(rebx, "tctl_tau", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "Omega", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "integrator", REBX_TYPE_INT);
