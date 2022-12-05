@@ -63,7 +63,7 @@
 #include <float.h>
 #include "reboundx.h"
 
-struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double sigma, const double sx, const double sy, const double sz, const int gr){
+struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double sigma, const double sx, const double sy, const double sz){
   // All quantities associated with SOURCE
   // This is the quadrupole potential/tides raised on the SOURCE
   const double ms = source->m;
@@ -135,36 +135,17 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
     }
   }
 
-  // Post-Newtonian correction (M&L, Kidder)
-  /*
-  if (gr == 1){
-    const double eta = ms * mt / (mtot * mtot);
-
-    const double pn1 = (1 + 3. * eta) * vel2;
-    const double pn2 = 2 * (2 + eta) * G * mtot / dr;
-    const double pn3 = 1.5 * eta * vel2;
-    const double pn4 = 2 * (2 - eta) * vr;
-    const double c = 10065.32; // magic number woo
-    const double pn_prefactor = (-G * mtot) / (dr * dr * dr * c * c);
-
-    tot_force.x -= pn_prefactor * ((pn1 - pn2 - pn3) * dx - pn4 * dvx);
-    tot_force.y -= pn_prefactor * ((pn1 - pn2 - pn3) * dy - pn4 * dvy);
-    tot_force.z -= pn_prefactor * ((pn1 - pn2 - pn3) * dz - pn4 * dvz);
-
-  }
-  */
-
   return tot_force;
 }
 
-static void rebx_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double sigma, const double sx, const double sy, const double sz, const int gr){
+static void rebx_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double sigma, const double sx, const double sy, const double sz){
 
     // Input params all associated with source
     const double ms = source->m;
     const double mt = target->m;
     const double mtot = ms + mt;
 
-    struct reb_vec3d tot_force = rebx_calculate_spin_orbit_accelerations(source, target, G, k2, sigma, sx, sy, sz, gr);
+    struct reb_vec3d tot_force = rebx_calculate_spin_orbit_accelerations(source, target, G, k2, sigma, sx, sy, sz);
 
     target->ax -= ((ms / mtot) * tot_force.x);
     target->ay -= ((ms / mtot) * tot_force.y);
@@ -211,7 +192,7 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
                 const double mj = pj->m;
                 const double mu_ij = (mi * mj) / (mi + mj);
 
-                struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, *sigma, sx, sy, sz, 0); // GR never used for spin derivs
+                struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, *sigma, sx, sy, sz);
                 yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) * (-mu_ij / *moi));
                 yDot[3*Nspins + 1] += ((dz * tf.x - dx * tf.z) * (-mu_ij / *moi));
                 yDot[3*Nspins + 2] += ((dx * tf.y - dy * tf.x) * (-mu_ij / *moi));
@@ -315,7 +296,6 @@ void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const effect
         const double* sx = rebx_get_param(rebx, source->ap, "spin_sx");
         const double* sy = rebx_get_param(rebx, source->ap, "spin_sy");
         const double* sz = rebx_get_param(rebx, source->ap, "spin_sz");
-        const double* gr1 = rebx_get_param(rebx, source->ap, "gr_spin");
 
         // Particle needs all three spin components and k2 to feel additional forces
         if (sx != NULL && sy != NULL && sz != NULL && k2 != NULL && sigma != NULL){
@@ -325,16 +305,11 @@ void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const effect
                   continue;
               }
               struct reb_particle* target = &particles[j]; // j raises tides on i
-              const double* gr2 = rebx_get_param(rebx, target->ap, "gr_spin");
               if (source->m == 0 || target->m == 0){
                   continue;
               }
 
-              if (i == 0 && j == 1){
-                gr = 1;
-              }
-
-              rebx_spin_orbit_accelerations(source, target, G, *k2, *sigma, *sx, *sy, *sz, gr);
+              rebx_spin_orbit_accelerations(source, target, G, *k2, *sigma, *sx, *sy, *sz);
           }
       }
     }
@@ -423,23 +398,3 @@ void rebx_set_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb
     reb_error(sim, "Could not set sigma because Love number and/or radius was not set for this particle\n");
   }
 }
-/*
-
-void rebx_set_star_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* star, struct reb_particle* body, const double q){
-  // CALL THIS AFTER OTHER PARAMETERS ARE SET
-  struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, *body, *star);
-  const double r = star->r;
-  const double n = orb.n;
-
-  const double* k2 = rebx_get_param(rebx, star->ap, "k2");
-
-  if (k2 != NULL || r != 0.0){
-      const double sigma = 2. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
-      rebx_set_param_double(rebx, &star->ap, "sigma", sigma);
-  }
-
-  else{
-    reb_error(sim, "Could not set sigma because Love number and/or radius was not set for this particle\n");
-  }
-}
-*/
