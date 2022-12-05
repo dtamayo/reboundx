@@ -64,7 +64,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &r->particles[0].ap, "spin_sz", solar_spin * 1.0);
     // rebx_set_param_double(rebx, &r->particles[0].ap, "gr_spin", 1);
     //rebx_set_time_lag(r, rebx, &r->particles[0], solar_tau);
-    rebx_set_star_q(r, rebx, &r->particles[0], &r->particles[1], 3e6, 1);
+    rebx_set_q(r, rebx, &r->particles[0], &r->particles[1], 3e6);
 
     // P1
     const double spin_period_p = 1. * 2. * M_PI / 365.; // days to reb years
@@ -82,7 +82,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &r->particles[1].ap, "spin_sz", spin_p * cos(theta_1));
     // rebx_set_time_lag(r, rebx, &r->particles[1], planet_tau);
     // rebx_set_param_double(rebx, &r->particles[1].ap, "gr_spin", 1);
-    rebx_set_planet_q(r, rebx, &r->particles[1], &r->particles[0], planet_q, 1);
+    rebx_set_q(r, rebx, &r->particles[1], &r->particles[0], planet_q);
 
     // add GR:
     struct rebx_force* gr = rebx_load_force(rebx, "gr_full");

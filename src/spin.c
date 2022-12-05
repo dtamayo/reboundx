@@ -406,37 +406,26 @@ void rebx_set_time_lag(struct reb_simulation* sim, struct rebx_extras* rebx, str
   }
 }
 
-void rebx_set_planet_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* primary, const double q, const int synchronized){
+void rebx_set_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* perturber, const double q){
   // CALL THIS AFTER OTHER PARAMETERS ARE SET
-  struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, *body, *primary);
+  struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, *body, *perturber);
   const double r = body->r;
   const double n = orb.n;
 
   const double* k2 = rebx_get_param(rebx, body->ap, "k2");
 
   if (k2 != NULL || r != 0.0){
-      if (synchronized == 1){
-        const double sigma = 2. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
-        rebx_set_param_double(rebx, &body->ap, "sigma", sigma);
-      }
-
-      else if (synchronized == 0){
-        const double* sx = rebx_get_param(rebx, body->ap, "spin_sx");
-        const double* sy = rebx_get_param(rebx, body->ap, "spin_sy");
-        const double* sz = rebx_get_param(rebx, body->ap, "spin_sz");
-        const double omega = sqrt((*sx) * (*sx) * (*sy) * (*sy) * (*sz) * (*sz));
-
-        const double sigma = 3. * q * (*k2) * r * r * r * r * r * fabs(omega - n) / (4. * sim->G);
-        rebx_set_param_double(rebx, &body->ap, "sigma", sigma);
-      }
+      const double sigma = 2. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
+      rebx_set_param_double(rebx, &body->ap, "sigma", sigma);
   }
 
   else{
     reb_error(sim, "Could not set sigma because Love number and/or radius was not set for this particle\n");
   }
 }
+/*
 
-void rebx_set_star_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* star, struct reb_particle* body, const double q, const int synchronized){
+void rebx_set_star_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* star, struct reb_particle* body, const double q){
   // CALL THIS AFTER OTHER PARAMETERS ARE SET
   struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, *body, *star);
   const double r = star->r;
@@ -445,23 +434,12 @@ void rebx_set_star_q(struct reb_simulation* sim, struct rebx_extras* rebx, struc
   const double* k2 = rebx_get_param(rebx, star->ap, "k2");
 
   if (k2 != NULL || r != 0.0){
-    if (synchronized == 1){
       const double sigma = 2. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
       rebx_set_param_double(rebx, &star->ap, "sigma", sigma);
-    }
-
-    else if (synchronized == 0){
-      const double* sx = rebx_get_param(rebx, star->ap, "spin_sx");
-      const double* sy = rebx_get_param(rebx, star->ap, "spin_sy");
-      const double* sz = rebx_get_param(rebx, star->ap, "spin_sz");
-      const double omega = sqrt((*sx) * (*sx) * (*sy) * (*sy) * (*sz) * (*sz));
-
-      const double sigma = 3. * q * (*k2) * r * r * r * r * r * fabs(omega - n) / (4. * sim->G);
-      rebx_set_param_double(rebx, &star->ap, "sigma", sigma);
-    }
   }
 
   else{
     reb_error(sim, "Could not set sigma because Love number and/or radius was not set for this particle\n");
   }
 }
+*/

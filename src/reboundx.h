@@ -558,8 +558,7 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
  */
 void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
 void rebx_set_time_lag(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, const double tau);
-void rebx_set_planet_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* primary, const double q, const int synchronized);
-void rebx_set_star_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* star, struct reb_particle* body, const double q, const int synchronized);
+void rebx_set_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* perturber, const double q);
 
 
 /****************************************
