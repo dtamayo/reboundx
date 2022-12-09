@@ -84,8 +84,8 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
   const double dvx = source->vx - target->vx;
   const double dvy = source->vy - target->vy;
   const double dvz = source->vz - target->vz;
-  const double vel2 = dvx * dvx + dvy * dvy + dvz * dvz;
-  const double vr = sqrt(vel2);
+  //const double vel2 = dvx * dvx + dvy * dvy + dvz * dvz;
+  //const double vr = sqrt(vel2);
 
   struct reb_vec3d tot_force = {0};
 
@@ -243,9 +243,9 @@ static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y
         const double* k2 = rebx_get_param(rebx, p->ap, "k2");
         const double* sigma = rebx_get_param(rebx, p->ap, "sigma");
         if (k2 != NULL && sigma != NULL){
-            rebx_set_param_double(rebx, &p->ap, "spin_sx", y0[3*Nspins]);
-            rebx_set_param_double(rebx, &p->ap, "spin_sy", y0[3*Nspins+1]);
-            rebx_set_param_double(rebx, &p->ap, "spin_sz", y0[3*Nspins+2]);
+            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sx", y0[3*Nspins]);
+            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sy", y0[3*Nspins+1]);
+            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sz", y0[3*Nspins+2]);
             Nspins += 1;
         }
     }
@@ -373,7 +373,7 @@ void rebx_set_time_lag(struct reb_simulation* sim, struct rebx_extras* rebx, str
 
   if (k2 != NULL || r != 0.0){
     const double sigma = 4 * tau * sim->G / (3 * r * r * r * r * r * (*k2));
-    rebx_set_param_double(rebx, &body->ap, "sigma", sigma);
+    rebx_set_param_double(rebx, (struct rebx_node**)&body->ap, "sigma", sigma);
   }
 
   else{
@@ -391,7 +391,7 @@ void rebx_set_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb
 
   if (k2 != NULL || r != 0.0){
       const double sigma = 2. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
-      rebx_set_param_double(rebx, &body->ap, "sigma", sigma);
+      rebx_set_param_double(rebx, (struct rebx_node**)&body->ap, "sigma", sigma);
   }
 
   else{
