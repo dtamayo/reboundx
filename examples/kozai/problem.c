@@ -13,6 +13,7 @@
  #include <math.h>
  #include "rebound.h"
  #include "reboundx.h"
+ #include "spin.c"
 
 void heartbeat(struct reb_simulation* r);
 double tmax = 1e5 * 2 * M_PI;
@@ -91,8 +92,8 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &gr->ap, "c", 10065.32); // in default units
 
     reb_move_to_com(r);
-    align_simulation(r, rebx);
-    rebx_spin_initialize_ode(r, effect);
+    rebx_align_simulation(r, rebx);
+    //rebx_spin_initialize_ode(r, effect);
 
     FILE* f = fopen("12_3_simple_nep_kozai_gr.txt","w");
     fprintf(f, "t,star_sx,star_sy,star_sz,magstar,a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1,f1,a2,i2,e2,Om2,pom2\n");

@@ -145,6 +145,8 @@ static void rebx_spin_orbit_accelerations(struct reb_particle* source, struct re
     const double mt = target->m;
     const double mtot = ms + mt;
 
+    // check if ODE is set here
+
     struct reb_vec3d tot_force = rebx_calculate_spin_orbit_accelerations(source, target, G, k2, sigma, sx, sy, sz);
 
     target->ax -= ((ms / mtot) * tot_force.x);
@@ -262,7 +264,7 @@ void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* con
     const int N_real = sim->N - sim->N_var;
     for (int i=0; i<N_real; i++){
         struct reb_particle* p = &sim->particles[i];
-        // Only track spin if particle has moment of inertia and valid spin axisset
+        // Only track spin if particle has moment of inertia and valid spin axis set
         double* moi = rebx_get_param(rebx, p->ap, "moi");
         double* sx = rebx_get_param(rebx, p->ap, "spin_sx");
         double* sy = rebx_get_param(rebx, p->ap, "spin_sy");
@@ -286,7 +288,6 @@ void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* con
 void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const effect, struct reb_particle* const particles, const int N){
     struct rebx_extras* const rebx = sim->extras;
     const double G = sim->G;
-    int gr;
 
     for (int i=0; i<N; i++){
         struct reb_particle* source = &particles[i];
@@ -299,7 +300,6 @@ void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const effect
 
         // Particle needs all three spin components and k2 to feel additional forces
         if (sx != NULL && sy != NULL && sz != NULL && k2 != NULL && sigma != NULL){
-          gr = 0;
           for (int j=0; j<N; j++){
               if (i==j){
                   continue;
@@ -397,4 +397,141 @@ void rebx_set_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb
   else{
     reb_error(sim, "Could not set sigma because Love number and/or radius was not set for this particle\n");
   }
+}
+
+// TLu 11/8/22 FROM CELMECH
+
+struct reb_vec3d rebx_tools_spin_and_orbital_angular_momentum(const struct reb_simulation* const r, const struct rebx_extras* const rebx){
+  // USE THIS FUNCTION IF PARTICLES HAVE SIGNIFICANT SPIN
+	const int N = r->N;
+	const struct reb_particle* restrict const particles = r->particles;
+	const int N_var = r->N_var;
+    struct reb_vec3d L = {0};
+    for (int i=0;i<N-N_var;i++){
+		struct reb_particle pi = particles[i];
+        // This is the orbital component
+        L.x += pi.m*(pi.y*pi.vz - pi.z*pi.vy);
+        L.y += pi.m*(pi.z*pi.vx - pi.x*pi.vz);
+        L.z += pi.m*(pi.x*pi.vy - pi.y*pi.vx);
+
+        // This is the spin component
+        const double* sx = rebx_get_param(rebx, pi.ap, "spin_sx");
+        const double* sy = rebx_get_param(rebx, pi.ap, "spin_sy");
+        const double* sz = rebx_get_param(rebx, pi.ap, "spin_sz");
+        const double* moi = rebx_get_param(rebx, pi.ap, "moi");
+
+        if (sx != NULL && sy != NULL && sz != NULL && moi != NULL){
+          L.x += (*moi) * (*sx);
+          L.y += (*moi) * (*sy);
+          L.z += (*moi) * (*sz);
+        }
+
+	}
+	return L;
+}
+
+void rebx_compute_transformation_angles(struct reb_simulation* sim, struct rebx_extras* rebx, double* theta1, double* theta2){
+    // From celmech line 330
+    // MODIFIED TO INCLUDE SPIN ANGULAR MOMENTUM
+    struct reb_vec3d gtot_vec = rebx_tools_spin_and_orbital_angular_momentum(sim, rebx);
+    double gtot = sqrt(gtot_vec.x * gtot_vec.x + gtot_vec.y * gtot_vec.y + gtot_vec.z * gtot_vec.z);
+    double ghat_x = gtot_vec.x / gtot;
+    double ghat_y = gtot_vec.y / gtot;
+    double ghat_z = gtot_vec.z / gtot;
+    double ghat_perp = sqrt(1 - ghat_z * ghat_z);
+    *theta1 = M_PI / 2 - atan2(ghat_y, ghat_x);
+    *theta2 = M_PI / 2 - atan2(ghat_z, ghat_perp);
+}
+
+struct reb_vec3d rebx_EulerAnglesTransform(struct reb_vec3d xyz, const double Omega, const double I, const double omega){
+    // celmech line 341
+    double x = xyz.x;
+    double y = xyz.y;
+    double z = xyz.z;
+
+    double s1 = sin(omega);
+    double c1 = cos(omega);
+    double x1 = c1 * x - s1 * y;
+    double y1 = s1 * x + c1 * y;
+    double z1 = z;
+
+    double s2 = sin(I);
+    double c2 = cos(I);
+    double x2 = x1;
+    double y2 = c2 * y1 - s2 * z1;
+    double z2 = s2 * y1 + c2 * z1;
+
+    double s3 = sin(Omega);
+    double c3 = cos(Omega);
+    double x3 = c3 * x2 - s3 * y2;
+    double y3 = s3 * x2 + c3 * y2;
+    double z3 = z2;
+
+    struct reb_vec3d shifted = {x3, y3, z3};
+    return shifted;
+}
+
+void rebx_align_simulation(struct reb_simulation* sim, struct rebx_extras* rebx){
+    // celmech line 360
+    // CHANGED TO INCLUDE SPIN ANGMOM
+    const int N_real = sim->N - sim->N_var;
+    double theta1, theta2;
+    rebx_compute_transformation_angles(sim, rebx, &theta1, &theta2);
+    for (int i = 0; i < N_real; i++){
+        struct reb_particle* p = &sim->particles[i];
+	      struct reb_vec3d pos = {p->x, p->y, p->z};
+	      struct reb_vec3d vel = {p->vx, p->vy, p->vz};
+        struct reb_vec3d ps = rebx_EulerAnglesTransform(pos, 0, theta2, theta1);
+      	struct reb_vec3d vs = rebx_EulerAnglesTransform(vel, 0, theta2, theta1);
+
+        // Try this for the spin
+        const double* sx = rebx_get_param(rebx, p->ap, "spin_sx");
+        const double* sy = rebx_get_param(rebx, p->ap, "spin_sy");
+        const double* sz = rebx_get_param(rebx, p->ap, "spin_sz");
+        if (sx != NULL && sy != NULL && sz != NULL){
+          struct reb_vec3d spin = {*sx, *sy, *sz};
+          struct reb_vec3d ss = rebx_EulerAnglesTransform(spin, 0, theta2, theta1);
+
+          rebx_set_param_double(rebx, &p->ap, "spin_sx", ss.x);
+          rebx_set_param_double(rebx, &p->ap, "spin_sy", ss.y);
+          rebx_set_param_double(rebx, &p->ap, "spin_sz", ss.z);
+        }
+
+      	p->x = ps.x;
+      	p->y = ps.y;
+      	p->z = ps.z;
+
+      	p->vx = vs.x;
+      	p->vy = vs.y;
+      	p->vz = vs.z;
+  }
+}
+
+
+// TLu transformation matrix
+struct reb_vec3d rebx_transform_inv_to_planet(double inc, double omega, struct reb_vec3d spin_inv){
+    // This ts a vector from the INVARIANT frame to the PLANET frame
+    double sx = spin_inv.x;
+    double sy = spin_inv.y;
+    double sz = spin_inv.z;
+
+    double t[3][3];
+
+    t[0][0] = cos(omega);
+    t[0][1] = sin(omega);
+    t[0][2] = 0;
+    t[1][0] = -cos(inc) * sin(omega);
+    t[1][1] = cos(inc) * cos(omega);
+    t[1][2] = sin(inc);
+    t[2][0] = sin(inc) * sin(omega);
+    t[2][1] = -sin(inc) * cos(omega);
+    t[2][2] = cos(inc);
+
+    struct reb_vec3d spin_planet = {0};
+
+    spin_planet.x = sx * t[0][0] + sy * t[0][1] + sz * t[0][2];
+    spin_planet.y = sx * t[1][0] + sy * t[1][1] + sz * t[1][2];
+    spin_planet.z = sx * t[2][0] + sy * t[2][1] + sz * t[2][2];
+
+    return spin_planet;
 }
