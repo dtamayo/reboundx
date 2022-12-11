@@ -22,11 +22,13 @@ try:
     ghash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii")
     ghash_arg = "-DREBXGITHASH="+ghash
 except:
-    ghash_arg = "-DREBXGITHASH=42c065a06ba9c31b1023088df2f79bc97c37d371" #GITHASHAUTOUPDATE
+    ghash_arg = "-DREBXGITHASH=c48bfa17c862c8a91fe03b1cc9a514df27e0524e" #GITHASHAUTOUPDATE
 
 class build_ext(_build_ext):
     def finalize_options(self):
         _build_ext.finalize_options(self)
+        if "PYODIDE" in os.environ:
+            return None
 
         try:
             import rebound
@@ -43,7 +45,8 @@ class build_ext(_build_ext):
         # get site-packages dir to add to paths in case reb & rebx installed simul in tmp dir
         rebdirsp = get_python_lib()+'/'#[p for p in sys.path if p.endswith('site-packages')][0]+'/'
         self.include_dirs.append(rebdir)
-        sources = [ 'src/modify_mass.c', 'src/integrator_euler.c', 'src/modify_orbits_forces.c', 'src/integrator_rk2.c', 'src/track_min_distance.c', 'src/rebxtools.c', 'src/inner_disk_edge.c', 'src/gravitational_harmonics.c', 'src/gr_potential.c', 'src/core.c', 'src/integrator_rk4.c', 'src/input.c', 'src/central_force.c', 'src/stochastic_forces.c', 'src/gr.c', 'src/modify_orbits_direct.c', 'src/tides_constant_time_lag.c', 'src/spin.c', 'src/gr_full.c', 'src/steppers.c', 'src/integrate_force.c', 'src/interpolation.c', 'src/type_I_migration.c', 'src/output.c', 'src/radiation_forces.c', 'src/integrator_implicit_midpoint.c', 'src/exponential_migration.c', 'src/linkedlist.c'],
+        sources = [ 'src/modify_mass.c', 'src/integrator_euler.c', 'src/modify_orbits_forces.c', 'src/integrator_rk2.c', 'src/track_min_distance.c', 'src/rebxtools.c', 'src/inner_disk_edge.c', 'src/gravitational_harmonics.c', 'src/gr_potential.c', 'src/core.c', 'src/integrator_rk4.c', 'src/input.c', 'src/central_force.c', 'src/stochastic_forces.c', 'src/gr.c', 'src/modify_orbits_direct.c', 'src/tides_constant_time_lag.c', 'src/yarkovsky_effect.c', 'src/spin.c', 'src/gr_full.c', 'src/steppers.c', 'src/integrate_force.c', 'src/interpolation.c', 'src/type_I_migration.c', 'src/output.c', 'src/radiation_forces.c', 'src/integrator_implicit_midpoint.c', 'src/exponential_migration.c', 'src/linkedlist.c'],
+        
         self.library_dirs.append(rebdir+'/../')
         self.library_dirs.append(rebdirsp)
         for ext in self.extensions:
@@ -62,13 +65,17 @@ if sys.platform == 'darwin':
     extra_link_args.append('-Wl,-install_name,@rpath/libreboundx'+suffix)
 
 libreboundxmodule = Extension('libreboundx',
+<<<<<<< HEAD
         sources = [ 'src/modify_mass.c', 'src/integrator_euler.c', 'src/modify_orbits_forces.c', 'src/integrator_rk2.c', 'src/track_min_distance.c', 'src/rebxtools.c', 'src/inner_disk_edge.c', 'src/gravitational_harmonics.c', 'src/gr_potential.c', 'src/core.c', 'src/integrator_rk4.c', 'src/input.c', 'src/central_force.c', 'src/stochastic_forces.c', 'src/gr.c', 'src/modify_orbits_direct.c', 'src/tides_constant_time_lag.c', 'src/spin.c', 'src/gr_full.c', 'src/steppers.c', 'src/integrate_force.c', 'src/interpolation.c', 'src/type_I_migration.c', 'src/output.c', 'src/radiation_forces.c', 'src/integrator_implicit_midpoint.c', 'src/exponential_migration.c', 'src/linkedlist.c'],
+=======
+        sources = [ 'src/modify_mass.c', 'src/integrator_euler.c', 'src/modify_orbits_forces.c', 'src/integrator_rk2.c', 'src/track_min_distance.c', 'src/rebxtools.c', 'src/inner_disk_edge.c', 'src/gravitational_harmonics.c', 'src/gr_potential.c', 'src/core.c', 'src/integrator_rk4.c', 'src/input.c', 'src/central_force.c', 'src/stochastic_forces.c', 'src/gr.c', 'src/modify_orbits_direct.c', 'src/tides_constant_time_lag.c', 'src/yarkovsky_effect.c', 'src/gr_full.c', 'src/steppers.c', 'src/integrate_force.c', 'src/interpolation.c', 'src/type_I_migration.c', 'src/output.c', 'src/radiation_forces.c', 'src/integrator_implicit_midpoint.c', 'src/exponential_migration.c', 'src/linkedlist.c'],
+>>>>>>> 6fbcdd9bc0e69f2f18cc56f912e7a7da26cfcc27
                     include_dirs = ['src'],
                     library_dirs = [],
                     runtime_library_dirs = ["."],
                     libraries=['rebound'+suffix[:suffix.rfind('.')]],
                     define_macros=[ ('LIBREBOUNDX', None) ],
-                    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99', '-fPIC', '-Wpointer-arith', ghash_arg],
+                    extra_compile_args=['-fstrict-aliasing', '-D_GNU_SOURCE', '-O3','-std=c99', '-fPIC', '-Wpointer-arith', ghash_arg],
                     extra_link_args=extra_link_args,
                     )
 
@@ -77,7 +84,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='reboundx',
-    version='3.6.0',
+    version='3.8.0',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
     url='https://github.com/dtamayo/reboundx',
@@ -108,8 +115,8 @@ setup(name='reboundx',
     keywords='astronomy astrophysics nbody integrator',
     packages=['reboundx'],
     cmdclass={'build_ext':build_ext},
-    setup_requires=['rebound>=3.10.0', 'numpy'],
-    install_requires=['rebound>=3.10.0', 'numpy'],
+    setup_requires=['rebound>=3.22.0', 'numpy'],
+    install_requires=['rebound>=3.22.0', 'numpy'],
     tests_require=["numpy","matplotlib"],
     test_suite="reboundx.test",
     ext_modules = [libreboundxmodule],

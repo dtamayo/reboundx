@@ -38,8 +38,8 @@
 #define STRINGIFY(s) str(s)
 #define str(s) #s
 
-const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string.
-const char* rebx_version_str = "3.6.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
+const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
+const char* rebx_version_str = "3.8.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
 
 
@@ -117,6 +117,19 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "tIm_scale_height_1", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tIm_surface_density_1", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tIm_surface_density_exponent", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_c", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_body_density", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_lstar", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_flag", REBX_TYPE_INT);
+    rebx_register_param(rebx, "ye_rotation_period", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_thermal_inertia", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_albedo", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_emissivity", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_k", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_stef_boltz", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_spin_axis_x", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_spin_axis_y", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ye_spin_axis_z", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -303,6 +316,9 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     }
     else if (strcmp(name, "spin") == 0){
         force->update_accelerations = rebx_spin;
+    }
+    else if (strcmp(name, "yarkovsky_effect") == 0){
+        force->update_accelerations = rebx_yarkovsky_effect;
         force->force_type = REBX_FORCE_VEL;
     }
     else{

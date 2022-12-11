@@ -102,6 +102,7 @@ void rebx_radiation_forces(struct reb_simulation* const sim, struct rebx_force* 
     double* c = rebx_get_param(rebx, radiation_forces->ap, "c");
     if (c == NULL){
         reb_error(sim, "Need to set speed of light in radiation_forces effect.  See examples in documentation.\n");
+        return;
     }
     
     int source_found=0;
