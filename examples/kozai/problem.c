@@ -93,7 +93,7 @@ int main(int argc, char* argv[]){
 
     reb_move_to_com(r);
     rebx_align_simulation(r, rebx);
-    //rebx_spin_initialize_ode(r, effect);
+    rebx_spin_initialize_ode(r, effect);
 
     FILE* f = fopen("12_3_simple_nep_kozai_gr.txt","w");
     fprintf(f, "t,star_sx,star_sy,star_sz,magstar,a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1,f1,a2,i2,e2,Om2,pom2\n");

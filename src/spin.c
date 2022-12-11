@@ -1,7 +1,7 @@
 /**
- * @file    tides_constant_time_lag.c
- * @brief   Add constant time lag tides raised on primary, orbiting bodies, or both
- * @author  Stanley A. Baronett <stanley.a.baronett@gmail.com>, Dan Tamayo <tamayo.daniel@gmail.com>
+ * @file    spin.c
+ * @brief   Add self-consistent spin, tidal and dynamical equations of motion for bodies with structure
+ * @author  Tiger Lu <tiger.lu@yale.edu>, Dan Tamayo <tamayo.daniel@gmail.com>
  *
  * @section     LICENSE
  * Copyright (c) 2015 Dan Tamayo, Hanno Rein
@@ -25,12 +25,12 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
- * $Tides$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ * $Self-Consistent Spin, Tidal and Dynamical Equations of Motion$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
  *
  * ======================= ===============================================
- * Authors                 Stanley A. Baronett, D. Tamayo, Noah Ferich
- * Implementation Paper    `Baronett et al., 2021 (in review) <https://arxiv.org/abs/2101.12277>`_.
- * Based on                `Hut 1981 <https://ui.adsabs.harvard.edu/#abs/1981A&A....99..126H/abstract>`_, `Bolmont et al., 2015 <https://ui.adsabs.harvard.edu/abs/2015A%26A...583A.116B/abstract>`_.
+ * Authors                 Tiger Lu, Hanno Rein, D. Tamayo, Sam Hadden, Gregory Laughlin
+ * Implementation Paper    `Lu et al., 2022 (in review).
+ * Based on                `Eggleton et al. 1998 <https://ui.adsabs.harvard.edu/abs/1998ApJ...499..853E/abstract>`_.
  * C Example               :ref:`c_example_tides_constant_time_lag`.
  * Python Example          `TidesConstantTimeLag.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesConstantTimeLag.ipynb>`_.
  * ======================= ===============================================
@@ -50,9 +50,12 @@
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
  * particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
- * tctl_k2 (float)              Yes         Potential Love number of degree 2.
- * tctl_tau (float)             No          Constant time lag. If not set will default to 0 and give conservative tidal potential.
- * Omega (float)                No          Rotation rate. If not set will default to 0.
+ * k2 (float)                   Yes         Potential Love number of degree 2.
+ * sx (float)                   Yes         x component of spin vector
+ * sy (float)                   Yes         y component of spin vector
+ * sz (float)                   Yes         z component of spin vector
+ * moi (float)                  Yes         Moment of inertia
+ * sigma (float)                No          Tidal Dissipation Parameter. If not set, defaults to 0
  * ============================ =========== ==================================================================
  *
  */
@@ -288,6 +291,12 @@ void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* con
 void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const effect, struct reb_particle* const particles, const int N){
     struct rebx_extras* const rebx = sim->extras;
     const double G = sim->G;
+
+    // check if ODE is initialized
+    struct reb_ode** ode = sim->odes;
+    if (ode == NULL){
+      reb_warning(sim, "Spin axes are not being evolved. Call rebx_spin_initialize_ode to evolve\n");
+    }
 
     for (int i=0; i<N; i++){
         struct reb_particle* source = &particles[i];
