@@ -48,15 +48,6 @@
  * c (double)                   Yes         Speed of light in the units used for the simulation.
  * ============================ =========== ==================================================================
  *
- * **Particle Parameters**
- *
- * If no particles have gr_source set, effect will assume the particle at index 0 in the particles array is the source.
- *
- * ============================ =========== ==================================================================
- * Field (C type)               Required    Description
- * ============================ =========== ==================================================================
- * gr_source (int)              No          Flag identifying the particle as the source of perturbations.
- * ============================ =========== ==================================================================
  * 
  */
 
