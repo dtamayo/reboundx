@@ -48,7 +48,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sx", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sy", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sz", solar_spin * 1.0);
-    rebx_set_star_q(sim, rebx, &sim->particles[0], &sim->particles[1], solar_q, 1);
+    rebx_set_q(sim, rebx, &sim->particles[0], &sim->particles[1], solar_q);
 
     // P1
     const double spin_period_1 = 5. * 2. * M_PI / 365.; // 5 days in reb years
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sx", spin_1 * 0.0);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sy", spin_1 * -0.0261769);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sz", spin_1 * 0.99965732);
-    rebx_set_planet_q(sim, rebx, &sim->particles[1], &sim->particles[0], planet_q, 1);
+    rebx_set_q(sim, rebx, &sim->particles[1], &sim->particles[0], planet_q);
 
     // P2
     double spin_period_2 = 3. * 2. * M_PI / 365.; // 3 days in reb years
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sx", spin_2 * 0.0);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sy", spin_2 * 0.0249736);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sz", spin_2 * 0.99968811);
-    rebx_set_planet_q(sim, rebx, &sim->particles[2], &sim->particles[0], planet_q, 1);
+    rebx_set_q(sim, rebx, &sim->particles[2], &sim->particles[0], planet_q);
 
     // And migration
     struct rebx_force* mo = rebx_load_force(rebx, "modify_orbits_forces");
