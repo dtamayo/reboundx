@@ -264,9 +264,10 @@ static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y
     }
 }
 
-
-void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* const effect){
-    struct rebx_extras* const rebx = sim->extras;
+void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force* const effect){
+//void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* const effect){
+    //struct rebx_extras* const rebx = sim->extras;
+    struct reb_simulation* sim = rebx->sim;
     unsigned int Nspins = 0;
     const int N_real = sim->N - sim->N_var;
     for (int i=0; i<N_real; i++){

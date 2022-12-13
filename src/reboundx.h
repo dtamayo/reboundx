@@ -441,7 +441,8 @@ void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum 
 /**
  * @brief Initialize spin ODE
  */
-void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* const effect);
+//void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* const effect);
+void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force* const effect);
 /**
  * @brief Calculates beta, the ratio between the radiation pressure force and the gravitational force from the star.
  * @param G Gravitational constant.
