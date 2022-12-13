@@ -23,9 +23,11 @@ int main(int argc, char* argv[]){
     const double p1_mass = 1. * 9.55e-4; // in Jupiter masses * 1 Jupiter Mass / 1 Solar Mass
     const double p1_rad = 1. * 4.676e-4; // in Jupiter rad * 1 jupiter rad / 1 AU
     double p1_e = 0.01;
+    /*
     if (argc == 2){
       p1_e = atof(argv[1]);
     }
+    */
 
     reb_add_fmt(sim, "m a e r", p1_mass, 0.04072, p1_e, p1_rad); // Planet 1
 
@@ -50,7 +52,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sx", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sy", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sz", solar_spin * 1.0);
-    rebx_set_q(sim, rebx, &sim->particles[0], &sim->particles[1], solar_q);
+    rebx_set_q(rebx, sim->G, sim->particles[0], sim->particles[1], solar_q);
 
     // P1
     const double spin_period_1 = 0.5 * 2. * M_PI / 365.; // 0.5 days in reb years
@@ -64,17 +66,16 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sx", spin_1 * sin(theta_1) * sin(phi_1));
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sy", spin_1 * sin(theta_1) * cos(phi_1));
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sz", spin_1 * cos(theta_1));
-    rebx_set_q(sim, rebx, &sim->particles[1], &sim->particles[0], planet_q);
-
+    rebx_set_q(rebx, sim->G, sim->particles[1], sim->particles[0], planet_q);
 
     // Run simulation
     rebx_spin_initialize_ode(sim, effect);
 
-    FILE* f = fopen("12_12_hj_spindown_reb_updated.txt","w");
-    fprintf(f, "t,a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1\n");
+    //FILE* f = fopen("12_12_hj_spindown_reb_updated.txt","w");
+    printf("t,a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1\n");
     //printf("t,starx,stary,starz,starvx,starvy,starvz,star_sx,star_sy,star_sz,a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1,f1,p1x,p1y,p1z,p1vx,p1vy,p1vz\n");
     //int cond = 0;
-    rebx_align_simulation(sim, rebx);
+    rebx_align_simulation(rebx);
 
     struct reb_particle* star = &sim->particles[0];
     struct reb_particle* p = &sim->particles[1];
@@ -127,13 +128,12 @@ int main(int argc, char* argv[]){
          double mag1 = sqrt(s1.x * s1.x + s1.y * s1.y + s1.z * s1.z);
          double ob1 = acos(s1.z / mag1) * (180 / M_PI);
 
-	 if (i % 1000 == 0){
-             printf("t=%f\t a1=%.6f\t o1=%0.5f\t", sim->t / (2 * M_PI), a1, ob1);
+	       if (i % 10000 == 0){
+             printf("t=%f\t a1=%.6f\t o1=%0.5f, mag1=%0.5f\t", sim->t / (2 * M_PI), a1, ob1, mag1);
              struct reb_vec3d gv = rebx_tools_spin_and_orbital_angular_momentum(sim, rebx);
              printf("Tot orbital and spin ang mom: %0.10f %0.10f %0.10f %0.10f\n", gv.x, gv.y, gv.z, sqrt(gv.x*gv.x+gv.y*gv.y+gv.z*gv.z));
          }
-
-         fprintf(f, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t / (2 * M_PI), a1, i1, e1, s1.x, s1.y, s1.z, mag1, pom1, Om1);
+         // printf("%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t / (2 * M_PI), a1, i1, e1, s1.x, s1.y, s1.z, mag1, pom1, Om1);
          reb_integrate(sim, sim->t+(1 * 2 * M_PI));
      }
     rebx_free(rebx);
