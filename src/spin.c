@@ -386,35 +386,39 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
 }
 
 // TLu 11/8/22 HELPER FUNCS
-void rebx_set_time_lag(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, const double tau){
-  const double* k2 = rebx_get_param(rebx, body->ap, "k2");
-  const double r = body->r;
+// Can't seem to get these working in python... if this continues to be an issue can just have them return sigma instead of directly setting.
+// Not as elegant but should be fine
+void rebx_set_time_lag(struct rebx_extras* rebx, const double G, struct reb_particle body, const double tau){
+  const double* k2 = rebx_get_param(rebx, body.ap, "k2");
+  const double r = body.r;
 
   if (k2 != NULL || r != 0.0){
-    const double sigma = 4 * tau * sim->G / (3 * r * r * r * r * r * (*k2));
-    rebx_set_param_double(rebx, (struct rebx_node**)&body->ap, "sigma", sigma);
+    const double sigma = 4 * tau * G / (3 * r * r * r * r * r * (*k2));
+    rebx_set_param_double(rebx, (struct rebx_node**)&body.ap, "sigma", sigma);
+    //rebx_set_param_double(rebx, (struct rebx_node**)&body->ap, "sigma", sigma);
   }
 
   else{
-    reb_error(sim, "Could not set sigma because Love number and/or radius was not set for this particle\n");
+    rebx_error(rebx, "Could not set sigma because Love number and/or radius was not set for this particle\n");
   }
 }
 
-void rebx_set_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* perturber, const double q){
+void rebx_set_q(struct rebx_extras* rebx, const double G, struct reb_particle body, struct reb_particle perturber, const double q){
   // CALL THIS AFTER OTHER PARAMETERS ARE SET
-  struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, *body, *perturber);
-  const double r = body->r;
+  struct reb_orbit orb = reb_tools_particle_to_orbit(G, body, perturber);
+  const double r = body.r;
   const double n = orb.n;
 
-  const double* k2 = rebx_get_param(rebx, body->ap, "k2");
-
+  const double* k2 = rebx_get_param(rebx, body.ap, "k2");
   if (k2 != NULL || r != 0.0){
-      const double sigma = 2. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
-      rebx_set_param_double(rebx, (struct rebx_node**)&body->ap, "sigma", sigma);
+      const double sigma = 4. * G / (3. * q * r * r * r * r * r * (*k2) * (n));
+      printf("%f,%f,%f,%f,%f,%f\n", G, q, r, *k2, n, sigma);
+      //rebx_set_param_double(rebx, (struct rebx_node**)&body->ap, "sigma", sigma);
+      rebx_set_param_double(rebx, (struct rebx_node**)&body.ap, "sigma", sigma);
   }
 
   else{
-    reb_error(sim, "Could not set sigma because Love number and/or radius was not set for this particle\n");
+    rebx_error(rebx, "Could not set sigma because Love number and/or radius was not set for this particle\n");
   }
 }
 
@@ -490,9 +494,10 @@ struct reb_vec3d rebx_EulerAnglesTransform(struct reb_vec3d xyz, const double Om
     return shifted;
 }
 
-void rebx_align_simulation(struct reb_simulation* sim, struct rebx_extras* rebx){
+void rebx_align_simulation(struct rebx_extras* rebx){
     // celmech line 360
     // CHANGED TO INCLUDE SPIN ANGMOM
+    struct reb_simulation* const sim = rebx->sim;
     const int N_real = sim->N - sim->N_var;
     double theta1, theta2;
     rebx_compute_transformation_angles(sim, rebx, &theta1, &theta2);
