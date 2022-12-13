@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
     // Sun
     const double solar_spin_period = 20 * 2 * M_PI / 365;
     const double solar_spin = (2 * M_PI) / solar_spin_period;
-    const double solar_q = 100000000.;
+    const double solar_q = 1000000.;
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", 0.07);
     //rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", 6303.);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "moi", 0.07 * solar_mass * solar_rad * solar_rad);
@@ -84,8 +84,8 @@ int main(int argc, char* argv[]){
     // Run simulation
     rebx_spin_initialize_ode(sim, effect);
 
-    FILE* f = fopen("10_27_sm_sigma_synced.txt","w");
-    fprintf(f, "t,starx,stary,starz,starvx,starvy,starvz,star_sx, star_sy, star_sz, a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1,f1,p1x,p1y,p1z,p1vx,p1vy,p1vz,a2,i2,e2,s2x,s2y,s2z,mag2,pom2,Om2,f2,p2x,p2y,p2z,p2vx,p2vy,p2vz\n");
+    FILE* f = fopen("12_12_sm_test_whfast_q_1e6.txt","w");
+    fprintf(f, "t,a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1,a2,i2,e2,s2x,s2y,s2z,mag2,pom2,Om2\n");
     int cond = 0;
      for (int i=0; i<100000; i++){
 
@@ -146,7 +146,7 @@ int main(int argc, char* argv[]){
          if (i % 100 == 0){
              printf("t=%f\t a1=%.6f\t a2=%.6f\t o1=%0.5f\t o2=%0.5f\n", sim->t / (2 * M_PI), a1, a2, ob1, ob2);
          }
-         fprintf(f, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%0.10f,%0.10f,%0.10f,%0.10f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%0.10f,%0.10f,%0.10f,%0.10f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n", sim->t / (2 * M_PI), sun->x, sun->y, sun->z, sun->vx, sun->vy, sun->vz, *star_sx, *star_sy, *star_sz, a1, i1, e1, s1.x, s1.y, s1.z, mag1, pom1, Om1, f1, p1->x,p1->y,p1->z, p1->vx, p1->vy, p1->vz, a2, i2, e2, s2.x, s2.y, s2.z, mag2, pom2, Om2, f2, p2->x,p2->y,p2->z, p2->vx, p2->vy, p2->vz);
+         fprintf(f, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t / (2 * M_PI), a1, i1, e1, s1.x, s1.y, s1.z, mag1, pom1, Om1, a2, i2, e2, s2.x, s2.y, s2.z, mag2, pom2, Om2);
          reb_integrate(sim,sim->t+(40 * 2 * M_PI));
      }
     rebx_free(rebx);
