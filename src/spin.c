@@ -173,8 +173,14 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
         const double* sigma = rebx_get_param(rebx, pi->ap, "sigma");
         const double* moi = rebx_get_param(rebx, pi->ap, "moi");
 
-        // Particle MUST have k2, sigma and moment of inertia to feel effects
-        if (k2 != NULL && sigma != NULL && moi != NULL){
+        // Particle MUST have k2 and moment of inertia to feel effects
+        if (k2 != NULL && moi != NULL){
+
+          // Possible to disregard sigma. Check for that here.
+          double sigma_in = 0.0;
+          if (sigma != NULL){
+            sigma_in = *sigma;
+          }
 	       // Set initial spin accelerations to 0
           yDot[3*Nspins] = 0;
           yDot[3*Nspins + 1] = 0;
@@ -197,7 +203,7 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
                 const double mj = pj->m;
                 const double mu_ij = (mi * mj) / (mi + mj);
 
-                struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, *sigma, sx, sy, sz);
+                struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, sigma_in, sx, sy, sz);
                 yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) * (-mu_ij / *moi));
                 yDot[3*Nspins + 1] += ((dz * tf.x - dx * tf.z) * (-mu_ij / *moi));
                 yDot[3*Nspins + 2] += ((dx * tf.y - dy * tf.x) * (-mu_ij / *moi));
@@ -220,8 +226,7 @@ static void rebx_spin_sync_pre(struct reb_ode* const ode, const double* const y0
     for (int i=0; i<N_real; i++){
         struct reb_particle* p = &sim->particles[i];
         const double* k2 = rebx_get_param(rebx, p->ap, "k2");
-        const double* sigma = rebx_get_param(rebx, p->ap, "sigma");
-        if (k2 != NULL && sigma != NULL){
+        if (k2 != NULL){
             const double* sx = rebx_get_param(rebx, p->ap, "spin_sx");
             const double* sy = rebx_get_param(rebx, p->ap, "spin_sy");
             const double* sz = rebx_get_param(rebx, p->ap, "spin_sz");
@@ -246,8 +251,7 @@ static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y
     for (int i=0; i<N_real; i++){
         struct reb_particle* p = &sim->particles[i];
         const double* k2 = rebx_get_param(rebx, p->ap, "k2");
-        const double* sigma = rebx_get_param(rebx, p->ap, "sigma");
-        if (k2 != NULL && sigma != NULL){
+        if (k2 != NULL){
             rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sx", y0[3*Nspins]);
             rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sy", y0[3*Nspins+1]);
             rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sz", y0[3*Nspins+2]);
@@ -308,7 +312,13 @@ void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const effect
         const double* sz = rebx_get_param(rebx, source->ap, "spin_sz");
 
         // Particle needs all three spin components and k2 to feel additional forces
-        if (sx != NULL && sy != NULL && sz != NULL && k2 != NULL && sigma != NULL){
+        if (sx != NULL && sy != NULL && sz != NULL && k2 != NULL){
+          // Possible to disregard sigma. Check for that here.
+          double sigma_in = 0.0;
+          if (sigma != NULL){
+            sigma_in = *sigma;
+          }
+
           for (int j=0; j<N; j++){
               if (i==j){
                   continue;
@@ -318,7 +328,7 @@ void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const effect
                   continue;
               }
 
-              rebx_spin_orbit_accelerations(source, target, G, *k2, *sigma, *sx, *sy, *sz);
+              rebx_spin_orbit_accelerations(source, target, G, *k2, sigma_in, *sx, *sy, *sz);
           }
       }
     }
