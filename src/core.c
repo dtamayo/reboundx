@@ -38,7 +38,7 @@
 #define STRINGIFY(s) str(s)
 #define str(s) #s
 
-const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string. 
+const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string.
 const char* rebx_version_str = "3.8.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
 
@@ -316,6 +316,7 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     }
     else if (strcmp(name, "spin") == 0){
         force->update_accelerations = rebx_spin;
+        force->force_type = REBX_FORCE_VEL;
     }
     else if (strcmp(name, "yarkovsky_effect") == 0){
         force->update_accelerations = rebx_yarkovsky_effect;

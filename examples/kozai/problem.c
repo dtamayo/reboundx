@@ -85,6 +85,7 @@ int main(int argc, char* argv[]){
     // rebx_set_param_double(rebx, &r->particles[1].ap, "gr_spin", 1);
     rebx_set_q(r, rebx, &r->particles[1], &r->particles[0], planet_q);
 
+
     // add GR:
     struct rebx_force* gr = rebx_load_force(rebx, "gr_full");
     rebx_add_force(rebx, gr);
