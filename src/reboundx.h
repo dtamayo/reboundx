@@ -559,8 +559,8 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
 void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
 
 // spin effect helper functions
-void rebx_set_time_lag(struct rebx_extras* rebx, const double G, struct reb_particle body, const double tau);
-void rebx_set_q(struct rebx_extras* rebx, const double G, struct reb_particle body, struct reb_particle perturber, const double q);
+void rebx_set_time_lag(struct rebx_extras* rebx, const double G, struct reb_particle* body, const double tau);
+void rebx_set_q(struct rebx_extras* rebx, const double G, struct reb_particle* body, struct reb_particle* perturber, const double q);
 void rebx_compute_transformation_angles(struct reb_simulation* sim, struct rebx_extras* rebx, double* theta1, double* theta2);
 struct reb_vec3d rebx_EulerAnglesTransform(struct reb_vec3d xyz, const double Omega, const double I, const double omega);
 void rebx_align_simulation(struct rebx_extras* rebx);
