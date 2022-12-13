@@ -386,45 +386,48 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
 }
 
 // TLu 11/8/22 HELPER FUNCS
-void rebx_set_time_lag(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, const double tau){
+// Can't seem to get these working in python... if this continues to be an issue can just have them return sigma instead of directly setting.
+// Not as elegant but should be fine
+void rebx_set_time_lag(struct rebx_extras* rebx, const double G, struct reb_particle* body, const double tau){
   const double* k2 = rebx_get_param(rebx, body->ap, "k2");
   const double r = body->r;
 
   if (k2 != NULL || r != 0.0){
-    const double sigma = 4 * tau * sim->G / (3 * r * r * r * r * r * (*k2));
+    const double sigma = 4 * tau * G / (3 * r * r * r * r * r * (*k2));
     rebx_set_param_double(rebx, (struct rebx_node**)&body->ap, "sigma", sigma);
   }
 
   else{
-    reb_error(sim, "Could not set sigma because Love number and/or radius was not set for this particle\n");
+    rebx_error(rebx, "Could not set sigma because Love number and/or radius was not set for this particle\n");
   }
 }
 
-void rebx_set_q(struct reb_simulation* sim, struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* perturber, const double q){
+void rebx_set_q(struct rebx_extras* rebx, const double G, struct reb_particle* body, struct reb_particle* perturber, const double q){
   // CALL THIS AFTER OTHER PARAMETERS ARE SET
-  struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, *body, *perturber);
+  struct reb_orbit orb = reb_tools_particle_to_orbit(G, *body, *perturber);
   const double r = body->r;
   const double n = orb.n;
 
   const double* k2 = rebx_get_param(rebx, body->ap, "k2");
-
   if (k2 != NULL || r != 0.0){
-      const double sigma = 2. * sim->G / (3. * q * r * r * r * r * r * (*k2) * (n));
+      const double sigma = 4. * G / (3. * q * r * r * r * r * r * (*k2) * (n));
+      //printf("%f,%f,%f,%f,%f,%f\n", G, q, r, *k2, n, sigma);
       rebx_set_param_double(rebx, (struct rebx_node**)&body->ap, "sigma", sigma);
   }
 
   else{
-    reb_error(sim, "Could not set sigma because Love number and/or radius was not set for this particle\n");
+    rebx_error(rebx, "Could not set sigma because Love number and/or radius was not set for this particle\n");
   }
 }
 
 // TLu 11/8/22 FROM CELMECH
 
-struct reb_vec3d rebx_tools_spin_and_orbital_angular_momentum(const struct reb_simulation* const r, const struct rebx_extras* const rebx){
+struct reb_vec3d rebx_tools_spin_and_orbital_angular_momentum(const struct rebx_extras* const rebx){
   // USE THIS FUNCTION IF PARTICLES HAVE SIGNIFICANT SPIN
-	const int N = r->N;
-	const struct reb_particle* restrict const particles = r->particles;
-	const int N_var = r->N_var;
+  struct reb_simulation* const sim = rebx->sim;
+	const int N = sim->N;
+	const struct reb_particle* restrict const particles = sim->particles;
+	const int N_var = sim->N_var;
     struct reb_vec3d L = {0};
     for (int i=0;i<N-N_var;i++){
 		struct reb_particle pi = particles[i];
@@ -452,7 +455,7 @@ struct reb_vec3d rebx_tools_spin_and_orbital_angular_momentum(const struct reb_s
 void rebx_compute_transformation_angles(struct reb_simulation* sim, struct rebx_extras* rebx, double* theta1, double* theta2){
     // From celmech line 330
     // MODIFIED TO INCLUDE SPIN ANGULAR MOMENTUM
-    struct reb_vec3d gtot_vec = rebx_tools_spin_and_orbital_angular_momentum(sim, rebx);
+    struct reb_vec3d gtot_vec = rebx_tools_spin_and_orbital_angular_momentum(rebx);
     double gtot = sqrt(gtot_vec.x * gtot_vec.x + gtot_vec.y * gtot_vec.y + gtot_vec.z * gtot_vec.z);
     double ghat_x = gtot_vec.x / gtot;
     double ghat_y = gtot_vec.y / gtot;
@@ -490,9 +493,10 @@ struct reb_vec3d rebx_EulerAnglesTransform(struct reb_vec3d xyz, const double Om
     return shifted;
 }
 
-void rebx_align_simulation(struct reb_simulation* sim, struct rebx_extras* rebx){
+void rebx_align_simulation(struct rebx_extras* rebx){
     // celmech line 360
     // CHANGED TO INCLUDE SPIN ANGMOM
+    struct reb_simulation* const sim = rebx->sim;
     const int N_real = sim->N - sim->N_var;
     double theta1, theta2;
     rebx_compute_transformation_angles(sim, rebx, &theta1, &theta2);
