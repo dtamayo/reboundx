@@ -651,6 +651,16 @@ void rebx_set_param_uint32(struct rebx_extras* const rebx, struct rebx_node** ap
     return;
 }
 
+// ONLY USE DURING POST-SYNC! Even so might be risky...
+void rebx_set_spin_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val){
+  // this is hacky
+
+  struct rebx_param* param = rebx_get_param_struct(rebx, *apptr, param_name);
+  double* valptr = param->value;
+  *valptr = val;
+  return;
+}
+
 /*******************************************************************
  User interface for getting REBOUNDx objects and parameters
  *******************************************************************/

@@ -421,6 +421,8 @@ void rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** ap
 void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val);
 void rebx_set_param_uint32(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, uint32_t val);
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type);
+
+void rebx_set_spin_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
 /** @} */
 /** @} */
 
