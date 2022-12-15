@@ -169,7 +169,7 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
     const int N_real = sim->N - sim->N_var;
     for (int i=0; i<N_real; i++){
         struct reb_particle* pi = &sim->particles[i]; // target particle
-        const double* k2 = rebx_get_param(rebx, pi->ap, "k2");
+        const double* k2 = rebx_get_param(rebx, pi->ap, "k2"); // This is slow
         const double* sigma = rebx_get_param(rebx, pi->ap, "sigma");
         const double* moi = rebx_get_param(rebx, pi->ap, "moi");
 
@@ -252,9 +252,12 @@ static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y
         struct reb_particle* p = &sim->particles[i];
         const double* k2 = rebx_get_param(rebx, p->ap, "k2");
         if (k2 != NULL){
-            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sx", y0[3*Nspins]);
-            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sy", y0[3*Nspins+1]);
-            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sz", y0[3*Nspins+2]);
+            //rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sx", y0[3*Nspins]);
+            //rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sy", y0[3*Nspins+1]);
+            //rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sz", y0[3*Nspins+2]);
+            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "spin_sx", y0[3*Nspins]);
+            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "spin_sy", y0[3*Nspins+1]);
+            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "spin_sz", y0[3*Nspins+2]);
             Nspins += 1;
         }
     }
@@ -284,7 +287,7 @@ void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force*
 
     if (Nspins > 0){
         struct reb_ode* spin_ode = reb_create_ode(sim, Nspins*3);
-        printf("Spin ODE length: %d\n", spin_ode->length);
+        // printf("Spin ODE length: %d\n", spin_ode->length);
         spin_ode->ref = sim;
         spin_ode->derivatives = rebx_spin_derivatives;
         spin_ode->pre_timestep = rebx_spin_sync_pre;
@@ -411,8 +414,7 @@ void rebx_set_q(struct rebx_extras* rebx, const double G, struct reb_particle* b
 
   const double* k2 = rebx_get_param(rebx, body->ap, "k2");
   if (k2 != NULL || r != 0.0){
-      const double sigma = 4. * G / (3. * q * r * r * r * r * r * (*k2) * (n));
-      //printf("%f,%f,%f,%f,%f,%f\n", G, q, r, *k2, n, sigma);
+      const double sigma = 2. * G / (3. * q * r * r * r * r * r * (*k2) * (n));
       rebx_set_param_double(rebx, (struct rebx_node**)&body->ap, "sigma", sigma);
   }
 
