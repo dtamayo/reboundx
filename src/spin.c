@@ -32,7 +32,7 @@
  * Implementation Paper    `Lu et al., 2022 (in review).
  * Based on                `Eggleton et al. 1998 <https://ui.adsabs.harvard.edu/abs/1998ApJ...499..853E/abstract>`_.
  * C Example               :ref:`c_example_pseudo_synchronization`.
- * Python Example          `TidesConstantTimeLag.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesConstantTimeLag.ipynb>`_.
+ * Python Example          `SelfConsistentSpinTidalDynamicalPseudoSynchronization.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/SelfConsistentSpinTidalDynamicalPseudoSynchronization.ipynb>`_.
  * ======================= ===============================================
  *
  * This adds constant time lag tidal interactions between orbiting bodies in the simulation and the primary, both from tides raised on the primary and on the other bodies.
