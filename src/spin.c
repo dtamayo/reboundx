@@ -31,7 +31,7 @@
  * Authors                 Tiger Lu, Hanno Rein, D. Tamayo, Sam Hadden, Gregory Laughlin
  * Implementation Paper    `Lu et al., 2022 (in review).
  * Based on                `Eggleton et al. 1998 <https://ui.adsabs.harvard.edu/abs/1998ApJ...499..853E/abstract>`_.
- * C Example               :ref:`c_example_tides_constant_time_lag`.
+ * C Example               :ref:`c_example_pseudo_synchronization`.
  * Python Example          `TidesConstantTimeLag.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesConstantTimeLag.ipynb>`_.
  * ======================= ===============================================
  *
