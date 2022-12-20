@@ -149,7 +149,6 @@ static void rebx_spin_orbit_accelerations(struct reb_particle* source, struct re
     const double mtot = ms + mt;
 
     // check if ODE is set here
-
     struct reb_vec3d tot_force = rebx_calculate_spin_orbit_accelerations(source, target, G, k2, sigma, sx, sy, sz);
 
     target->ax -= ((ms / mtot) * tot_force.x);
@@ -296,7 +295,7 @@ void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force*
     }
 }
 
-void rebx_spin(struct reb_simulation* const sim, struct rebx_force* const effect, struct reb_particle* const particles, const int N){
+void rebx_tides_spin(struct reb_simulation* const sim, struct rebx_force* const effect, struct reb_particle* const particles, const int N){
     struct rebx_extras* const rebx = sim->extras;
     const double G = sim->G;
 
@@ -390,23 +389,21 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
 }
 
 // TLu 11/8/22 HELPER FUNCS
-// Can't seem to get these working in python... if this continues to be an issue can just have them return sigma instead of directly setting.
-// Not as elegant but should be fine
-void rebx_set_time_lag(struct rebx_extras* rebx, const double G, struct reb_particle* body, const double tau){
+double rebx_set_time_lag(struct rebx_extras* rebx, const double G, struct reb_particle* body, const double tau){
   const double* k2 = rebx_get_param(rebx, body->ap, "k2");
   const double r = body->r;
 
   if (k2 != NULL || r != 0.0){
-    const double sigma = 4 * tau * G / (3 * r * r * r * r * r * (*k2));
-    rebx_set_param_double(rebx, (struct rebx_node**)&body->ap, "sigma", sigma);
+    return 4 * tau * G / (3 * r * r * r * r * r * (*k2));
   }
 
   else{
     rebx_error(rebx, "Could not set sigma because Love number and/or radius was not set for this particle\n");
+    exit(0);
   }
 }
 
-void rebx_set_q(struct rebx_extras* rebx, const double G, struct reb_particle* body, struct reb_particle* perturber, const double q){
+double rebx_set_q(struct rebx_extras* rebx, const double G, struct reb_particle* body, struct reb_particle* perturber, const double q){
   // CALL THIS AFTER OTHER PARAMETERS ARE SET
   struct reb_orbit orb = reb_tools_particle_to_orbit(G, *body, *perturber);
   const double r = body->r;
@@ -414,17 +411,16 @@ void rebx_set_q(struct rebx_extras* rebx, const double G, struct reb_particle* b
 
   const double* k2 = rebx_get_param(rebx, body->ap, "k2");
   if (k2 != NULL || r != 0.0){
-      const double sigma = 2. * G / (3. * q * r * r * r * r * r * (*k2) * (n));
-      rebx_set_param_double(rebx, (struct rebx_node**)&body->ap, "sigma", sigma);
+      return 2. * G / (3. * q * r * r * r * r * r * (*k2) * (n));
   }
 
   else{
     rebx_error(rebx, "Could not set sigma because Love number and/or radius was not set for this particle\n");
+    exit(0);
   }
 }
 
 // TLu 11/8/22 FROM CELMECH
-
 struct reb_vec3d rebx_tools_spin_and_orbital_angular_momentum(const struct rebx_extras* const rebx){
   // USE THIS FUNCTION IF PARTICLES HAVE SIGNIFICANT SPIN
   struct reb_simulation* const sim = rebx->sim;

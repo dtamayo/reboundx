@@ -10,7 +10,7 @@
 #include <math.h>
 #include "rebound.h"
 #include "reboundx.h"
-#include "spin.c"
+#include "tides_spin.c"
 
 void heartbeat(struct reb_simulation* sim);
 double tmax = 10000 * 2 * M_PI;
@@ -37,7 +37,7 @@ int main(int argc, char* argv[]){
     // First Spin
     struct rebx_extras* rebx = rebx_attach(sim);
 
-    struct rebx_force* effect = rebx_load_force(rebx, "spin");
+    struct rebx_force* effect = rebx_load_force(rebx, "tides_spin");
     rebx_add_force(rebx, effect);
     // Star
     const double solar_spin_period = 27 * 2 * M_PI / 365;
@@ -48,7 +48,9 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sx", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sy", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sz", solar_spin * 1.0);
-    rebx_set_q(rebx, sim->G, &sim->particles[0], &sim->particles[1], solar_q);
+    double solar_sigma = rebx_set_q(rebx, sim->G, &sim->particles[0], &sim->particles[1], solar_q);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", solar_sigma);
+    //rebx_set_q(rebx, sim->G, &sim->particles[0], &sim->particles[1], solar_q);
 
     // Planet
     const double spin_period_1 = 0.5 * 2. * M_PI / 365.; // 0.5 days in reb years
@@ -61,55 +63,14 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sx", spin_1 * sin(theta_1) * sin(phi_1));
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sy", spin_1 * sin(theta_1) * cos(phi_1));
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sz", spin_1 * cos(theta_1));
-    rebx_set_q(rebx, sim->G, &sim->particles[1], &sim->particles[0], planet_q);
+    double planet_sigma = rebx_set_q(rebx, sim->G, &sim->particles[1], &sim->particles[0], planet_q);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma);
+    // rebx_set_q(rebx, sim->G, &sim->particles[1], &sim->particles[0], planet_q);
 
     rebx_align_simulation(rebx);
     rebx_spin_initialize_ode(rebx, effect);
-/*
-    FILE* f = fopen("12_12_hj_spindown_reb_updated.txt","w");
-    fprintf(f,"t,a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1\n");
-    //printf("t,starx,stary,starz,starvx,starvy,starvz,star_sx,star_sy,star_sz,a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1,f1,p1x,p1y,p1z,p1vx,p1vy,p1vz\n");
-    /*
-    struct reb_particle* star = &sim->particles[0];
-    struct reb_particle* p = &sim->particles[1];
 
-    struct reb_orbit o = reb_tools_particle_to_orbit(sim->G, *p, *star);
-    double a = o.a;//vis_viva(r, &p1, &sun);
-    double Om = o.Omega;
-    double i = o.inc;
-    double pom = o.pomega;
-    double e = o.e;
-
-     for (int i=0; i<100000; i++){
-
-         struct reb_particle* sun = &sim->particles[0];
-         struct reb_particle* p1 = &sim->particles[1];
-
-         double* sx1 = rebx_get_param(rebx, p1->ap, "spin_sx");
-         double* sy1 = rebx_get_param(rebx, p1->ap, "spin_sy");
-         double* sz1 = rebx_get_param(rebx, p1->ap, "spin_sz");
-
-         struct reb_orbit o1 = reb_tools_particle_to_orbit(sim->G, *p1, *sun);
-         double a1 = o1.a;//vis_viva(r, &p1, &sun);
-         double Om1 = o1.Omega;
-         double i1 = o1.inc;
-         double pom1 = o1.pomega;
-         double e1 = o1.e;
-
-         struct reb_vec3d s1 = {*sx1, *sy1, *sz1};
-
-         // Interpret in the planet frame
-         double mag1 = sqrt(s1.x * s1.x + s1.y * s1.y + s1.z * s1.z);
-         double ob1 = acos(s1.z / mag1) * (180 / M_PI);
-
-	       if (i % 1000 == 0){
-             printf("t=%f\t a1=%.6f\t o1=%0.5f, mag1=%0.5f\t", sim->t / (2 * M_PI), a1, ob1, mag1);
-         }
-        fprintf(f, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t / (2 * M_PI), a1, i1, e1, s1.x, s1.y, s1.z, mag1, pom1, Om1);
-        reb_integrate(sim, sim->t+(1 * 2 * M_PI));
-     }
-     */
-    system("rm -v output.txt");
+    system("rm -v output.txt"); // remove previous output file
     reb_integrate(sim, tmax);
     rebx_free(rebx);
     reb_free_simulation(sim);
@@ -132,7 +93,7 @@ void heartbeat(struct reb_simulation* sim){
       double* sy = rebx_get_param(rebx, p->ap, "spin_sy");
       double* sz = rebx_get_param(rebx, p->ap, "spin_sz");
       double mag = sqrt(*sx * *sx + *sy * *sy + *sz * *sz);
-      double ob = acos(*sz / mag) * (180 / M_PI);
+      // double ob = acos(*sz / mag) * (180 / M_PI);
 
       struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, *p, *star);
       double a = orb.a;

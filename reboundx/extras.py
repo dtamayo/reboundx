@@ -212,11 +212,11 @@ class Extras(Structure):
         return clibreboundx.rebx_spin_initialize_ode(byref(self), byref(force))
 
     def set_time_lag(self, G, p, tau):
-        clibreboundx.rebx_set_time_lag.restype = None
+        clibreboundx.rebx_set_time_lag.restype = c_double
         return clibreboundx.rebx_set_time_lag(byref(self), c_double(G), pointer(p), c_double(tau))
 
     def set_q(self, G, p, perturber, q):
-        clibreboundx.rebx_set_q.restype = None
+        clibreboundx.rebx_set_q.restype = c_double
         return clibreboundx.rebx_set_q(byref(self), c_double(G), pointer(p), pointer(perturber), c_double(q))
 
     def align_simulation(self):

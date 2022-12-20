@@ -13,7 +13,7 @@
  #include <math.h>
  #include "rebound.h"
  #include "reboundx.h"
- #include "spin.c"
+ #include "tides_spin.c"
 
 void heartbeat(struct reb_simulation* r);
 double tmax = 1e5 * 2 * M_PI;
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]){
 
     struct rebx_extras* rebx = rebx_attach(sim);
 
-    struct rebx_force* effect = rebx_load_force(rebx, "spin");
+    struct rebx_force* effect = rebx_load_force(rebx, "tides_spin");
     rebx_add_force(rebx, effect);
     // Sun
     const double solar_spin_period = 4.6 * 2. * M_PI / 365.;
@@ -60,7 +60,8 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sx", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sy", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sz", solar_spin * 1.0);
-    rebx_set_q(rebx, sim->G, &sim->particles[0], &sim->particles[1], 3e6);
+    double solar_sigma = rebx_set_q(rebx, sim->G, &sim->particles[0], &sim->particles[1], 3e6);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", solar_sigma);
 
     // P1
     const double spin_period_p = 1. * 2. * M_PI / 365.; // days to reb years
@@ -74,7 +75,8 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sx", spin_p * sin(theta_1) * sin(phi_1));
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sy", spin_p * sin(theta_1) * cos(phi_1));
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sz", spin_p * cos(theta_1));
-    rebx_set_q(rebx, sim->G, &sim->particles[1], &sim->particles[0], planet_q);
+    double planet_sigma = rebx_set_q(rebx, sim->G, &sim->particles[1], &sim->particles[0], planet_q);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma);
 
 
     // add GR:
@@ -87,7 +89,7 @@ int main(int argc, char* argv[]){
     rebx_align_simulation(rebx);
     rebx_spin_initialize_ode(rebx, effect);
 
-    FILE* f = fopen("12_3_simple_nep_kozai_gr.txt","w");
+    FILE* f = fopen("test.txt","w");
     fprintf(f, "t,star_sx,star_sy,star_sz,magstar,a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1,f1,a2,i2,e2,Om2,pom2\n");
 
     for (int i=0; i<5000000; i++){

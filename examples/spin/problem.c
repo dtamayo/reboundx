@@ -10,6 +10,7 @@
 #include <math.h>
 #include "rebound.h"
 #include "reboundx.h"
+#include "tides_spin.c"
 
 void heartbeat(struct reb_simulation* sim);
 
@@ -36,7 +37,7 @@ int main(int argc, char* argv[]){
 
     struct rebx_extras* rebx = rebx_attach(sim);
 
-    struct rebx_force* effect = rebx_load_force(rebx, "spin");
+    struct rebx_force* effect = rebx_load_force(rebx, "tides_spin");
     rebx_add_force(rebx, effect);
     // Sun
     const double solar_spin_period = 20 * 2 * M_PI / 365;
@@ -48,7 +49,8 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sx", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sy", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sz", solar_spin * 1.0);
-    rebx_set_q(rebx, sim->G, &sim->particles[0], &sim->particles[1], solar_q);
+    double solar_sigma = rebx_set_q(rebx, sim->G, &sim->particles[0], &sim->particles[1], solar_q);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", solar_sigma);
 
     // P1
     const double spin_period_1 = 5. * 2. * M_PI / 365.; // 5 days in reb years
@@ -60,18 +62,20 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sx", spin_1 * 0.0);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sy", spin_1 * -0.0261769);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sz", spin_1 * 0.99965732);
-    rebx_set_q(rebx, sim->G, &sim->particles[1], &sim->particles[0], planet_q);
+    double planet_sigma_1 = rebx_set_q(rebx, sim->G, &sim->particles[1], &sim->particles[0], planet_q);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma_1);
 
     // P2
     double spin_period_2 = 3. * 2. * M_PI / 365.; // 3 days in reb years
     double spin_2 = (2. * M_PI) / spin_period_2;
     rebx_set_param_double(rebx, &sim->particles[2].ap, "k2", 0.4);
-    rebx_set_param_double(rebx, &sim->particles[2].ap, "sigma", 2.73e15);
+    // rebx_set_param_double(rebx, &sim->particles[2].ap, "sigma", 2.73e15);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "moi", 0.25 * p2_mass * p2_rad * p2_rad);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sx", spin_2 * 0.0);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sy", spin_2 * 0.0249736);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sz", spin_2 * 0.99968811);
-    rebx_set_q(rebx, sim->G, &sim->particles[2], &sim->particles[0], planet_q);
+    double planet_sigma_2 = rebx_set_q(rebx, sim->G, &sim->particles[2], &sim->particles[0], planet_q);
+    rebx_set_param_double(rebx, &sim->particles[2].ap, "sigma", planet_sigma_2);
 
     // And migration
     struct rebx_force* mo = rebx_load_force(rebx, "modify_orbits_forces");
@@ -84,7 +88,7 @@ int main(int argc, char* argv[]){
     // Run simulation
     rebx_spin_initialize_ode(rebx, effect);
 
-    FILE* f = fopen("10_27_sm_sigma_synced.txt","w");
+    FILE* f = fopen("test.txt","w");
     fprintf(f, "t,starx,stary,starz,starvx,starvy,starvz,star_sx, star_sy, star_sz, a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1,f1,p1x,p1y,p1z,p1vx,p1vy,p1vz,a2,i2,e2,s2x,s2y,s2z,mag2,pom2,Om2,f2,p2x,p2y,p2z,p2vx,p2vy,p2vz\n");
     int cond = 0;
      for (int i=0; i<100000; i++){
