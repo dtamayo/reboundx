@@ -60,10 +60,10 @@ int main(int argc, char* argv[]){
     const double solar_k2 = 0.1;
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", solar_k2);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "moi", 0.07 * star.m * star.r * star.r);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sx", solar_spin * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sy", solar_spin * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sz", solar_spin * 1.0);
-    double solar_sigma = rebx_set_q(rebx, sim->G, &sim->particles[0], &sim->particles[1], 3e6);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sx", solar_spin * 0.0);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sy", solar_spin * 0.0);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sz", solar_spin * 1.0);
+    double solar_sigma = rebx_tides_calc_sigma_from_Q(rebx, sim->G, &sim->particles[0], &sim->particles[1], 3e6);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", solar_sigma);
 
     // P1
@@ -75,10 +75,10 @@ int main(int argc, char* argv[]){
     const double phi_1 = 0. * M_PI / 180;
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k2", planet_k2);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "moi", 0.25 * planet_m * planet_r * planet_r);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sx", spin_p * sin(theta_1) * sin(phi_1));
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sy", spin_p * sin(theta_1) * cos(phi_1));
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sz", spin_p * cos(theta_1));
-    double planet_sigma = rebx_set_q(rebx, sim->G, &sim->particles[1], &sim->particles[0], planet_q);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sx", spin_p * sin(theta_1) * sin(phi_1));
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sy", spin_p * sin(theta_1) * cos(phi_1));
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sz", spin_p * cos(theta_1));
+    double planet_sigma = rebx_tides_calc_sigma_from_Q(rebx, sim->G, &sim->particles[1], &sim->particles[0], planet_q);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma);
 
 
@@ -100,13 +100,13 @@ int main(int argc, char* argv[]){
         struct reb_particle* p1 = &sim->particles[1];
         struct reb_particle* pert = &sim->particles[2];
 
-        double* star_sx = rebx_get_param(rebx, sun->ap, "spin_sx");
-        double* star_sy = rebx_get_param(rebx, sun->ap, "spin_sy");
-        double* star_sz = rebx_get_param(rebx, sun->ap, "spin_sz");
+        double* star_sx = rebx_get_param(rebx, sun->ap, "sx");
+        double* star_sy = rebx_get_param(rebx, sun->ap, "sy");
+        double* star_sz = rebx_get_param(rebx, sun->ap, "sz");
 
-        double* sx1 = rebx_get_param(rebx, p1->ap, "spin_sx");
-        double* sy1 = rebx_get_param(rebx, p1->ap, "spin_sy");
-        double* sz1 = rebx_get_param(rebx, p1->ap, "spin_sz");
+        double* sx1 = rebx_get_param(rebx, p1->ap, "sx");
+        double* sy1 = rebx_get_param(rebx, p1->ap, "sy");
+        double* sz1 = rebx_get_param(rebx, p1->ap, "sz");
 
         struct reb_orbit o1 = reb_tools_particle_to_orbit(sim->G, *p1, *sun);
         double a1 = o1.a;
