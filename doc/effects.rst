@@ -149,7 +149,7 @@ C example               :ref:`c_example_type_I_migration`
 Python example          `TypeIMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TypeIMigration.ipynb>`_.
 ======================= ===============================================
 
-This applies Type I migration, damping eccentricity, semi-major axis and inclination.
+This applies Type I migration, damping eccentricity, angular momentum and inclination.
 The base of the code is the same as the modified orbital forces one written by D. Tamayo, H. Rein.
 It also allows for parameters describing an inner disc edge, modeled using the implementation in inner_disk_edge.c.
 Note that this code is not machine independent since power laws were not possible to avoid all together.
