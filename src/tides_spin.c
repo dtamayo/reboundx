@@ -226,9 +226,9 @@ static void rebx_spin_sync_pre(struct reb_ode* const ode, const double* const y0
         struct reb_particle* p = &sim->particles[i];
         const double* k2 = rebx_get_param(rebx, p->ap, "k2");
         if (k2 != NULL){
-            const double* sx = rebx_get_param(rebx, p->ap, "spin_sx");
-            const double* sy = rebx_get_param(rebx, p->ap, "spin_sy");
-            const double* sz = rebx_get_param(rebx, p->ap, "spin_sz");
+            const double* sx = rebx_get_param(rebx, p->ap, "sx");
+            const double* sy = rebx_get_param(rebx, p->ap, "sy");
+            const double* sz = rebx_get_param(rebx, p->ap, "sz");
             ode->y[3*Nspins] = *sx;
             ode->y[3*Nspins+1] = *sy;
             ode->y[3*Nspins+2] = *sz;
@@ -251,12 +251,9 @@ static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y
         struct reb_particle* p = &sim->particles[i];
         const double* k2 = rebx_get_param(rebx, p->ap, "k2");
         if (k2 != NULL){
-            //rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sx", y0[3*Nspins]);
-            //rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sy", y0[3*Nspins+1]);
-            //rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "spin_sz", y0[3*Nspins+2]);
-            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "spin_sx", y0[3*Nspins]);
-            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "spin_sy", y0[3*Nspins+1]);
-            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "spin_sz", y0[3*Nspins+2]);
+            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "sx", y0[3*Nspins]);
+            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "sy", y0[3*Nspins+1]);
+            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "sz", y0[3*Nspins+2]);
             Nspins += 1;
         }
     }
@@ -267,8 +264,6 @@ static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y
 }
 
 void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force* const effect){
-//void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* const effect){
-    //struct rebx_extras* const rebx = sim->extras;
     struct reb_simulation* sim = rebx->sim;
     unsigned int Nspins = 0;
     const int N_real = sim->N - sim->N_var;
@@ -276,9 +271,9 @@ void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force*
         struct reb_particle* p = &sim->particles[i];
         // Only track spin if particle has moment of inertia and valid spin axis set
         double* moi = rebx_get_param(rebx, p->ap, "moi");
-        double* sx = rebx_get_param(rebx, p->ap, "spin_sx");
-        double* sy = rebx_get_param(rebx, p->ap, "spin_sy");
-        double* sz = rebx_get_param(rebx, p->ap, "spin_sz");
+        double* sx = rebx_get_param(rebx, p->ap, "sx");
+        double* sy = rebx_get_param(rebx, p->ap, "sy");
+        double* sz = rebx_get_param(rebx, p->ap, "sz");
         if (moi != NULL && sx != NULL && sy != NULL && sz != NULL){
             Nspins += 1;
         }
@@ -310,9 +305,9 @@ void rebx_tides_spin(struct reb_simulation* const sim, struct rebx_force* const 
         // Particle must have a k2 set, otherwise we treat this body as a point particle
         const double* k2 = rebx_get_param(rebx, source->ap, "k2");
         const double* sigma = rebx_get_param(rebx, source->ap, "sigma");
-        const double* sx = rebx_get_param(rebx, source->ap, "spin_sx");
-        const double* sy = rebx_get_param(rebx, source->ap, "spin_sy");
-        const double* sz = rebx_get_param(rebx, source->ap, "spin_sz");
+        const double* sx = rebx_get_param(rebx, source->ap, "sx");
+        const double* sy = rebx_get_param(rebx, source->ap, "sy");
+        const double* sz = rebx_get_param(rebx, source->ap, "sz");
 
         // Particle needs all three spin components and k2 to feel additional forces
         if (sx != NULL && sy != NULL && sz != NULL && k2 != NULL){
@@ -389,7 +384,7 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
 }
 
 // TLu 11/8/22 HELPER FUNCS
-double rebx_set_time_lag(struct rebx_extras* rebx, const double G, struct reb_particle* body, const double tau){
+double rebx_tides_calc_sigma_from_tau(struct rebx_extras* rebx, const double G, struct reb_particle* body, const double tau){
   const double* k2 = rebx_get_param(rebx, body->ap, "k2");
   const double r = body->r;
 
@@ -399,11 +394,11 @@ double rebx_set_time_lag(struct rebx_extras* rebx, const double G, struct reb_pa
 
   else{
     rebx_error(rebx, "Could not set sigma because Love number and/or radius was not set for this particle\n");
-    exit(0);
+    return 0;
   }
 }
 
-double rebx_set_q(struct rebx_extras* rebx, const double G, struct reb_particle* body, struct reb_particle* perturber, const double q){
+double rebx_tides_calc_sigma_from_Q(struct rebx_extras* rebx, const double G, struct reb_particle* body, struct reb_particle* perturber, const double Q){
   // CALL THIS AFTER OTHER PARAMETERS ARE SET
   struct reb_orbit orb = reb_tools_particle_to_orbit(G, *body, *perturber);
   const double r = body->r;
@@ -411,12 +406,11 @@ double rebx_set_q(struct rebx_extras* rebx, const double G, struct reb_particle*
 
   const double* k2 = rebx_get_param(rebx, body->ap, "k2");
   if (k2 != NULL || r != 0.0){
-      return 2. * G / (3. * q * r * r * r * r * r * (*k2) * (n));
+      return 2. * G / (3. * Q * r * r * r * r * r * (*k2) * (n));
   }
-
   else{
-    rebx_error(rebx, "Could not set sigma because Love number and/or radius was not set for this particle\n");
-    exit(0);
+    rebx_error(rebx, "Could not calculate sigma because Love number and/or radius was not set for this particle\n");
+    return 0;
   }
 }
 
@@ -436,9 +430,9 @@ struct reb_vec3d rebx_tools_spin_and_orbital_angular_momentum(const struct rebx_
         L.z += pi.m*(pi.x*pi.vy - pi.y*pi.vx);
 
         // This is the spin component
-        const double* sx = rebx_get_param(rebx, pi.ap, "spin_sx");
-        const double* sy = rebx_get_param(rebx, pi.ap, "spin_sy");
-        const double* sz = rebx_get_param(rebx, pi.ap, "spin_sz");
+        const double* sx = rebx_get_param(rebx, pi.ap, "sx");
+        const double* sy = rebx_get_param(rebx, pi.ap, "sy");
+        const double* sz = rebx_get_param(rebx, pi.ap, "sz");
         const double* moi = rebx_get_param(rebx, pi.ap, "moi");
 
         if (sx != NULL && sy != NULL && sz != NULL && moi != NULL){
@@ -462,6 +456,23 @@ void rebx_compute_transformation_angles(struct reb_simulation* sim, struct rebx_
     double ghat_perp = sqrt(1 - ghat_z * ghat_z);
     *theta1 = M_PI / 2 - atan2(ghat_y, ghat_x);
     *theta2 = M_PI / 2 - atan2(ghat_z, ghat_perp);
+}
+
+void rebx_tools_calc_Omega_inc_from_normal_vec(struct reb_vec3d xyz, double* Omega, double* inc){
+    double r = sqrt(xyz.x*xyz.x + xyz.y*xyz.y + xyz.z*xyz.z); 
+    *inc = acos(xyz.z/r);
+    double nx = -xyz.y;
+    double ny = xyz.x;
+    double cosine = nx/sqrt(nx*nx + ny*ny); 
+    if (cosine > -1. && cosine < 1.){
+       *Omega = acos(cosine);
+       if (ny < 0){
+           *Omega = -*Omega;
+       }
+    }
+    else{
+        *Omega = (cosine <= -1.) ? M_PI : 0.;
+    }
 }
 
 struct reb_vec3d rebx_EulerAnglesTransform(struct reb_vec3d xyz, const double Omega, const double I, const double omega){
@@ -492,6 +503,72 @@ struct reb_vec3d rebx_EulerAnglesTransform(struct reb_vec3d xyz, const double Om
     return shifted;
 }
 
+struct reb_vec3d rebx_EulerAnglesInvTransform(struct reb_vec3d xyz, const double Omega, const double I, const double omega){
+    // celmech line 341
+    double x4 = xyz.x;
+    double y4 = xyz.y;
+    double z4 = xyz.z;
+
+    double s3 = sin(-Omega);
+    double c3 = cos(-Omega);
+    double x3 = c3 * x4 - s3 * y4;
+    double y3 = s3 * x4 + c3 * y4;
+    double z3 = z4;
+
+    double s2 = sin(-I);
+    double c2 = cos(-I);
+    double x2 = x3;
+    double y2 = c2 * y3 - s2 * z3;
+    double z2 = s2 * y3 + c2 * z3;
+
+    double s1 = sin(-omega);
+    double c1 = cos(-omega);
+    double x1 = c1 * x2 - s1 * y2;
+    double y1 = s1 * x2 + c1 * y2;
+    double z1 = z2;
+
+    struct reb_vec3d shifted = {x1, y1, z1};
+    return shifted;
+}
+
+void rebx_align_simulation2(struct rebx_extras* rebx){
+    // celmech line 360
+    // CHANGED TO INCLUDE SPIN ANGMOM
+    struct reb_simulation* const sim = rebx->sim;
+    const int N_real = sim->N - sim->N_var;
+    double Omega, inc; 
+    struct reb_vec3d L = rebx_tools_spin_and_orbital_angular_momentum(rebx);
+    rebx_tools_calc_Omega_inc_from_normal_vec(L, &Omega, &inc);
+    for (int i = 0; i < N_real; i++){
+        struct reb_particle* p = &sim->particles[i];
+	      struct reb_vec3d pos = {p->x, p->y, p->z};
+	      struct reb_vec3d vel = {p->vx, p->vy, p->vz};
+        struct reb_vec3d ps = rebx_EulerAnglesInvTransform(pos, Omega, inc, 0);
+      	struct reb_vec3d vs = rebx_EulerAnglesInvTransform(vel, Omega, inc, 0); 
+
+        // Try this for the spin
+        const double* sx = rebx_get_param(rebx, p->ap, "sx");
+        const double* sy = rebx_get_param(rebx, p->ap, "sy");
+        const double* sz = rebx_get_param(rebx, p->ap, "sz");
+        if (sx != NULL && sy != NULL && sz != NULL){
+          struct reb_vec3d spin = {*sx, *sy, *sz};
+          struct reb_vec3d ss = rebx_EulerAnglesInvTransform(spin, Omega, inc, 0);
+
+          rebx_set_param_double(rebx, &p->ap, "sx", ss.x);
+          rebx_set_param_double(rebx, &p->ap, "sy", ss.y);
+          rebx_set_param_double(rebx, &p->ap, "sz", ss.z);
+        }
+
+      	p->x = ps.x;
+      	p->y = ps.y;
+      	p->z = ps.z;
+
+      	p->vx = vs.x;
+      	p->vy = vs.y;
+      	p->vz = vs.z;
+  }
+}
+
 void rebx_align_simulation(struct rebx_extras* rebx){
     // celmech line 360
     // CHANGED TO INCLUDE SPIN ANGMOM
@@ -507,16 +584,16 @@ void rebx_align_simulation(struct rebx_extras* rebx){
       	struct reb_vec3d vs = rebx_EulerAnglesTransform(vel, 0, theta2, theta1);
 
         // Try this for the spin
-        const double* sx = rebx_get_param(rebx, p->ap, "spin_sx");
-        const double* sy = rebx_get_param(rebx, p->ap, "spin_sy");
-        const double* sz = rebx_get_param(rebx, p->ap, "spin_sz");
+        const double* sx = rebx_get_param(rebx, p->ap, "sx");
+        const double* sy = rebx_get_param(rebx, p->ap, "sy");
+        const double* sz = rebx_get_param(rebx, p->ap, "sz");
         if (sx != NULL && sy != NULL && sz != NULL){
           struct reb_vec3d spin = {*sx, *sy, *sz};
           struct reb_vec3d ss = rebx_EulerAnglesTransform(spin, 0, theta2, theta1);
 
-          rebx_set_param_double(rebx, &p->ap, "spin_sx", ss.x);
-          rebx_set_param_double(rebx, &p->ap, "spin_sy", ss.y);
-          rebx_set_param_double(rebx, &p->ap, "spin_sz", ss.z);
+          rebx_set_param_double(rebx, &p->ap, "sx", ss.x);
+          rebx_set_param_double(rebx, &p->ap, "sy", ss.y);
+          rebx_set_param_double(rebx, &p->ap, "sz", ss.z);
         }
 
       	p->x = ps.x;
