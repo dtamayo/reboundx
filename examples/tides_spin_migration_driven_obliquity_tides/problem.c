@@ -1,8 +1,8 @@
 /**
- * Constant time lag model for tides (Hut 1981)
+ * Self-Consistent Spin-Tidal and Dynamical equations of motion (Eggleton et. al 1998)
  *
- * In particular, this simulates post-main sequence tidal interactions between the Earth and Sun near its tip-RGB phase.
- * Definitely see the corresponding ipython example, as well as the documentation, for more explanations along the way of the various parameters and assumptions.
+ * In particular, this simulates the obliquity sculpting of the Kepler multis due to convergent migration
+ * Result in based on Figure 3 in Millholland & Laughlin (2019), and reproduces Figure 3 in Lu et. al (2023)
  */
 #include <stdio.h>
 #include <stdlib.h>

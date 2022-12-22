@@ -6,6 +6,9 @@
  * The integrator automatically adjusts the timestep so that
  * even very high eccentricity encounters are resolved with high
  * accuracy.
+ *
+ * This example includes self-consistent spin, tidal & dynamical effects
+ * as well as general relativity
  */
  #include <stdio.h>
  #include <stdlib.h>
