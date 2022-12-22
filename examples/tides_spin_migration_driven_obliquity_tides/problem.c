@@ -46,10 +46,10 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", 0.07);
     //rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", 6303.);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "moi", 0.07 * solar_mass * solar_rad * solar_rad);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sx", solar_spin * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sy", solar_spin * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "spin_sz", solar_spin * 1.0);
-    double solar_sigma = rebx_set_q(rebx, sim->G, &sim->particles[0], &sim->particles[1], solar_q);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sx", solar_spin * 0.0);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sy", solar_spin * 0.0);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sz", solar_spin * 1.0);
+    double solar_sigma = rebx_tides_calc_sigma_from_Q(rebx, sim->G, &sim->particles[0], &sim->particles[1], solar_q);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", solar_sigma);
 
     // P1
@@ -59,10 +59,10 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k2", 0.4);
     //rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", 1.75e15);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "moi", 0.25 * p1_mass * p1_rad * p1_rad);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sx", spin_1 * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sy", spin_1 * -0.0261769);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "spin_sz", spin_1 * 0.99965732);
-    double planet_sigma_1 = rebx_set_q(rebx, sim->G, &sim->particles[1], &sim->particles[0], planet_q);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sx", spin_1 * 0.0);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sy", spin_1 * -0.0261769);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sz", spin_1 * 0.99965732);
+    double planet_sigma_1 = rebx_tides_calc_sigma_from_Q(rebx, sim->G, &sim->particles[1], &sim->particles[0], planet_q);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma_1);
 
     // P2
@@ -71,10 +71,10 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[2].ap, "k2", 0.4);
     // rebx_set_param_double(rebx, &sim->particles[2].ap, "sigma", 2.73e15);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "moi", 0.25 * p2_mass * p2_rad * p2_rad);
-    rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sx", spin_2 * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sy", spin_2 * 0.0249736);
-    rebx_set_param_double(rebx, &sim->particles[2].ap, "spin_sz", spin_2 * 0.99968811);
-    double planet_sigma_2 = rebx_set_q(rebx, sim->G, &sim->particles[2], &sim->particles[0], planet_q);
+    rebx_set_param_double(rebx, &sim->particles[2].ap, "sx", spin_2 * 0.0);
+    rebx_set_param_double(rebx, &sim->particles[2].ap, "sy", spin_2 * 0.0249736);
+    rebx_set_param_double(rebx, &sim->particles[2].ap, "sz", spin_2 * 0.99968811);
+    double planet_sigma_2 = rebx_tides_calc_sigma_from_Q(rebx, sim->G, &sim->particles[2], &sim->particles[0], planet_q);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "sigma", planet_sigma_2);
 
     // And migration
@@ -104,17 +104,17 @@ int main(int argc, char* argv[]){
   	 	cond = 1;
   	 }
 
-         double* star_sx = rebx_get_param(rebx, sun->ap, "spin_sx");
-         double* star_sy = rebx_get_param(rebx, sun->ap, "spin_sy");
-         double* star_sz = rebx_get_param(rebx, sun->ap, "spin_sz");
+         double* star_sx = rebx_get_param(rebx, sun->ap, "sx");
+         double* star_sy = rebx_get_param(rebx, sun->ap, "sy");
+         double* star_sz = rebx_get_param(rebx, sun->ap, "sz");
 
-         double* sx1 = rebx_get_param(rebx, p1->ap, "spin_sx");
-         double* sy1 = rebx_get_param(rebx, p1->ap, "spin_sy");
-         double* sz1 = rebx_get_param(rebx, p1->ap, "spin_sz");
+         double* sx1 = rebx_get_param(rebx, p1->ap, "sx");
+         double* sy1 = rebx_get_param(rebx, p1->ap, "sy");
+         double* sz1 = rebx_get_param(rebx, p1->ap, "sz");
 
-         double* sx2 = rebx_get_param(rebx, p2->ap, "spin_sx");
-         double* sy2 = rebx_get_param(rebx, p2->ap, "spin_sy");
-         double* sz2 = rebx_get_param(rebx, p2->ap, "spin_sz");
+         double* sx2 = rebx_get_param(rebx, p2->ap, "sx");
+         double* sy2 = rebx_get_param(rebx, p2->ap, "sy");
+         double* sz2 = rebx_get_param(rebx, p2->ap, "sz");
 
          struct reb_orbit o1 = reb_tools_particle_to_orbit(sim->G, *p1, *sun);
          double a1 = o1.a;//vis_viva(r, &p1, &sun);

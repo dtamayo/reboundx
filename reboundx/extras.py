@@ -176,6 +176,14 @@ class Extras(Structure):
         self.process_messages()
         return Acentral
 
+    def tides_calc_sigma_from_tau(self, G, p, tau):
+        clibreboundx.rebx_tides_calc_sigma_from_tau.restype = c_double
+        return clibreboundx.rebx_tides_calc_sigma_from_tau(byref(self), c_double(G), pointer(p), c_double(tau))
+
+    def tides_calc_sigma_from_Q(self, G, p, perturber, Q):
+        clibreboundx.rebx_tides_calc_sigma_from_Q.restype = c_double
+        return clibreboundx.rebx_tides_calc_sigma_from_Q(byref(self), c_double(G), pointer(p), pointer(perturber), c_double(Q))
+
     # Hamiltonian calculation functions
     def gr_full_hamiltonian(self, force):
         clibreboundx.rebx_gr_full_hamiltonian.restype = c_double
@@ -211,17 +219,12 @@ class Extras(Structure):
         clibreboundx.rebx_spin_initialize_ode.restype = None
         return clibreboundx.rebx_spin_initialize_ode(byref(self), byref(force))
 
-    def set_time_lag(self, G, p, tau):
-        clibreboundx.rebx_set_time_lag.restype = c_double
-        return clibreboundx.rebx_set_time_lag(byref(self), c_double(G), pointer(p), c_double(tau))
-
-    def set_q(self, G, p, perturber, q):
-        clibreboundx.rebx_set_q.restype = c_double
-        return clibreboundx.rebx_set_q(byref(self), c_double(G), pointer(p), pointer(perturber), c_double(q))
-
     def align_simulation(self):
         clibreboundx.rebx_align_simulation.restype = None
         return clibreboundx.rebx_align_simulation(byref(self))
+    def align_simulation2(self):
+        clibreboundx.rebx_align_simulation2.restype = None
+        return clibreboundx.rebx_align_simulation2(byref(self))
 
     def process_messages(self):
         try:
