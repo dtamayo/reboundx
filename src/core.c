@@ -49,9 +49,9 @@ const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line 
  ****************************/
 
 void rebx_register_default_params(struct rebx_extras* rebx){
-    rebx_register_param(rebx, "spin_sx", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "spin_sy", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "spin_sz", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "sx", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "sy", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "sz", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "ode", REBX_TYPE_ODE);
     rebx_register_param(rebx, "c", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "gr_source", REBX_TYPE_INT);
@@ -314,8 +314,8 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->update_accelerations = rebx_modify_orbits_with_type_I_migration;
         force->force_type = REBX_FORCE_VEL;
     }
-    else if (strcmp(name, "spin") == 0){
-        force->update_accelerations = rebx_spin;
+    else if (strcmp(name, "tides_spin") == 0){
+        force->update_accelerations = rebx_tides_spin;
         force->force_type = REBX_FORCE_VEL;
     }
     else if (strcmp(name, "yarkovsky_effect") == 0){
@@ -649,6 +649,16 @@ void rebx_set_param_uint32(struct rebx_extras* const rebx, struct rebx_node** ap
     *valptr = val;
 
     return;
+}
+
+// ONLY USE DURING POST-SYNC! Even so might be risky...
+void rebx_set_spin_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val){
+  // this is hacky
+
+  struct rebx_param* param = rebx_get_param_struct(rebx, *apptr, param_name);
+  double* valptr = param->value;
+  *valptr = val;
+  return;
 }
 
 /*******************************************************************
