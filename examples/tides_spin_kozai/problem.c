@@ -44,7 +44,7 @@ int main(int argc, char* argv[]){
 
     // The perturber
     struct reb_particle perturber = {0};
-    double perturber_inc = 65. * (M_PI / 180.);
+    double perturber_inc = 1. * (M_PI / 180.);
     double perturber_mass = 10. * 9.55e-4;
     double perturber_a  = 50.;
     double perturber_e = 0.52;
@@ -71,8 +71,8 @@ int main(int argc, char* argv[]){
     const double spin_p = (2. * M_PI) / spin_period_p;
     const double planet_k2 = 0.4;
     const double planet_q = 3e5;
-    const double theta_1 = 0. * M_PI / 180.;
-    const double phi_1 = 0. * M_PI / 180;
+    const double theta_1 = 30. * M_PI / 180.;
+    const double phi_1 = 50. * M_PI / 180;
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k2", planet_k2);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "moi", 0.25 * planet_m * planet_r * planet_r);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sx", spin_p * sin(theta_1) * sin(phi_1));
@@ -89,7 +89,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &gr->ap, "c", 10065.32); // in default units
 
     reb_move_to_com(sim);
-    rebx_align_simulation(rebx);
+    rebx_align_simulation2(rebx);
     rebx_spin_initialize_ode(rebx, effect);
 
     FILE* f = fopen("test.txt","w");
@@ -131,10 +131,13 @@ int main(int argc, char* argv[]){
         double mag1 = sqrt((*sx1) * (*sx1) + (*sy1) * (*sy1) + (*sz1) * (*sz1));
         double ob1 = acos(s1.z / mag1) * (180 / M_PI);
 
-        if (i % 50000 == 0){
-            printf("t=%e\t a1=%.6f\t o1=%0.5f\n", sim->t / (2 * M_PI), a1, ob1);
+        if (i % 5000 == 0){
+            // printf("t=%e\t a1=%.6f\t o1=%0.5f\n", sim->t / (2 * M_PI), a1, ob1);
+            struct reb_vec3d gtot = rebx_tools_spin_and_orbital_angular_momentum(rebx);
+            double gtot_mag = sqrt((gtot.x) * (gtot.x) + (gtot.y) * (gtot.y) + (gtot.z) * (gtot.z));
+            printf("Gtot: %e, %e, %e\n", gtot.x/gtot_mag, gtot.y/gtot_mag, gtot.z/gtot_mag);
         }
-        fprintf(f, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%.e,%e\n", sim->t / (2 * M_PI), *star_sx, *star_sy, *star_sz, magstar, a1, i1, e1, s1.x, s1.y, s1.z, mag1, pom1, Om1, f1, a2, i2, e2, Om2, pom2);
+        //fprintf(f, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%.e,%e\n", sim->t / (2 * M_PI), *star_sx, *star_sy, *star_sz, magstar, a1, i1, e1, s1.x, s1.y, s1.z, mag1, pom1, Om1, f1, a2, i2, e2, Om2, pom2);
         reb_integrate(sim, sim->t+(10 * 2 * M_PI));
     }
    rebx_free(rebx);

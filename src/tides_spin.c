@@ -35,7 +35,12 @@
  * Python Example          `TidesSpinPseudoSynchronization.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesSpinPseudoSynchronization.ipynb>`_.
  * ======================= ===============================================
  *
- * This effect tracks both the spin and orbital evolution of bodies under constant-time lag tides raised on both the primary and on the orbiting bodies.
+ * This effect consistently tracks both the spin and orbital evolution of bodies under constant-time lag tides raised on both the primary and on the orbiting bodies.
+ * In all cases, we need to set masses for all the particles that will feel these tidal forces. Particles with only mass are point particles
+ * Particles are assumed to have structure (i.e - physical extent & distortion from spin) if the following parameters are set: physical radius particles[i].r, potential Love number of degree 2 k2, and the spin frequency components sx, sy, sz.
+ * If we wish to evolve a body's spin components, the fully dimensional moment of inertia moi must be set as well. If this parameter is not set, the spin components will be stationary.
+ * Finally, if we wish to consider the effects of tides raised on a specific body, we must set the tidal dissipation parameter sigma as well.
+ * See Lu et. al (in review) and Eggleton et. al (1998) above
  *
  * **Effect Parameters**
  *
@@ -51,7 +56,7 @@
  * sx (float)                   Yes         x component of spin vector
  * sy (float)                   Yes         y component of spin vector
  * sz (float)                   Yes         z component of spin vector
- * moi (float)                  Yes         Moment of inertia
+ * moi (float)                  No          Moment of inertia
  * sigma (float)                No          Tidal Dissipation Parameter. If not set, defaults to 0
  * ============================ =========== ==================================================================
  *
@@ -456,11 +461,11 @@ void rebx_compute_transformation_angles(struct reb_simulation* sim, struct rebx_
 }
 
 void rebx_tools_calc_Omega_inc_from_normal_vec(struct reb_vec3d xyz, double* Omega, double* inc){
-    double r = sqrt(xyz.x*xyz.x + xyz.y*xyz.y + xyz.z*xyz.z); 
+    double r = sqrt(xyz.x*xyz.x + xyz.y*xyz.y + xyz.z*xyz.z);
     *inc = acos(xyz.z/r);
     double nx = -xyz.y;
     double ny = xyz.x;
-    double cosine = nx/sqrt(nx*nx + ny*ny); 
+    double cosine = nx/sqrt(nx*nx + ny*ny);
     if (cosine > -1. && cosine < 1.){
        *Omega = acos(cosine);
        if (ny < 0){
@@ -533,7 +538,7 @@ void rebx_align_simulation2(struct rebx_extras* rebx){
     // CHANGED TO INCLUDE SPIN ANGMOM
     struct reb_simulation* const sim = rebx->sim;
     const int N_real = sim->N - sim->N_var;
-    double Omega, inc; 
+    double Omega, inc;
     struct reb_vec3d L = rebx_tools_spin_and_orbital_angular_momentum(rebx);
     rebx_tools_calc_Omega_inc_from_normal_vec(L, &Omega, &inc);
     for (int i = 0; i < N_real; i++){
@@ -541,7 +546,7 @@ void rebx_align_simulation2(struct rebx_extras* rebx){
 	      struct reb_vec3d pos = {p->x, p->y, p->z};
 	      struct reb_vec3d vel = {p->vx, p->vy, p->vz};
         struct reb_vec3d ps = rebx_EulerAnglesInvTransform(pos, Omega, inc, 0);
-      	struct reb_vec3d vs = rebx_EulerAnglesInvTransform(vel, Omega, inc, 0); 
+      	struct reb_vec3d vs = rebx_EulerAnglesInvTransform(vel, Omega, inc, 0);
 
         // Try this for the spin
         const double* sx = rebx_get_param(rebx, p->ap, "sx");
