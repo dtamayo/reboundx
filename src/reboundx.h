@@ -421,6 +421,8 @@ void rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** ap
 void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val);
 void rebx_set_param_uint32(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, uint32_t val);
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type);
+
+void rebx_set_spin_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
 /** @} */
 /** @} */
 
@@ -441,7 +443,8 @@ void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum 
 /**
  * @brief Initialize spin ODE
  */
-void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* const effect);
+//void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* const effect);
+void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force* const effect);
 /**
  * @brief Calculates beta, the ratio between the radiation pressure force and the gravitational force from the star.
  * @param G Gravitational constant.
@@ -559,12 +562,17 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
 void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
 
 // spin effect helper functions
-void rebx_set_time_lag(struct rebx_extras* rebx, const double G, struct reb_particle* body, const double tau);
-void rebx_set_q(struct rebx_extras* rebx, const double G, struct reb_particle* body, struct reb_particle* perturber, const double q);
+double rebx_tides_calc_sigma_from_tau(struct rebx_extras* rebx, const double G, struct reb_particle* body, const double tau);
+double rebx_tides_calc_sigma_from_Q(struct rebx_extras* rebx, const double G, struct reb_particle* body, struct reb_particle* perturber, const double q);
 void rebx_compute_transformation_angles(struct reb_simulation* sim, struct rebx_extras* rebx, double* theta1, double* theta2);
 struct reb_vec3d rebx_EulerAnglesTransform(struct reb_vec3d xyz, const double Omega, const double I, const double omega);
+struct reb_vec3d rebx_EulerAnglesInvTransform(struct reb_vec3d xyz, const double Omega, const double I, const double omega);
 void rebx_align_simulation(struct rebx_extras* rebx);
 struct reb_vec3d rebx_transform_inv_to_planet(double inc, double omega, struct reb_vec3d spin_inv); // Should we consider moving this to base REBOUND?
+struct reb_vec3d rebx_EulerAnglesTransform2(struct reb_vec3d xyz, const double Omega, const double I, const double omega);
+struct reb_vec3d rebx_EulerAnglesInvTransform2(struct reb_vec3d xyz, const double Omega, const double I, const double omega);
+void rebx_align_simulation2(struct rebx_extras* rebx);
+void rebx_tools_calc_Omega_inc_from_normal_vec(struct reb_vec3d xyz, double* Omega, double* inc);
 
 
 /****************************************
