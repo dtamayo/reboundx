@@ -176,13 +176,13 @@ class Extras(Structure):
         self.process_messages()
         return Acentral
 
-    def tides_calc_sigma_from_tau(self, G, p, tau):
+    def tides_calc_sigma_from_tau(self, body, tau):
         clibreboundx.rebx_tides_calc_sigma_from_tau.restype = c_double
-        return clibreboundx.rebx_tides_calc_sigma_from_tau(byref(self), c_double(G), pointer(p), c_double(tau))
+        return clibreboundx.rebx_tides_calc_sigma_from_tau(byref(self), pointer(body), c_double(tau))
 
-    def tides_calc_sigma_from_Q(self, G, p, perturber, Q):
+    def tides_calc_sigma_from_Q(self, body, primary, Q):
         clibreboundx.rebx_tides_calc_sigma_from_Q.restype = c_double
-        return clibreboundx.rebx_tides_calc_sigma_from_Q(byref(self), c_double(G), pointer(p), pointer(perturber), c_double(Q))
+        return clibreboundx.rebx_tides_calc_sigma_from_Q(byref(self), pointer(body), pointer(primary), c_double(Q))
 
     # Hamiltonian calculation functions
     def gr_full_hamiltonian(self, force):
@@ -222,9 +222,6 @@ class Extras(Structure):
     def align_simulation(self):
         clibreboundx.rebx_align_simulation.restype = None
         return clibreboundx.rebx_align_simulation(byref(self))
-    def align_simulation2(self):
-        clibreboundx.rebx_align_simulation2.restype = None
-        return clibreboundx.rebx_align_simulation2(byref(self))
 
     def process_messages(self):
         try:

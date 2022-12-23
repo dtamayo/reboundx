@@ -20,7 +20,7 @@
  #include "tides_spin.c"
 
 void heartbeat(struct reb_simulation* r);
-double tmax = 1.6e4;
+double tmax = 4e3; // kept short to run quickly. set to at least 4x longer to see full evolution
 
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[0].ap, "sx", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "sy", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "sz", solar_spin * 1.0);
-    double solar_sigma = rebx_tides_calc_sigma_from_Q(rebx, sim->G, &sim->particles[0], &sim->particles[1], 3e6);
+    double solar_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[0], &sim->particles[1], 3e6);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", solar_sigma);
 
     // P1
@@ -86,7 +86,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sx", spin_p * sin(theta_1) * sin(phi_1));
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sy", spin_p * sin(theta_1) * cos(phi_1));
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sz", spin_p * cos(theta_1));
-    double planet_sigma = rebx_tides_calc_sigma_from_Q(rebx, sim->G, &sim->particles[1], &sim->particles[0], planet_q);
+    double planet_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[1], &sim->particles[0], planet_q);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma);
 
 
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &gr->ap, "c", 10065.32); // in default units
 
     reb_move_to_com(sim);
-    rebx_align_simulation2(rebx);
+    rebx_align_simulation(rebx);
     rebx_spin_initialize_ode(rebx, effect);
 
     system("rm -v orbits.txt");        // delete previous output file

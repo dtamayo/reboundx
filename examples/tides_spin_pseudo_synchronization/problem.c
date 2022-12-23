@@ -27,7 +27,7 @@ int main(int argc, char* argv[]){
     const double solar_rad = 0.00465; // Bodies with structure require radius! This is one solar radius
     reb_add_fmt(sim, "m r", solar_mass, solar_rad);// Central object
 
-    // Fiducual hot Jupiter
+    // Fiducial hot Jupiter
     const double p1_mass = 1. * 9.55e-4; // in Jupiter masses * 1 Jupiter Mass / 1 Solar Mass
     const double p1_rad = 1. * 4.676e-4; // in Jupiter rad * 1 jupiter rad / 1 AU
     const double p1_e = 0.01;
@@ -40,13 +40,12 @@ int main(int argc, char* argv[]){
 
     // Add tides_spin as a REBOUNDx additional effect
     struct rebx_extras* rebx = rebx_attach(sim);
-
     struct rebx_force* effect = rebx_load_force(rebx, "tides_spin");
     rebx_add_force(rebx, effect);
     // Star
     // The following parameters are mandatory to set for the body to have structure:
     // The Love number (k2)
-    // The three components of spin frequency (sx, sy, sz)
+    // The three components of spin (sx, sy, sz)
     const double solar_k2 = 0.07;
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", solar_k2);
     const double solar_spin_period = 27 * 2 * M_PI / 365; // 27 Days in REBOUND time units
@@ -60,35 +59,34 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[0].ap, "moi", 0.07 * solar_mass * solar_rad * solar_rad);
 
     // Finally, the last parameter is the tidal dissipation parameter (sigma)
-    // You can either set sigma directly, or use two helper functions that relate sigma to more intuitive quantities:
-    // 'rebx_tides_calc_sigma_from_Q' uses the Tidal Quality Factor (Q)
-    // 'rebx_tides_calc_sigma_from_tau' uses the constant time lag (tau)
-    // See Lu et. al (in review) for the specific relations used to relate these quantities.
-    const double solar_Q = 1000000.;
-
+    // This quantity is related to the constant time lag tau, and in the case of circular synchronous orbits, to the tital quality factor Q
+    const double solar_Q = 1e6; // the tidal quality factor Q
     struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
-    const double solar_tau = 1 / (2 * solar_Q * orb.n);
+    const double solar_tau = 1 / (2 * solar_Q * orb.n); // the constant time lag tau
+    // See Lu et. al (2023) for discussion of the cases in which this approximation relating Q and tau is valid
+    
+    // You can calculate sigma directly (see Lu et al. (2023))
+    double solar_sigma = 4 * sim->G * solar_tau / (3 * solar_rad * solar_rad * solar_rad * solar_rad * solar_rad * solar_k2);
 
-    // You can set sigma directly whenever you want, but the two helper functions depend on the previously set values above
-    // For this reason, if you choose to use the helper functions, USE THEM LAST, after the other tides_spin parameters have been set!
-    // Here are examples of all three ways to set sigma. All three are equivalent!
+    // Alternatively, you can use a helper function to calculate sigma from either Q or tau.
+    // In both cases, you need to make sure that k2 and the physical radius are already set for the body. If they aren't you'll get a reb_error 
 
-    // rebx_tides_calc_sigma_from_Q takes, as input:
+    // To use rebx_tides_calc_sigma_from_Q, we need
     // 1) The rebx extras object
-    // 2) The simulation's value of G
-    // 3) The particle you wish to set sigma for
-    // 4) A tidal perturber
-    // 5) The Q value you will use
-    double solar_sigma = rebx_tides_calc_sigma_from_Q(rebx, sim->G, &sim->particles[0], &sim->particles[1], solar_Q);
+    // 2) The particle you wish to set sigma for
+    // 3) The primary around which the body is orbiting
+    // 4) The tidal quality factor Q you will use
+    // Here we are recalculating our solar_sigma from above using the helper function (you would just choose most convenient option):
+    solar_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[0], &sim->particles[1], solar_Q);
 
     // rebx_tides_calc_sigma_from_tau takes, as input:
     // 1) The rebx extras object
-    // 2) The simulation's value of G
-    // 3) The particle you wish to set sigma for
-    // 4) The Q value you will use
-    // double solar_sigma = rebx_tides_calc_sigma_from_tau(rebx, sim->G, &sim->particles[0], solar_tau);
+    // 2) The body you wish to set sigma for
+    // 3) The Q value you will use
+    solar_sigma = rebx_tides_calc_sigma_from_tau(rebx, &sim->particles[0], solar_tau);
 
-    //double solar_sigma = 4 * sim->G * solar_tau / (3 * solar_rad * solar_rad * solar_rad * solar_rad * solar_rad * solar_k2);
+    // For your own use case, you would just use whichever of the above three methods is most convenient (here we've done it three ways)
+    // whichever of the three methods we use above, we need to remember to set sigma
     rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", solar_sigma);
 
     // Planet - all of the above applies here too
@@ -102,12 +100,12 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sx", spin_1 * sin(theta_1) * sin(phi_1));
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sy", spin_1 * sin(theta_1) * cos(phi_1));
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sz", spin_1 * cos(theta_1));
-    double planet_sigma = rebx_tides_calc_sigma_from_Q(rebx, sim->G, &sim->particles[1], &sim->particles[0], planet_Q);
+    double planet_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[1], &sim->particles[0], planet_Q);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma);
 
     reb_move_to_com(sim);
-    rebx_align_simulation(rebx);
-    rebx_spin_initialize_ode(rebx, effect);
+    rebx_align_simulation(rebx); // This rotates our simulation into the invariable plane aligned with the total ang. momentum (including spin)
+    rebx_spin_initialize_ode(rebx, effect); // We must call this function before starting our integration to track the spins
 
     system("rm -v output.txt"); // remove previous output file
     reb_integrate(sim, tmax);
