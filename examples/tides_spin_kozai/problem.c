@@ -7,8 +7,9 @@
  * even very high eccentricity encounters are resolved with high
  * accuracy.
  *
- * This example includes self-consistent spin, tidal & dynamical effects
- * as well as general relativity
+ * This is the same Kozai example implemented in base REBOUND, modified to include the tidal and spin effects from bodies with structure.
+ * Please refer to that example for the system details
+ * Also, see the ipython examples prefixed TidesSpin for in-depth exploration of the parameters that can be set in this simulation.
  */
  #include <stdio.h>
  #include <stdlib.h>
@@ -19,43 +20,50 @@
  #include "tides_spin.c"
 
 void heartbeat(struct reb_simulation* r);
-double tmax = 1e5 * 2 * M_PI;
+double tmax = 1.6e4;
 
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
+    // Initial conditions
     // Setup constants
     sim->dt             = M_PI*1e-2;     // initial timestep
-    sim->integrator        = REB_INTEGRATOR_IAS15;
+    sim->integrator        = REB_INTEGRATOR_IAS15; // IAS15 is used for its adaptive timestep:
+                                                   // in a Kozai cycle the planet experiences close encounters during the high-eccentricity epochs.
+                                                   // A fixed-time integrator (for example, WHFast) would need to apply the worst-case timestep to the whole simulation
     sim->heartbeat        = heartbeat;
 
     // Initial conditions
-
     struct reb_particle star = {0};
-    star.m  = 0.32;
-    star.r = 0.5 * 0.00465;
+    star.m  = 1;
+    star.r = 0.00465;
     reb_add(sim, star);
 
-    double planet_m  = 0.05 * 9.55e-4; // in Jupiter masses
-    double planet_r = 0.3 * 4.676e-4;
-    double planet_a = 2.;
-    double planet_e = 0.01;
-    double planet_omega = 0. * (M_PI/180);
-    reb_add_fmt(sim, "m r a e omega", planet_m, planet_r, planet_a, planet_e, planet_omega);
+    struct reb_particle planet = {0};
+    planet.m  = 0.05 * 9.55e-4; // A Neptune-like planet
+    planet.r = 0.3 * 4.676e-4;
+    double e_planet = 0;
+    planet.x  = 1. - e_planet;
+    planet.vy = sqrt((1. + e_planet) / (1. - e_planet));
+    reb_add(sim, planet);
 
-    // The perturber
+    // The perturber - treated as a point particle
     struct reb_particle perturber = {0};
-    double perturber_inc = 1. * (M_PI / 180.);
-    double perturber_mass = 10. * 9.55e-4;
-    double perturber_a  = 50.;
-    double perturber_e = 0.52;
-    reb_add_fmt(sim, "m a e inc", perturber_mass, perturber_a, perturber_e, perturber_inc);
+    perturber.x  = 10;
+    double inc_perturber = 89.9;
+    perturber.m  = 1;
+    perturber.vy = cos(inc_perturber/180.*M_PI)*sqrt((star.m+perturber.m)/perturber.x);
+    perturber.vz = sin(inc_perturber/180.*M_PI)*sqrt((star.m+perturber.m)/perturber.x);
+    reb_add(sim, perturber);
 
+    // Add REBOUNDx effects
+    // First tides_spin
     struct rebx_extras* rebx = rebx_attach(sim);
 
     struct rebx_force* effect = rebx_load_force(rebx, "tides_spin");
     rebx_add_force(rebx, effect);
+
     // Sun
-    const double solar_spin_period = 4.6 * 2. * M_PI / 365.;
+    const double solar_spin_period = 27 * 2. * M_PI / 365.;
     const double solar_spin = (2 * M_PI) / solar_spin_period;
     const double solar_k2 = 0.1;
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", solar_k2);
@@ -70,11 +78,11 @@ int main(int argc, char* argv[]){
     const double spin_period_p = 1. * 2. * M_PI / 365.; // days to reb years
     const double spin_p = (2. * M_PI) / spin_period_p;
     const double planet_k2 = 0.4;
-    const double planet_q = 3e5;
-    const double theta_1 = 30. * M_PI / 180.;
-    const double phi_1 = 50. * M_PI / 180;
+    const double planet_q = 1e4;
+    const double theta_1 = 0. * M_PI / 180.;
+    const double phi_1 = 0. * M_PI / 180;
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k2", planet_k2);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "moi", 0.25 * planet_m * planet_r * planet_r);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "moi", 0.25 * planet.m * planet.r * planet.r);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sx", spin_p * sin(theta_1) * sin(phi_1));
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sy", spin_p * sin(theta_1) * cos(phi_1));
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sz", spin_p * cos(theta_1));
@@ -82,75 +90,67 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma);
 
 
-    // add GR:
+    // add GR precession:
     struct rebx_force* gr = rebx_load_force(rebx, "gr_full");
     rebx_add_force(rebx, gr);
-
     rebx_set_param_double(rebx, &gr->ap, "c", 10065.32); // in default units
 
     reb_move_to_com(sim);
     rebx_align_simulation2(rebx);
     rebx_spin_initialize_ode(rebx, effect);
 
-    FILE* f = fopen("test.txt","w");
-    fprintf(f, "t,star_sx,star_sy,star_sz,magstar,a1,i1,e1,s1x,s1y,s1z,mag1,pom1,Om1,f1,a2,i2,e2,Om2,pom2\n");
+    system("rm -v orbits.txt");        // delete previous output file
+    reb_integrate(sim, tmax);
 
-    for (int i=0; i<5000000; i++){
-        struct reb_particle* sun = &sim->particles[0];
-        struct reb_particle* p1 = &sim->particles[1];
-        struct reb_particle* pert = &sim->particles[2];
-
-        double* star_sx = rebx_get_param(rebx, sun->ap, "sx");
-        double* star_sy = rebx_get_param(rebx, sun->ap, "sy");
-        double* star_sz = rebx_get_param(rebx, sun->ap, "sz");
-
-        double* sx1 = rebx_get_param(rebx, p1->ap, "sx");
-        double* sy1 = rebx_get_param(rebx, p1->ap, "sy");
-        double* sz1 = rebx_get_param(rebx, p1->ap, "sz");
-
-        struct reb_orbit o1 = reb_tools_particle_to_orbit(sim->G, *p1, *sun);
-        double a1 = o1.a;
-        double Om1 = o1.Omega;
-        double i1 = o1.inc;
-        double pom1 = o1.pomega;
-        double f1 = o1.f;
-        double e1 = o1.e;
-
-        struct reb_vec3d s1 = {*sx1, *sy1, *sz1};
-
-        struct reb_particle com = reb_get_com_of_pair(sim->particles[0],sim->particles[1]);
-        struct reb_orbit o2 = reb_tools_particle_to_orbit(sim->G, *pert, com);
-        double a2 = o2.a;
-        double Om2 = o2.Omega;
-        double i2 = o2.inc;
-        double pom2 = o2.pomega;
-        double e2 = o2.e;
-
-        // Interpret in the planet frame
-        double magstar = sqrt((*star_sx) * (*star_sx) + (*star_sy) * (*star_sy) + (*star_sz) * (*star_sz));
-        double mag1 = sqrt((*sx1) * (*sx1) + (*sy1) * (*sy1) + (*sz1) * (*sz1));
-        double ob1 = acos(s1.z / mag1) * (180 / M_PI);
-
-        if (i % 5000 == 0){
-            // printf("t=%e\t a1=%.6f\t o1=%0.5f\n", sim->t / (2 * M_PI), a1, ob1);
-            struct reb_vec3d gtot = rebx_tools_spin_and_orbital_angular_momentum(rebx);
-            double gtot_mag = sqrt((gtot.x) * (gtot.x) + (gtot.y) * (gtot.y) + (gtot.z) * (gtot.z));
-            printf("Gtot: %e, %e, %e\n", gtot.x/gtot_mag, gtot.y/gtot_mag, gtot.z/gtot_mag);
-        }
-        //fprintf(f, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%.e,%e\n", sim->t / (2 * M_PI), *star_sx, *star_sy, *star_sz, magstar, a1, i1, e1, s1.x, s1.y, s1.z, mag1, pom1, Om1, f1, a2, i2, e2, Om2, pom2);
-        reb_integrate(sim, sim->t+(10 * 2 * M_PI));
-    }
-   rebx_free(rebx);
-   reb_free_simulation(sim);
+    rebx_free(rebx);
+    reb_free_simulation(sim);
 }
 
 void heartbeat(struct reb_simulation* sim){
+    // Output spin and orbital information to file
+    if(reb_output_check(sim, 10)){        // outputs every 10 REBOUND years
+      struct rebx_extras* const rebx = sim->extras;
+      FILE* of = fopen("output.txt", "a");
+      if (of==NULL){
+          reb_error(sim, "Can not open file.");
+          return;
+      }
+
+      struct reb_particle* sun = &sim->particles[0];
+      struct reb_particle* p1 = &sim->particles[1];
+      struct reb_particle* pert = &sim->particles[2];
+
+      double* sx_sun = rebx_get_param(rebx, sun->ap, "sx");
+      double* sy_sun = rebx_get_param(rebx, sun->ap, "sy");
+      double* sz_sun = rebx_get_param(rebx, sun->ap, "sz");
+      double mag_sun = sqrt((*sx_sun) * (*sx_sun) + (*sy_sun) * (*sy_sun) + (*sz_sun) * (*sz_sun));
+
+      double* sx_p = rebx_get_param(rebx, p1->ap, "sx");
+      double* sy_p = rebx_get_param(rebx, p1->ap, "sy");
+      double* sz_p = rebx_get_param(rebx, p1->ap, "sz");
+      double mag_p = sqrt((*sx_p) * (*sx_p) + (*sy_p) * (*sy_p) + (*sz_p) * (*sz_p));
+
+      struct reb_orbit o1 = reb_tools_particle_to_orbit(sim->G, *p1, *sun);
+      double a1 = o1.a;
+      double Om1 = o1.Omega;
+      double i1 = o1.inc;
+      double pom1 = o1.pomega;
+      double e1 = o1.e;
+
+      struct reb_particle com = reb_get_com_of_pair(sim->particles[0],sim->particles[1]);
+      struct reb_orbit o2 = reb_tools_particle_to_orbit(sim->G, *pert, com);
+      double a2 = o2.a;
+      double Om2 = o2.Omega;
+      double i2 = o2.inc;
+      double pom2 = o2.pomega;
+      double e2 = o2.e;
+
+      fprintf(of, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, sx_sun, sy_sun, sz_sun, mag_sun, sx_p, sy_p, sz_p, mag_p, a1, Om1, i1, pom1, e1, a2, Om2, i2, pom2, e2); // print spins and orbits
+
+      fclose(of);
+    }
+
     if(reb_output_check(sim, 20.*M_PI)){        // outputs to the screen
-        // reb_output_timing(r, tmax);
+        reb_output_timing(sim, tmax);
     }
-    /*
-    if(reb_output_check(r, 12.)){            // outputs to a file
-        reb_output_orbits(r, "orbits.txt");
-    }
-    */
 }
