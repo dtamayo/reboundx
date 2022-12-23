@@ -414,8 +414,8 @@ int rebx_remove_param(struct rebx_node** apptr, const char* const param_name);
  * @return A void pointer to the parameter. NULL if not found.
  */
 
-void* rebx_get_param(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name);
-struct rebx_param* rebx_get_param_struct(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name);
+void* rebx_get_param(struct rebx_extras* const rebx, struct rebx_node* ap, const char* const param_name);
+struct rebx_param* rebx_get_param_struct(struct rebx_extras* const rebx, struct rebx_node* ap, const char* const param_name);
 void rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* val);
 void rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
 void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val);
@@ -425,6 +425,64 @@ void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum 
 void rebx_set_spin_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
 /** @} */
 /** @} */
+
+/******************************************
+  General utility functions
+*******************************************/
+
+/**
+ * \name General utility functions
+ * @{
+ */
+/**
+ * @defgroup UtilFunc
+ * @brief General utility functions
+ * @{
+ */
+
+/**
+ * @brief Calculate total angular momentum in the simulation (including any spin angular momentum of bodies with spin parameters set).
+ *
+ * @param rebx Pointer to the rebx_extras instance
+ */
+struct reb_vec3d rebx_tools_total_angular_momentum(struct rebx_extras* const rebx);
+
+/**
+ * @brief Rotate simulation (orbits and any included spins) into invariable plane with z along system's total angular momentum (orbital and any spin angular momentum). New x direction will point along the line of nodes between the invariable plane and the original reference plane.
+ *
+ * @param rebx Pointer to the rebx_extras instance
+ */
+void rebx_align_simulation(struct rebx_extras* rebx);
+
+/**
+ * @brief 3D rotation of cartesian vector XYZ into rotated coordinates
+ * @details Consider a reference system XhatYhatZhat, and an orbit in that reference system with Euler angles Omega, inc and omega. Function takes a vector XYZ in the original reference system, and return the corresponding xyz in the rotated system with z along the orbit normal and x along pericenter. Note: Given an orbital plane specified by Omega and inc in the XYZ system, can also use this function with omega=0 to obtain xyz in the rotated system with z along the normal to the plane, and x along the line of nodes between the new and original reference planes. Implements 2.121 of Murray and Dermott Sec 2.8 xyz = P^-1P2^-1P3^-1(XYZ).
+ * @param XYZ (reb_vec3d) Cartesian vector with components in the original reference system.
+ * @param Omega (double) Longitude of ascending node of the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
+ * @param inc (double) Inclination of the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
+ * @param omega (double) Argument of pericenter for the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
+ */
+struct reb_vec3d rebx_tools_rotate_XYZ_to_orbital_xyz(struct reb_vec3d XYZ, const double Omega, const double inc, const double omega);
+
+/**
+ * @brief 3D rotation of cartesian vector xyz in a system referenced to an orbit back into reference coordinates
+ * @details Consider a reference system XhatYhatZhat, and an orbit in that reference system with Euler angles Omega, inc and omega. Function takes a rotated vector xyz in a system where x points toward the pericenter of the orbit, and z points along the orbit normal, and returns the corresponding XYZ in the reference system. Note: Given an orbital plane specified by Omega and inc in the XYZ system, can also use this function with omega=0 to take a rotated xyz in a system with z along the normal to the orbital plane, and x along the line of nodes between the orbital and original reference planes, and get back XYZ in the reference system. Implements 2.121 of Murray and Dermott Sec 2.8 XYZ = P3P2P1(xyz).
+ *
+ * @param xyz (reb_vec3d) Cartesian vector with components in the rotated orbital system.
+ * @param Omega (double) Longitude of ascending node of the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
+ * @param inc (double) Inclination of the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
+ * @param omega (double) Argument of pericenter for the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
+ */
+struct reb_vec3d rebx_tools_rotate_orbital_xyz_to_XYZ(struct reb_vec3d xyz, const double Omega, const double inc, const double omega);
+
+/**
+ * @brief Given a vector pointing along a plane's normal vector, calculate the plane's longitude of ascending node (Omega) and inclination.
+ * @param normal_vec (reb_vec3d) Cartesian vector along plane's normal vector (doesn't need to be a unit vector).
+ * @param Omega (double*) Pointer to a double in which to store the computed longitude of ascending node.
+ * @param inc (double*) Pointer to a double in which to store the computed inclination.
+ */
+void rebx_tools_calc_plane_Omega_inc(struct reb_vec3d normal_vec, double* Omega, double* inc);
+
 
 /******************************************
   Convenience functions for various effects
@@ -441,11 +499,6 @@ void rebx_set_spin_param(struct rebx_extras* const rebx, struct rebx_node** appt
  */
 
 /**
- * @brief Initialize spin ODE
- */
-//void rebx_spin_initialize_ode(struct reb_simulation* sim, struct rebx_force* const effect);
-void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force* const effect);
-/**
  * @brief Calculates beta, the ratio between the radiation pressure force and the gravitational force from the star.
  * @param G Gravitational constant.
  * @param c Speed of light.
@@ -457,6 +510,7 @@ void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force*
  * @return Beta parameter (double).
  */
 double rebx_rad_calc_beta(const double G, const double c, const double source_mass, const double source_luminosity, const double radius, const double density, const double Q_pr);
+
 /**
  * @brief Calculates the particle radius from physical parameters and beta, the ratio of radiation to gravitational forces from the star.
  * @param G Gravitational constant.
@@ -469,6 +523,33 @@ double rebx_rad_calc_beta(const double G, const double c, const double source_ma
  * @return Particle radius (double).
  */
 double rebx_rad_calc_particle_radius(const double G, const double c, const double source_mass, const double source_luminosity, const double beta, const double density, const double Q_pr);
+
+/**
+ * @brief Count how many particles have their moment of inertia and spin set, and initialize corresponding spin ODEs
+ * @details Must be called after setting the moment of inertia and spin of all particles you want to evolve. Attaches spin_ode param to passed effect struct.
+ * @param rebx Pointer to the rebx_extras instance.
+ * @param effect (rebx_force) Force structure to which to attach spin_ode object.
+ */
+void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force* const effect);
+
+/**
+ * @brief Calculate sigma tidal parameter from constant time lag tau.
+ *
+ * @param rebx Pointer to the rebx_extras instance.
+ * @param body (reb_particle) Body for which we are calculating tidal sigma.
+ * @param tau (double) Constant time lag. 
+ */
+double rebx_tides_calc_sigma_from_tau(struct rebx_extras* rebx, struct reb_particle* body, const double tau);
+
+/**
+ * @brief Calculate sigma tidal parameter from tidal quality factor Q assuming circular orbit and synchronized spin (see Lu et al. 2023).
+ *
+ * @param rebx Pointer to the rebx_extras instance.
+ * @param body (reb_particle) Body for which we are calculating tidal sigma.
+ * @param primary (reb_particle) Primary the body is orbiting.
+ * @param Q (double) Tidal quality factor.
+ */
+double rebx_tides_calc_sigma_from_Q(struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* perturber, const double Q);
 
 /**
  * @brief Calculates the Aradial parameter for central_force effect required for a particle to have a particular pericenter precession rate.
@@ -560,19 +641,6 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
  * @return Void pointer to the parameter. NULL if not found or type does not match (will write error to stderr).
  */
 void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
-
-// spin effect helper functions
-double rebx_tides_calc_sigma_from_tau(struct rebx_extras* rebx, const double G, struct reb_particle* body, const double tau);
-double rebx_tides_calc_sigma_from_Q(struct rebx_extras* rebx, const double G, struct reb_particle* body, struct reb_particle* perturber, const double q);
-void rebx_compute_transformation_angles(struct reb_simulation* sim, struct rebx_extras* rebx, double* theta1, double* theta2);
-struct reb_vec3d rebx_EulerAnglesTransform(struct reb_vec3d xyz, const double Omega, const double I, const double omega);
-struct reb_vec3d rebx_EulerAnglesInvTransform(struct reb_vec3d xyz, const double Omega, const double I, const double omega);
-void rebx_align_simulation(struct rebx_extras* rebx);
-struct reb_vec3d rebx_transform_inv_to_planet(double inc, double omega, struct reb_vec3d spin_inv); // Should we consider moving this to base REBOUND?
-struct reb_vec3d rebx_EulerAnglesTransform2(struct reb_vec3d xyz, const double Omega, const double I, const double omega);
-struct reb_vec3d rebx_EulerAnglesInvTransform2(struct reb_vec3d xyz, const double Omega, const double I, const double omega);
-void rebx_align_simulation2(struct rebx_extras* rebx);
-void rebx_tools_calc_Omega_inc_from_normal_vec(struct reb_vec3d xyz, double* Omega, double* inc);
 
 
 /****************************************
