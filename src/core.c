@@ -665,7 +665,7 @@ void rebx_set_spin_param(struct rebx_extras* const rebx, struct rebx_node** appt
  User interface for getting REBOUNDx objects and parameters
  *******************************************************************/
 
-struct rebx_param* rebx_get_param_struct(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name){
+struct rebx_param* rebx_get_param_struct(struct rebx_extras* const rebx, struct rebx_node* ap, const char* const param_name){
     struct rebx_node* current = ap;
     while(current != NULL){
         struct rebx_param* param = current->object;
@@ -678,7 +678,7 @@ struct rebx_param* rebx_get_param_struct(struct rebx_extras* rebx, struct rebx_n
     return NULL;   // name not found. Don't want warnings for optional parameters so don't reb_error
 }
 
-void* rebx_get_param(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name){
+void* rebx_get_param(struct rebx_extras* const rebx, struct rebx_node* ap, const char* const param_name){
     struct rebx_param* param = rebx_get_param_struct(rebx, ap, param_name);
     if (param == NULL){
         return NULL;
