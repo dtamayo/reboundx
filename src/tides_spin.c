@@ -1,7 +1,7 @@
 /**
  * @file    spin.c
  * @brief   Add self-consistent spin, tidal and dynamical equations of motion for bodies with structure
- * @author  Tiger Lu <tiger.lu@yale.edu>, Dan Tamayo <tamayo.daniel@gmail.com>
+ * @author  Tiger Lu <tiger.lu@yale.edu>, Dan Tamayo <tamayo.daniel@gmail.com>, Hanno, Rein <hanno.rein@utoronto.ca>
  *
  * @section     LICENSE
  * Copyright (c) 2015 Dan Tamayo, Hanno Rein
@@ -25,20 +25,17 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
- * $Self-Consistent Spin, Tidal and Dynamical Equations of Motion$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ * $Tides$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
  *
  * ======================= ===============================================
  * Authors                 Tiger Lu, Hanno Rein, D. Tamayo, Sam Hadden, Gregory Laughlin
- * Implementation Paper    `Lu et al., 2022 (in review).
+ * Implementation Paper    Lu et al., 2022 (in review).
  * Based on                `Eggleton et al. 1998 <https://ui.adsabs.harvard.edu/abs/1998ApJ...499..853E/abstract>`_.
- * C Example               :ref:`c_example_pseudo_synchronization`.
- * Python Example          `SelfConsistentSpinTidalDynamicalPseudoSynchronization.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/SelfConsistentSpinTidalDynamicalPseudoSynchronization.ipynb>`_.
+ * C Example               :ref:`c_example_tides_spin_pseudo_synchronization`, :ref:`c_example_tides_spin_migration_driven_obliquity_tides`, :ref:`c_example_tides_spin_kozai`.
+ * Python Example          `TidesSpinPseudoSynchronization.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesSpinPseudoSynchronization.ipynb>`_.
  * ======================= ===============================================
  *
- * This adds constant time lag tidal interactions between orbiting bodies in the simulation and the primary, both from tides raised on the primary and on the other bodies.
- * In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' physical radius particles[i].r, k2 (potential Love number of degree 2), constant time lag tau, and rotation rate Omega. See Baronett et al. (2021), Hut (1981), and Bolmont et al. 2015 above.
- *
- * If tau is not set, it will default to zero and yield the conservative piece of the tidal potential.
+ * This effect tracks both the spin and orbital evolution of bodies under constant-time lag tides raised on both the primary and on the orbiting bodies.
  *
  * **Effect Parameters**
  *
