@@ -38,6 +38,7 @@ int main(int argc, char* argv[]){
     sim->N_active = 3;
     sim->integrator = REB_INTEGRATOR_WHFAST;
     sim->dt = 1e-3;
+    sim->heartbeat = heartbeat;
 
     // Add REBOUNDx Additional effects
     // First Spin
@@ -88,6 +89,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "tau_a", -5e6 * 2 * M_PI);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "tau_a", (-5e6 * 2 * M_PI) / 1.1);
 
+    // printf("Are we even initializing");
     reb_move_to_com(sim);
     rebx_align_simulation2(rebx);
     rebx_spin_initialize_ode(rebx, effect);
@@ -149,11 +151,10 @@ void heartbeat(struct reb_simulation* sim){
     double e2 = o2.e;
 
     fprintf(of, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, sx_sun, sy_sun, sz_sun, mag_sun, sx_p1, sy_p1, sz_p1, mag_p1, sx_p2, sy_p2, sz_p2, mag_p2, a1, Om1, i1, pom1, e1, a2, Om2, i2, pom2, e2);  // prints the spins and orbits of all bodies
-
     fclose(of);
   }
 
-  if(reb_output_check(sim, 500.*M_PI)){        // outputs to the screen
+  if(reb_output_check(sim, 100.*M_PI)){        // outputs to the screen
       reb_output_timing(sim, tmax);
   }
 }
