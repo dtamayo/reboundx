@@ -318,7 +318,7 @@ struct reb_vec3d rebx_tools_total_angular_momentum(struct rebx_extras* const reb
 	const int N = sim->N;
 	const struct reb_particle* restrict const particles = sim->particles;
 	const int N_var = sim->N_var;
-    struct reb_vec3d L = reb_tools_angular_momentum(sim); 
+    struct reb_vec3d L = reb_tools_angular_momentum(sim);
     // Add spin angular momentum of any particles with spin parameters set
     for (int i=0;i<N-N_var;i++){
 		struct reb_particle pi = particles[i];
@@ -374,3 +374,32 @@ void rebx_align_simulation(struct rebx_extras* const rebx){
   }
 }
 
+// TLu transformation matrix
+struct reb_vec3d rebx_transform_inv_to_planet(struct reb_vec3d spin_inv, double inc, double omega){
+    // This ts a vector from the INVARIANT frame to the PLANET frame
+    double sx = spin_inv.x;
+    double sy = spin_inv.y;
+    double sz = spin_inv.z;
+
+    printf("%e %e %e %e %e\n", sx, sy, sz, inc, omega);
+
+    double t[3][3];
+
+    t[0][0] = cos(omega);
+    t[0][1] = sin(omega);
+    t[0][2] = 0;
+    t[1][0] = -cos(inc) * sin(omega);
+    t[1][1] = cos(inc) * cos(omega);
+    t[1][2] = sin(inc);
+    t[2][0] = sin(inc) * sin(omega);
+    t[2][1] = -sin(inc) * cos(omega);
+    t[2][2] = cos(inc);
+
+    struct reb_vec3d spin_planet = {0};
+
+    spin_planet.x = sx * t[0][0] + sy * t[0][1] + sz * t[0][2];
+    spin_planet.y = sx * t[1][0] + sy * t[1][1] + sz * t[1][2];
+    spin_planet.z = sx * t[2][0] + sy * t[2][1] + sz * t[2][2];
+
+    return spin_planet;
+}
