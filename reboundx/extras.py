@@ -28,31 +28,6 @@ REBX_BINARY_WARNINGS = [
     (False,16384, "REBOUNDx: Binary file was saved with a different version of REBOUNDx. Binary format might have changed. Check that effects and parameters are loaded as expected.")
 ]
 
-
-# This is probably not the best way to do this
-class reb_vec3d(Structure):
-    _fields_ = [("x", c_double),
-                ("y", c_double),
-                ("z", c_double)]
-
-    def __init__(self, x = None, y = None, z = None):
-        self.x = x
-        self.y = y
-        self.z = z
-
-
-    def inv_to_planet_frame(self, inc, Omega):
-        """
-        Transforms from the invariant frame into the rotating frame of the planet
-        This frame is characterized by the z-axis aligned with the planet's orbit normal, and the x-axis along the direction of the planet's ascending node.
-        Requires the planet's inclination and longitude of ascending node (in radians) as inputs
-        """
-        clibreboundx.rebx_transform_inv_to_planet.restype = reb_vec3d
-        print(inc, Omega, self.x, self.y, self.z)
-        sp = clibreboundx.rebx_transform_inv_to_planet(byref(self), c_double(inc), c_double(Omega))
-        return [sp.x, sp.y, sp.z]
-
-
 class Extras(Structure):
     """
     Main object used for all REBOUNDx operations, tied to a particular REBOUND simulation.
