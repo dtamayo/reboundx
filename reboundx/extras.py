@@ -281,7 +281,7 @@ class Extras(Structure):
         """
         Returns a list of the three (x,y,z) components of the total angular momentum of all particles in the simulation.
         """
-        clibreboundx.rebx_tools_total_angular_momentum.restype = reb_vec3d
+        clibreboundx.rebx_tools_total_angular_momentum.restype = rebound.reb_vec3d
         L = clibreboundx.rebx_tools_total_angular_momentum(byref(self))
         return [L.x, L.y, L.z]
 
