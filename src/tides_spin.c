@@ -416,31 +416,3 @@ double rebx_tides_calc_sigma_from_Q(struct rebx_extras* rebx, struct reb_particl
     return 0;
   }
 }
-
-// TLu transformation matrix
-struct reb_vec3d rebx_transform_inv_to_planet(double inc, double omega, struct reb_vec3d spin_inv){
-    // This ts a vector from the INVARIANT frame to the PLANET frame
-    double sx = spin_inv.x;
-    double sy = spin_inv.y;
-    double sz = spin_inv.z;
-
-    double t[3][3];
-
-    t[0][0] = cos(omega);
-    t[0][1] = sin(omega);
-    t[0][2] = 0;
-    t[1][0] = -cos(inc) * sin(omega);
-    t[1][1] = cos(inc) * cos(omega);
-    t[1][2] = sin(inc);
-    t[2][0] = sin(inc) * sin(omega);
-    t[2][1] = -sin(inc) * cos(omega);
-    t[2][2] = cos(inc);
-
-    struct reb_vec3d spin_planet = {0};
-
-    spin_planet.x = sx * t[0][0] + sy * t[0][1] + sz * t[0][2];
-    spin_planet.y = sx * t[1][0] + sy * t[1][1] + sz * t[1][2];
-    spin_planet.z = sx * t[2][0] + sy * t[2][1] + sz * t[2][2];
-
-    return spin_planet;
-}

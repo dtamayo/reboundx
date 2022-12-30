@@ -243,6 +243,7 @@ class Extras(Structure):
         clibreboundx.rebx_xyz_to_spherical(byref(mag), byref(theta), byref(phi))
         return [mag.value, theta.value, phi.value]
 
+<<<<<<< HEAD
     def calc_spin_rel_to_plane(self, p, normalvecx, normalvecy, normalvecz):
         normalvec = rebound.reb_vec3d(normalvecx, normalvecy, normalvecz)
         clibreboundx.rebx_calc_spin_rel_to_plane.restype = rebound.reb_vec3d
@@ -275,6 +276,15 @@ class Extras(Structure):
         clibreboundx.rebx_tools_calc_plane_Omega_inc(v, byref(Omega), byref(inc))
         return Omega.value, inc.value
     '''
+
+    def calculate_total_angular_momentum(self):
+        """
+        Returns a list of the three (x,y,z) components of the total angular momentum of all particles in the simulation.
+        """
+        clibreboundx.rebx_tools_total_angular_momentum.restype = reb_vec3d
+        L = clibreboundx.rebx_tools_total_angular_momentum(byref(self))
+        return [L.x, L.y, L.z]
+
     def process_messages(self):
         try:
             self._sim.contents.process_messages()
