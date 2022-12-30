@@ -260,7 +260,7 @@ struct reb_vec3d rebx_tools_total_angular_momentum(struct rebx_extras* const reb
 	const int N = sim->N;
 	const struct reb_particle* restrict const particles = sim->particles;
 	const int N_var = sim->N_var;
-    struct reb_vec3d L = reb_tools_angular_momentum(sim); 
+    struct reb_vec3d L = reb_tools_angular_momentum(sim);
     // Add spin angular momentum of any particles with spin parameters set
     for (int i=0;i<N-N_var;i++){
 		struct reb_particle pi = particles[i];
