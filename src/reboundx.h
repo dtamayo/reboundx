@@ -447,42 +447,6 @@ void rebx_set_spin_param(struct rebx_extras* const rebx, struct rebx_node** appt
  */
 struct reb_vec3d rebx_tools_total_angular_momentum(struct rebx_extras* const rebx);
 
-/**
- * @brief Rotate simulation (orbits and any included spins) into invariable plane with z along system's total angular momentum (orbital and any spin angular momentum). New x direction will point along the line of nodes between the invariable plane and the original reference plane.
- *
- * @param rebx Pointer to the rebx_extras instance
- */
-void rebx_align_simulation(struct rebx_extras* rebx);
-
-/**
- * @brief 3D rotation of cartesian vector XYZ into rotated coordinates
- * @details Consider a reference system XhatYhatZhat, and an orbit in that reference system with Euler angles Omega, inc and omega. Function takes a vector XYZ in the original reference system, and return the corresponding xyz in the rotated system with z along the orbit normal and x along pericenter. Note: Given an orbital plane specified by Omega and inc in the XYZ system, can also use this function with omega=0 to obtain xyz in the rotated system with z along the normal to the plane, and x along the line of nodes between the new and original reference planes. Implements 2.121 of Murray and Dermott Sec 2.8 xyz = P^-1P2^-1P3^-1(XYZ).
- * @param XYZ (reb_vec3d) Cartesian vector with components in the original reference system.
- * @param Omega (double) Longitude of ascending node of the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
- * @param inc (double) Inclination of the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
- * @param omega (double) Argument of pericenter for the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
- */
-struct reb_vec3d rebx_tools_rotate_XYZ_to_orbital_xyz(struct reb_vec3d XYZ, const double Omega, const double inc, const double omega);
-
-/**
- * @brief 3D rotation of cartesian vector xyz in a system referenced to an orbit back into reference coordinates
- * @details Consider a reference system XhatYhatZhat, and an orbit in that reference system with Euler angles Omega, inc and omega. Function takes a rotated vector xyz in a system where x points toward the pericenter of the orbit, and z points along the orbit normal, and returns the corresponding XYZ in the reference system. Note: Given an orbital plane specified by Omega and inc in the XYZ system, can also use this function with omega=0 to take a rotated xyz in a system with z along the normal to the orbital plane, and x along the line of nodes between the orbital and original reference planes, and get back XYZ in the reference system. Implements 2.121 of Murray and Dermott Sec 2.8 XYZ = P3P2P1(xyz).
- *
- * @param xyz (reb_vec3d) Cartesian vector with components in the rotated orbital system.
- * @param Omega (double) Longitude of ascending node of the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
- * @param inc (double) Inclination of the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
- * @param omega (double) Argument of pericenter for the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
- */
-struct reb_vec3d rebx_tools_rotate_orbital_xyz_to_XYZ(struct reb_vec3d xyz, const double Omega, const double inc, const double omega);
-
-/**
- * @brief Given a vector pointing along a plane's normal vector, calculate the plane's longitude of ascending node (Omega) and inclination.
- * @param normal_vec (reb_vec3d) Cartesian vector along plane's normal vector (doesn't need to be a unit vector).
- * @param Omega (double*) Pointer to a double in which to store the computed longitude of ascending node.
- * @param inc (double*) Pointer to a double in which to store the computed inclination.
- */
-void rebx_tools_calc_plane_Omega_inc(struct reb_vec3d normal_vec, double* Omega, double* inc);
-
 
 /******************************************
   Convenience functions for various effects
@@ -549,7 +513,7 @@ double rebx_tides_calc_sigma_from_tau(struct rebx_extras* rebx, struct reb_parti
  * @param primary (reb_particle) Primary the body is orbiting.
  * @param Q (double) Tidal quality factor.
  */
-double rebx_tides_calc_sigma_from_Q(struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* perturber, const double Q);
+double rebx_tides_calc_sigma_from_Q(struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* primary, const double Q);
 
 /**
  * @brief Calculates the Aradial parameter for central_force effect required for a particle to have a particular pericenter precession rate.
@@ -607,6 +571,65 @@ double rebx_central_force_potential(struct rebx_extras* const rebx);
  * @return Potential corresponding to the effect from all particles of their additional gravity field harmonics
  */
 double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
+
+/** @} */
+/** @} */
+
+/********************************
+ * Functions to help with rotations
+ *******************************/
+
+/**
+ * \name Functions to help with rotations
+ * @{
+ */
+/**
+ * @defgroup RotationFuncs
+ * @brief These functions help with various rotations of the coordinate axes and calculating vectors in different bases.
+ * @{
+ */
+
+/**
+ * @brief Rotate simulation (orbits and any included spins) into invariable plane with z along system's total angular momentum (orbital and any spin angular momentum). New x direction will point along the line of nodes between the invariable plane and the original reference plane.
+ *
+ * @param rebx Pointer to the rebx_extras instance
+ */
+void rebx_align_simulation(struct rebx_extras* rebx);
+
+struct reb_vec3d rebx_tools_calc_spin_obl_psi(struct rebx_extras* const rebx, struct reb_particle* const p, struct reb_particle* const primary, double* const obl, double* const psi);
+
+/**
+ * @brief 3D rotation of cartesian vector XYZ into rotated coordinates
+ * @details Consider a reference system XhatYhatZhat, and an orbit in that reference system with Euler angles Omega, inc and omega. Function takes a vector XYZ in the original reference system, and return the corresponding xyz in the rotated system with z along the orbit normal and x along pericenter. Note: Given an orbital plane specified by Omega and inc in the XYZ system, can also use this function with omega=0 to obtain xyz in the rotated system with z along the normal to the plane, and x along the line of nodes between the new and original reference planes. Implements 2.121 of Murray and Dermott Sec 2.8 xyz = P^-1P2^-1P3^-1(XYZ).
+ * @param XYZ (reb_vec3d) Cartesian vector with components in the original reference system.
+ * @param Omega (double) Longitude of ascending node of the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
+ * @param inc (double) Inclination of the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
+ * @param omega (double) Argument of pericenter for the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
+ */
+struct reb_vec3d rebx_tools_rotate_XYZ_to_orbital_xyz(struct reb_vec3d XYZ, const double Omega, const double inc, const double omega);
+
+/**
+ * @brief 3D rotation of cartesian vector xyz in a system referenced to an orbit back into reference coordinates
+ * @details Consider a reference system XhatYhatZhat, and an orbit in that reference system with Euler angles Omega, inc and omega. Function takes a rotated vector xyz in a system where x points toward the pericenter of the orbit, and z points along the orbit normal, and returns the corresponding XYZ in the reference system. Note: Given an orbital plane specified by Omega and inc in the XYZ system, can also use this function with omega=0 to take a rotated xyz in a system with z along the normal to the orbital plane, and x along the line of nodes between the orbital and original reference planes, and get back XYZ in the reference system. Implements 2.121 of Murray and Dermott Sec 2.8 XYZ = P3P2P1(xyz).
+ *
+ * @param xyz (reb_vec3d) Cartesian vector with components in the rotated orbital system.
+ * @param Omega (double) Longitude of ascending node of the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
+ * @param inc (double) Inclination of the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
+ * @param omega (double) Argument of pericenter for the orbit in XYZ frame. Orbital frame will be used as the rotated axes.
+ */
+struct reb_vec3d rebx_tools_rotate_orbital_xyz_to_XYZ(struct reb_vec3d xyz, const double Omega, const double inc, const double omega);
+
+/**
+ * @brief Given a vector pointing along a plane's normal vector, calculate the plane's longitude of nodes (Omega, specifically the direction pointing along zhat cross normal_vec) and inclination.
+ * @param normal_vec (reb_vec3d) Cartesian vector along plane's normal vector (doesn't need to be a unit vector).
+ * @param Omega (double*) Pointer to a double in which to store the computed longitude of ascending node.
+ * @param inc (double*) Pointer to a double in which to store the computed inclination.
+ */
+void rebx_tools_calc_plane_Omega_inc(struct reb_vec3d normal_vec, double* Omega, double* inc);
+struct reb_vec3d rebx_spherical_to_xyz(const double mag, const double theta, const double phi);
+void rebx_xyz_to_spherical(struct rebx_extras* const rebx, struct reb_vec3d const xyz, double* mag, double* theta, double* phi);
+struct reb_vec3d rebx_calc_spin_rel_to_plane(struct rebx_extras* const rebx, struct reb_particle* const p, struct reb_vec3d const normalvec);
+struct reb_vec3d rebx_calc_spin_rel_to_orbit(struct rebx_extras* const rebx, struct reb_particle* const p, struct reb_particle* primary);
 
 /** @} */
 /** @} */

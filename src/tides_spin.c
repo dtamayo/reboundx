@@ -401,10 +401,10 @@ double rebx_tides_calc_sigma_from_tau(struct rebx_extras* rebx, struct reb_parti
   }
 }
 
-double rebx_tides_calc_sigma_from_Q(struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* perturber, const double Q){
+double rebx_tides_calc_sigma_from_Q(struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* primary, const double Q){
   struct reb_simulation* const sim = rebx->sim;
   const double G = sim->G;
-  struct reb_orbit orb = reb_tools_particle_to_orbit(G, *body, *perturber);
+  struct reb_orbit orb = reb_tools_particle_to_orbit(G, *body, *primary);
   const double r = body->r;
   const double n = orb.n;
   const double* k2 = rebx_get_param(rebx, body->ap, "k2");
