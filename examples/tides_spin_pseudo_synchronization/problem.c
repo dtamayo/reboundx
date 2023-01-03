@@ -17,7 +17,7 @@
 #include "tides_spin.c"
 
 void heartbeat(struct reb_simulation* sim);
-double tmax = 10000 * 2 * M_PI;
+double tmax = 1000 * 2 * M_PI;
 
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
@@ -31,7 +31,8 @@ int main(int argc, char* argv[]){
     const double p1_mass = 1. * 9.55e-4; // in Jupiter masses * 1 Jupiter Mass / 1 Solar Mass
     const double p1_rad = 1. * 4.676e-4; // in Jupiter rad * 1 jupiter rad / 1 AU
     const double p1_e = 0.01;
-    reb_add_fmt(sim, "m a e r", p1_mass, 0.04072, p1_e, p1_rad); // Planet 1
+    const double p1_inc = M_PI/4;
+    reb_add_fmt(sim, "m a e inc r", p1_mass, 0.04072, p1_e, p1_inc, p1_rad); // Planet 1
 
     sim->N_active = 2;
     sim->integrator = REB_INTEGRATOR_WHFAST;
@@ -51,8 +52,8 @@ int main(int argc, char* argv[]){
     const double solar_spin_period = 27 * 2 * M_PI / 365; // 27 Days in REBOUND time units
     const double solar_spin = (2 * M_PI) / solar_spin_period;
     rebx_set_param_double(rebx, &sim->particles[0].ap, "sx", solar_spin * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sy", solar_spin * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sz", solar_spin * 1.0);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sy", solar_spin / sqrt(2.));
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sz", solar_spin / sqrt(2.));
 
     // While not technically necessary, the fully dimensional moment of inertia (moi) should also be set
     // This is required to evolve the spin axis! Without setting this value, the spin axis will remain stationary.
@@ -104,7 +105,13 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma);
 
     reb_move_to_com(sim);
-    rebx_align_simulation(rebx); // This rotates our simulation into the invariable plane aligned with the total ang. momentum (including spin)
+
+    // Let's create a reb_rotation object that rotates to new axes with newz pointing along the total ang. momentum, and x along the line of
+    // nodes with the invariable plane (along z cross newz)
+    struct reb_vec3d newz = rebx_tools_total_angular_momentum(rebx);
+    struct reb_vec3d newx = reb_vec3d_cross((struct reb_vec3d){.z =1}, newz);
+    struct reb_rotation rot = reb_rotation_init_to_new_axes(newz, newx);
+    rebx_simulation_irotate(rebx, rot); // This rotates our simulation into the invariable plane aligned with the total ang. momentum (including spin)
     rebx_spin_initialize_ode(rebx, effect); // We must call this function before starting our integration to track the spins
 
     system("rm -v output.txt"); // remove previous output file
