@@ -88,9 +88,15 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "tau_a", -5e6 * 2 * M_PI);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "tau_a", (-5e6 * 2 * M_PI) / 1.1);
 
-    // printf("Are we even initializing");
     reb_move_to_com(sim);
-    rebx_align_simulation(rebx);
+
+    // Let's create a reb_rotation object that rotates to new axes with newz pointing along the total ang. momentum, and x along the line of
+    // nodes with the invariable plane (along z cross newz)
+    struct reb_vec3d newz = rebx_tools_total_angular_momentum(rebx);
+    struct reb_vec3d newx = reb_vec3d_cross((struct reb_vec3d){.z =1}, newz);
+    struct reb_rotation rot = reb_rotation_init_to_new_axes(newz, newx);
+    rebx_simulation_irotate(rebx, rot); // This rotates our simulation into the invariable plane aligned with the total ang. momentum (including spin)
+    
     rebx_spin_initialize_ode(rebx, effect);
 
     // Run simulation
@@ -100,7 +106,7 @@ int main(int argc, char* argv[]){
     printf("Migration Switching Off\n");
     rebx_set_param_double(rebx, &sim->particles[1].ap, "tau_a", INFINITY);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "tau_a", INFINITY);
-    
+
     reb_integrate(sim, tmax);
 
     rebx_free(rebx);
