@@ -60,11 +60,3 @@ This isn't an effect that's loaded like the others, but an object that facilitat
 $$$$$$$$$$$$
 Miscellaneous Utilities
 ^^^^^^^^^^^^^^^^^^^^^^^
-
-$$$$$$$$$$$$$$$$$
-Inner disk edge
-^^^^^^^^^^^^^^^^^
-
-$$$$$$$$$$$$$$$$$$
-Type I migration
-^^^^^^^^^^^^^^^^^^
