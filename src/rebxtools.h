@@ -2,7 +2,7 @@
  * @file    rebxtools.h
  * @brief   Helper functions for reboundx
  * @author  Dan Tamayo <tamayo.daniel@gmail.com>
- * 
+ *
  * @section     LICENSE
  * Copyright (c) 2015 Dan Tamayo, Hanno Rein
  *
@@ -27,6 +27,7 @@
 #define _REBXTOOLS_H
 
 struct reb_simulation;
+struct rebx_extras;
 struct reb_particle;
 struct reb_orbit;
 struct reb_vec3d;
@@ -47,21 +48,12 @@ Effect helper functions
 ****************************************/
 const double rebx_calculate_planet_trap(const double r, const double dedge, const double hedge);
 
+// TLu 11/8/22
+struct reb_vec3d rebx_tools_spin_and_orbital_angular_momentum(const struct rebx_extras* const rebx);
 /*
-struct reb_orbit rebxtools_particle_to_orbit_err(double G, struct reb_particle* p, struct reb_particle* primary, int* err);
-
-struct reb_orbit rebxtools_particle_to_orbit(double G, struct reb_particle* p, struct reb_particle* primary);
-
-void rebxtools_orbit2p(double G, struct reb_particle* p, struct reb_particle* primary, struct reb_orbit* o);
-
-void rebxtools_orbit_to_particle(double G, struct reb_particle* p, struct reb_particle* primary, double a, double e, double inc, double Omega, double omega, double f, int* err);
-
-void rebxtools_move_to_com(struct reb_simulation* const sim);
-
-void rebxtools_update_com_with_particle(struct reb_particle* const com, const struct reb_particle* p);
-
-void rebxtools_update_com_without_particle(struct reb_particle* const com, const struct reb_particle* p);
-
-void rebxtools_get_com(const struct reb_simulation* const sim, const int first_N, struct reb_particle* com);
+void compute_transformation_angles(struct reb_simulation* sim, struct rebx_extras* rebx, double* theta1, double* theta2);
+struct reb_vec3d EulerAnglesTransform(struct reb_vec3d xyz, const double Omega, const double I, const double omega);
+void align_simulation(struct reb_simulation* sim, struct rebx_extras* rebx);
+struct reb_vec3d rebx_transform_inv_to_planet(double inc, double omega, struct reb_vec3d spin_inv);
 */
 #endif
