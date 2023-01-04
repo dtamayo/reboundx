@@ -159,8 +159,12 @@ class Extras(Structure):
         self.process_messages()
 
     #######################################
-    # Convenience Functions
+    # Effect Specific Functions
     #######################################
+    
+    def initialize_spin_ode(self, force):
+        clibreboundx.rebx_spin_initialize_ode.restype = None
+        return clibreboundx.rebx_spin_initialize_ode(byref(self), byref(force))
 
     def rad_calc_beta(self, G, c, source_mass, source_luminosity, radius, density, Q_pr):
         clibreboundx.rebx_rad_calc_beta.restype = c_double
@@ -193,6 +197,11 @@ class Extras(Structure):
         clibreboundx.rebx_gr_hamiltonian.restype = c_double
         return clibreboundx.rebx_gr_hamiltonian(byref(self), byref(force))
 
+    def calculate_total_angular_momentum(self):
+        clibreboundx.rebx_tools_total_angular_momentum.restype=rebound.reb_vec3d
+        L = clibreboundx.rebx_tools_total_angular_momentum(byref(self))
+        return [L.x, L.y, L.z]
+
     # Potential calculation functions
     def gr_potential_potential(self, force):
         clibreboundx.rebx_gr_potential_potential.restype = c_double
@@ -214,20 +223,65 @@ class Extras(Structure):
         clibreboundx.rebx_gravitational_harmonics_potential.restype = c_double
         return clibreboundx.rebx_gravitational_harmonics_potential(byref(self))
 
-    # For the spin effects
-    def initialize_spin_ode(self, force):
-        clibreboundx.rebx_spin_initialize_ode.restype = None
-        return clibreboundx.rebx_spin_initialize_ode(byref(self), byref(force))
+    # Functions to help with rotations
 
-    def align_simulation(self):
-        clibreboundx.rebx_align_simulation.restype = None
-        return clibreboundx.rebx_align_simulation(byref(self))
+    def rotate_params(self, normalvec):
+        clibreboundx.rebx_rotate_params.restype = None
+        clibreboundx.rebx_rotate_params(byref(self), rebound.reb_vec3d(normalvec))
+  
+    '''
+    def spherical_to_xyz(self, mag, theta, phi):
+        clibreboundx.rebx_spherical_to_xyz.restype = rebound.reb_vec3d
+        xyz = clibreboundx.rebx_spherical_to_xyz(c_double(mag), c_double(theta), c_double(phi))
+        return [xyz.x, xyz.y, xyz.z]
+    
+    def xyz_to_spherical(self, x, y, z):
+        clibreboundx.rebx_xyz_to_spherical.restype = None
+        mag = c_double() 
+        theta = c_double() 
+        phi = c_double() 
+        clibreboundx.rebx_xyz_to_spherical(byref(mag), byref(theta), byref(phi))
+        return [mag.value, theta.value, phi.value]
+
+<<<<<<< HEAD
+    def calc_spin_rel_to_plane(self, p, normalvecx, normalvecy, normalvecz):
+        normalvec = rebound.reb_vec3d(normalvecx, normalvecy, normalvecz)
+        clibreboundx.rebx_calc_spin_rel_to_plane.restype = rebound.reb_vec3d
+        spin = clibreboundx.rebx_calc_spin_rel_to_plane(byref(self), byref(p), normalvec)
+        return [spin.x, spin.y, spin.z]
+    
+    def calc_spin_rel_to_orbit(self, p, primary=None):
+        if primary is None:
+            primary = p._sim.contents.particles[0]
+        clibreboundx.rebx_calc_spin_rel_to_orbit.restype = rebound.reb_vec3d
+        spin = clibreboundx.rebx_calc_spin_rel_to_orbit(byref(self), byref(p), byref(primary))
+        return [spin.x, spin.y, spin.z]
+
+    def rotate_XYZ_to_orbital_xyz(self, XYZ, Omega, inc, omega):
+        vec = rebound.reb_vec3d(XYZ[0], XYZ[1], XYZ[2])
+        clibreboundx.rebx_tools_rotate_XYZ_to_orbital_xyz.restype = rebound.reb_vec3d
+        xyz = clibreboundx.rebx_tools_rotate_XYZ_to_orbital_xyz(vec, c_double(Omega), c_double(inc), c_double(omega))
+        return [xyz.x, xyz.y, xyz.z]
+    
+    def rotate_orbital_xyz_to_XYZ(self, xyz, Omega, inc, omega):
+        vec = rebound.reb_vec3d(xyz[0], xyz[1], xyz[2])
+        clibreboundx.rebx_tools_rotate_orbital_xyz_to_XYZ.restype = rebound.reb_vec3d
+        XYZ = clibreboundx.rebx_tools_rotate_orbital_xyz_to_XYZ(vec, c_double(Omega), c_double(inc), c_double(omega))
+        return [XYZ.x, XYZ.y, XYZ.z]
+
+    def calc_plane_Omega_inc(self, vec):
+        v = rebound.reb_vec3d(vec[0], vec[1], vec[2])
+        Omega = c_double()
+        inc = c_double()
+        clibreboundx.rebx_tools_calc_plane_Omega_inc(v, byref(Omega), byref(inc))
+        return Omega.value, inc.value
+    '''
 
     def calculate_total_angular_momentum(self):
         """
         Returns a list of the three (x,y,z) components of the total angular momentum of all particles in the simulation.
         """
-        clibreboundx.rebx_tools_total_angular_momentum.restype = reb_vec3d
+        clibreboundx.rebx_tools_total_angular_momentum.restype = rebound.reb_vec3d
         L = clibreboundx.rebx_tools_total_angular_momentum(byref(self))
         return [L.x, L.y, L.z]
 

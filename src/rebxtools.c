@@ -3,10 +3,21 @@
 #include <stdio.h>
 #include "reboundx.h"
 
-/* only accepts one reference particle if coordinates=REBX_COORDINATES_PARTICLE.
- * calculate_effect function should check for edge case where particle and reference are the same
- * (could happen e.g. with barycentric coordinates with test particles and single massive body)
- */
+static double acos2(double num, double denom, double disambiguator){
+    // disambiguator is value that if < 0 means acosine lines in [-pi, 0]. Used for Omega calc
+    double val;
+    double cosine = num/denom;
+    if (cosine > -1. && cosine < 1.){
+        val = acos(cosine);
+        if (disambiguator < 0.){
+            val = -val;
+        }
+    }
+    else{
+        val = (cosine <= -1.) ? M_PI : 0.;
+    }
+    return val;
+}
 
 struct reb_particle rebx_get_com_without_particle(struct reb_particle com, struct reb_particle p){
     com.x = com.x*com.m - p.x*p.m;
@@ -160,6 +171,11 @@ static inline void rebx_subtract_posvel(struct reb_particle* p, struct reb_parti
     p->vz -= massratio*diff->vz;
 }
 
+/* only accepts one reference particle if coordinates=REBX_COORDINATES_PARTICLE.
+ * calculate_effect function should check for edge case where particle and reference are the same
+ * (could happen e.g. with barycentric coordinates with test particles and single massive body)
+ */
+
 void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* const operator, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_particle (*calculate_step) (struct reb_simulation* const sim, struct rebx_operator* const operator, struct reb_particle* p, struct reb_particle* source, const double dt), const double dt){
     struct rebx_extras* const rebx = sim->extras;
     const int N_real = sim->N - sim->N_var;
@@ -239,82 +255,8 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* c
         }
     }
 }
-
-void rebx_tools_calc_plane_Omega_inc(struct reb_vec3d normal_vec, double* Omega, double* inc){
-    double r = sqrt(normal_vec.x*normal_vec.x + normal_vec.y*normal_vec.y + normal_vec.z*normal_vec.z);
-    *inc = acos(normal_vec.z/r);
-    double nx = -normal_vec.y;  // n is the vector pointing toward ascending node
-    double ny = normal_vec.x;
-    double cosine = nx/sqrt(nx*nx + ny*ny);
-    if (cosine > -1. && cosine < 1.){
-       *Omega = acos(cosine);
-       if (ny < 0){             // if ny is < 0, then azimuthal angle of n is in [-pi, 0]
-           *Omega = -*Omega;
-       }
-    }
-    else{
-        *Omega = (cosine <= -1.) ? M_PI : 0.;
-    }
-}
-
-struct reb_vec3d rebx_tools_rotate_XYZ_to_orbital_xyz(struct reb_vec3d XYZ, const double Omega, const double inc, const double omega){
-    // adapted from celmech nbody_simulation_utilities.py. Eq 2.121 of 2.8 in Murray & Dermott, xyz = P1^-1P2^-1P3^-1(XYZ)
-    double X = XYZ.x;
-    double Y = XYZ.y;
-    double Z = XYZ.z;
-
-    double s3 = sin(-Omega);
-    double c3 = cos(-Omega);
-    double x3 = c3 * X - s3 * Y;
-    double y3 = s3 * X + c3 * Y;
-    double z3 = Z;
-
-    double s2 = sin(-inc);
-    double c2 = cos(-inc);
-    double x2 = x3;
-    double y2 = c2 * y3 - s2 * z3;
-    double z2 = s2 * y3 + c2 * z3;
-
-    double s1 = sin(-omega);
-    double c1 = cos(-omega);
-    double x1 = c1 * x2 - s1 * y2;
-    double y1 = s1 * x2 + c1 * y2;
-    double z1 = z2;
-
-    struct reb_vec3d xyz = {x1, y1, z1};
-    return xyz;
-}
-
-struct reb_vec3d rebx_tools_rotate_orbital_xyz_to_XYZ(struct reb_vec3d xyz, const double Omega, const double inc, const double omega){
-    // adapted from celmech nbody_simulation_utilities.py. Uses Eq 2.121 of 2.8 in Murray & Dermott, XYZ = P3P2P1(xyz).
-    double x = xyz.x;
-    double y = xyz.y;
-    double z = xyz.z;
-
-    double s1 = sin(omega);
-    double c1 = cos(omega);
-    double x1 = c1 * x - s1 * y;
-    double y1 = s1 * x + c1 * y;
-    double z1 = z;
-
-    double s2 = sin(inc);
-    double c2 = cos(inc);
-    double x2 = x1;
-    double y2 = c2 * y1 - s2 * z1;
-    double z2 = s2 * y1 + c2 * z1;
-
-    double s3 = sin(Omega);
-    double c3 = cos(Omega);
-    double x3 = c3 * x2 - s3 * y2;
-    double y3 = s3 * x2 + c3 * y2;
-    double z3 = z2;
-
-    struct reb_vec3d XYZ = {x3, y3, z3};
-    return XYZ;
-}
-
 struct reb_vec3d rebx_tools_total_angular_momentum(struct rebx_extras* const rebx){
-  struct reb_simulation* const sim = rebx->sim;
+    struct reb_simulation* const sim = rebx->sim;
 	const int N = sim->N;
 	const struct reb_particle* restrict const particles = sim->particles;
 	const int N_var = sim->N_var;
@@ -337,69 +279,69 @@ struct reb_vec3d rebx_tools_total_angular_momentum(struct rebx_extras* const reb
 	return L;
 }
 
-void rebx_align_simulation(struct rebx_extras* const rebx){
+/*
+struct reb_vec3d rebx_calc_spin_rel_to_plane(struct rebx_extras* const rebx, struct reb_particle* const p, struct reb_vec3d const normalvec){
+    struct reb_simulation* const sim = rebx->sim;
+    const double* sx = rebx_get_param(rebx, p->ap, "sx");
+    const double* sy = rebx_get_param(rebx, p->ap, "sy");
+    const double* sz = rebx_get_param(rebx, p->ap, "sz");
+    struct reb_vec3d spin_rot = {0., 0., 0.};   // set return variable to default in case spin not set
+    if (sx != NULL && sy != NULL && sz != NULL){
+        struct reb_vec3d spin_ref = {*sx, *sy, *sz};
+        // rotate spin vector into axes with z along its orbit normal and x along line of nodes between orbital and reference planes
+        double Omega, inc;
+        rebx_tools_calc_plane_Omega_inc(normalvec, &Omega, &inc);
+        spin_rot = rebx_tools_rotate_XYZ_to_orbital_xyz(spin_ref, Omega, inc, 0); // omega = 0 see XYZ_to_orbital_xyz docstring
+    }
+    else{
+        reb_warning(sim, "Can't calculate spin angles, spin parameters not set for particle.\n");
+	}
+    //fprintf(stderr, "%f\t%f\t%f\t\n", primary->m, *obl, *psi);
+    return spin_rot;
+}
+
+struct reb_vec3d rebx_calc_spin_rel_to_orbit(struct rebx_extras* const rebx, struct reb_particle* const p, struct reb_particle* primary){
+    struct reb_simulation* const sim = rebx->sim;
+    const double G = sim->G;
+    if (primary == NULL){
+        primary = &sim->particles[0];
+    }
+    struct reb_orbit orb = reb_tools_particle_to_orbit(G, *p, *primary);
+    const double* sx = rebx_get_param(rebx, p->ap, "sx");
+    const double* sy = rebx_get_param(rebx, p->ap, "sy");
+    const double* sz = rebx_get_param(rebx, p->ap, "sz");
+    struct reb_vec3d spin_rot = {0., 0., 0.};   // set return variable to default in case spin not set
+    if (sx != NULL && sy != NULL && sz != NULL){
+        struct reb_vec3d spin_ref = {*sx, *sy, *sz};
+        // rotate spin vector into axes with z along its orbit normal and x along line of nodes between orbital and reference planes
+        struct reb_vec3d spin_orb = rebx_tools_rotate_XYZ_to_orbital_xyz(spin_ref, orb.Omega, orb.inc, 0);  // omega = 0, see XYZ_to_orbital doc
+    }
+    else{
+        reb_warning(sim, "Can't calculate spin angles, spin parameters not set for particle.\n");
+	}
+    //fprintf(stderr, "%f\t%f\t%f\t\n", primary->m, *obl, *psi);
+    return spin_rot;
+}
+*/
+void rebx_rotate_params(struct rebx_extras* const rebx, const struct reb_vec3d normalvec){
     // Modified from celmech nbody_simulation_utilities.py to include spin angular momentum
     struct reb_simulation* const sim = rebx->sim;
     const int N_real = sim->N - sim->N_var;
     double Omega, inc;
-    struct reb_vec3d L = rebx_tools_total_angular_momentum(rebx);
-    rebx_tools_calc_plane_Omega_inc(L, &Omega, &inc);
+    reb_tools_calc_plane_Omega_inc(normalvec, &Omega, &inc);
     for (int i = 0; i < N_real; i++){
         struct reb_particle* p = &sim->particles[i];
-	    struct reb_vec3d pos = {p->x, p->y, p->z};
-	    struct reb_vec3d vel = {p->vx, p->vy, p->vz};
-        struct reb_vec3d ps = rebx_tools_rotate_XYZ_to_orbital_xyz(pos, Omega, inc, 0);
-      	struct reb_vec3d vs = rebx_tools_rotate_XYZ_to_orbital_xyz(vel, Omega, inc, 0);
-
-        // Try this for the spin
+        // Rotate spins
         const double* sx = rebx_get_param(rebx, p->ap, "sx");
         const double* sy = rebx_get_param(rebx, p->ap, "sy");
         const double* sz = rebx_get_param(rebx, p->ap, "sz");
         if (sx != NULL && sy != NULL && sz != NULL){
             struct reb_vec3d spin = {*sx, *sy, *sz};
-            struct reb_vec3d ss = rebx_tools_rotate_XYZ_to_orbital_xyz(spin, Omega, inc, 0);
+            struct reb_vec3d ss = reb_tools_rotate_XYZ_to_orbital_xyz(spin, Omega, inc, 0);
 
             rebx_set_param_double(rebx, &p->ap, "sx", ss.x);
             rebx_set_param_double(rebx, &p->ap, "sy", ss.y);
             rebx_set_param_double(rebx, &p->ap, "sz", ss.z);
         }
-
-      	p->x = ps.x;
-      	p->y = ps.y;
-      	p->z = ps.z;
-
-      	p->vx = vs.x;
-      	p->vy = vs.y;
-      	p->vz = vs.z;
-  }
-}
-
-// TLu transformation matrix
-struct reb_vec3d rebx_transform_inv_to_planet(struct reb_vec3d spin_inv, double inc, double omega){
-    // This ts a vector from the INVARIANT frame to the PLANET frame
-    double sx = spin_inv.x;
-    double sy = spin_inv.y;
-    double sz = spin_inv.z;
-
-    printf("%e %e %e %e %e\n", sx, sy, sz, inc, omega);
-
-    double t[3][3];
-
-    t[0][0] = cos(omega);
-    t[0][1] = sin(omega);
-    t[0][2] = 0;
-    t[1][0] = -cos(inc) * sin(omega);
-    t[1][1] = cos(inc) * cos(omega);
-    t[1][2] = sin(inc);
-    t[2][0] = sin(inc) * sin(omega);
-    t[2][1] = -sin(inc) * cos(omega);
-    t[2][2] = cos(inc);
-
-    struct reb_vec3d spin_planet = {0};
-
-    spin_planet.x = sx * t[0][0] + sy * t[0][1] + sz * t[0][2];
-    spin_planet.y = sx * t[1][0] + sy * t[1][1] + sz * t[1][2];
-    spin_planet.z = sx * t[2][0] + sy * t[2][1] + sz * t[2][2];
-
-    return spin_planet;
+    }
 }
