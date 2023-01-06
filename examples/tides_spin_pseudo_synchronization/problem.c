@@ -31,7 +31,7 @@ int main(int argc, char* argv[]){
     const double p1_mass = 1. * 9.55e-4; // in Jupiter masses * 1 Jupiter Mass / 1 Solar Mass
     const double p1_rad = 1. * 4.676e-4; // in Jupiter rad * 1 jupiter rad / 1 AU
     const double p1_e = 0.01;
-    const double p1_inc = M_PI/4;
+    const double p1_inc = 0;
     reb_add_fmt(sim, "m a e inc r", p1_mass, 0.04072, p1_e, p1_inc, p1_rad); // Planet 1
 
     sim->N_active = 2;
@@ -51,9 +51,9 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", solar_k2);
     const double solar_spin_period = 27 * 2 * M_PI / 365; // 27 Days in REBOUND time units
     const double solar_spin = (2 * M_PI) / solar_spin_period;
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sx", solar_spin * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sy", solar_spin / sqrt(2.));
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sz", solar_spin / sqrt(2.));
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sx", 0.0);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sy", 0.0);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "sz", solar_spin);
 
     // While not technically necessary, the fully dimensional moment of inertia (moi) should also be set
     // This is required to evolve the spin axis! Without setting this value, the spin axis will remain stationary.
@@ -65,12 +65,12 @@ int main(int argc, char* argv[]){
     struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
     const double solar_tau = 1 / (2 * solar_Q * orb.n); // the constant time lag tau
     // See Lu et. al (2023) for discussion of the cases in which this approximation relating Q and tau is valid
-    
+
     // You can calculate sigma directly (see Lu et al. (2023))
     double solar_sigma = 4 * sim->G * solar_tau / (3 * solar_rad * solar_rad * solar_rad * solar_rad * solar_rad * solar_k2);
 
     // Alternatively, you can use a helper function to calculate sigma from either Q or tau.
-    // In both cases, you need to make sure that k2 and the physical radius are already set for the body. If they aren't you'll get a reb_error 
+    // In both cases, you need to make sure that k2 and the physical radius are already set for the body. If they aren't you'll get a reb_error
 
     // To use rebx_tides_calc_sigma_from_Q, we need
     // 1) The rebx extras object
@@ -98,9 +98,25 @@ int main(int argc, char* argv[]){
     const double phi_1 = 0 * (M_PI / 180);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k2", 0.3);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "moi", 0.25 * p1_mass * p1_rad * p1_rad);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sx", spin_1 * sin(theta_1) * sin(phi_1));
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sy", spin_1 * sin(theta_1) * cos(phi_1));
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sz", spin_1 * cos(theta_1));
+
+    // You can either manually set spin axis components:
+    double planet_sx = spin_1 * sin(theta_1) * cos(phi_1);
+    double planet_sy = spin_1 * sin(theta_1) * sin(phi_1);
+    double planet_sz = spin_1 * cos(theta_1);
+
+    // Or use the built-in convenience function, which returns the Cartesian coordinates of the spin vector given:
+    // magnitude, obliquity, and phase angle
+    struct reb_vec3d p_sv = reb_tools_spherical_to_xyz(spin_1, theta_1, phi_1);
+    planet_sx = p_sv.x;
+    planet_sy = p_sv.y;
+    planet_sz = p_sv.z;
+
+    // For your own use case, you would just use whichever of the above two methods is most convenient (here we've done it three ways)
+    // whichever of the two methods we use above, we need to remember to set the spin axis values
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sx", planet_sx);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sy", planet_sy);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sz", planet_sz);
+
     double planet_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[1], &sim->particles[0], planet_Q);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma);
 
@@ -133,12 +149,6 @@ void heartbeat(struct reb_simulation* sim){
       struct reb_particle* star = &sim->particles[0];
       struct reb_particle* p = &sim->particles[1];
 
-      double* sx = rebx_get_param(rebx, p->ap, "sx");
-      double* sy = rebx_get_param(rebx, p->ap, "sy");
-      double* sz = rebx_get_param(rebx, p->ap, "sz");
-      double mag = sqrt(*sx * *sx + *sy * *sy + *sz * *sz);
-      // double ob = acos(*sz / mag) * (180 / M_PI);
-
       struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, *p, *star);
       double a = orb.a;
       double Om = orb.Omega;
@@ -146,8 +156,25 @@ void heartbeat(struct reb_simulation* sim){
       double pom = orb.pomega;
       double e = orb.e;
 
-      fprintf(of, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, a, inc, e, mag, pom, Om, *sx, *sy, *sz);
+      // The spin vector in the inertial (in this case, invariant frame)
+      double* sx_inv = rebx_get_param(rebx, p->ap, "sx");
+      double* sy_inv = rebx_get_param(rebx, p->ap, "sy");
+      double* sz_inv = rebx_get_param(rebx, p->ap, "sz");
+      struct reb_vec3d spin_inv = {*sx_inv, *sy_inv, *sz_inv};
 
+      // Transform spin vector into planet frame, w/ z-axis aligned with orbit normal and x-axis aligned with line of nodes
+      struct reb_vec3d orbit_normal = orb.hvec;
+      struct reb_vec3d line_of_nodes = reb_vec3d_cross((struct reb_vec3d){.z =1}, orbit_normal);
+      struct reb_rotation rot = reb_rotation_init_to_new_axes(orbit_normal, line_of_nodes); // Arguments to this function are the new z and x axes
+      struct reb_vec3d srot = reb_vec3d_rotate(spin_inv, rot); // spin vector in the planet's frame
+
+      // Interpret the spin axis in the more natural spherical coordinates
+      double mag;
+      double theta;
+      double phi;
+      reb_tools_xyz_to_spherical(srot, &mag, &theta, &phi);
+
+      fprintf(of, "%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, a, inc, e, pom, Om, mag, theta, phi);
       fclose(of);
     }
 

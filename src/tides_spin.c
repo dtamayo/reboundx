@@ -28,8 +28,8 @@
  * $Tides$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
  *
  * ======================= ===============================================
- * Authors                 Tiger Lu, Hanno Rein, D. Tamayo, Sam Hadden, Gregory Laughlin
- * Implementation Paper    Lu et al., 2022 (in review).
+ * Authors                 Tiger Lu, Hanno Rein, D. Tamayo, Sam Hadden, Rosemary Mardling, Sarah Millholland, Gregory Laughlin
+ * Implementation Paper    Lu et al., 2023 (in review).
  * Based on                `Eggleton et al. 1998 <https://ui.adsabs.harvard.edu/abs/1998ApJ...499..853E/abstract>`_.
  * C Example               :ref:`c_example_tides_spin_pseudo_synchronization`, :ref:`c_example_tides_spin_migration_driven_obliquity_tides`, :ref:`c_example_tides_spin_kozai`.
  * Python Example          `TidesSpinPseudoSynchronization.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesSpinPseudoSynchronization.ipynb>`_.
@@ -253,9 +253,9 @@ static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y
         struct reb_particle* p = &sim->particles[i];
         const double* k2 = rebx_get_param(rebx, p->ap, "k2");
         if (k2 != NULL){
-            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "sx", y0[3*Nspins]);
-            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "sy", y0[3*Nspins+1]);
-            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "sz", y0[3*Nspins+2]);
+            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "sx", y0[3*Nspins]);
+            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "sy", y0[3*Nspins+1]);
+            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "sz", y0[3*Nspins+2]);
             Nspins += 1;
         }
     }
@@ -363,10 +363,8 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
 
     for (int i=0; i<N_real; i++){
         struct reb_particle* source = &particles[i];
-        // Particle must have a k2 and sigma set, otherwise we treat this body as a point particle
-        const double* k2 = rebx_get_param(rebx, source->ap, "k2");
-        const double* sigma = rebx_get_param(rebx, source->ap, "sigma");
-        if (k2 == NULL || sigma == NULL || source->r == 0 || source->m == 0){
+        // Particle must have a k2, radius and mass set, otherwise we treat this body as a point particle
+        if (source->m == 0){
             continue;
         }
         for (int j=0; j<N_real; j++){
@@ -374,7 +372,8 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
                 continue;
             }
             struct reb_particle* target = &particles[j]; // planet raising the tides on the star
-            if (source->m == 0 || target->m == 0){
+            const double* k2 = rebx_get_param(rebx, target->ap, "k2");
+            if (k2 == NULL || target->m == 0 || target->r == 0){
                 continue;
             }
             H += rebx_calculate_spin_potential(source, target, G, *k2);
