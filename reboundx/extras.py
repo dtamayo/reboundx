@@ -159,8 +159,12 @@ class Extras(Structure):
         self.process_messages()
 
     #######################################
-    # Convenience Functions
+    # Effect Specific Functions
     #######################################
+    
+    def initialize_spin_ode(self, force):
+        clibreboundx.rebx_spin_initialize_ode.restype = None
+        return clibreboundx.rebx_spin_initialize_ode(byref(self), byref(force))
 
     def rad_calc_beta(self, G, c, source_mass, source_luminosity, radius, density, Q_pr):
         clibreboundx.rebx_rad_calc_beta.restype = c_double
@@ -176,13 +180,13 @@ class Extras(Structure):
         self.process_messages()
         return Acentral
 
-    def tides_calc_sigma_from_tau(self, G, p, tau):
+    def tides_calc_sigma_from_tau(self, body, tau):
         clibreboundx.rebx_tides_calc_sigma_from_tau.restype = c_double
-        return clibreboundx.rebx_tides_calc_sigma_from_tau(byref(self), c_double(G), pointer(p), c_double(tau))
+        return clibreboundx.rebx_tides_calc_sigma_from_tau(byref(self), pointer(body), c_double(tau))
 
-    def tides_calc_sigma_from_Q(self, G, p, perturber, Q):
+    def tides_calc_sigma_from_Q(self, body, primary, Q):
         clibreboundx.rebx_tides_calc_sigma_from_Q.restype = c_double
-        return clibreboundx.rebx_tides_calc_sigma_from_Q(byref(self), c_double(G), pointer(p), pointer(perturber), c_double(Q))
+        return clibreboundx.rebx_tides_calc_sigma_from_Q(byref(self), pointer(body), pointer(primary), c_double(Q))
 
     # Hamiltonian calculation functions
     def gr_full_hamiltonian(self, force):
@@ -214,17 +218,27 @@ class Extras(Structure):
         clibreboundx.rebx_gravitational_harmonics_potential.restype = c_double
         return clibreboundx.rebx_gravitational_harmonics_potential(byref(self))
 
-    # For the spin effects
-    def initialize_spin_ode(self, force):
-        clibreboundx.rebx_spin_initialize_ode.restype = None
-        return clibreboundx.rebx_spin_initialize_ode(byref(self), byref(force))
+    # Functions to help with rotations
 
-    def align_simulation(self):
-        clibreboundx.rebx_align_simulation.restype = None
-        return clibreboundx.rebx_align_simulation(byref(self))
-    def align_simulation2(self):
-        clibreboundx.rebx_align_simulation2.restype = None
-        return clibreboundx.rebx_align_simulation2(byref(self))
+    def rotate_simulation(self, q):
+        """
+        Rotates the simulation with the passed rebound.Rotation object. Analogous to Simulation.rotate, except one should use
+        this function to not only rotate the orbits according to q, but also all the spatial REBOUNDx parameters (e.g., spins). 
+        See SpinsIntro.ipynb
+        """
+        if not isinstance(q, rebound.Rotation):
+            raise NotImplementedError
+        clibreboundx.rebx_simulation_irotate.restype = None
+        clibreboundx.rebx_simulation_irotate(byref(self), q)
+  
+    def calculate_total_angular_momentum(self):
+        """
+        Returns a list of the three (x,y,z) components of the total angular momentum of all particles in the simulation.
+        Includes orbital angular momentum and spin angular momentum.
+        """
+        clibreboundx.rebx_tools_total_angular_momentum.restype = rebound.Vec3d
+        L = clibreboundx.rebx_tools_total_angular_momentum(byref(self))
+        return [L.x, L.y, L.z]
 
     def process_messages(self):
         try:
