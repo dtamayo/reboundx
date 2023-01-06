@@ -28,8 +28,8 @@
  * $Tides$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
  *
  * ======================= ===============================================
- * Authors                 Tiger Lu, Hanno Rein, D. Tamayo, Sam Hadden, Gregory Laughlin
- * Implementation Paper    Lu et al., 2022 (in review).
+ * Authors                 Tiger Lu, Hanno Rein, D. Tamayo, Sam Hadden, Rosemary Mardling, Sarah Millholland, Gregory Laughlin
+ * Implementation Paper    Lu et al., 2023 (in review).
  * Based on                `Eggleton et al. 1998 <https://ui.adsabs.harvard.edu/abs/1998ApJ...499..853E/abstract>`_.
  * C Example               :ref:`c_example_tides_spin_pseudo_synchronization`, :ref:`c_example_tides_spin_migration_driven_obliquity_tides`, :ref:`c_example_tides_spin_kozai`.
  * Python Example          `TidesSpinPseudoSynchronization.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesSpinPseudoSynchronization.ipynb>`_.
