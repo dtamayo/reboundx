@@ -63,30 +63,39 @@ int main(int argc, char* argv[]){
     rebx_add_force(rebx, effect);
 
     // Sun
-    const double solar_spin_period = 27 * 2. * M_PI / 365.;
-    const double solar_spin = (2 * M_PI) / solar_spin_period;
     const double solar_k2 = 0.1;
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", solar_k2);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "moi", 0.07 * star.m * star.r * star.r);
+
+    const double solar_spin_period = 27 * 2. * M_PI / 365.;
+    const double solar_spin = (2 * M_PI) / solar_spin_period;
     rebx_set_param_double(rebx, &sim->particles[0].ap, "sx", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "sy", solar_spin * 0.0);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "sz", solar_spin * 1.0);
-    double solar_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[0], &sim->particles[1], 3e6);
+
+    const double solar_Q = 3e6;
+    double solar_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[0], &sim->particles[1], solar_Q);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", solar_sigma);
 
-    // P1
-    const double spin_period_p = 1. * 2. * M_PI / 365.; // days to reb years
-    const double spin_p = (2. * M_PI) / spin_period_p;
+    // Planet
     const double planet_k2 = 0.4;
-    const double planet_q = 1e4;
-    const double theta_1 = 0. * M_PI / 180.;
-    const double phi_1 = 0. * M_PI / 180;
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k2", planet_k2);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "moi", 0.25 * planet.m * planet.r * planet.r);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sx", spin_p * sin(theta_1) * sin(phi_1));
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sy", spin_p * sin(theta_1) * cos(phi_1));
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sz", spin_p * cos(theta_1));
-    double planet_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[1], &sim->particles[0], planet_q);
+
+    const double spin_period_p = 1. * 2. * M_PI / 365.; // days to reb years
+    const double spin_p = (2. * M_PI) / spin_period_p;
+    const double theta_p = 0. * M_PI / 180.;
+    const double phi_p = 0. * M_PI / 180;
+    struct reb_vec3d p_sv = reb_tools_spherical_to_xyz(spin_p, theta_p, phi_p);
+    double psx = p_sv.x;
+    double psy = p_sv.y;
+    double psz = p_sv.z;
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sx", psx);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sy", psy);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "sz", psz);
+
+    const double planet_Q = 1e4;
+    double planet_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[1], &sim->particles[0], planet_Q);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma);
 
 
@@ -96,10 +105,17 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &gr->ap, "c", 10065.32); // in default units
 
     reb_move_to_com(sim);
-    rebx_align_simulation(rebx);
+
+    // Let's create a reb_rotation object that rotates to new axes with newz pointing along the total ang. momentum, and x along the line of
+    // nodes with the invariable plane (along z cross newz)
+    struct reb_vec3d newz = rebx_tools_total_angular_momentum(rebx);
+    struct reb_vec3d newx = reb_vec3d_cross((struct reb_vec3d){.z =1}, newz);
+    struct reb_rotation rot = reb_rotation_init_to_new_axes(newz, newx);
+    rebx_simulation_irotate(rebx, rot); // This rotates our simulation into the invariable plane aligned with the total ang. momentum (including spin)
+
     rebx_spin_initialize_ode(rebx, effect);
 
-    system("rm -v orbits.txt");        // delete previous output file
+    system("rm -v output.txt");        // delete previous output file
     reb_integrate(sim, tmax);
 
     rebx_free(rebx);
@@ -120,32 +136,47 @@ void heartbeat(struct reb_simulation* sim){
       struct reb_particle* p1 = &sim->particles[1];
       struct reb_particle* pert = &sim->particles[2];
 
-      double* sx_sun = rebx_get_param(rebx, sun->ap, "sx");
-      double* sy_sun = rebx_get_param(rebx, sun->ap, "sy");
-      double* sz_sun = rebx_get_param(rebx, sun->ap, "sz");
-      double mag_sun = sqrt((*sx_sun) * (*sx_sun) + (*sy_sun) * (*sy_sun) + (*sz_sun) * (*sz_sun));
-
-      double* sx_p = rebx_get_param(rebx, p1->ap, "sx");
-      double* sy_p = rebx_get_param(rebx, p1->ap, "sy");
-      double* sz_p = rebx_get_param(rebx, p1->ap, "sz");
-      double mag_p = sqrt((*sx_p) * (*sx_p) + (*sy_p) * (*sy_p) + (*sz_p) * (*sz_p));
-
+      // orbits
       struct reb_orbit o1 = reb_tools_particle_to_orbit(sim->G, *p1, *sun);
       double a1 = o1.a;
-      double Om1 = o1.Omega;
-      double i1 = o1.inc;
-      double pom1 = o1.pomega;
       double e1 = o1.e;
+      double i1 = o1.inc;
+      double Om1 = o1.Omega;
+      double pom1 = o1.pomega;
+      struct reb_vec3d n1 = o1.hvec;
 
       struct reb_particle com = reb_get_com_of_pair(sim->particles[0],sim->particles[1]);
       struct reb_orbit o2 = reb_tools_particle_to_orbit(sim->G, *pert, com);
       double a2 = o2.a;
-      double Om2 = o2.Omega;
-      double i2 = o2.inc;
-      double pom2 = o2.pomega;
       double e2 = o2.e;
+      double i2 = o2.inc;
+      double Om2 = o2.Omega;
+      double pom2 = o2.pomega;
 
-      fprintf(of, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, sx_sun, sy_sun, sz_sun, mag_sun, sx_p, sy_p, sz_p, mag_p, a1, Om1, i1, pom1, e1, a2, Om2, i2, pom2, e2); // print spins and orbits
+      // Spins - initially  in the invariant frame
+      double* sx_sun = rebx_get_param(rebx, sun->ap, "sx");
+      double* sy_sun = rebx_get_param(rebx, sun->ap, "sy");
+      double* sz_sun = rebx_get_param(rebx, sun->ap, "sz");
+
+      // Interpret planet spin in the rotating planet frame
+      double* sx_p_inv = rebx_get_param(rebx, p1->ap, "sx");
+      double* sy_p_inv = rebx_get_param(rebx, p1->ap, "sy");
+      double* sz_p_inv = rebx_get_param(rebx, p1->ap, "sz");
+
+      struct reb_vec3d spin_inv = {*sx_p_inv, *sy_p_inv, *sz_p_inv};
+
+      // Transform spin vector into planet frame, w/ z-axis aligned with orbit normal and x-axis aligned with line of nodes
+      struct reb_vec3d line_of_nodes = reb_vec3d_cross((struct reb_vec3d){.z =1}, n1);
+      struct reb_rotation rot = reb_rotation_init_to_new_axes(n1, line_of_nodes); // Arguments to this function are the new z and x axes
+      struct reb_vec3d srot = reb_vec3d_rotate(spin_inv, rot); // spin vector in the planet's frame
+
+      // Interpret the spin axis in the more natural spherical coordinates
+      double mag_p;
+      double theta_p;
+      double phi_p;
+      reb_tools_xyz_to_spherical(srot, &mag_p, &theta_p, &phi_p);
+
+      fprintf(of, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, *sx_sun, *sy_sun, *sz_sun, mag_p, theta_p, phi_p, a1, e1, i1, Om1, pom1, a2, e2, i2, Om2, pom2); // print spins and orbits
 
       fclose(of);
     }

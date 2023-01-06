@@ -31,7 +31,7 @@ int main(int argc, char* argv[]){
     const double p1_mass = 1. * 9.55e-4; // in Jupiter masses * 1 Jupiter Mass / 1 Solar Mass
     const double p1_rad = 1. * 4.676e-4; // in Jupiter rad * 1 jupiter rad / 1 AU
     const double p1_e = 0.01;
-    const double p1_inc = M_PI/4;
+    const double p1_inc = 0;
     reb_add_fmt(sim, "m a e inc r", p1_mass, 0.04072, p1_e, p1_inc, p1_rad); // Planet 1
 
     sim->N_active = 2;
@@ -100,9 +100,10 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "moi", 0.25 * p1_mass * p1_rad * p1_rad);
 
     // You can either manually set spin axis components:
-    double planet_sx = spin_1 * sin(theta_1) * sin(phi_1);
-    double planet_sy = spin_1 * sin(theta_1) * cos(phi_1);
+    double planet_sx = spin_1 * sin(theta_1) * cos(phi_1);
+    double planet_sy = spin_1 * sin(theta_1) * sin(phi_1);
     double planet_sz = spin_1 * cos(theta_1);
+
     // Or use the built-in convenience function, which returns the Cartesian coordinates of the spin vector given:
     // magnitude, obliquity, and phase angle
     struct reb_vec3d p_sv = reb_tools_spherical_to_xyz(spin_1, theta_1, phi_1);
@@ -115,6 +116,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sx", planet_sx);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sy", planet_sy);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sz", planet_sz);
+
     double planet_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[1], &sim->particles[0], planet_Q);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma);
 
@@ -162,16 +164,17 @@ void heartbeat(struct reb_simulation* sim){
 
       // Transform spin vector into planet frame, w/ z-axis aligned with orbit normal and x-axis aligned with line of nodes
       struct reb_vec3d orbit_normal = orb.hvec;
-      struct reb_vec3d z_old = {0.0, 0.0, 1.0};
-      struct reb_vec3d line_of_nodes = reb_vec3d_cross(z_old, orbit_normal);
+      struct reb_vec3d line_of_nodes = reb_vec3d_cross((struct reb_vec3d){.z =1}, orbit_normal);
       struct reb_rotation rot = reb_rotation_init_to_new_axes(orbit_normal, line_of_nodes); // Arguments to this function are the new z and x axes
-
       struct reb_vec3d srot = reb_vec3d_rotate(spin_inv, rot); // spin vector in the planet's frame
-      double mag = sqrt(reb_vec3d_length_squared(srot));
 
+      // Interpret the spin axis in the more natural spherical coordinates
+      double mag;
+      double theta;
+      double phi;
+      reb_tools_xyz_to_spherical(srot, &mag, &theta, &phi);
 
-      fprintf(of, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, a, inc, e, mag, pom, Om, srot.x, srot.y, srot.z);
-
+      fprintf(of, "%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, a, inc, e, pom, Om, mag, theta, phi);
       fclose(of);
     }
 
