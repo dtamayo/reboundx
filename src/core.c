@@ -572,18 +572,18 @@ static struct rebx_param* rebx_get_or_add_param(struct rebx_extras* const rebx, 
         return NULL;
     }
 
-    enum rebx_param_type type = rebx_get_type(rebx, param_name);
-    if (type == REBX_TYPE_NONE){
-        char str[300];
-        sprintf(str, "REBOUNDx Error: Need to register parameter name '%s' before using it. See examples.\n", param_name);
-        rebx_error(rebx, str);
-        return NULL;
-    }
-
     // Check whether it already exists in linked list
     struct rebx_param* param = rebx_get_param_struct(rebx, *apptr, param_name);
 
     if(param == NULL){
+        enum rebx_param_type type = rebx_get_type(rebx, param_name);
+        if (type == REBX_TYPE_NONE){
+            char str[300];
+            sprintf(str, "REBOUNDx Error: Need to register parameter name '%s' before using it. See examples.\n", param_name);
+            rebx_error(rebx, str);
+            return NULL;
+        }
+
         param = rebx_create_param(rebx, param_name, type);
         if (param == NULL){ // adding new param failed
             return NULL;
@@ -649,16 +649,6 @@ void rebx_set_param_uint32(struct rebx_extras* const rebx, struct rebx_node** ap
     *valptr = val;
 
     return;
-}
-
-// ONLY USE DURING POST-SYNC! Even so might be risky...
-void rebx_set_spin_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val){
-  // this is hacky
-
-  struct rebx_param* param = rebx_get_param_struct(rebx, *apptr, param_name);
-  double* valptr = param->value;
-  *valptr = val;
-  return;
 }
 
 /*******************************************************************
