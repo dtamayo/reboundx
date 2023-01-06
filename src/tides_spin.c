@@ -253,9 +253,9 @@ static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y
         struct reb_particle* p = &sim->particles[i];
         const double* k2 = rebx_get_param(rebx, p->ap, "k2");
         if (k2 != NULL){
-            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "sx", y0[3*Nspins]);
-            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "sy", y0[3*Nspins+1]);
-            rebx_set_spin_param(rebx, (struct rebx_node**)&p->ap, "sz", y0[3*Nspins+2]);
+            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "sx", y0[3*Nspins]);
+            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "sy", y0[3*Nspins+1]);
+            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "sz", y0[3*Nspins+2]);
             Nspins += 1;
         }
     }
