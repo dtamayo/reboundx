@@ -363,10 +363,8 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
 
     for (int i=0; i<N_real; i++){
         struct reb_particle* source = &particles[i];
-        // Particle must have a k2 and sigma set, otherwise we treat this body as a point particle
-        const double* k2 = rebx_get_param(rebx, source->ap, "k2");
-        const double* sigma = rebx_get_param(rebx, source->ap, "sigma");
-        if (k2 == NULL || sigma == NULL || source->r == 0 || source->m == 0){
+        // Particle must have a k2, radius and mass set, otherwise we treat this body as a point particle
+        if (source->m == 0){
             continue;
         }
         for (int j=0; j<N_real; j++){
@@ -374,7 +372,8 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
                 continue;
             }
             struct reb_particle* target = &particles[j]; // planet raising the tides on the star
-            if (source->m == 0 || target->m == 0){
+            const double* k2 = rebx_get_param(rebx, target->ap, "k2");
+            if (k2 == NULL || target->m == 0 || target->r == 0){
                 continue;
             }
             H += rebx_calculate_spin_potential(source, target, G, *k2);
