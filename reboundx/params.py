@@ -27,6 +27,9 @@ class Params(MutableMapping):
             self.rebx = cast(extrasvp, POINTER(Extras))
 
     def __getitem__(self, key):
+        if key.startswith("Vec3d_"):
+            shortkey = key[6:]
+            return rebound.Vec3d([self[shortkey+"x"],self[shortkey+"y"],self[shortkey+"z"]])
         param_type = clibreboundx.rebx_get_type(self.rebx, c_char_p(key.encode('ascii')))
         ctype = REBX_CTYPES[param_type]
         if ctype == None:
@@ -51,6 +54,16 @@ class Params(MutableMapping):
         return val
 
     def __setitem__(self, key, value):
+        if key.startswith("Vec3d_"):
+            try:
+                assert len(value) == 3
+            except:
+                raise AttributeError("Need to pass list or rebound.Vec3d when assing a Vec3d parameter.")
+            shortkey = key[6:]
+            self[shortkey+"x"] = value[0]
+            self[shortkey+"y"] = value[1]
+            self[shortkey+"z"] = value[2]
+            return
         param_type = clibreboundx.rebx_get_type(self.rebx, c_char_p(key.encode('ascii')))
         ctype = REBX_CTYPES[param_type]
         if ctype == None:
