@@ -95,6 +95,7 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
   struct reb_vec3d tot_force = {0};
 
   if (k2 != 0.0){
+    // Eggleton et. al 1998 quadrupole (equation 33)
     const double quad_prefactor = mt * big_a / mu_ij;
     const double omega_dot_d = sx * dx + sy * dy + sz * dz;
     const double omega_squared = sx * sx + sy * sy + sz * sz;
@@ -109,7 +110,7 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
     tot_force.z = (quad_prefactor * ((t1 - t2 - t4) * dz - (t3 * sz)));
 
     if (sigma != 0.0){
-      // EKH FRAMEWORK TIDAL
+      // Eggleton et. al 1998 tidal (equation 45)
       const double d_dot_vel = dx*dvx + dy*dvy + dz*dvz;
 
       // first vector
@@ -205,6 +206,8 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
                 const double mu_ij = (mi * mj) / (mi + mj);
 
                 struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, sigma_in, sx, sy, sz);
+
+                // Eggleton et. al 1998 spin EoM (equation 36)
                 yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) * (-mu_ij / *moi));
                 yDot[3*Nspins + 1] += ((dz * tf.x - dx * tf.z) * (-mu_ij / *moi));
                 yDot[3*Nspins + 2] += ((dx * tf.y - dy * tf.x) * (-mu_ij / *moi));
@@ -334,20 +337,37 @@ void rebx_tides_spin(struct reb_simulation* const sim, struct rebx_force* const 
 }
 
 // Calculate potential of conservative piece of tidal interaction
-static double rebx_calculate_spin_potential(struct reb_particle* source, struct reb_particle* target, const double G, const double k2){
+// Equation 31 in Eggleton et. al (1998)
+static double rebx_calculate_spin_potential(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double sx, const double sy, const double sz){
     const double ms = source->m;
+    const double Rs = source->r;
     const double mt = target->m;
-    const double Rt = target->r;
+    const double mu = ms * mt / (ms + mt);
 
-    const double mratio = ms/mt; // have already checked for 0 and inf
-    const double fac = mratio*k2*Rt*Rt*Rt*Rt*Rt;
+    const double big_a = k2 * (Rs * Rs * Rs * Rs * Rs);
 
-    const double dx = target->x - source->x;
-    const double dy = target->y - source->y;
-    const double dz = target->z - source->z;
-    const double dr2 = dx*dx + dy*dy + dz*dz;
+    // distance vector FROM j TO i
+    const double dx = source->x - target->x;
+    const double dy = source->y - target->y;
+    const double dz = source->z - target->z;
+    const double d2 = dx * dx + dy * dy + dz * dz;
+    const double dr = sqrt(d2);
 
-    return -1./2.*G*ms*mt/(dr2*dr2*dr2)*fac;
+    const double omega_dot_d = sx * dx + sy * dy + sz * dz;
+    const double omega_squared = sx * sx + sy * sy + sz * sz;
+
+    const double t1 = -mt * big_a * omega_dot_d * omega_dot_d / (2 * d2 * d2 * dr);
+    const double t2 = mt * big_a * omega_squared / (6 * d2 * dr);
+    const double t3 = G * mt * mt * big_a / (d2 * d2 * d2);
+
+    return -(t1 + t2 + t3);
+}
+
+// Equation 31 in Eggleton et. al (1998)
+// currently not called anywhere
+static double rebx_spin_kinetic_energy(const double moi, const double sx, const double sy, const double sz){
+    const double omega_squared = sx * sx + sy * sy + sz * sz;
+    return 0.5 * moi * omega_squared;
 }
 
 double rebx_spin_potential(struct rebx_extras* const rebx){
@@ -372,11 +392,14 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
                 continue;
             }
             struct reb_particle* target = &particles[j]; // planet raising the tides on the star
-            const double* k2 = rebx_get_param(rebx, target->ap, "k2");
+            const double* k2 = rebx_get_param(rebx, source->ap, "k2");
+            const double* sx = rebx_get_param(rebx, source->ap, "sx");
+            const double* sy = rebx_get_param(rebx, source->ap, "sy");
+            const double* sz = rebx_get_param(rebx, source->ap, "sz");
             if (k2 == NULL || target->m == 0 || target->r == 0){
                 continue;
             }
-            H += rebx_calculate_spin_potential(source, target, G, *k2);
+            H += rebx_calculate_spin_potential(source, target, G, *k2, *sx, *sy, *sz);
         }
     }
 
