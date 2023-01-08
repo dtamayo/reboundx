@@ -447,17 +447,19 @@ tides_spin
 **********
 
 ======================= ===============================================
-Authors                 Tiger Lu, Hanno Rein, D. Tamayo, Sam Hadden, Gregory Laughlin
-Implementation Paper    `Lu et al., 2022 (in review).
+Authors                 Tiger Lu, Hanno Rein, D. Tamayo, Sam Hadden, Rosemary Mardling, Sarah Millholland, Gregory Laughlin
+Implementation Paper    Lu et al., 2023 (in review).
 Based on                `Eggleton et al. 1998 <https://ui.adsabs.harvard.edu/abs/1998ApJ...499..853E/abstract>`_.
 C Example               :ref:`c_example_tides_spin_pseudo_synchronization`, :ref:`c_example_tides_spin_migration_driven_obliquity_tides`, :ref:`c_example_tides_spin_kozai`.
 Python Example          `TidesSpinPseudoSynchronization.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesSpinPseudoSynchronization.ipynb>`_.
 ======================= ===============================================
 
-This adds constant time lag tidal interactions between orbiting bodies in the simulation and the primary, both from tides raised on the primary and on the other bodies.
-In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' physical radius particles[i].r, k2 (potential Love number of degree 2), constant time lag tau, and rotation rate Omega. See Baronett et al. (2021), Hut (1981), and Bolmont et al. 2015 above.
-
-If tau is not set, it will default to zero and yield the conservative piece of the tidal potential.
+This effect consistently tracks both the spin and orbital evolution of bodies under constant-time lag tides raised on both the primary and on the orbiting bodies.
+In all cases, we need to set masses for all the particles that will feel these tidal forces. Particles with only mass are point particles
+Particles are assumed to have structure (i.e - physical extent & distortion from spin) if the following parameters are set: physical radius particles[i].r, potential Love number of degree 2 k2, and the spin frequency components sx, sy, sz.
+If we wish to evolve a body's spin components, the fully dimensional moment of inertia moi must be set as well. If this parameter is not set, the spin components will be stationary.
+Finally, if we wish to consider the effects of tides raised on a specific body, we must set the tidal dissipation parameter sigma as well.
+See Lu et. al (in review) and Eggleton et. al (1998) above
 
 **Effect Parameters**
 
@@ -473,7 +475,7 @@ k2 (float)                   Yes         Potential Love number of degree 2.
 sx (float)                   Yes         x component of spin vector
 sy (float)                   Yes         y component of spin vector
 sz (float)                   Yes         z component of spin vector
-moi (float)                  Yes         Moment of inertia
+moi (float)                  No          Moment of inertia
 sigma (float)                No          Tidal Dissipation Parameter. If not set, defaults to 0
 ============================ =========== ==================================================================
 
