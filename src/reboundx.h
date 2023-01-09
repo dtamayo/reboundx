@@ -57,6 +57,7 @@ enum rebx_param_type{
     REBX_TYPE_UINT32,
     REBX_TYPE_ORBIT,
     REBX_TYPE_ODE,
+    REBX_TYPE_VEC3D
 };
 
 /**
@@ -420,9 +421,9 @@ void rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** a
 void rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
 void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val);
 void rebx_set_param_uint32(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, uint32_t val);
+void rebx_set_param_vec3d(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, struct reb_vec3d val);
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type);
 
-void rebx_set_spin_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
 /** @} */
 /** @} */
 
@@ -608,6 +609,7 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
  * @return Void pointer to the parameter. NULL if not found or type does not match (will write error to stderr).
  */
 void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
+struct rebx_param* rebx_get_or_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name);
 
 
 /****************************************
