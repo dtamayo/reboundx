@@ -41,9 +41,11 @@ int main(int argc, char* argv[]){
     // We add dissipation by adding a constant time lag tctl_tau
     rebx_set_param_double(rebx, &sim->particles[0].ap, "tctl_tau", 0.04);
 
-    // We also can set the angular rotation rate of bodies Omega. Here we explicitly set the star's to zero, but implementation will assume zero if not specified. 
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "Omega", 0.);
-
+    // We also can set the angular rotation rate of bodies OmegaMag. Implementation assumes Omega is along z axis
+    // If you need a more general implementation, see the tides_spin effect. Implementation will assume zero if not specified.
+    
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "OmegaMag", 2*M_PI/(30./365.)); // 30 day rotation rate
+    //exit(1);                                                                                
     // Run simulation
     double tmax = 2.5e5; // years
     reb_integrate(sim, tmax);

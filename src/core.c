@@ -49,9 +49,9 @@ const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line 
  ****************************/
 
 void rebx_register_default_params(struct rebx_extras* rebx){
-    rebx_register_param(rebx, "sx", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "sy", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "sz", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "k2", REBX_TYPE_DOUBLE); // TLu: add k2
+    rebx_register_param(rebx, "I", REBX_TYPE_DOUBLE); // TLu: add moment of inertia
+    rebx_register_param(rebx, "sigma", REBX_TYPE_DOUBLE); //TLu: add dissipation constant from EKH
     rebx_register_param(rebx, "ode", REBX_TYPE_ODE);
     rebx_register_param(rebx, "c", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "gr_source", REBX_TYPE_INT);
@@ -93,12 +93,7 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "tides_primary", REBX_TYPE_INT);
     rebx_register_param(rebx, "R_tides", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tctl_k2", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "k2", REBX_TYPE_DOUBLE); // TLu: add k2
-    rebx_register_param(rebx, "q", REBX_TYPE_DOUBLE); // TLu: add tidal
-    rebx_register_param(rebx, "moi", REBX_TYPE_DOUBLE); // TLu: add moment of inertia
-    rebx_register_param(rebx, "sigma", REBX_TYPE_DOUBLE); //TLu: add dissipation constant from EKH
     rebx_register_param(rebx, "tctl_tau", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "Omega", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "integrator", REBX_TYPE_INT);
     rebx_register_param(rebx, "free_arrays", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "im_ps_final", REBX_TYPE_POINTER);
@@ -130,6 +125,8 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "ye_spin_axis_x", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "ye_spin_axis_y", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "ye_spin_axis_z", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "OmegaMag", REBX_TYPE_VEC3D);
+    rebx_register_param(rebx, "Omega", REBX_TYPE_VEC3D);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -566,7 +563,7 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
  *****************************************************************/
 
 // Gets parameter if it already exists, otherwise creates a new one and adds it to the passed linked list
-static struct rebx_param* rebx_get_or_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name){
+struct rebx_param* rebx_get_or_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name){
     if (apptr == NULL){
         rebx_error(rebx, "REBOUNDx Error: Passed NULL apptr to rebx_add_param. See examples.\n");
         return NULL;
@@ -583,7 +580,6 @@ static struct rebx_param* rebx_get_or_add_param(struct rebx_extras* const rebx, 
             rebx_error(rebx, str);
             return NULL;
         }
-
         param = rebx_create_param(rebx, param_name, type);
         if (param == NULL){ // adding new param failed
             return NULL;
@@ -647,6 +643,23 @@ void rebx_set_param_uint32(struct rebx_extras* const rebx, struct rebx_node** ap
     // Update new or existing param value
     uint32_t* valptr = param->value;
     *valptr = val;
+
+    return;
+}
+
+void rebx_set_param_vec3d(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, struct reb_vec3d val){
+    struct rebx_param* param = rebx_get_or_add_param(rebx, apptr, param_name);
+    if (param == NULL){
+        return;
+    }
+    if (param->value == NULL){ // new parameter, allocate
+        param->value = rebx_malloc(rebx, sizeof(struct reb_vec3d));
+    }
+    // Update new or existing param value
+    struct reb_vec3d* valptr = param->value;
+    valptr->x = val.x;
+    valptr->y = val.y;
+    valptr->z = val.z;
 
     return;
 }
@@ -1018,7 +1031,6 @@ enum rebx_param_type rebx_get_type(struct rebx_extras* rebx, const char* name){
     if (param == NULL){ // param not found
         return REBX_TYPE_NONE;
     }
-
     return param->type;
 }
 
@@ -1036,10 +1048,10 @@ size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type){
         {
             return sizeof(struct rebx_force);
         }
-        /*case REBX_TYPE_ORBIT:
+        case REBX_TYPE_VEC3D:
         {
-            return sizeof(struct reb_orbit);
-        }*/
+            return sizeof(struct reb_vec3d);
+        }
         case REBX_TYPE_POINTER:
         {
             return 0;

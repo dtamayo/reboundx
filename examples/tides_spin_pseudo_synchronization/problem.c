@@ -31,7 +31,7 @@ int main(int argc, char* argv[]){
     const double p1_mass = 1. * 9.55e-4; // in Jupiter masses * 1 Jupiter Mass / 1 Solar Mass
     const double p1_rad = 1. * 4.676e-4; // in Jupiter rad * 1 jupiter rad / 1 AU
     const double p1_e = 0.01;
-    const double p1_inc = 0;
+    const double p1_inc = 0.01;
     reb_add_fmt(sim, "m a e inc r", p1_mass, 0.04072, p1_e, p1_inc, p1_rad); // Planet 1
 
     sim->N_active = 2;
@@ -51,13 +51,11 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", solar_k2);
     const double solar_spin_period = 27 * 2 * M_PI / 365; // 27 Days in REBOUND time units
     const double solar_spin = (2 * M_PI) / solar_spin_period;
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sx", 0.0);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sy", 0.0);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sz", solar_spin);
+    rebx_set_param_vec3d(rebx, &sim->particles[0].ap, "Omega", (struct reb_vec3d){.z=solar_spin}); // Omega.x = Omega.y = 0 by default
 
-    // While not technically necessary, the fully dimensional moment of inertia (moi) should also be set
+    // While not technically necessary, the fully dimensional moment of inertia (I) should also be set
     // This is required to evolve the spin axis! Without setting this value, the spin axis will remain stationary.
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "moi", 0.07 * solar_mass * solar_rad * solar_rad);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "I", 0.07 * solar_mass * solar_rad * solar_rad);
 
     // Finally, the last parameter is the tidal dissipation parameter (sigma)
     // This quantity is related to the constant time lag tau, and in the case of circular synchronous orbits, to the tital quality factor Q
@@ -97,7 +95,7 @@ int main(int argc, char* argv[]){
     const double theta_1 = 30. * (M_PI / 180.);
     const double phi_1 = 0 * (M_PI / 180);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k2", 0.3);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "moi", 0.25 * p1_mass * p1_rad * p1_rad);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "I", 0.25 * p1_mass * p1_rad * p1_rad);
 
     // You can either manually set spin axis components:
     double planet_sx = spin_1 * sin(theta_1) * cos(phi_1);
@@ -113,9 +111,7 @@ int main(int argc, char* argv[]){
 
     // For your own use case, you would just use whichever of the above two methods is most convenient (here we've done it three ways)
     // whichever of the two methods we use above, we need to remember to set the spin axis values
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sx", planet_sx);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sy", planet_sy);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sz", planet_sz);
+    rebx_set_param_vec3d(rebx, &sim->particles[1].ap, "Omega", (struct reb_vec3d){.x=planet_sx, .y=planet_sy, .z=planet_sz});
 
     double planet_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[1], &sim->particles[0], planet_Q);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma);
@@ -129,7 +125,7 @@ int main(int argc, char* argv[]){
     struct reb_rotation rot = reb_rotation_init_to_new_axes(newz, newx);
     rebx_simulation_irotate(rebx, rot); // This rotates our simulation into the invariable plane aligned with the total ang. momentum (including spin)
     rebx_spin_initialize_ode(rebx, effect); // We must call this function before starting our integration to track the spins
-
+    
     system("rm -v output.txt"); // remove previous output file
     reb_integrate(sim, tmax);
     rebx_free(rebx);
@@ -157,16 +153,13 @@ void heartbeat(struct reb_simulation* sim){
       double e = orb.e;
 
       // The spin vector in the inertial (in this case, invariant frame)
-      double* sx_inv = rebx_get_param(rebx, p->ap, "sx");
-      double* sy_inv = rebx_get_param(rebx, p->ap, "sy");
-      double* sz_inv = rebx_get_param(rebx, p->ap, "sz");
-      struct reb_vec3d spin_inv = {*sx_inv, *sy_inv, *sz_inv};
+      struct reb_vec3d* Omega_inv = rebx_get_param(rebx, p->ap, "Omega");
 
       // Transform spin vector into planet frame, w/ z-axis aligned with orbit normal and x-axis aligned with line of nodes
       struct reb_vec3d orbit_normal = orb.hvec;
       struct reb_vec3d line_of_nodes = reb_vec3d_cross((struct reb_vec3d){.z =1}, orbit_normal);
       struct reb_rotation rot = reb_rotation_init_to_new_axes(orbit_normal, line_of_nodes); // Arguments to this function are the new z and x axes
-      struct reb_vec3d srot = reb_vec3d_rotate(spin_inv, rot); // spin vector in the planet's frame
+      struct reb_vec3d srot = reb_vec3d_rotate(*Omega_inv, rot); // spin vector in the planet's frame
 
       // Interpret the spin axis in the more natural spherical coordinates
       double mag;
