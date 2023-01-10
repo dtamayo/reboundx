@@ -51,35 +51,32 @@ int main(int argc, char* argv[]){
     const double solar_spin = (2 * M_PI) / solar_spin_period;
     const double solar_Q = 1000000.;
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", 0.07);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "moi", 0.07 * solar_mass * solar_rad * solar_rad);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sx", solar_spin * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sy", solar_spin * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sz", solar_spin * 1.0);
-    double solar_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[0], &sim->particles[1], solar_Q);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", solar_sigma);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "I", 0.07 * solar_mass * solar_rad * solar_rad);
+    rebx_set_param_vec3d(rebx, &sim->particles[0].ap, "Omega", (struct reb_vec3d){.z = solar_spin}); // Omega_x = Omega_y = 0 by default
+   
+    // We assume tau = 1/(2*n*Q) with n the mean motion, even though the spin is not synchronized with the orbit (see Lu et al. (2023))
+    struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "tau", 1./(2.*orb.n*solar_Q));
 
     // P1
     const double spin_period_1 = 5. * 2. * M_PI / 365.; // 5 days in REBOUND time units
     const double spin_1 = (2. * M_PI) / spin_period_1;
     const double planet_Q = 10000.;
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k2", 0.4);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "moi", 0.25 * p1_mass * p1_rad * p1_rad);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sx", spin_1 * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sy", spin_1 * -0.0261769);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sz", spin_1 * 0.99965732);
-    double planet_sigma_1 = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[1], &sim->particles[0], planet_Q);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma_1);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "I", 0.25 * p1_mass * p1_rad * p1_rad);
+    rebx_set_param_vec3d(rebx, &sim->particles[1].ap, "Omega", (struct reb_vec3d){.y=spin_1 * -0.0261769, .z=spin_1 * 0.99965732});
+    
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "tau", 1./(2.*orb.n*planet_Q));
 
     // P2
     double spin_period_2 = 3. * 2. * M_PI / 365.; // 3 days in REBOUND time units
     double spin_2 = (2. * M_PI) / spin_period_2;
     rebx_set_param_double(rebx, &sim->particles[2].ap, "k2", 0.4);
-    rebx_set_param_double(rebx, &sim->particles[2].ap, "moi", 0.25 * p2_mass * p2_rad * p2_rad);
-    rebx_set_param_double(rebx, &sim->particles[2].ap, "sx", spin_2 * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[2].ap, "sy", spin_2 * 0.0249736);
-    rebx_set_param_double(rebx, &sim->particles[2].ap, "sz", spin_2 * 0.99968811);
-    double planet_sigma_2 = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[2], &sim->particles[0], planet_Q);
-    rebx_set_param_double(rebx, &sim->particles[2].ap, "sigma", planet_sigma_2);
+    rebx_set_param_double(rebx, &sim->particles[2].ap, "I", 0.25 * p2_mass * p2_rad * p2_rad);
+    rebx_set_param_vec3d(rebx, &sim->particles[2].ap, "Omega", (struct reb_vec3d){.y=spin_2 * 0.0249736, .z=spin_2 * 0.99968811});
+    
+    struct reb_orbit orb2 = reb_tools_particle_to_orbit(sim->G, sim->particles[2], sim->particles[0]);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "tau", 1./(2.*orb2.n*planet_Q));
 
     // And migration
     struct rebx_force* mo = rebx_load_force(rebx, "modify_orbits_forces");
@@ -146,33 +143,25 @@ void heartbeat(struct reb_simulation* sim){
     struct reb_vec3d norm2 = o2.hvec;
 
     // Spin vectors - all initially in invariant plane
-    double* sx_sun = rebx_get_param(rebx, sun->ap, "sx");
-    double* sy_sun = rebx_get_param(rebx, sun->ap, "sy");
-    double* sz_sun = rebx_get_param(rebx, sun->ap, "sz");
+    struct reb_vec3d* Omega_sun = rebx_get_param(rebx, sun->ap, "Omega");
 
     // Interpret both planet spin vectors in the rotating planet frame in spherical coordinates
-    double* sx_p1 = rebx_get_param(rebx, p1->ap, "sx");
-    double* sy_p1 = rebx_get_param(rebx, p1->ap, "sy");
-    double* sz_p1 = rebx_get_param(rebx, p1->ap, "sz");
-    struct reb_vec3d sv_p1_inv = {*sx_p1, *sy_p1, *sz_p1};
+    struct reb_vec3d* Omega_p1 = rebx_get_param(rebx, p1->ap, "Omega");
 
-    struct reb_vec3d lon1 = reb_vec3d_cross((struct reb_vec3d){.z =1}, norm1); // Line of nodes is the new x-axis
-    struct reb_rotation rot1 = reb_rotation_init_to_new_axes(norm1, lon1); // Arguments to this function are the new z and x axes
-    struct reb_vec3d sv1 = reb_vec3d_rotate(sv_p1_inv, rot1);
+    struct reb_vec3d lon1 = reb_vec3d_cross((struct reb_vec3d){.z =1}, norm1);  // Line of nodes is the new x-axis
+    struct reb_rotation rot1 = reb_rotation_init_to_new_axes(norm1, lon1);      // Arguments to this function are the new z and x axes
+    struct reb_vec3d sv1 = reb_vec3d_rotate(*Omega_p1, rot1);
 
     double mag1;
     double theta1;
     double phi1;
     reb_tools_xyz_to_spherical(sv1, &mag1, &theta1, &phi1);
 
-    double* sx_p2 = rebx_get_param(rebx, p2->ap, "sx");
-    double* sy_p2 = rebx_get_param(rebx, p2->ap, "sy");
-    double* sz_p2 = rebx_get_param(rebx, p2->ap, "sz");
-    struct reb_vec3d sv_p2_inv = {*sx_p2, *sy_p2, *sz_p2};
+    struct reb_vec3d* Omega_p2 = rebx_get_param(rebx, p2->ap, "Omega");
 
     struct reb_vec3d lon2 = reb_vec3d_cross((struct reb_vec3d){.z =1}, norm2); // Line of nodes is the new x-axis
     struct reb_rotation rot2 = reb_rotation_init_to_new_axes(norm2, lon2); // Arguments to this function are the new z and x axes
-    struct reb_vec3d sv2 = reb_vec3d_rotate(sv_p2_inv, rot2);
+    struct reb_vec3d sv2 = reb_vec3d_rotate(*Omega_p2, rot2);
 
     double mag2;
     double theta2;
@@ -181,7 +170,7 @@ void heartbeat(struct reb_simulation* sim){
 
     fprintf(of_orb, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, a1, e1, i1, pom1, Om1, norm1.x, norm1.y, norm1.z, a2, e2, i2, pom2, Om2, norm2.x, norm2.y, norm2.z);  // prints the spins and orbits of all bodies
     fclose(of_orb);
-    fprintf(of_spins, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, *sx_sun, *sy_sun, *sz_sun, mag1, theta1, phi1, mag2, theta2, phi2);
+    fprintf(of_spins, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, Omega_sun->x, Omega_sun->y, Omega_sun->z, mag1, theta1, phi1, mag2, theta2, phi2);
     fclose(of_spins);
   }
 

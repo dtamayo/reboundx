@@ -37,10 +37,10 @@
  *
  * This effect consistently tracks both the spin and orbital evolution of bodies under constant-time lag tides raised on both the primary and on the orbiting bodies.
  * In all cases, we need to set masses for all the particles that will feel these tidal forces. Particles with only mass are point particles
- * Particles are assumed to have structure (i.e - physical extent & distortion from spin) if the following parameters are set: physical radius particles[i].r, potential Love number of degree 2 k2, and the spin frequency components sx, sy, sz.
- * If we wish to evolve a body's spin components, the fully dimensional moment of inertia moi must be set as well. If this parameter is not set, the spin components will be stationary.
- * Finally, if we wish to consider the effects of tides raised on a specific body, we must set the tidal dissipation parameter sigma as well.
- * See Lu et. al (in review) and Eggleton et. al (1998) above
+ * Particles are assumed to have structure (i.e - physical extent & distortion from spin) if the following parameters are set: physical radius particles[i].r, potential Love number of degree 2 k2 (Q/(1-Q) in Eggleton 1998), and the spin angular rotation frequency vector Omega.
+ * If we wish to evolve a body's spin components, the fully dimensional moment of inertia I must be set as well. If this parameter is not set, the spin components will be stationary.
+ * Finally, if we wish to consider the effects of tides raised on a specific body, we must set the constant time lag tau as well.
+ * See Lu et. al (in review) and Eggleton et. al (1998) above.
  *
  * **Effect Parameters**
  *
@@ -53,11 +53,9 @@
  * ============================ =========== ==================================================================
  * particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
  * k2 (float)                   Yes         Potential Love number of degree 2.
- * sx (float)                   Yes         x component of spin vector
- * sy (float)                   Yes         y component of spin vector
- * sz (float)                   Yes         z component of spin vector
- * moi (float)                  No          Moment of inertia
- * sigma (float)                No          Tidal Dissipation Parameter. If not set, defaults to 0
+ * Omega (reb_vec3d)            Yes         Angular rotation frequency
+ * I (float)                    No          Moment of inertia
+ * tau (float)                  No          Constant time lag. If not set, defaults to 0
  * ============================ =========== ==================================================================
  *
  */
@@ -68,7 +66,7 @@
 #include <float.h>
 #include "reboundx.h"
 
-struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double sigma, const double sx, const double sy, const double sz){
+struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double sigma, const struct reb_vec3d Omega){
   // All quantities associated with SOURCE
   // This is the quadrupole potential/tides raised on the SOURCE
   const double ms = source->m;
@@ -95,21 +93,22 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
   struct reb_vec3d tot_force = {0};
 
   if (k2 != 0.0){
+    // Eggleton et. al 1998 quadrupole (equation 33)
     const double quad_prefactor = mt * big_a / mu_ij;
-    const double omega_dot_d = sx * dx + sy * dy + sz * dz;
-    const double omega_squared = sx * sx + sy * sy + sz * sz;
+    const double omega_dot_d = Omega.x * dx + Omega.y * dy + Omega.z * dz;
+    const double omega_squared = Omega.x * Omega.x + Omega.y * Omega.y + Omega.z * Omega.z;
 
     const double t1 = 5. * omega_dot_d * omega_dot_d / (2. * (dr * dr * dr * dr * dr * dr * dr));
     const double t2 = omega_squared / (2. * (dr * dr * dr * dr * dr));
     const double t3 = omega_dot_d / (dr * dr * dr * dr * dr);
     const double t4 = 6. * G * mt / (dr * dr * dr * dr * dr * dr * dr * dr);
 
-    tot_force.x = (quad_prefactor * ((t1 - t2 - t4) * dx - (t3 * sx)));
-    tot_force.y = (quad_prefactor * ((t1 - t2 - t4) * dy - (t3 * sy)));
-    tot_force.z = (quad_prefactor * ((t1 - t2 - t4) * dz - (t3 * sz)));
+    tot_force.x = (quad_prefactor * ((t1 - t2 - t4) * dx - (t3 * Omega.x)));
+    tot_force.y = (quad_prefactor * ((t1 - t2 - t4) * dy - (t3 * Omega.y)));
+    tot_force.z = (quad_prefactor * ((t1 - t2 - t4) * dz - (t3 * Omega.z)));
 
     if (sigma != 0.0){
-      // EKH FRAMEWORK TIDAL
+      // Eggleton et. al 1998 tidal (equation 45)
       const double d_dot_vel = dx*dvx + dy*dvy + dz*dvz;
 
       // first vector
@@ -123,9 +122,9 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
       const double hz = dx * dvy - dy * dvx;
 
       // h - r^2 Omega
-      const double comp_2_x = hx - d2 * sx;
-      const double comp_2_y = hy - d2 * sy;
-      const double comp_2_z = hz - d2 * sz;
+      const double comp_2_x = hx - d2 * Omega.x;
+      const double comp_2_y = hy - d2 * Omega.y;
+      const double comp_2_z = hz - d2 * Omega.z;
 
       // second vector
       const double vec2_x = comp_2_y * dz - comp_2_z * dy;
@@ -143,7 +142,7 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
   return tot_force;
 }
 
-static void rebx_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double sigma, const double sx, const double sy, const double sz){
+static void rebx_spin_orbit_accelerations(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const double sigma, const struct reb_vec3d Omega){
 
     // Input params all associated with source
     const double ms = source->m;
@@ -151,7 +150,7 @@ static void rebx_spin_orbit_accelerations(struct reb_particle* source, struct re
     const double mtot = ms + mt;
 
     // check if ODE is set here
-    struct reb_vec3d tot_force = rebx_calculate_spin_orbit_accelerations(source, target, G, k2, sigma, sx, sy, sz);
+    struct reb_vec3d tot_force = rebx_calculate_spin_orbit_accelerations(source, target, G, k2, sigma, Omega);
 
     target->ax -= ((ms / mtot) * tot_force.x);
     target->ay -= ((ms / mtot) * tot_force.y);
@@ -171,26 +170,23 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
     for (int i=0; i<N_real; i++){
         struct reb_particle* pi = &sim->particles[i]; // target particle
         const double* k2 = rebx_get_param(rebx, pi->ap, "k2"); // This is slow
-        const double* sigma = rebx_get_param(rebx, pi->ap, "sigma");
-        const double* moi = rebx_get_param(rebx, pi->ap, "moi");
+        const double* tau = rebx_get_param(rebx, pi->ap, "tau");
+        const double* I = rebx_get_param(rebx, pi->ap, "I");
 
         // Particle MUST have k2 and moment of inertia to feel effects
-        if (k2 != NULL && moi != NULL){
+        if (k2 != NULL && I != NULL){
 
-          // Possible to disregard sigma. Check for that here.
+          // Tidal dissipation off by default. Check for non-zero tau here.
           double sigma_in = 0.0;
-          if (sigma != NULL){
-            sigma_in = *sigma;
+          if (tau != NULL){
+            sigma_in = 4 * (*tau) * sim->G / (3. * pi->r * pi->r * pi->r * pi->r * pi->r * (*k2));
           }
 	       // Set initial spin accelerations to 0
           yDot[3*Nspins] = 0;
           yDot[3*Nspins + 1] = 0;
           yDot[3*Nspins + 2] = 0;
 
-          const double sx = y[3*Nspins];
-          const double sy = y[3*Nspins + 1];
-          const double sz = y[3*Nspins + 2];
-
+          const struct reb_vec3d Omega = {.x=y[3*Nspins], .y=y[3*Nspins+1], .z=y[3*Nspins+2]};
           for (int j=0; j<N_real; j++){
             if (i != j){
                 struct reb_particle* pj = &sim->particles[j];
@@ -203,11 +199,13 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
                 const double mi = pi->m;
                 const double mj = pj->m;
                 const double mu_ij = (mi * mj) / (mi + mj);
+                
+                struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, sigma_in, Omega);
 
-                struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, sigma_in, sx, sy, sz);
-                yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) * (-mu_ij / *moi));
-                yDot[3*Nspins + 1] += ((dz * tf.x - dx * tf.z) * (-mu_ij / *moi));
-                yDot[3*Nspins + 2] += ((dx * tf.y - dy * tf.x) * (-mu_ij / *moi));
+                // Eggleton et. al 1998 spin EoM (equation 36)
+                yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) * (-mu_ij / *I));
+                yDot[3*Nspins + 1] += ((dz * tf.x - dx * tf.z) * (-mu_ij / *I));
+                yDot[3*Nspins + 2] += ((dx * tf.y - dy * tf.x) * (-mu_ij / *I));
             }
           }
           Nspins += 1;
@@ -228,12 +226,10 @@ static void rebx_spin_sync_pre(struct reb_ode* const ode, const double* const y0
         struct reb_particle* p = &sim->particles[i];
         const double* k2 = rebx_get_param(rebx, p->ap, "k2");
         if (k2 != NULL){
-            const double* sx = rebx_get_param(rebx, p->ap, "sx");
-            const double* sy = rebx_get_param(rebx, p->ap, "sy");
-            const double* sz = rebx_get_param(rebx, p->ap, "sz");
-            ode->y[3*Nspins] = *sx;
-            ode->y[3*Nspins+1] = *sy;
-            ode->y[3*Nspins+2] = *sz;
+            const struct reb_vec3d* Omega = rebx_get_param(rebx, p->ap, "Omega");
+            ode->y[3*Nspins] = Omega->x;
+            ode->y[3*Nspins+1] = Omega->y;
+            ode->y[3*Nspins+2] = Omega->z;
             Nspins += 1;
         }
     }
@@ -253,9 +249,7 @@ static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y
         struct reb_particle* p = &sim->particles[i];
         const double* k2 = rebx_get_param(rebx, p->ap, "k2");
         if (k2 != NULL){
-            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "sx", y0[3*Nspins]);
-            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "sy", y0[3*Nspins+1]);
-            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "sz", y0[3*Nspins+2]);
+            rebx_set_param_vec3d(rebx, (struct rebx_node**)&p->ap, "Omega", (struct reb_vec3d){.x=y0[3*Nspins], .y=y0[3*Nspins+1], .z=y0[3*Nspins+2]});
             Nspins += 1;
         }
     }
@@ -272,11 +266,9 @@ void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force*
     for (int i=0; i<N_real; i++){
         struct reb_particle* p = &sim->particles[i];
         // Only track spin if particle has moment of inertia and valid spin axis set
-        double* moi = rebx_get_param(rebx, p->ap, "moi");
-        double* sx = rebx_get_param(rebx, p->ap, "sx");
-        double* sy = rebx_get_param(rebx, p->ap, "sy");
-        double* sz = rebx_get_param(rebx, p->ap, "sz");
-        if (moi != NULL && sx != NULL && sy != NULL && sz != NULL){
+        double* I = rebx_get_param(rebx, p->ap, "I");
+        struct reb_vec3d* Omega = rebx_get_param(rebx, p->ap, "Omega");
+        if (I != NULL && Omega != NULL){
             Nspins += 1;
         }
     }
@@ -305,17 +297,15 @@ void rebx_tides_spin(struct reb_simulation* const sim, struct rebx_force* const 
         struct reb_particle* source = &particles[i];
         // Particle must have a k2 set, otherwise we treat this body as a point particle
         const double* k2 = rebx_get_param(rebx, source->ap, "k2");
-        const double* sigma = rebx_get_param(rebx, source->ap, "sigma");
-        const double* sx = rebx_get_param(rebx, source->ap, "sx");
-        const double* sy = rebx_get_param(rebx, source->ap, "sy");
-        const double* sz = rebx_get_param(rebx, source->ap, "sz");
+        const double* tau = rebx_get_param(rebx, source->ap, "tau");
+        const struct reb_vec3d* Omega = rebx_get_param(rebx, source->ap, "Omega");
 
         // Particle needs all three spin components and k2 to feel additional forces
-        if (sx != NULL && sy != NULL && sz != NULL && k2 != NULL){
-          // Possible to disregard sigma. Check for that here.
+        if (Omega != NULL && k2 != NULL){
+          // Tidal dissipation off by default. Check for non-zero tau here.
           double sigma_in = 0.0;
-          if (sigma != NULL){
-            sigma_in = *sigma;
+          if (tau != NULL){
+            sigma_in = 4 * (*tau) * sim->G / (3. * source->r * source->r * source->r * source->r * source->r * (*k2));
           }
 
           for (int j=0; j<N; j++){
@@ -326,28 +316,53 @@ void rebx_tides_spin(struct reb_simulation* const sim, struct rebx_force* const 
               if (source->m == 0 || target->m == 0){
                   continue;
               }
-
-              rebx_spin_orbit_accelerations(source, target, G, *k2, sigma_in, *sx, *sy, *sz);
+                
+              rebx_spin_orbit_accelerations(source, target, G, *k2, sigma_in, *Omega);
           }
       }
     }
 }
 
+double rebx_spin_kinetic_energy(struct rebx_extras* const rebx){
+    struct reb_simulation* const sim = rebx->sim;
+    const int N_real = sim->N - sim->N_var;
+    double E=0.;
+    double* I;
+    struct reb_vec3d* Omega;
+    for (int i=0; i<N_real; i++){
+        I = rebx_get_param(rebx, sim->particles[i].ap, "I");
+        Omega = rebx_get_param(rebx, sim->particles[i].ap, "Omega");
+        if (I != NULL && Omega != NULL){
+            const double omega_squared = Omega->x * Omega->x + Omega->y * Omega->y + Omega->z * Omega->z;
+            E += 0.5 * (*I) * omega_squared;
+        }
+    }
+    return E;
+}
+
 // Calculate potential of conservative piece of tidal interaction
-static double rebx_calculate_spin_potential(struct reb_particle* source, struct reb_particle* target, const double G, const double k2){
-    const double ms = source->m;
+// Equation 31 in Eggleton et. al (1998)
+static double rebx_calculate_spin_potential(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const struct reb_vec3d Omega){
+    const double Rs = source->r;
     const double mt = target->m;
-    const double Rt = target->r;
 
-    const double mratio = ms/mt; // have already checked for 0 and inf
-    const double fac = mratio*k2*Rt*Rt*Rt*Rt*Rt;
+    const double big_a = k2 * (Rs * Rs * Rs * Rs * Rs);
 
-    const double dx = target->x - source->x;
-    const double dy = target->y - source->y;
-    const double dz = target->z - source->z;
-    const double dr2 = dx*dx + dy*dy + dz*dz;
+    // distance vector FROM j TO i
+    const double dx = source->x - target->x;
+    const double dy = source->y - target->y;
+    const double dz = source->z - target->z;
+    const double d2 = dx * dx + dy * dy + dz * dz;
+    const double dr = sqrt(d2);
 
-    return -1./2.*G*ms*mt/(dr2*dr2*dr2)*fac;
+    const double omega_dot_d = Omega.x * dx + Omega.y * dy + Omega.z * dz;
+    const double omega_squared = Omega.x * Omega.x + Omega.y * Omega.y + Omega.z * Omega.z;
+
+    const double t1 = -mt * big_a * omega_dot_d * omega_dot_d / (2 * d2 * d2 * dr);
+    const double t2 = mt * big_a * omega_squared / (6 * d2 * dr);
+    const double t3 = G * mt * mt * big_a / (d2 * d2 * d2);
+
+    return -(t1 + t2 + t3);
 }
 
 double rebx_spin_potential(struct rebx_extras* const rebx){
@@ -372,46 +387,14 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
                 continue;
             }
             struct reb_particle* target = &particles[j]; // planet raising the tides on the star
-            const double* k2 = rebx_get_param(rebx, target->ap, "k2");
-            if (k2 == NULL || target->m == 0 || target->r == 0){
+            const double* k2 = rebx_get_param(rebx, source->ap, "k2");
+            const struct reb_vec3d* Omega = rebx_get_param(rebx, source->ap, "Omega");
+            if (k2 == NULL || Omega == NULL || target->m == 0 || target->r == 0){
                 continue;
             }
-            H += rebx_calculate_spin_potential(source, target, G, *k2);
+            H += rebx_calculate_spin_potential(source, target, G, *k2, *Omega);
         }
     }
 
     return H;
-}
-
-// TLu 11/8/22 HELPER FUNCS
-double rebx_tides_calc_sigma_from_tau(struct rebx_extras* rebx, struct reb_particle* body, const double tau){
-  struct reb_simulation* const sim = rebx->sim;
-  const double G = sim->G;
-  const double* k2 = rebx_get_param(rebx, body->ap, "k2");
-  const double r = body->r;
-
-  if (k2 != NULL && r != 0.0){
-    return 4 * tau * G / (3 * r * r * r * r * r * (*k2));
-  }
-
-  else{
-    rebx_error(rebx, "Could not set sigma because Love number and/or physical radius was not set for this particle\n");
-    return 0;
-  }
-}
-
-double rebx_tides_calc_sigma_from_Q(struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* primary, const double Q){
-  struct reb_simulation* const sim = rebx->sim;
-  const double G = sim->G;
-  struct reb_orbit orb = reb_tools_particle_to_orbit(G, *body, *primary);
-  const double r = body->r;
-  const double n = orb.n;
-  const double* k2 = rebx_get_param(rebx, body->ap, "k2");
-  if (k2 != NULL && r != 0.0){
-      return 2. * G / (3. * Q * r * r * r * r * r * (*k2) * (n));
-  }
-  else{
-    rebx_error(rebx, "Could not calculate sigma because Love number and/or physical radius was not set for this particle\n");
-    return 0;
-  }
 }
