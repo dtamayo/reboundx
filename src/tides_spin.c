@@ -170,16 +170,16 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
     for (int i=0; i<N_real; i++){
         struct reb_particle* pi = &sim->particles[i]; // target particle
         const double* k2 = rebx_get_param(rebx, pi->ap, "k2"); // This is slow
-        const double* sigma = rebx_get_param(rebx, pi->ap, "sigma");
+        const double* tau = rebx_get_param(rebx, pi->ap, "tau");
         const double* I = rebx_get_param(rebx, pi->ap, "I");
 
         // Particle MUST have k2 and moment of inertia to feel effects
         if (k2 != NULL && I != NULL){
 
-          // Possible to disregard sigma. Check for that here.
+          // Tidal dissipation off by default. Check for non-zero tau here.
           double sigma_in = 0.0;
-          if (sigma != NULL){
-            sigma_in = *sigma;
+          if (tau != NULL){
+            sigma_in = 4 * (*tau) * sim->G / (3. * pi->r * pi->r * pi->r * pi->r * pi->r * (*k2));
           }
 	       // Set initial spin accelerations to 0
           yDot[3*Nspins] = 0;
@@ -297,15 +297,15 @@ void rebx_tides_spin(struct reb_simulation* const sim, struct rebx_force* const 
         struct reb_particle* source = &particles[i];
         // Particle must have a k2 set, otherwise we treat this body as a point particle
         const double* k2 = rebx_get_param(rebx, source->ap, "k2");
-        const double* sigma = rebx_get_param(rebx, source->ap, "sigma");
+        const double* tau = rebx_get_param(rebx, source->ap, "tau");
         const struct reb_vec3d* Omega = rebx_get_param(rebx, source->ap, "Omega");
 
         // Particle needs all three spin components and k2 to feel additional forces
         if (Omega != NULL && k2 != NULL){
-          // sigma doesn't have to be set. Check for that here.
+          // Tidal dissipation off by default. Check for non-zero tau here.
           double sigma_in = 0.0;
-          if (sigma != NULL){
-            sigma_in = *sigma;
+          if (tau != NULL){
+            sigma_in = 4 * (*tau) * sim->G / (3. * source->r * source->r * source->r * source->r * source->r * (*k2));
           }
 
           for (int j=0; j<N; j++){
@@ -399,35 +399,9 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
     return H;
 }
 
-// TLu 11/8/22 HELPER FUNCS
-double rebx_tides_calc_sigma_from_tau(struct rebx_extras* rebx, struct reb_particle* body, const double tau){
-  struct reb_simulation* const sim = rebx->sim;
-  const double G = sim->G;
-  const double* k2 = rebx_get_param(rebx, body->ap, "k2");
-  const double r = body->r;
-
-  if (k2 != NULL && r != 0.0){
-    return 4 * tau * G / (3 * r * r * r * r * r * (*k2));
-  }
-
-  else{
-    rebx_error(rebx, "Could not set sigma because Love number and/or physical radius was not set for this particle\n");
-    return 0;
-  }
-}
-
-double rebx_tides_calc_sigma_from_Q(struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* primary, const double Q){
+double rebx_tides_calc_tau_from_Q(struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* primary, const double Q){
   struct reb_simulation* const sim = rebx->sim;
   const double G = sim->G;
   struct reb_orbit orb = reb_tools_particle_to_orbit(G, *body, *primary);
-  const double r = body->r;
-  const double n = orb.n;
-  const double* k2 = rebx_get_param(rebx, body->ap, "k2");
-  if (k2 != NULL && r != 0.0){
-      return 2. * G / (3. * Q * r * r * r * r * r * (*k2) * (n));
-  }
-  else{
-    rebx_error(rebx, "Could not calculate sigma because Love number and/or physical radius was not set for this particle\n");
-    return 0;
-  }
+  return 1./(2.*orb.n*Q);
 }
