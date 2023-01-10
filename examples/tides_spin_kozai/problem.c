@@ -7,8 +7,7 @@
  * even very high eccentricity encounters are resolved with high
  * accuracy.
  *
- * This is the same Kozai example implemented in base REBOUND, modified to include the tidal and spin effects from bodies with structure.
- * Please refer to that example for the system details
+ * This is the same Kozai example implemented in Lu et. al (2023)
  * Also, see the ipython examples prefixed TidesSpin for in-depth exploration of the parameters that can be set in this simulation.
  */
  #include <stdio.h>
@@ -20,13 +19,15 @@
  #include "tides_spin.c"
 
 void heartbeat(struct reb_simulation* r);
-double tmax = 4e3; // kept short to run quickly. set to at least 4x longer to see full evolution
+double tmax = 4e3; // kept short to run quickly.
+                   // set to 3e5 for a full cycle
+                   // or 7e6 * 2 * M_PI to reproduce the paper plot
 
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
     // Initial conditions
     // Setup constants
-    sim->dt                 = M_PI*1e-2;     // initial timestep
+    sim->dt                 = M_PI*1e-1;     // initial timestep
     sim->integrator         = REB_INTEGRATOR_IAS15; // IAS15 is used for its adaptive timestep:
                                                    // in a Kozai cycle the planet experiences close encounters during the high-eccentricity epochs.
                                                    // A fixed-time integrator (for example, WHFast) would need to apply the worst-case timestep to the whole simulation
@@ -38,22 +39,19 @@ int main(int argc, char* argv[]){
     star.r = 0.00465;
     reb_add(sim, star);
 
-    struct reb_particle planet = {0};
-    planet.m  = 0.05 * 9.55e-4; // A Neptune-like planet
-    planet.r = 0.3 * 4.676e-4;
-    double e_planet = 0;
-    planet.x  = 1. - e_planet;
-    planet.vy = sqrt((1. + e_planet) / (1. - e_planet));
-    reb_add(sim, planet);
+    // struct reb_particle planet = {0};
+    double planet_m  = 0.054 * 9.55e-4; // A Jupiter-like planet
+    double planet_r = 0.3 * 4.676e-4;
+    double planet_a = 2.;
+    double planet_e = 0.001;
+    reb_add_fmt(sim, "m r a e", planet_m, planet_r, planet_a, planet_e);
 
     // The perturber - treated as a point particle
-    struct reb_particle perturber = {0};
-    perturber.x  = 10;
-    double inc_perturber = 89.9;
-    perturber.m  = 1;
-    perturber.vy = cos(inc_perturber/180.*M_PI)*sqrt((star.m+perturber.m)/perturber.x);
-    perturber.vz = sin(inc_perturber/180.*M_PI)*sqrt((star.m+perturber.m)/perturber.x);
-    reb_add(sim, perturber);
+    double perturber_m  = 1;
+    double perturber_a = 50.;
+    double perturber_e = 0.7 * M_PI / 180.;
+    double perturber_inc = 80. * M_PI / 180.;
+    reb_add_fmt(sim, "m a e inc", perturber_m, perturber_a, perturber_e, perturber_inc);
 
     // Add REBOUNDx effects
     // First tides_spin
@@ -62,16 +60,17 @@ int main(int argc, char* argv[]){
     struct rebx_force* effect = rebx_load_force(rebx, "tides_spin");
     rebx_add_force(rebx, effect);
 
+
     // Sun
-    const double solar_k2 = 0.1;
+    const double solar_k2 = 0.07;
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", solar_k2);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "I", 0.07 * star.m * star.r * star.r);
 
-    const double solar_spin_period = 27 * 2. * M_PI / 365.;
+    const double solar_spin_period = 4.6 * 2. * M_PI / 365.;
     const double solar_spin = (2 * M_PI) / solar_spin_period;
     rebx_set_param_vec3d(rebx, &sim->particles[0].ap, "Omega", (struct reb_vec3d){.z=solar_spin}); // Omega_x = Omega_y = 0 by default
 
-    const double solar_Q = 3e6;
+    const double solar_Q = 1e6;
     struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
     // In the case of a spin that is synchronous with a circular orbit, tau is related to the tidal quality factor Q through the orbital mean motion n (see Lu et al. 2023 for discussion). Clearly that's not the case here, but gives us a reasonable starting point to start turning this knob
     double solar_tau = 1 / (2 * solar_Q * orb.n);
@@ -80,7 +79,7 @@ int main(int argc, char* argv[]){
     // Planet
     const double planet_k2 = 0.4;
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k2", planet_k2);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "I", 0.25 * planet.m * planet.r * planet.r);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "I", 0.25 * planet_m * planet_r * planet_r);
 
     const double spin_period_p = 1. * 2. * M_PI / 365.; // days to reb years
     const double spin_p = (2. * M_PI) / spin_period_p;
@@ -89,8 +88,9 @@ int main(int argc, char* argv[]){
     struct reb_vec3d Omega_sv = reb_tools_spherical_to_xyz(spin_p, theta_p, phi_p);
     rebx_set_param_vec3d(rebx, &sim->particles[1].ap, "Omega", Omega_sv);
 
-    const double planet_Q = 1e4;
+    const double planet_Q = 3e5;
     rebx_set_param_double(rebx, &sim->particles[1].ap, "tau", 1./(2.*planet_Q*orb.n));
+
 
     // add GR precession:
     struct rebx_force* gr = rebx_load_force(rebx, "gr_potential");
