@@ -49,10 +49,6 @@ const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line 
  ****************************/
 
 void rebx_register_default_params(struct rebx_extras* rebx){
-    rebx_register_param(rebx, "k2", REBX_TYPE_DOUBLE); // TLu: add k2
-    rebx_register_param(rebx, "I", REBX_TYPE_DOUBLE); // TLu: add moment of inertia
-    rebx_register_param(rebx, "sigma", REBX_TYPE_DOUBLE); //TLu: add dissipation constant from EKH
-    rebx_register_param(rebx, "ode", REBX_TYPE_ODE);
     rebx_register_param(rebx, "c", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "gr_source", REBX_TYPE_INT);
     rebx_register_param(rebx, "tau_mass", REBX_TYPE_DOUBLE);
@@ -127,6 +123,10 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "ye_spin_axis_z", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "OmegaMag", REBX_TYPE_VEC3D);
     rebx_register_param(rebx, "Omega", REBX_TYPE_VEC3D);
+    rebx_register_param(rebx, "k2", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "I", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tau", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "ode", REBX_TYPE_ODE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){

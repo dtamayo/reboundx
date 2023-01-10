@@ -180,14 +180,6 @@ class Extras(Structure):
         self.process_messages()
         return Acentral
 
-    def tides_calc_sigma_from_tau(self, body, tau):
-        clibreboundx.rebx_tides_calc_sigma_from_tau.restype = c_double
-        return clibreboundx.rebx_tides_calc_sigma_from_tau(byref(self), pointer(body), c_double(tau))
-
-    def tides_calc_sigma_from_Q(self, body, primary, Q):
-        clibreboundx.rebx_tides_calc_sigma_from_Q.restype = c_double
-        return clibreboundx.rebx_tides_calc_sigma_from_Q(byref(self), pointer(body), pointer(primary), c_double(Q))
-
     # Hamiltonian calculation functions
     def gr_full_hamiltonian(self, force):
         clibreboundx.rebx_gr_full_hamiltonian.restype = c_double
@@ -206,6 +198,10 @@ class Extras(Structure):
         clibreboundx.rebx_tides_constant_time_lag_potential.restype = c_double
         return clibreboundx.rebx_tides_constant_time_lag_potential(byref(self), byref(force))
 
+    def spin_kinetic_energy(self, force):
+        clibreboundx.rebx_spin_kinetic_energy.restype = c_double
+        return clibreboundx.rebx_spin_kinetic_energy(byref(self), byref(force))
+    
     def spin_potential(self, force):
         clibreboundx.rebx_spin_potential.restype = c_double
         return clibreboundx.rebx_spin_potential(byref(self), byref(force))
