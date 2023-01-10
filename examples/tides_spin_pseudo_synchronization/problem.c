@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
     // Star
     // The following parameters are mandatory to set for the body to have structure:
     // The Love number (k2)
-    // The three components of spin (sx, sy, sz)
+    // The three components of the anguarl spin frequency (Omega_x, Omega_y, Omega_z)
     const double solar_k2 = 0.07;
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", solar_k2);
     const double solar_spin_period = 27 * 2 * M_PI / 365; // 27 Days in REBOUND time units
@@ -57,36 +57,14 @@ int main(int argc, char* argv[]){
     // This is required to evolve the spin axis! Without setting this value, the spin axis will remain stationary.
     rebx_set_param_double(rebx, &sim->particles[0].ap, "I", 0.07 * solar_mass * solar_rad * solar_rad);
 
-    // Finally, the last parameter is the tidal dissipation parameter (sigma)
-    // This quantity is related to the constant time lag tau, and in the case of circular synchronous orbits, to the tital quality factor Q
-    const double solar_Q = 1e6; // the tidal quality factor Q
+    // Finally, the last parameter is the constant time lag tau
+    const double solar_Q = 1e6; // Often tidal dissipation is expressed in terms of a tidal quality factor Q
     struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
-    const double solar_tau = 1 / (2 * solar_Q * orb.n); // the constant time lag tau
+    // In the case of a spin that is synchronous with a circular orbit, tau is related to the tidal quality factor Q through the orbital mean motion n
+    double solar_tau = 1 / (2 * solar_Q * orb.n);
     // See Lu et. al (2023) for discussion of the cases in which this approximation relating Q and tau is valid
 
-    // You can calculate sigma directly (see Lu et al. (2023))
-    double solar_sigma = 4 * sim->G * solar_tau / (3 * solar_rad * solar_rad * solar_rad * solar_rad * solar_rad * solar_k2);
-
-    // Alternatively, you can use a helper function to calculate sigma from either Q or tau.
-    // In both cases, you need to make sure that k2 and the physical radius are already set for the body. If they aren't you'll get a reb_error
-
-    // To use rebx_tides_calc_sigma_from_Q, we need
-    // 1) The rebx extras object
-    // 2) The particle you wish to set sigma for
-    // 3) The primary around which the body is orbiting
-    // 4) The tidal quality factor Q you will use
-    // Here we are recalculating our solar_sigma from above using the helper function (you would just choose most convenient option):
-    solar_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[0], &sim->particles[1], solar_Q);
-
-    // rebx_tides_calc_sigma_from_tau takes, as input:
-    // 1) The rebx extras object
-    // 2) The body you wish to set sigma for
-    // 3) The Q value you will use
-    solar_sigma = rebx_tides_calc_sigma_from_tau(rebx, &sim->particles[0], solar_tau);
-
-    // For your own use case, you would just use whichever of the above three methods is most convenient (here we've done it three ways)
-    // whichever of the three methods we use above, we need to remember to set sigma
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", solar_sigma);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "tau", solar_tau);
 
     // Planet - all of the above applies here too
     const double spin_period_1 = 0.5 * 2. * M_PI / 365.; // 0.5 days in reb years
@@ -97,28 +75,25 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k2", 0.3);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "I", 0.25 * p1_mass * p1_rad * p1_rad);
 
-    // You can either manually set spin axis components:
-    double planet_sx = spin_1 * sin(theta_1) * cos(phi_1);
-    double planet_sy = spin_1 * sin(theta_1) * sin(phi_1);
-    double planet_sz = spin_1 * cos(theta_1);
+    // Let's consider a tilted planetary spin axis. The spin frequency vector is expressed in the same inertial reference frame as the simulation.
+    // Given a polar angle theta (from the z axis) and azimuthal angle phi (from the x axis), we could either manually set spin axis components:
+    struct reb_vec3d Omega_1;
+    Omega_1.x = spin_1 * sin(theta_1) * cos(phi_1);
+    Omega_1.y = spin_1 * sin(theta_1) * sin(phi_1);
+    Omega_1.z = spin_1 * cos(theta_1);
 
     // Or use the built-in convenience function, which returns the Cartesian coordinates of the spin vector given:
     // magnitude, obliquity, and phase angle
-    struct reb_vec3d p_sv = reb_tools_spherical_to_xyz(spin_1, theta_1, phi_1);
-    planet_sx = p_sv.x;
-    planet_sy = p_sv.y;
-    planet_sz = p_sv.z;
+    Omega_1 = reb_tools_spherical_to_xyz(spin_1, theta_1, phi_1);
 
     // For your own use case, you would just use whichever of the above two methods is most convenient (here we've done it three ways)
     // whichever of the two methods we use above, we need to remember to set the spin axis values
-    rebx_set_param_vec3d(rebx, &sim->particles[1].ap, "Omega", (struct reb_vec3d){.x=planet_sx, .y=planet_sy, .z=planet_sz});
-
-    double planet_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[1], &sim->particles[0], planet_Q);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma);
+    rebx_set_param_vec3d(rebx, &sim->particles[1].ap, "Omega", Omega_1);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "tau", 1./(2*planet_Q*orb.n));
 
     reb_move_to_com(sim);
 
-    // Let's create a reb_rotation object that rotates to new axes with newz pointing along the total ang. momentum, and x along the line of
+    // Let's create a reb_rotation object that rotates our simulation to new axes with newz pointing along the total ang. momentum, and x along the line of
     // nodes with the invariable plane (along z cross newz)
     struct reb_vec3d newz = rebx_tools_total_angular_momentum(rebx);
     struct reb_vec3d newx = reb_vec3d_cross((struct reb_vec3d){.z =1}, newz);

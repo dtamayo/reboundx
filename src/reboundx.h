@@ -501,16 +501,6 @@ double rebx_rad_calc_particle_radius(const double G, const double c, const doubl
 void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force* const effect);
 
 /**
- * @brief Calculate sigma tidal parameter from tidal quality factor Q assuming circular orbit and synchronized spin (see Lu et al. 2023).
- *
- * @param rebx Pointer to the rebx_extras instance.
- * @param body (reb_particle) Body for which we are calculating tidal sigma.
- * @param primary (reb_particle) Primary the body is orbiting.
- * @param Q (double) Tidal quality factor.
- */
-double rebx_tides_calc_tau_from_Q(struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* primary, const double Q);
-
-/**
  * @brief Calculates the Aradial parameter for central_force effect required for a particle to have a particular pericenter precession rate.
  * @param p Particle whose pericenter precession rate we want to match.
  * @param primary Central particle for the central force (to which we add the Acentral and gammacentral parameters).
