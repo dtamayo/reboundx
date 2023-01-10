@@ -53,7 +53,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", 0.07);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "I", 0.07 * solar_mass * solar_rad * solar_rad);
     rebx_set_param_vec3d(rebx, &sim->particles[0].ap, "Omega", (struct reb_vec3d){.z = solar_spin}); // Omega_x = Omega_y = 0 by default
-   
+
     // We assume tau = 1/(2*n*Q) with n the mean motion, even though the spin is not synchronized with the orbit (see Lu et al. (2023))
     struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "tau", 1./(2.*orb.n*solar_Q));
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k2", 0.4);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "I", 0.25 * p1_mass * p1_rad * p1_rad);
     rebx_set_param_vec3d(rebx, &sim->particles[1].ap, "Omega", (struct reb_vec3d){.y=spin_1 * -0.0261769, .z=spin_1 * 0.99965732});
-    
+
     rebx_set_param_double(rebx, &sim->particles[1].ap, "tau", 1./(2.*orb.n*planet_Q));
 
     // P2
@@ -74,7 +74,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[2].ap, "k2", 0.4);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "I", 0.25 * p2_mass * p2_rad * p2_rad);
     rebx_set_param_vec3d(rebx, &sim->particles[2].ap, "Omega", (struct reb_vec3d){.y=spin_2 * 0.0249736, .z=spin_2 * 0.99968811});
-    
+
     struct reb_orbit orb2 = reb_tools_particle_to_orbit(sim->G, sim->particles[2], sim->particles[0]);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "tau", 1./(2.*orb2.n*planet_Q));
 
@@ -112,7 +112,7 @@ int main(int argc, char* argv[]){
 }
 
 void heartbeat(struct reb_simulation* sim){
-  if(reb_output_check(sim, tmax/10)){        // outputs every 100 REBOUND years
+  if(reb_output_check(sim, tmax/100000)){        // outputs every 100 REBOUND years
     struct rebx_extras* const rebx = sim->extras;
     FILE* of_orb = fopen("output_orbits.txt", "a");
     FILE* of_spins = fopen("output_spins.txt", "a");
