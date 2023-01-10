@@ -26,11 +26,11 @@ int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_create_simulation();
     // Initial conditions
     // Setup constants
-    sim->dt             = M_PI*1e-2;     // initial timestep
-    sim->integrator        = REB_INTEGRATOR_IAS15; // IAS15 is used for its adaptive timestep:
+    sim->dt                 = M_PI*1e-2;     // initial timestep
+    sim->integrator         = REB_INTEGRATOR_IAS15; // IAS15 is used for its adaptive timestep:
                                                    // in a Kozai cycle the planet experiences close encounters during the high-eccentricity epochs.
                                                    // A fixed-time integrator (for example, WHFast) would need to apply the worst-case timestep to the whole simulation
-    sim->heartbeat        = heartbeat;
+    sim->heartbeat          = heartbeat;
 
     // Initial conditions
     struct reb_particle star = {0};
@@ -65,42 +65,35 @@ int main(int argc, char* argv[]){
     // Sun
     const double solar_k2 = 0.1;
     rebx_set_param_double(rebx, &sim->particles[0].ap, "k2", solar_k2);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "moi", 0.07 * star.m * star.r * star.r);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "I", 0.07 * star.m * star.r * star.r);
 
     const double solar_spin_period = 27 * 2. * M_PI / 365.;
     const double solar_spin = (2 * M_PI) / solar_spin_period;
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sx", solar_spin * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sy", solar_spin * 0.0);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sz", solar_spin * 1.0);
+    rebx_set_param_vec3d(rebx, &sim->particles[0].ap, "Omega", (struct reb_vec3d){.z=solar_spin}); // Omega_x = Omega_y = 0 by default
 
     const double solar_Q = 3e6;
-    double solar_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[0], &sim->particles[1], solar_Q);
-    rebx_set_param_double(rebx, &sim->particles[0].ap, "sigma", solar_sigma);
+    struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
+    // In the case of a spin that is synchronous with a circular orbit, tau is related to the tidal quality factor Q through the orbital mean motion n (see Lu et al. 2023 for discussion). Clearly that's not the case here, but gives us a reasonable starting point to start turning this knob
+    double solar_tau = 1 / (2 * solar_Q * orb.n);
+    rebx_set_param_double(rebx, &sim->particles[0].ap, "tau", solar_tau);
 
     // Planet
     const double planet_k2 = 0.4;
     rebx_set_param_double(rebx, &sim->particles[1].ap, "k2", planet_k2);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "moi", 0.25 * planet.m * planet.r * planet.r);
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "I", 0.25 * planet.m * planet.r * planet.r);
 
     const double spin_period_p = 1. * 2. * M_PI / 365.; // days to reb years
     const double spin_p = (2. * M_PI) / spin_period_p;
     const double theta_p = 0. * M_PI / 180.;
     const double phi_p = 0. * M_PI / 180;
-    struct reb_vec3d p_sv = reb_tools_spherical_to_xyz(spin_p, theta_p, phi_p);
-    double psx = p_sv.x;
-    double psy = p_sv.y;
-    double psz = p_sv.z;
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sx", psx);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sy", psy);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sz", psz);
+    struct reb_vec3d Omega_sv = reb_tools_spherical_to_xyz(spin_p, theta_p, phi_p);
+    rebx_set_param_vec3d(rebx, &sim->particles[1].ap, "Omega", Omega_sv);
 
     const double planet_Q = 1e4;
-    double planet_sigma = rebx_tides_calc_sigma_from_Q(rebx, &sim->particles[1], &sim->particles[0], planet_Q);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "sigma", planet_sigma);
-
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "tau", 1./(2.*planet_Q*orb.n));
 
     // add GR precession:
-    struct rebx_force* gr = rebx_load_force(rebx, "gr_full");
+    struct rebx_force* gr = rebx_load_force(rebx, "gr_potential");
     rebx_add_force(rebx, gr);
     rebx_set_param_double(rebx, &gr->ap, "c", 10065.32); // in default units
 
@@ -153,22 +146,15 @@ void heartbeat(struct reb_simulation* sim){
       double Om2 = o2.Omega;
       double pom2 = o2.pomega;
 
-      // Spins - initially  in the invariant frame
-      double* sx_sun = rebx_get_param(rebx, sun->ap, "sx");
-      double* sy_sun = rebx_get_param(rebx, sun->ap, "sy");
-      double* sz_sun = rebx_get_param(rebx, sun->ap, "sz");
+      struct reb_vec3d* Omega_sun = rebx_get_param(rebx, sun->ap, "Omega");
 
       // Interpret planet spin in the rotating planet frame
-      double* sx_p_inv = rebx_get_param(rebx, p1->ap, "sx");
-      double* sy_p_inv = rebx_get_param(rebx, p1->ap, "sy");
-      double* sz_p_inv = rebx_get_param(rebx, p1->ap, "sz");
-
-      struct reb_vec3d spin_inv = {*sx_p_inv, *sy_p_inv, *sz_p_inv};
+      struct reb_vec3d* Omega_p_inv = rebx_get_param(rebx, p1->ap, "Omega");
 
       // Transform spin vector into planet frame, w/ z-axis aligned with orbit normal and x-axis aligned with line of nodes
       struct reb_vec3d line_of_nodes = reb_vec3d_cross((struct reb_vec3d){.z =1}, n1);
       struct reb_rotation rot = reb_rotation_init_to_new_axes(n1, line_of_nodes); // Arguments to this function are the new z and x axes
-      struct reb_vec3d srot = reb_vec3d_rotate(spin_inv, rot); // spin vector in the planet's frame
+      struct reb_vec3d srot = reb_vec3d_rotate(*Omega_p_inv, rot); // spin vector in the planet's frame
 
       // Interpret the spin axis in the more natural spherical coordinates
       double mag_p;
@@ -176,7 +162,7 @@ void heartbeat(struct reb_simulation* sim){
       double phi_p;
       reb_tools_xyz_to_spherical(srot, &mag_p, &theta_p, &phi_p);
 
-      fprintf(of, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, *sx_sun, *sy_sun, *sz_sun, mag_p, theta_p, phi_p, a1, e1, i1, Om1, pom1, a2, e2, i2, Om2, pom2); // print spins and orbits
+      fprintf(of, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, Omega_sun->x, Omega_sun->y, Omega_sun->z, mag_p, theta_p, phi_p, a1, e1, i1, Om1, pom1, a2, e2, i2, Om2, pom2); // print spins and orbits
 
       fclose(of);
     }

@@ -57,6 +57,7 @@ enum rebx_param_type{
     REBX_TYPE_UINT32,
     REBX_TYPE_ORBIT,
     REBX_TYPE_ODE,
+    REBX_TYPE_VEC3D
 };
 
 /**
@@ -420,9 +421,9 @@ void rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** a
 void rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
 void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val);
 void rebx_set_param_uint32(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, uint32_t val);
+void rebx_set_param_vec3d(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, struct reb_vec3d val);
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type);
 
-void rebx_set_spin_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
 /** @} */
 /** @} */
 
@@ -498,25 +499,6 @@ double rebx_rad_calc_particle_radius(const double G, const double c, const doubl
  * @param effect (rebx_force) Force structure to which to attach spin_ode object.
  */
 void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force* const effect);
-
-/**
- * @brief Calculate sigma tidal parameter from constant time lag tau.
- *
- * @param rebx Pointer to the rebx_extras instance.
- * @param body (reb_particle) Body for which we are calculating tidal sigma.
- * @param tau (double) Constant time lag. 
- */
-double rebx_tides_calc_sigma_from_tau(struct rebx_extras* rebx, struct reb_particle* body, const double tau);
-
-/**
- * @brief Calculate sigma tidal parameter from tidal quality factor Q assuming circular orbit and synchronized spin (see Lu et al. 2023).
- *
- * @param rebx Pointer to the rebx_extras instance.
- * @param body (reb_particle) Body for which we are calculating tidal sigma.
- * @param primary (reb_particle) Primary the body is orbiting.
- * @param Q (double) Tidal quality factor.
- */
-double rebx_tides_calc_sigma_from_Q(struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* primary, const double Q);
 
 /**
  * @brief Calculates the Aradial parameter for central_force effect required for a particle to have a particular pericenter precession rate.
@@ -608,6 +590,7 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
  * @return Void pointer to the parameter. NULL if not found or type does not match (will write error to stderr).
  */
 void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
+struct rebx_param* rebx_get_or_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name);
 
 
 /****************************************

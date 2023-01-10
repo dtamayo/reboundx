@@ -52,7 +52,7 @@
  * particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
  * tctl_k2 (float)              Yes         Potential Love number of degree 2.
  * tctl_tau (float)             No          Constant time lag. If not set will default to 0 and give conservative tidal potential.
- * Omega (float)                No          Rotation rate. If not set will default to 0.
+ * OmegaMag (float)             No          Angular rotation frequency. If not set will default to 0.
  * ============================ =========== ==================================================================
  * 
  */
@@ -133,7 +133,7 @@ void rebx_tides_constant_time_lag(struct reb_simulation* const sim, struct rebx_
         double* tauptr = rebx_get_param(rebx, target->ap, "tctl_tau");
         if (tauptr){
             tau = *tauptr;
-            double* Omegaptr = rebx_get_param(rebx, target->ap, "Omega");
+            double* Omegaptr = rebx_get_param(rebx, target->ap, "OmegaMag");
             if (Omegaptr){
                 Omega = *Omegaptr;
             }
@@ -160,7 +160,7 @@ void rebx_tides_constant_time_lag(struct reb_simulation* const sim, struct rebx_
         double* tauptr = rebx_get_param(rebx, target->ap, "tctl_tau");
         if (tauptr){
             tau = *tauptr;
-            double* Omegaptr = rebx_get_param(rebx, target->ap, "Omega");
+            double* Omegaptr = rebx_get_param(rebx, target->ap, "OmegaMag");
             if (Omegaptr){
                 Omega = *Omegaptr;
             }
