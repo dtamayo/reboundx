@@ -37,10 +37,10 @@
  *
  * This effect consistently tracks both the spin and orbital evolution of bodies under constant-time lag tides raised on both the primary and on the orbiting bodies.
  * In all cases, we need to set masses for all the particles that will feel these tidal forces. Particles with only mass are point particles
- * Particles are assumed to have structure (i.e - physical extent & distortion from spin) if the following parameters are set: physical radius particles[i].r, potential Love number of degree 2 k2, and the spin frequency components sx, sy, sz.
+ * Particles are assumed to have structure (i.e - physical extent & distortion from spin) if the following parameters are set: physical radius particles[i].r, potential Love number of degree 2 k2 (Q/(1-Q) in Eggleton 1998), and the spin angular rotation frequency vector Omega.
  * If we wish to evolve a body's spin components, the fully dimensional moment of inertia I must be set as well. If this parameter is not set, the spin components will be stationary.
- * Finally, if we wish to consider the effects of tides raised on a specific body, we must set the tidal dissipation parameter sigma as well.
- * See Lu et. al (in review) and Eggleton et. al (1998) above
+ * Finally, if we wish to consider the effects of tides raised on a specific body, we must set the constant time lag tau as well.
+ * See Lu et. al (in review) and Eggleton et. al (1998) above.
  *
  * **Effect Parameters**
  *
@@ -55,7 +55,7 @@
  * k2 (float)                   Yes         Potential Love number of degree 2.
  * Omega (reb_vec3d)            Yes         Angular rotation frequency
  * I (float)                    No          Moment of inertia
- * sigma (float)                No          Tidal Dissipation Parameter. If not set, defaults to 0
+ * tau (float)                  No          Constant time lag. If not set, defaults to 0
  * ============================ =========== ==================================================================
  *
  */
@@ -397,11 +397,4 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
     }
 
     return H;
-}
-
-double rebx_tides_calc_tau_from_Q(struct rebx_extras* rebx, struct reb_particle* body, struct reb_particle* primary, const double Q){
-  struct reb_simulation* const sim = rebx->sim;
-  const double G = sim->G;
-  struct reb_orbit orb = reb_tools_particle_to_orbit(G, *body, *primary);
-  return 1./(2.*orb.n*Q);
 }
