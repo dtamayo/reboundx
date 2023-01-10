@@ -8,7 +8,6 @@ from .extras import Param, Node, Force, Operator, Extras, REBX_CTYPES
 from . import clibreboundx
 from ctypes import byref, c_double, c_int, c_int32, c_int64, c_uint, c_uint32, c_longlong, c_char_p, POINTER, cast
 from ctypes import c_void_p, memmove, sizeof, addressof
-import numpy as np
 from rebound.tools import hash as rebhash
 
 class Params(MutableMapping):
@@ -32,7 +31,7 @@ class Params(MutableMapping):
         ctype = REBX_CTYPES[param_type]
         if ctype == None:
             raise AttributeError("REBOUNDx Error: Parameter '{0}' not found in REBOUNDx. Need to register it first.".format(key))
-        
+
         clibreboundx.rebx_get_param.restype = c_void_p
         valptr = clibreboundx.rebx_get_param(self.rebx, self.ap, c_char_p(key.encode('ascii')))
 
@@ -46,6 +45,8 @@ class Params(MutableMapping):
             val = valptr.contents.value # return python int or float rather than c_int or c_double
         except AttributeError:
             val = valptr.contents # Structure, return ctypes object
+            if isinstance(val, rebound.Vec3d):
+                return [val.x, val.y, val.z]
         except ValueError: # NULL access
             raise AttributeError("REBOUNDx Error: Parameter '{0}' not found on object.".format(key))
 
@@ -62,6 +63,8 @@ class Params(MutableMapping):
             clibreboundx.rebx_set_param_int(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), c_int(value))
         if ctype == c_uint32:
             clibreboundx.rebx_set_param_uint32(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), value)
+        if ctype == rebound.Vec3d:
+            clibreboundx.rebx_set_param_vec3d(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), rebound.Vec3d(value))
         if ctype == Force:
             if not isinstance(value, Force):
                 raise AttributeError("REBOUNDx Error: Parameter '{0}' must be assigned a Force object.".format(key))

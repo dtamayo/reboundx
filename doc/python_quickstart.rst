@@ -37,8 +37,8 @@ would, e.g.
 
     import rebound
     sim = rebound.Simulation()
-    sim.add(m=1., hash="sun")
-    sim.add(a=1., hash="earth")
+    sim.add(m=1.)
+    sim.add(a=1.)
 
 To use reboundx, we first import it, and then create a
 ``reboundx.Extras`` instance, passing it the simulation we want to attach it to:
@@ -59,14 +59,15 @@ For example, let's add some mass loss to the star:
 .. code:: python
 
     mm = rebx.load_operator("modify_mass")
+    rebx.add_operator(mm)
 
 Each effect will have different parameters to set, listed on the :ref:`effects` page and the examples.
 Forces, operators and particles have a params attribute that works like a dictionary.
-For example, let's add an exponential mass loss (i.e., negative) timescale to the star (index 0) of 100 time units.
+For example, let's add an exponential mass loss (i.e., negative) timescale to the star (index 0) of 1000 time units.
 
 .. code:: python
 
-    sim.particles[0].params["tau_mass"] = -100
+    sim.particles[0].params["tau_mass"] = -1000
 
 You can add as many modifications as you'd like in the same simulation.
 Simply add them:
