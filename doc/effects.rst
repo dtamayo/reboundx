@@ -456,10 +456,11 @@ Python Example          `TidesSpinPseudoSynchronization.ipynb <https://github.co
 
 This effect consistently tracks both the spin and orbital evolution of bodies under constant-time lag tides raised on both the primary and on the orbiting bodies.
 In all cases, we need to set masses for all the particles that will feel these tidal forces. Particles with only mass are point particles
-Particles are assumed to have structure (i.e - physical extent & distortion from spin) if the following parameters are set: physical radius particles[i].r, potential Love number of degree 2 k2, and the spin frequency components sx, sy, sz.
-If we wish to evolve a body's spin components, the fully dimensional moment of inertia moi must be set as well. If this parameter is not set, the spin components will be stationary.
-Finally, if we wish to consider the effects of tides raised on a specific body, we must set the tidal dissipation parameter sigma as well.
-See Lu et. al (in review) and Eggleton et. al (1998) above
+Particles are assumed to have structure (i.e - physical extent & distortion from spin) if the following parameters are set: physical radius particles[i].r, potential Love number of degree 2 k2 (Q/(1-Q) in Eggleton 1998), and the spin angular rotation frequency vector Omega.
+If we wish to evolve a body's spin components, the fully dimensional moment of inertia I must be set as well. If this parameter is not set, the spin components will be stationary.
+Finally, if we wish to consider the effects of tides raised on a specific body, we must set the constant time lag tau as well.
+For spins that are synchronized with a circular orbit, the constant time lag can be related to the tidal quality factor Q as tau = 1/(2*n*tau), with n the orbital mean motion.
+See Lu et. al (in review) and Eggleton et. al (1998) above for discussion.
 
 **Effect Parameters**
 
@@ -472,11 +473,9 @@ Field (C type)               Required    Description
 ============================ =========== ==================================================================
 particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
 k2 (float)                   Yes         Potential Love number of degree 2.
-sx (float)                   Yes         x component of spin vector
-sy (float)                   Yes         y component of spin vector
-sz (float)                   Yes         z component of spin vector
-moi (float)                  No          Moment of inertia
-sigma (float)                No          Tidal Dissipation Parameter. If not set, defaults to 0
+Omega (reb_vec3d)            Yes         Angular rotation frequency
+I (float)                    No          Moment of inertia
+tau (float)                  No          Constant time lag. If not set, defaults to 0
 ============================ =========== ==================================================================
 
 
@@ -510,7 +509,7 @@ Field (C type)               Required    Description
 particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
 tctl_k2 (float)              Yes         Potential Love number of degree 2.
 tctl_tau (float)             No          Constant time lag. If not set will default to 0 and give conservative tidal potential.
-Omega (float)                No          Rotation rate. If not set will default to 0.
+OmegaMag (float)             No          Angular rotation frequency. If not set will default to 0.
 ============================ =========== ==================================================================
 
 
