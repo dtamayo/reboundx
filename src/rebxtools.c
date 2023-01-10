@@ -247,15 +247,13 @@ struct reb_vec3d rebx_tools_total_angular_momentum(struct rebx_extras* const reb
     const int N_real = sim->N - sim->N_var;
     for (int i=0;i<N_real;i++){
 		struct reb_particle* pi = &sim->particles[i];
-        const double* sx = rebx_get_param(rebx, pi->ap, "sx");
-        const double* sy = rebx_get_param(rebx, pi->ap, "sy");
-        const double* sz = rebx_get_param(rebx, pi->ap, "sz");
-        const double* moi = rebx_get_param(rebx, pi->ap, "moi");
+        const struct reb_vec3d* Omega = rebx_get_param(rebx, pi->ap, "Omega");
+        const double* I = rebx_get_param(rebx, pi->ap, "I");
 
-        if (sx != NULL && sy != NULL && sz != NULL && moi != NULL){
-          L.x += (*moi) * (*sx);
-          L.y += (*moi) * (*sy);
-          L.z += (*moi) * (*sz);
+        if (Omega != NULL && I != NULL){
+          L.x += (*I) * (Omega->x);
+          L.y += (*I) * (Omega->y);
+          L.z += (*I) * (Omega->z);
         }
 	}
 	return L;
@@ -268,15 +266,9 @@ void rebx_simulation_irotate(struct rebx_extras* const rebx, const struct reb_ro
     for (int i=0; i<sim->N; i++){
         struct reb_particle* p = &sim->particles[i];
         // Rotate spins
-        const double* sx = rebx_get_param(rebx, p->ap, "sx");
-        const double* sy = rebx_get_param(rebx, p->ap, "sy");
-        const double* sz = rebx_get_param(rebx, p->ap, "sz");
-        if (sx != NULL && sy != NULL && sz != NULL){
-            struct reb_vec3d spin = {*sx, *sy, *sz};
-            reb_vec3d_irotate(&spin, q);
-            rebx_set_param_double(rebx, &p->ap, "sx", spin.x);
-            rebx_set_param_double(rebx, &p->ap, "sy", spin.y);
-            rebx_set_param_double(rebx, &p->ap, "sz", spin.z);
+        const struct reb_vec3d* Omega = rebx_get_param(rebx, p->ap, "Omega");
+        if (Omega != NULL){
+            reb_vec3d_irotate(Omega, q);
         }
     }
 }
