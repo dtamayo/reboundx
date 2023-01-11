@@ -8,6 +8,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install REBOUND
+        uses: actions/checkout@v3
+        with:
+          repository: hannorein/rebound
+        run: |
+          cd src
+          make
       - uses: actions/checkout@v3
       - name: Compile all examples
         run: |
