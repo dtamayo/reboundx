@@ -16,7 +16,7 @@ jobs:
           path: ./rebound
       - name: Install REBOUND
         run: |
-          cd ../rebound/src
+          cd rebound/src
           make
       - name: Compile all examples
         run: |
