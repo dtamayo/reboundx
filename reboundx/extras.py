@@ -198,13 +198,9 @@ class Extras(Structure):
         clibreboundx.rebx_tides_constant_time_lag_potential.restype = c_double
         return clibreboundx.rebx_tides_constant_time_lag_potential(byref(self), byref(force))
 
-    def spin_kinetic_energy(self, force):
-        clibreboundx.rebx_spin_kinetic_energy.restype = c_double
-        return clibreboundx.rebx_spin_kinetic_energy(byref(self), byref(force))
-    
-    def spin_potential(self, force):
-        clibreboundx.rebx_spin_potential.restype = c_double
-        return clibreboundx.rebx_spin_potential(byref(self), byref(force))
+    def tides_spin_energy(self):
+        clibreboundx.rebx_tides_spin_energy.restype = c_double
+        return clibreboundx.rebx_tides_spin_energy(byref(self))
 
     def central_force_potential(self):
         clibreboundx.rebx_central_force_potential.restype = c_double
@@ -227,13 +223,13 @@ class Extras(Structure):
         clibreboundx.rebx_simulation_irotate.restype = None
         clibreboundx.rebx_simulation_irotate(byref(self), q)
   
-    def calculate_total_angular_momentum(self):
+    def spin_angular_momentum(self):
         """
-        Returns a list of the three (x,y,z) components of the total angular momentum of all particles in the simulation.
-        Includes orbital angular momentum and spin angular momentum.
+        Returns a list of the three (x,y,z) components of the spin angular momentum of all particles in the simulation with
+        moment of inertia (I) and spin angular frequency vector (Omega) parameters set.
         """
-        clibreboundx.rebx_tools_total_angular_momentum.restype = rebound.Vec3d
-        L = clibreboundx.rebx_tools_total_angular_momentum(byref(self))
+        clibreboundx.rebx_spin_angular_momentum.restype = rebound.Vec3d
+        L = clibreboundx.rebx_spin_angular_momentum(byref(self))
         return [L.x, L.y, L.z]
 
     def process_messages(self):
