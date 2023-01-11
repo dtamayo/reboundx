@@ -60,9 +60,9 @@ class TestTides(unittest.TestCase):
         self.test_conservation_planet()
 
     def do_test_conservation(self):
-        H0 = self.sim.calculate_energy() + self.rebx.tides_constant_time_lag_potential(self.force)
+        H0 = self.sim.energy() + self.rebx.tides_constant_time_lag_potential(self.force)
         self.sim.integrate(1.e3*self.sim.particles[1].P)
-        H = self.sim.calculate_energy() + self.rebx.tides_constant_time_lag_potential(self.force)
+        H = self.sim.energy() + self.rebx.tides_constant_time_lag_potential(self.force)
         self.assertLess(abs((H-H0)/H0), 1.e-12)
         self.assertGreater(self.sim.particles[1].pomega, 1.e-6)
 
