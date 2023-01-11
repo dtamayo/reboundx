@@ -446,7 +446,7 @@ void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum 
  *
  * @param rebx Pointer to the rebx_extras instance
  */
-struct reb_vec3d rebx_spin_angular_momentum(struct rebx_extras* const rebx);
+struct reb_vec3d rebx_tools_spin_angular_momentum(struct rebx_extras* const rebx);
 
 void rebx_simulation_irotate(struct rebx_extras* const rebx, const struct reb_rotation q);
 
