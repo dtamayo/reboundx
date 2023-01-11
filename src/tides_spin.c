@@ -324,24 +324,7 @@ void rebx_tides_spin(struct reb_simulation* const sim, struct rebx_force* const 
     }
 }
 
-double rebx_spin_kinetic_energy(struct rebx_extras* const rebx){
-    struct reb_simulation* const sim = rebx->sim;
-    const int N_real = sim->N - sim->N_var;
-    double E=0.;
-    double* I;
-    struct reb_vec3d* Omega;
-    for (int i=0; i<N_real; i++){
-        I = rebx_get_param(rebx, sim->particles[i].ap, "I");
-        Omega = rebx_get_param(rebx, sim->particles[i].ap, "Omega");
-        if (I != NULL && Omega != NULL){
-            const double omega_squared = Omega->x * Omega->x + Omega->y * Omega->y + Omega->z * Omega->z;
-            E += 0.5 * (*I) * omega_squared;
-        }
-    }
-    return E;
-}
-
-// Calculate potential of conservative piece of tidal interaction
+// Calculate potential of conservative piece of interaction between a point mass target and a source with a tidally and rotationally induced quadrupole
 // Equation 31 in Eggleton et. al (1998)
 static double rebx_calculate_spin_potential(struct reb_particle* source, struct reb_particle* target, const double G, const double k2, const struct reb_vec3d Omega){
     const double Rs = source->r;
@@ -366,7 +349,7 @@ static double rebx_calculate_spin_potential(struct reb_particle* source, struct 
     return -(t1 + t2 + t3);
 }
 
-double rebx_spin_potential(struct rebx_extras* const rebx){
+double rebx_tides_spin_energy(struct rebx_extras* const rebx){
     if (rebx->sim == NULL){
         rebx_error(rebx, ""); // rebx_error gives meaningful err
         return 0;
@@ -375,27 +358,35 @@ double rebx_spin_potential(struct rebx_extras* const rebx){
     const int N_real = sim->N - sim->N_var;
     struct reb_particle* const particles = sim->particles;
     const double G = sim->G;
-    double H=0.;
+    double E=0.;
 
     for (int i=0; i<N_real; i++){
         struct reb_particle* source = &particles[i];
         // Particle must have a k2, radius and mass set, otherwise we treat this body as a point particle
-        if (source->m == 0){
+        const double* k2 = rebx_get_param(rebx, source->ap, "k2");
+        const struct reb_vec3d* Omegaptr = rebx_get_param(rebx, source->ap, "Omega");
+        if (k2 == NULL || source->m == 0 || source->r == 0){
             continue;
+        }
+        struct reb_vec3d Omega = {0};
+        if (Omegaptr != NULL){
+            Omega = *Omegaptr;
+        }
+        double* I = rebx_get_param(rebx, source->ap, "I");
+        if (I != NULL){
+            const double omega_squared = Omega.x * Omega.x + Omega.y * Omega.y + Omega.z * Omega.z;
+            E += 0.5 * (*I) * omega_squared;
         }
         for (int j=0; j<N_real; j++){
             if (i==j){
                 continue;
             }
             struct reb_particle* target = &particles[j]; // planet raising the tides on the star
-            const double* k2 = rebx_get_param(rebx, source->ap, "k2");
-            const struct reb_vec3d* Omega = rebx_get_param(rebx, source->ap, "Omega");
-            if (k2 == NULL || Omega == NULL || target->m == 0 || target->r == 0){
-                continue;
+            if (target->m > 0){
+                E += rebx_calculate_spin_potential(source, target, G, *k2, Omega);
             }
-            H += rebx_calculate_spin_potential(source, target, G, *k2, *Omega);
         }
     }
 
-    return H;
+    return E;
 }

@@ -442,11 +442,11 @@ void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum 
  */
 
 /**
- * @brief Calculate total angular momentum in the simulation (including any spin angular momentum of bodies with spin parameters set).
+ * @brief Calculate spin angular momentum in the simulation of any bodies with spin parameters set (moment of inertia I and angular rotation frequency vector Omega).
  *
  * @param rebx Pointer to the rebx_extras instance
  */
-struct reb_vec3d rebx_tools_total_angular_momentum(struct rebx_extras* const rebx);
+struct reb_vec3d rebx_spin_angular_momentum(struct rebx_extras* const rebx);
 
 void rebx_simulation_irotate(struct rebx_extras* const rebx, const struct reb_rotation q);
 
@@ -542,6 +542,13 @@ double rebx_gr_potential_potential(struct rebx_extras* const rebx, const struct 
  * @return Potential corresponding to tides_constant_time_lag effect.
  */
 double rebx_tides_constant_time_lag_potential(struct rebx_extras* const rebx);
+
+/**
+ * @brief Calculates the total energy associated with bodies' spin and their tidal interactions in tides_spin effect. This includes the spin kinetic energy plus gravitational potential between the tidally and rotationally induced quadrupoles and other bodies (treated as point masses). You should add sim.calculate_energy() to include bodies' overall kinetic energy and point-mass gravitational potential energy.
+ * @param rebx pointer to the REBOUNDx extras instance.
+ * @return Energy associated with tides_spin effect.
+ */
+double rebx_tides_spin_energy(struct rebx_extras* const rebx);
 
 /**
  * @brief Calculates the potential for central_force effect.
