@@ -44,9 +44,9 @@ class TestConservation(unittest.TestCase):
         rebx.add_force(force)
         force.params['c'] = 1.e4
         ps = sim.particles
-        H0 = sim.calculate_energy() + rebx.gr_potential_potential(force)
+        H0 = sim.energy() + rebx.gr_potential_potential(force)
         sim.integrate(1.e4)
-        H = sim.calculate_energy() + rebx.gr_potential_potential(force)
+        H = sim.energy() + rebx.gr_potential_potential(force)
         self.assertLess(abs((H-H0)/H0), 1.e-12)
 
     def test_central_force(self):
@@ -59,9 +59,9 @@ class TestConservation(unittest.TestCase):
         ps = sim.particles
         ps[0].params['Acentral'] = 1.e-4
         ps[0].params['gammacentral'] = -1
-        H0 = sim.calculate_energy() + rebx.central_force_potential()
+        H0 = sim.energy() + rebx.central_force_potential()
         sim.integrate(1.e4)
-        H = sim.calculate_energy() + rebx.central_force_potential()
+        H = sim.energy() + rebx.central_force_potential()
         self.assertLess(abs((H-H0)/H0), 1.e-12)
 
     def test_gravitational_harmonics(self):
@@ -75,9 +75,9 @@ class TestConservation(unittest.TestCase):
         ps[0].params['J2'] = 1.e-3
         ps[0].params['J4'] = 1.e-3
         ps[0].params['R_eq'] = 1.e-3
-        H0 = sim.calculate_energy() + rebx.gravitational_harmonics_potential()
+        H0 = sim.energy() + rebx.gravitational_harmonics_potential()
         sim.integrate(1.e4)
-        H = sim.calculate_energy() + rebx.gravitational_harmonics_potential()
+        H = sim.energy() + rebx.gravitational_harmonics_potential()
         self.assertLess(abs((H-H0)/H0), 1.e-12)
 
 if __name__ == '__main__':
