@@ -240,11 +240,11 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* c
     }
 }
 
-struct reb_vec3d rebx_tools_total_angular_momentum(struct rebx_extras* const rebx){
+struct reb_vec3d rebx_spin_angular_momentum(struct rebx_extras* const rebx){
     struct reb_simulation* const sim = rebx->sim;
-    struct reb_vec3d L = reb_tools_angular_momentum(sim);
     // Add spin angular momentum of any particles with spin parameters set
     const int N_real = sim->N - sim->N_var;
+    struct reb_vec3d L = {0.};
     for (int i=0;i<N_real;i++){
 		struct reb_particle* pi = &sim->particles[i];
         const struct reb_vec3d* Omega = rebx_get_param(rebx, pi->ap, "Omega");
@@ -266,7 +266,7 @@ void rebx_simulation_irotate(struct rebx_extras* const rebx, const struct reb_ro
     for (int i=0; i<sim->N; i++){
         struct reb_particle* p = &sim->particles[i];
         // Rotate spins
-        const struct reb_vec3d* Omega = rebx_get_param(rebx, p->ap, "Omega");
+        struct reb_vec3d* Omega = rebx_get_param(rebx, p->ap, "Omega");
         if (Omega != NULL){
             reb_vec3d_irotate(Omega, q);
         }
