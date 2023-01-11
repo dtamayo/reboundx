@@ -544,7 +544,7 @@ double rebx_gr_potential_potential(struct rebx_extras* const rebx, const struct 
 double rebx_tides_constant_time_lag_potential(struct rebx_extras* const rebx);
 
 /**
- * @brief Calculates the total energy associated with bodies' spin and their tidal interactions in tides_spin effect. This includes the spin kinetic energy plus gravitational potential between the tidally and rotationally induced quadrupoles and other bodies (treated as point masses). You should add sim.calculate_energy() to include bodies' overall kinetic energy and point-mass gravitational potential energy.
+ * @brief Calculates the total energy associated with bodies' spin and their tidal interactions in tides_spin effect. This includes the spin kinetic energy plus gravitational potential between the tidally and rotationally induced quadrupoles and other bodies (treated as point masses). You should add sim.energy() to include bodies' overall kinetic energy and point-mass gravitational potential energy.
  * @param rebx pointer to the REBOUNDx extras instance.
  * @return Energy associated with tides_spin effect.
  */
