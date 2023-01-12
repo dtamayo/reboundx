@@ -240,7 +240,7 @@ void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* c
     }
 }
 
-struct reb_vec3d rebx_spin_angular_momentum(struct rebx_extras* const rebx){
+struct reb_vec3d rebx_tools_spin_angular_momentum(struct rebx_extras* const rebx){
     struct reb_simulation* const sim = rebx->sim;
     // Add spin angular momentum of any particles with spin parameters set
     const int N_real = sim->N - sim->N_var;

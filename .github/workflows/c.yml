@@ -9,7 +9,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Checkout REBOUND
+        uses: actions/checkout@v3
+        with:
+          repository: hannorein/rebound
+          path: ./rebound
       - name: Compile all examples
         run: |
           cd examples
+          export REB_DIR=$GITHUB_WORKSPACE/rebound
           make

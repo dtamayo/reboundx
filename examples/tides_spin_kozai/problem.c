@@ -19,7 +19,7 @@
  #include "tides_spin.c"
 
 void heartbeat(struct reb_simulation* r);
-double tmax = 4e3; // kept short to run quickly.
+double tmax = 1e5; // kept short to run quickly.
                    // set to 3e5 for a full cycle
                    // or 7e6 * 2 * M_PI to reproduce the paper plot
 
@@ -87,7 +87,6 @@ int main(int argc, char* argv[]){
     const double phi_p = 0. * M_PI / 180;
     struct reb_vec3d Omega_sv = reb_tools_spherical_to_xyz(spin_p, theta_p, phi_p);
     rebx_set_param_vec3d(rebx, &sim->particles[1].ap, "Omega", Omega_sv);
-    printf("%e,%e,%e\n", Omega_sv.x, Omega_sv.y, Omega_sv.z);
 
     const double planet_Q = 3e5;
     rebx_set_param_double(rebx, &sim->particles[1].ap, "tau", 1./(2.*planet_Q*orb.n));
@@ -102,7 +101,7 @@ int main(int argc, char* argv[]){
 
     // Let's create a reb_rotation object that rotates to new axes with newz pointing along the total ang. momentum, and x along the line of
     // nodes with the invariable plane (along z cross newz)
-    struct reb_vec3d newz = rebx_spin_angular_momentum(rebx);
+    struct reb_vec3d newz = reb_vec3d_add(reb_tools_angular_momentum(sim), rebx_tools_spin_angular_momentum(rebx));
     struct reb_vec3d newx = reb_vec3d_cross((struct reb_vec3d){.z =1}, newz);
     struct reb_rotation rot = reb_rotation_init_to_new_axes(newz, newx);
     rebx_simulation_irotate(rebx, rot); // This rotates our simulation into the invariable plane aligned with the total ang. momentum (including spin)
