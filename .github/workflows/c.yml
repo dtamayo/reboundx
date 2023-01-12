@@ -13,12 +13,9 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: hannorein/rebound
-          path: ../rebound
-      - name: Install REBOUND
-        run: |
-          cd ../rebound/src
-          make
+          path: ./rebound
       - name: Compile all examples
         run: |
           cd examples
+          export REB_DIR=./rebound
           make
