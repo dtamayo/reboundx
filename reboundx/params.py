@@ -45,8 +45,8 @@ class Params(MutableMapping):
             val = valptr.contents.value # return python int or float rather than c_int or c_double
         except AttributeError:
             val = valptr.contents # Structure, return ctypes object
-            if isinstance(val, rebound.Vec3d):
-                return [val.x, val.y, val.z]
+            if isinstance(val, rebound._Vec3d):
+                return rebound.Vec3d(val)
         except ValueError: # NULL access
             raise AttributeError("REBOUNDx Error: Parameter '{0}' not found on object.".format(key))
 
@@ -63,8 +63,8 @@ class Params(MutableMapping):
             clibreboundx.rebx_set_param_int(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), c_int(value))
         if ctype == c_uint32:
             clibreboundx.rebx_set_param_uint32(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), value)
-        if ctype == rebound.Vec3d:
-            clibreboundx.rebx_set_param_vec3d(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), rebound.Vec3d(value))
+        if ctype == rebound._Vec3d:
+            clibreboundx.rebx_set_param_vec3d(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), rebound.Vec3d(value)._vec3d)
         if ctype == Force:
             if not isinstance(value, Force):
                 raise AttributeError("REBOUNDx Error: Parameter '{0}' must be assigned a Force object.".format(key))
