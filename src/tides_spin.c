@@ -205,7 +205,6 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
                 const double mu_ij = (mi * mj) / (mi + mj);
                 
                 struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, sigma_in, Omega);
-
                 // Eggleton et. al 1998 spin EoM (equation 36)
                 yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) * (-mu_ij / *I));
                 yDot[3*Nspins + 1] += ((dz * tf.x - dx * tf.z) * (-mu_ij / *I));
@@ -219,6 +218,7 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
         reb_error(sim, "rebx_spin ODE is not of the expected length.\n");
         exit(1);
     }
+
 }
 
 static void rebx_spin_sync_pre(struct reb_ode* const ode, const double* const y0){
