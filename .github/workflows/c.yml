@@ -17,5 +17,5 @@ jobs:
       - name: Compile all examples
         run: |
           cd examples
-          export REB_DIR=./rebound
+          export REB_DIR=$GITHUB_WORKSPACE/rebound
           make
