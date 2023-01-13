@@ -76,7 +76,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_vec3d(rebx, &sim->particles[2].ap, "Omega", (struct reb_vec3d){.y=spin_2 * 0.0249736, .z=spin_2 * 0.99968811});
 
     struct reb_orbit orb2 = reb_tools_particle_to_orbit(sim->G, sim->particles[2], sim->particles[0]);
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "tau", 1./(2.*orb2.n*planet_Q));
+    rebx_set_param_double(rebx, &sim->particles[2].ap, "tau", 1./(2.*orb2.n*planet_Q));
 
     // And migration
     struct rebx_force* mo = rebx_load_force(rebx, "modify_orbits_forces");
@@ -99,6 +99,7 @@ int main(int argc, char* argv[]){
     // Run simulation
     system("rm -v output_orbits.txt"); // remove previous output files
     system("rm -v output_spins.txt");
+    
     reb_integrate(sim, tmax/2);
 
     printf("Migration Switching Off\n");
@@ -170,7 +171,7 @@ void heartbeat(struct reb_simulation* sim){
 
     fprintf(of_orb, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, a1, e1, i1, pom1, Om1, norm1.x, norm1.y, norm1.z, a2, e2, i2, pom2, Om2, norm2.x, norm2.y, norm2.z);  // prints the spins and orbits of all bodies
     fclose(of_orb);
-    fprintf(of_spins, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, Omega_sun->x, Omega_sun->y, Omega_sun->z, mag1, theta1, phi1, mag2, theta2, phi2);
+    fprintf(of_spins, "%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e,%e\n", sim->t, Omega_sun->x, Omega_sun->y, Omega_sun->z, mag1, theta1, phi1, mag2, theta2, phi2, Omega_p1->x, Omega_p1->y, Omega_p1->z, Omega_p2->x, Omega_p2->y, Omega_p2->z);
     fclose(of_spins);
   }
 
