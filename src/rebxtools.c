@@ -160,7 +160,7 @@ static inline void rebx_subtract_posvel(struct reb_particle* p, struct reb_parti
  * (could happen e.g. with barycentric coordinates with test particles and single massive body)
  */
 
-void rebxtools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* const operator, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_particle (*calculate_step) (struct reb_simulation* const sim, struct rebx_operator* const operator, struct reb_particle* p, struct reb_particle* source, const double dt), const double dt){
+void rebx_tools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* const operator, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_particle (*calculate_step) (struct reb_simulation* const sim, struct rebx_operator* const operator, struct reb_particle* p, struct reb_particle* source, const double dt), const double dt){
     struct rebx_extras* const rebx = sim->extras;
     const int N_real = sim->N - sim->N_var;
     struct reb_particle com = reb_get_com(sim); // Start with full com for jacobi and barycentric coordinates.

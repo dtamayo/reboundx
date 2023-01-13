@@ -140,5 +140,5 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_ope
 	}
     const int back_reactions_inclusive = 1;
     const char* reference_name = "primary";
-    rebxtools_com_ptm(sim, operator, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_direct, dt);
+    rebx_tools_com_ptm(sim, operator, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_modify_orbits_direct, dt);
 }
