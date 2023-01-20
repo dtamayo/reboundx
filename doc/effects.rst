@@ -67,7 +67,7 @@ inner_disk_edge
 
 ======================= ================================================================================================================
 Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
-Implementation Paper    Kajtazi et al. in prep.
+Implementation Paper    `Kajtazi et al 2022 <https://ui.adsabs.harvard.edu/abs/2022arXiv221106181K/abstract>`_.
 Based on                `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>`_.
 C example               :ref:`c_example_inner_disk_edge`
 Python example          `InnerDiskEdge.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/InnerDiskEdge.ipynb>`_.
@@ -143,13 +143,13 @@ type_I_migration
 
 ======================= ===============================================
 Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
-Implementation Paper    Kajtazi et al. in prep.
+Implementation Paper    `Kajtazi et al 2022 <https://ui.adsabs.harvard.edu/abs/2022arXiv221106181K/abstract>`_.
 Based on                `Cresswell & Nelson 2008 <https://ui.adsabs.harvard.edu/abs/2008A%26A...482..677C/abstract>`_, and `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>`_.
 C example               :ref:`c_example_type_I_migration`
 Python example          `TypeIMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TypeIMigration.ipynb>`_.
 ======================= ===============================================
 
-This applies Type I migration, damping eccentricity, semi-major axis and inclination.
+This applies Type I migration, damping eccentricity, angular momentum and inclination.
 The base of the code is the same as the modified orbital forces one written by D. Tamayo, H. Rein.
 It also allows for parameters describing an inner disc edge, modeled using the implementation in inner_disk_edge.c.
 Note that this code is not machine independent since power laws were not possible to avoid all together.
@@ -441,6 +441,44 @@ tau_mass (double)            Yes         e-folding mass loss (<0) or growth (>0)
 Tides
 ^^^^^^^^^^^^^^^^^^
 
+.. _tides_spin:
+
+tides_spin
+**********
+
+======================= ===============================================
+Authors                 Tiger Lu, Hanno Rein, D. Tamayo, Sam Hadden, Rosemary Mardling, Sarah Millholland, Gregory Laughlin
+Implementation Paper    Lu et al., 2023 (in review).
+Based on                `Eggleton et al. 1998 <https://ui.adsabs.harvard.edu/abs/1998ApJ...499..853E/abstract>`_.
+C Example               :ref:`c_example_tides_spin_pseudo_synchronization`, :ref:`c_example_tides_spin_migration_driven_obliquity_tides`, :ref:`c_example_tides_spin_kozai`.
+Python Example          `SpinsIntro.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/SpinsIntro.ipynb>`_., `TidesSpinPseudoSynchronization.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesSpinPseudoSynchronization.ipynb>`_., `TidesSpinEarthMoon.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesSpinEarthMoon.ipynb>`_.
+======================= ===============================================
+
+This effect consistently tracks both the spin and orbital evolution of bodies under constant-time lag tides raised on both the primary and on the orbiting bodies.
+In all cases, we need to set masses for all the particles that will feel these tidal forces. Particles with only mass are point particles
+Particles are assumed to have structure (i.e - physical extent & distortion from spin) if the following parameters are set: physical radius particles[i].r, potential Love number of degree 2 k2 (Q/(1-Q) in Eggleton 1998), and the spin angular rotation frequency vector Omega.
+If we wish to evolve a body's spin components, the fully dimensional moment of inertia I must be set as well. If this parameter is not set, the spin components will be stationary.
+Finally, if we wish to consider the effects of tides raised on a specific body, we must set the constant time lag tau as well.
+For spins that are synchronized with a circular orbit, the constant time lag can be related to the tidal quality factor Q as tau = 1/(2*n*tau), with n the orbital mean motion.
+See Lu et. al (in review) and Eggleton et. al (1998) above for discussion.
+
+**Effect Parameters**
+
+None
+
+**Particle Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
+k2 (float)                   Yes         Potential Love number of degree 2.
+Omega (reb_vec3d)            Yes         Angular rotation frequency
+I (float)                    No          Moment of inertia
+tau (float)                  No          Constant time lag. If not set, defaults to 0
+============================ =========== ==================================================================
+
+
 .. _tides_constant_time_lag:
 
 tides_constant_time_lag
@@ -471,7 +509,7 @@ Field (C type)               Required    Description
 particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
 tctl_k2 (float)              Yes         Potential Love number of degree 2.
 tctl_tau (float)             No          Constant time lag. If not set will default to 0 and give conservative tidal potential.
-Omega (float)                No          Rotation rate. If not set will default to 0.
+OmegaMag (float)             No          Angular rotation frequency. If not set will default to 0.
 ============================ =========== ==================================================================
 
 
@@ -599,7 +637,6 @@ Not applicable. See examples.
 
 Miscellaneous Utilities
 ^^^^^^^^^^^^^^^^^^^^^^^
-
 .. _track_min_distance:
 
 track_min_distance
@@ -636,8 +673,3 @@ min_distance_orbit (reb_orbit)   No          Parameter to store orbital elements
 ================================ =========== =======================================================
 
 
-Inner disk edge
-^^^^^^^^^^^^^^^^^
-
-Type I migration
-^^^^^^^^^^^^^^^^^^

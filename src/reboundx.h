@@ -2,7 +2,7 @@
  * @file    reboundx.h
  * @brief   REBOUNDx API definition.
  * @author  Dan Tamayo <tamayo.daniel@gmail.com>, Hanno Rein
- * 
+ *
  * @section     LICENSE
  * Copyright (c) 2019 Dan Tamayo, Hanno Rein
  *
@@ -25,7 +25,7 @@
 #ifndef _REBX_REBOUNDX_H
 #define _REBX_REBOUNDX_H
 
-#ifndef M_PI 
+#ifndef M_PI
 #define M_PI 3.1415926535879323846
 #endif
 
@@ -34,7 +34,7 @@
 #include "rebound.h"
 #include "rebxtools.h"
 #ifndef REBXGITHASH
-#define REBXGITHASH notavailable0000000000000000000000000001 
+#define REBXGITHASH notavailable0000000000000000000000000001
 #endif // REBXGITHASH
 
 extern const char* rebx_build_str;      ///< Date and time build string.
@@ -42,7 +42,7 @@ extern const char* rebx_version_str;    ///< Version string.
 extern const char* rebx_githash_str;    ///< Current git hash.
 
 /******************************************
-  REBOUNDx Enums 
+  REBOUNDx Enums
 *******************************************/
 
 /**
@@ -56,6 +56,8 @@ enum rebx_param_type{
     REBX_TYPE_FORCE,
     REBX_TYPE_UINT32,
     REBX_TYPE_ORBIT,
+    REBX_TYPE_ODE,
+    REBX_TYPE_VEC3D
 };
 
 /**
@@ -246,13 +248,13 @@ struct rebx_interpolator{
  * @brief Main REBOUNDx structure.
  * @details These fields are used internally by REBOUNDx and generally should not be changed manually by the user. Use the API instead.
  */
-struct rebx_extras {	
+struct rebx_extras {
 	struct reb_simulation* sim;					    ///< Pointer to the simulation REBOUNDx is linked to.
-    
+
     struct rebx_node* additional_forces;            ///< Linked list of extra forces
     struct rebx_node* pre_timestep_modifications;   ///< Linked list of rebx_steps to apply before each timestep
 	struct rebx_node* post_timestep_modifications;  ///< Linked list of rebx_steps to apply after each timestep
-	
+
     struct rebx_node* registered_params;            ///< Linked list of rebx_params with all the parameter names registered with their type (for type safety)
     struct rebx_node* allocated_forces;             ///< For memory management
     struct rebx_node* allocated_operators;          ///< For memory management
@@ -266,7 +268,7 @@ struct rebx_extras {
  * @{
  */
 /**
- * @defgroup MainRebxFunctions 
+ * @defgroup MainRebxFunctions
  * @details These are the top level routines that one needs when using REBOUNDx.
  * @{
  */
@@ -313,7 +315,7 @@ struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, c
  * @brief Similar to rebx_create_extras_from_binary(), but takes an extras instance (must be attached to a simulation) and allows for manual message handling.
  * @param rebx Pointer to a rebx_extras instance to be updated.
  * @param filename Filename of the saved binary file.
- * @param warnings Pointer to an array of warnings to be populated during loading. 
+ * @param warnings Pointer to an array of warnings to be populated during loading.
  */
 void rebx_init_extras_from_binary(struct rebx_extras* rebx, const char* const filename, enum rebx_input_binary_messages* warnings);
 /** @} */
@@ -413,15 +415,42 @@ int rebx_remove_param(struct rebx_node** apptr, const char* const param_name);
  * @return A void pointer to the parameter. NULL if not found.
  */
 
-void* rebx_get_param(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name);
-struct rebx_param* rebx_get_param_struct(struct rebx_extras* rebx, struct rebx_node* ap, const char* const param_name);
+void* rebx_get_param(struct rebx_extras* const rebx, struct rebx_node* ap, const char* const param_name);
+struct rebx_param* rebx_get_param_struct(struct rebx_extras* const rebx, struct rebx_node* ap, const char* const param_name);
 void rebx_set_param_pointer(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, void* val);
 void rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, double val);
 void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val);
 void rebx_set_param_uint32(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, uint32_t val);
+void rebx_set_param_vec3d(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, struct reb_vec3d val);
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type);
+
 /** @} */
 /** @} */
+
+/******************************************
+  General utility functions
+*******************************************/
+
+/**
+ * \name General utility functions
+ * @{
+ */
+/**
+ * @defgroup UtilFunc
+ * @brief General utility functions
+ * @{
+ */
+
+/**
+ * @brief Calculate spin angular momentum in the simulation of any bodies with spin parameters set (moment of inertia I and angular rotation frequency vector Omega).
+ *
+ * @param rebx Pointer to the rebx_extras instance
+ */
+struct reb_vec3d rebx_tools_spin_angular_momentum(struct rebx_extras* const rebx);
+
+void rebx_simulation_irotate(struct rebx_extras* const rebx, const struct reb_rotation q);
+
+
 
 /******************************************
   Convenience functions for various effects
@@ -446,9 +475,10 @@ void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum 
  * @param radius Particle physical radius.
  * @param density density of particle.
  * @param Q_pr Radiation pressure coefficient (Burns et al. 1979).
- * @return Beta parameter (double). 
+ * @return Beta parameter (double).
  */
 double rebx_rad_calc_beta(const double G, const double c, const double source_mass, const double source_luminosity, const double radius, const double density, const double Q_pr);
+
 /**
  * @brief Calculates the particle radius from physical parameters and beta, the ratio of radiation to gravitational forces from the star.
  * @param G Gravitational constant.
@@ -461,6 +491,14 @@ double rebx_rad_calc_beta(const double G, const double c, const double source_ma
  * @return Particle radius (double).
  */
 double rebx_rad_calc_particle_radius(const double G, const double c, const double source_mass, const double source_luminosity, const double beta, const double density, const double Q_pr);
+
+/**
+ * @brief Count how many particles have their moment of inertia and spin set, and initialize corresponding spin ODEs
+ * @details Must be called after setting the moment of inertia and spin of all particles you want to evolve. Attaches spin_ode param to passed effect struct.
+ * @param rebx Pointer to the rebx_extras instance.
+ * @param effect (rebx_force) Force structure to which to attach spin_ode object.
+ */
+void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force* const effect);
 
 /**
  * @brief Calculates the Aradial parameter for central_force effect required for a particle to have a particular pericenter precession rate.
@@ -504,6 +542,13 @@ double rebx_gr_potential_potential(struct rebx_extras* const rebx, const struct 
  * @return Potential corresponding to tides_constant_time_lag effect.
  */
 double rebx_tides_constant_time_lag_potential(struct rebx_extras* const rebx);
+
+/**
+ * @brief Calculates the total energy associated with bodies' spin and their tidal interactions in tides_spin effect. This includes the spin kinetic energy plus gravitational potential between the tidally and rotationally induced quadrupoles and other bodies (treated as point masses). You should add sim.energy() to include bodies' overall kinetic energy and point-mass gravitational potential energy.
+ * @param rebx pointer to the REBOUNDx extras instance.
+ * @return Energy associated with tides_spin effect.
+ */
+double rebx_tides_spin_energy(struct rebx_extras* const rebx);
 
 /**
  * @brief Calculates the potential for central_force effect.
@@ -552,6 +597,8 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
  * @return Void pointer to the parameter. NULL if not found or type does not match (will write error to stderr).
  */
 void* rebx_get_param_check(struct reb_simulation* sim, struct rebx_node* ap, const char* const param_name, enum rebx_param_type param_type);
+struct rebx_param* rebx_get_or_add_param(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name);
+
 
 /****************************************
  Stepper Functions

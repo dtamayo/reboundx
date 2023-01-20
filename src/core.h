@@ -2,7 +2,7 @@
  * @file    core.h
  * @brief   Central internal functions for REBOUNDx (not called by user)
  * @author  Dan Tamayo <tamayo.daniel@gmail.com>
- * 
+ *
  * @section     LICENSE
  * Copyright (c) 2015 Dan Tamayo, Hanno Rein
  *
@@ -76,6 +76,7 @@ void rebx_tides_constant_time_lag(struct reb_simulation* const sim, struct rebx_
 void rebx_central_force(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_modify_orbits_with_type_I_migration(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_tides_spin(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_yarkovsky_effect(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 
 /****************************************

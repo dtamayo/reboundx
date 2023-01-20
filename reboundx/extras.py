@@ -1,5 +1,5 @@
 from . import clibreboundx
-from ctypes import Structure, c_double, POINTER, c_int, c_uint, c_long, c_ulong, c_void_p, c_char_p, CFUNCTYPE, byref, c_uint32, c_uint, cast, c_char
+from ctypes import Structure, c_double, POINTER, c_int, c_uint, c_long, c_ulong, c_void_p, c_char_p, CFUNCTYPE, byref, c_uint32, c_uint, cast, c_char, pointer
 import rebound
 import reboundx
 import warnings
@@ -32,16 +32,16 @@ class Extras(Structure):
     """
     Main object used for all REBOUNDx operations, tied to a particular REBOUND simulation.
     This is an abstraction of the C struct rebx_extras, with all the C convenience functions
-    and functions for adding effects implemented as methods of the class.  
-    The fastest way to understand it is to follow the examples at :ref:`ipython_examples`.  
+    and functions for adding effects implemented as methods of the class.
+    The fastest way to understand it is to follow the examples at :ref:`ipython_examples`.
     """
-    
+
     def __new__(cls, sim, filename=None):
         rebx = super(Extras,cls).__new__(cls)
         return rebx
 
     def __init__(self, sim, filename=None):
-        sim._extras_ref = self # add a reference to this instance in sim to make sure it's not garbage collected_ 
+        sim._extras_ref = self # add a reference to this instance in sim to make sure it's not garbage collected_
         clibreboundx.rebx_initialize(byref(sim), byref(self))
         # Create simulation
         if filename==None:
@@ -65,15 +65,15 @@ class Extras(Structure):
             clibreboundx.rebx_free_pointers(byref(self))
 
     def detach(self, sim):
-        sim._extras_ref = None # remove reference to rebx so it can be garbage collected 
+        sim._extras_ref = None # remove reference to rebx so it can be garbage collected
         clibreboundx.rebx_detach(byref(sim), byref(self))
-    
+
     #######################################
     # Functions for manipulating REBOUNDx effects
     #######################################
 
     def register_param(self, name, param_type):
-        type_enum = REBX_C_PARAM_TYPES[param_type] 
+        type_enum = REBX_C_PARAM_TYPES[param_type]
         clibreboundx.rebx_register_param(byref(self), c_char_p(name.encode('ascii')), c_int(type_enum))
         self.process_messages()
 
@@ -82,7 +82,7 @@ class Extras(Structure):
         ptr = clibreboundx.rebx_load_force(byref(self), c_char_p(name.encode('ascii')))
         self.process_messages()
         return ptr.contents
-    
+
     def create_force(self, name):
         clibreboundx.rebx_create_force.restype = POINTER(Force)
         ptr = clibreboundx.rebx_create_force(byref(self), c_char_p(name.encode('ascii')))
@@ -159,8 +159,12 @@ class Extras(Structure):
         self.process_messages()
 
     #######################################
-    # Convenience Functions
+    # Effect Specific Functions
     #######################################
+    
+    def initialize_spin_ode(self, force):
+        clibreboundx.rebx_spin_initialize_ode.restype = None
+        return clibreboundx.rebx_spin_initialize_ode(byref(self), byref(force))
 
     def rad_calc_beta(self, G, c, source_mass, source_luminosity, radius, density, Q_pr):
         clibreboundx.rebx_rad_calc_beta.restype = c_double
@@ -180,27 +184,52 @@ class Extras(Structure):
     def gr_full_hamiltonian(self, force):
         clibreboundx.rebx_gr_full_hamiltonian.restype = c_double
         return clibreboundx.rebx_gr_full_hamiltonian(byref(self), byref(force))
-    
+
     def gr_hamiltonian(self, force):
         clibreboundx.rebx_gr_hamiltonian.restype = c_double
         return clibreboundx.rebx_gr_hamiltonian(byref(self), byref(force))
-    
+
     # Potential calculation functions
     def gr_potential_potential(self, force):
         clibreboundx.rebx_gr_potential_potential.restype = c_double
         return clibreboundx.rebx_gr_potential_potential(byref(self), byref(force))
-    
-    def tides_constant_time_lag_potential(self, force):
+
+    def tides_constant_time_lag_potential(self):
         clibreboundx.rebx_tides_constant_time_lag_potential.restype = c_double
-        return clibreboundx.rebx_tides_constant_time_lag_potential(byref(self), byref(force))
+        return clibreboundx.rebx_tides_constant_time_lag_potential(byref(self))
+
+    def tides_spin_energy(self):
+        clibreboundx.rebx_tides_spin_energy.restype = c_double
+        return clibreboundx.rebx_tides_spin_energy(byref(self))
 
     def central_force_potential(self):
         clibreboundx.rebx_central_force_potential.restype = c_double
         return clibreboundx.rebx_central_force_potential(byref(self))
-    
+
     def gravitational_harmonics_potential(self):
         clibreboundx.rebx_gravitational_harmonics_potential.restype = c_double
         return clibreboundx.rebx_gravitational_harmonics_potential(byref(self))
+
+    # Functions to help with rotations
+
+    def rotate_simulation(self, q):
+        """
+        Rotates the simulation with the passed rebound.Rotation object. Analogous to Simulation.rotate, except one should use
+        this function to not only rotate the orbits according to q, but also all the spatial REBOUNDx parameters (e.g., spins). 
+        See SpinsIntro.ipynb
+        """
+        if not isinstance(q, rebound.Rotation):
+            raise NotImplementedError
+        clibreboundx.rebx_simulation_irotate.restype = None
+        clibreboundx.rebx_simulation_irotate(byref(self), q)
+  
+    def spin_angular_momentum(self):
+        """
+        Returns a list of the three (x,y,z) components of the spin angular momentum of all particles in the simulation with
+        moment of inertia (I) and spin angular frequency vector (Omega) parameters set.
+        """
+        clibreboundx.rebx_tools_spin_angular_momentum.restype = rebound._Vec3d
+        return rebound.Vec3d(clibreboundx.rebx_tools_spin_angular_momentum(byref(self)))
 
     def process_messages(self):
         try:
@@ -213,13 +242,13 @@ class Extras(Structure):
 
 
 class Param(Structure): # need to define fields afterward because of circular ref in linked list
-    pass    
+    pass
 Param._fields_ =  [ ("name", c_char_p),
                     ("type", c_int),
                     ("value", c_void_p)]
 
 class Node(Structure): # need to define fields afterward because of circular ref in linked list
-    pass    
+    pass
 Node._fields_ =  [  ("object", c_void_p),
                     ("next", POINTER(Node))]
 
@@ -244,7 +273,7 @@ class Operator(Structure):
     def step(self, sim, dt):
         self._step_function(byref(sim), byref(self), dt)
 
-    @property 
+    @property
     def params(self):
         params = Params(self)
         return params
@@ -274,7 +303,7 @@ class Force(Structure):
         self._ffp = FORCEFUNCPTR(func) # keep a reference to func so it doesn't get garbage collected
         self._update_accelerations = self._ffp
 
-    @property 
+    @property
     def params(self):
         params = Params(self)
         return params
@@ -299,7 +328,7 @@ Extras._fields_ =  [("_sim", POINTER(rebound.Simulation)),
 class Interpolator(Structure):
     def __new__(cls, rebx, times, values, interpolation):
         interp = super(Interpolator, cls).__new__(cls)
-        return interp 
+        return interp
 
     def __init__(self, rebx, times, values, interpolation="spline"):
         try:
@@ -317,16 +346,16 @@ class Interpolator(Structure):
             raise ValueError("REBOUNDx Error: Interpolation type not supported")
 
         DblArr = c_double * Nvalues
-        clibreboundx.rebx_init_interpolator(byref(rebx), byref(self), c_int(Nvalues), DblArr(*times), DblArr(*values), c_int(interp)) 
+        clibreboundx.rebx_init_interpolator(byref(rebx), byref(self), c_int(Nvalues), DblArr(*times), DblArr(*values), c_int(interp))
 
     def interpolate(self, rebx, t):
         clibreboundx.rebx_interpolate.restype = c_double
         return clibreboundx.rebx_interpolate(byref(rebx), byref(self), c_double(t))
-    
+
     def __del__(self):
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_interpolator_pointers(byref(self))
-        
+
 Interpolator._fields_ = [  ("interpolation", c_int),
                     ("times", POINTER(c_double)),
                     ("values", POINTER(c_double)),
@@ -337,7 +366,7 @@ Interpolator._fields_ = [  ("interpolation", c_int),
 INTERPOLATION_TYPE = {"none":0, "spline":1}
 
 # This list keeps pairing from C rebx_param_type enum to ctypes type 1-to-1. Derive the required mappings from it
-REBX_C_TO_CTYPES = [["REBX_TYPE_NONE", None], ["REBX_TYPE_DOUBLE", c_double], ["REBX_TYPE_INT",c_int], ["REBX_TYPE_POINTER", c_void_p], ["REBX_TYPE_FORCE", Force], ["REBX_TYPE_UNIT32", c_uint32], ["REBX_TYPE_ORBIT", rebound.Orbit]]
+REBX_C_TO_CTYPES = [["REBX_TYPE_NONE", None], ["REBX_TYPE_DOUBLE", c_double], ["REBX_TYPE_INT",c_int], ["REBX_TYPE_POINTER", c_void_p], ["REBX_TYPE_FORCE", Force], ["REBX_TYPE_UNIT32", c_uint32], ["REBX_TYPE_ORBIT", rebound.Orbit], ["REBX_TYPE_ODE", rebound.ODE], ["REBX_TYPE_VEC3D", rebound._Vec3d]]
 REBX_CTYPES = {} # maps int value of rebx_param_type enum to ctypes type
 REBX_C_PARAM_TYPES = {} # maps string of rebx_param_type enum to int
 for i, pair in enumerate(REBX_C_TO_CTYPES):
