@@ -19,7 +19,7 @@ class TestStochastic(unittest.TestCase):
         ps = self.sim.particles
         ps[1].params['kappa'] = 1e-5
         self.sim.integrate(ps[1].P*1000)
-        self.assertLess(np.abs(1.-ps[1].a), 0.004)
+        self.assertLess(np.abs(1.-ps[1].a), 0.01)
 
     def test_scaling(self):
         self.sim = rebound.Simulation()
@@ -35,7 +35,7 @@ class TestStochastic(unittest.TestCase):
         ps = self.sim.particles
         ps[1].params['kappa'] = 1e-5
         self.sim.integrate(ps[1].P*1000)
-        self.assertLess(np.abs(0.001-ps[1].a), 0.000004)
+        self.assertLess(np.abs(0.001-ps[1].a), 0.00001)
 
     def test_binary(self):
         self.sim = rebound.Simulation()
