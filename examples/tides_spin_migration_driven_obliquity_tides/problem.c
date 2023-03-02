@@ -1,5 +1,5 @@
 /**
- * Self-Consistent Spin-Tidal and Dynamical equations of motion (Eggleton et. al 1998)
+ * Obliquity Sculpting of Kepler Multis (Eggleton et. al 1998)
  *
  * In particular, this simulates the obliquity sculpting of the Kepler multis due to convergent migration over 4 Myr.
  * Two planets are initialized just wide of the 3:2 MMR (0.173 and 0.233 AU) are migrated inward. After 2 Myr, migration is turned off. After a period of chaotic obliquity evolution, the inner planet is excited to high obliquity and maintained indefinitely
