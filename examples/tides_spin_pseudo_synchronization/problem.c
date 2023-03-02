@@ -1,5 +1,5 @@
 /**
- * Pseudo-Synchronization (Eggleton et. al 1998)
+ * Pseudo-Synchronization (Hut 1981)
  *
  * This example shows how to add quadrupole and tidal distortions to bodies with structure, letting us consistently track the spin-axis and dynamical evolution of the system.
  * In particular, this simulates the pseudo-synchronization of a fiducial hot Jupiter.
