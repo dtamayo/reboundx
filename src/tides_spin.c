@@ -1,5 +1,5 @@
 /**
- * @file    spin.c
+ * @file    tides_spin.c
  * @brief   Add self-consistent spin, tidal and dynamical equations of motion for bodies with structure
  * @author  Tiger Lu <tiger.lu@yale.edu>, Dan Tamayo <tamayo.daniel@gmail.com>, Hanno, Rein <hanno.rein@utoronto.ca>
  *
@@ -29,7 +29,7 @@
  *
  * ======================= ===============================================
  * Authors                 Tiger Lu, Hanno Rein, D. Tamayo, Sam Hadden, Rosemary Mardling, Sarah Millholland, Gregory Laughlin
- * Implementation Paper    Lu et al., 2023 (in review).
+ * Implementation Paper    Lu et al., 2023. <https://arxiv.org/abs/2303.00006>`_.
  * Based on                `Eggleton et al. 1998 <https://ui.adsabs.harvard.edu/abs/1998ApJ...499..853E/abstract>`_.
  * C Example               :ref:`c_example_tides_spin_pseudo_synchronization`, :ref:`c_example_tides_spin_migration_driven_obliquity_tides`, :ref:`c_example_tides_spin_kozai`.
  * Python Example          `SpinsIntro.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/SpinsIntro.ipynb>`_, `TidesSpinPseudoSynchronization.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesSpinPseudoSynchronization.ipynb>`_, `TidesSpinEarthMoon.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesSpinEarthMoon.ipynb>`_.
@@ -37,7 +37,7 @@
  *
  * This effect consistently tracks both the spin and orbital evolution of bodies under constant-time lag tides raised on both the primary and on the orbiting bodies.
  * In all cases, we need to set masses for all the particles that will feel these tidal forces. Particles with only mass are point particles.
- * 
+ *
  * Particles are assumed to have structure (i.e - physical extent & distortion from spin) if the following parameters are set: physical radius particles[i].r, potential Love number of degree 2 k2 (Q/(1-Q) in Eggleton 1998), and the spin angular rotation frequency vector Omega.
  * If we wish to evolve a body's spin components, the fully dimensional moment of inertia I must be set as well. If this parameter is not set, the spin components will be stationary.
  * Finally, if we wish to consider the effects of tides raised on a specific body, we must set the constant time lag tau as well.
@@ -203,7 +203,7 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
                 const double mi = pi->m;
                 const double mj = pj->m;
                 const double mu_ij = (mi * mj) / (mi + mj);
-                
+
                 struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, sigma_in, Omega);
                 // Eggleton et. al 1998 spin EoM (equation 36)
                 yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) * (-mu_ij / *I));
@@ -320,7 +320,7 @@ void rebx_tides_spin(struct reb_simulation* const sim, struct rebx_force* const 
               if (source->m == 0 || target->m == 0){
                   continue;
               }
-                
+
               rebx_spin_orbit_accelerations(source, target, G, *k2, sigma_in, *Omega);
           }
       }
