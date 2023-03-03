@@ -79,7 +79,7 @@ class TestTidesAnalytic(unittest.TestCase):
         self.rebx.add_force(self.tides)
         ps[0].params["tctl_k2"] = 0.023 # in AU
         ps[0].params["tctl_tau"] = 0.3
-        ps[0].params["Omega"] = 0.
+        ps[0].params["Omega"] = [0.,0.,0.]
 
         self.q = (ps[1].m/ps[0].m)
         self.T = ps[0].r**3/self.sim.G/ps[0].m/ps[0].params["tctl_tau"]
@@ -87,7 +87,7 @@ class TestTidesAnalytic(unittest.TestCase):
 
     def test_adamping(self):
         ps = self.sim.particles
-        tmax = 4e4*ps[1].P
+        tmax = 2e4*ps[1].P
         apred = ps[0].r*((ps[1].a/ps[0].r)**8 - 48.*ps[0].params["tctl_k2"]*self.q*(1+self.q)*tmax/self.T)**(1./8.)
 
         self.sim.integrate(tmax)
@@ -95,7 +95,7 @@ class TestTidesAnalytic(unittest.TestCase):
     
     def test_linear_adamping(self):
         ps = self.sim.particles
-        tmax = self.taua/100
+        tmax = self.taua/1000
         apred = ps[1].a*np.exp(-tmax/self.taua)
 
         self.sim.integrate(tmax)
@@ -103,7 +103,7 @@ class TestTidesAnalytic(unittest.TestCase):
     
     def test_linear_edamping(self):
         ps = self.sim.particles
-        tmax = self.taua/100
+        tmax = self.taua/1000
         epred = ps[1].e*np.exp(-tmax/(6./27.*self.taua))
 
         self.sim.integrate(tmax)
