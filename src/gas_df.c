@@ -29,10 +29,10 @@
  *
  * ======================= ===============================================
  * Authors                 A. Generozov, H. Perets
- * Implementation Paper    `Generozov and Perets 2022 <https://arxiv.org/abs/2212.11301>`_.
- * Based on                `Ostriker 1999 (with simplifications) <https://ui.adsabs.harvard.edu/abs/1999ApJ...513..252O/abstract>`, `Just et al 2012 <https://ui.adsabs.harvard.edu/abs/2012ApJ...758...51J/abstract>`
+ * Implementation Paper    `Generozov and Perets 2022 <https://arxiv.org/abs/2212.11301>`_
+ * Based on                `Ostriker 1999 (with simplifications) <https://ui.adsabs.harvard.edu/abs/1999ApJ...513..252O/abstract>`_, `Just et al 2012 <https://ui.adsabs.harvard.edu/abs/2012ApJ...758...51J/abstract>`_.
  * C Example               :ref:`c_example_gas_df`
- * Python Example          :ref:`gas_df.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/gas_df.ipynb>`_.
+ * Python Example          `gas_df.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/gas_df.ipynb>`_
  *                        
  * 
  * ======================= ===============================================
@@ -47,7 +47,7 @@
  * alpha_rhog (double)          Yes         Power-law slope of the power-law density profile.
  * cs (double)                  Yes         Normalization of the sound speed. Sound speed has profile cs*r^alpha_cs
  * alpha_cs (double)            Yes         Power-law slope of the sound speed
- * xmin (double)                Yes         Dimensionaless parameter that determines the Coulomb logarithm (ln(L) =log (1/xmin))
+ * xmin (double)                Yes         Dimensionless parameter that determines the Coulomb logarithm (ln(L) =log (1/xmin))
  * hr (double)                  Yes         Aspect ratio of the disk
  * Qd (double)                  Yes         Prefactor for geometric drag
  * ============================ =========== ==================================================================
@@ -63,9 +63,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include "reboundx.h"
-#include <gsl/gsl_sf_exp.h>
-#include <gsl/gsl_sf_erf.h>
-
 
 static double mach_piece_sub(const double mach){
     //Using powerlaw expansion at low mach numbers for numerical reasons
