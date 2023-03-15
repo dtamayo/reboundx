@@ -583,6 +583,45 @@ R_eq (double)                No          Equatorial radius of nonspherical body 
 ============================ =========== ==================================================================
 
 
+Gas Effects
+^^^^^^^^^^^^^^^^^^
+
+.. _gas_df:
+
+gas_df
+******
+
+======================= ===============================================
+Authors                 A. Generozov, H. Perets
+Implementation Paper    `Generozov and Perets 2022 <https://arxiv.org/abs/2212.11301>`_
+Based on                `Ostriker 1999 (with simplifications) <https://ui.adsabs.harvard.edu/abs/1999ApJ...513..252O/abstract>`_, `Just et al 2012 <https://ui.adsabs.harvard.edu/abs/2012ApJ...758...51J/abstract>`_.
+C Example               :ref:`c_example_gas_df`
+Python Example          `gas_df.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/gas_df.ipynb>`_
+                       
+
+======================= ===============================================
+
+
+**Effect Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+rhog (double)                Yes         Normalization of density. Density in the disk midplane is rhog*r^alpha_rhog
+alpha_rhog (double)          Yes         Power-law slope of the power-law density profile.
+cs (double)                  Yes         Normalization of the sound speed. Sound speed has profile cs*r^alpha_cs
+alpha_cs (double)            Yes         Power-law slope of the sound speed
+xmin (double)                Yes         Dimensionless parameter that determines the Coulomb logarithm (ln(L) =log (1/xmin))
+hr (double)                  Yes         Aspect ratio of the disk
+Qd (double)                  Yes         Prefactor for geometric drag
+============================ =========== ==================================================================
+
+
+**Particle Parameters**
+
+None.
+
+
 Integration Steppers
 ^^^^^^^^^^^^^^^^^^^^
 

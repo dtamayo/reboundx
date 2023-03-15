@@ -1,7 +1,7 @@
 /**
  * Gas dynamical friction
  * 
- * This example shows how to add a the gas_df force.
+ * This example shows how to add the gas_df force.
  */
 #include <stdio.h>
 #include <stdlib.h>
