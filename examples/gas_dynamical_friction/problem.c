@@ -31,7 +31,7 @@ int main(int argc, char* argv[]){
     reb_move_to_com(sim);
     
     struct rebx_extras* rebx = rebx_attach(sim);
-    struct rebx_force* gdf = rebx_load_force(rebx, "gas_df");
+    struct rebx_force* gdf = rebx_load_force(rebx, "gas_dynamical_friction");
     rebx_add_force(rebx, gdf);
 
     rebx_set_param_double(rebx, &gdf->ap, "gas_df_rhog", 0.20);    
