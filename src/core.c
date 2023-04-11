@@ -331,6 +331,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->update_accelerations = rebx_gas_dynamical_friction;
         force->force_type = REBX_FORCE_VEL;
     }
+    else if (strcmp(name, "stark_force") == 0){
+        force->update_accelerations = rebx_stark_force;
+        force->force_type = REBX_FORCE_POS;
+    }
     else{
         char str[300];
         sprintf(str, "REBOUNDx error: Force '%s' not found in REBOUNDx library.\n", name);
