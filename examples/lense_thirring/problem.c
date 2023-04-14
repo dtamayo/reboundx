@@ -18,6 +18,7 @@ int main(int argc, char* argv[]){
     star.m     = 1.;
     reb_add(sim, star);
 
+
     struct reb_particle planet = {0};  // add a planet on a circular orbit (with default units where G=1)
     planet.x = 1.;
     planet.vy = 1.;
@@ -26,6 +27,8 @@ int main(int argc, char* argv[]){
     struct rebx_extras* rebx = rebx_attach(sim);  // first initialize rebx
     struct rebx_force* lense  = rebx_load_force(rebx, "lense_thirring"); // add our new force
     rebx_add_force(rebx, lense);
+
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "p_hat_x", 0.01);
 
     double tmax = 100000.;
     reb_integrate(sim, tmax);

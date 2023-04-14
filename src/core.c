@@ -134,6 +134,12 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "gas_df_xmin", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "gas_df_hr", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "gas_df_Qd", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "LT_R_eq", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "LT_Mom_I_fac", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "LT_rot_rate", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "LT_p_hatx", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "LT_p_haty", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "LT_p_hatz", REBX_TYPE_DOUBLE);
 
 }
 
