@@ -61,7 +61,21 @@
 
 void rebx_lense_thirring(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
 
-    double Omega_x, Omega_y, Omega_z, v_x, v_y, v_z;
+    struct rebx_extras* const rebx = sim->extras;
+    for (int i=0; i<N; i++){
+        const double* R_eq = rebx_get_param(rebx, particles[i].ap, "LT_R_eq");
+        const double* C_fac = rebx_get_param(rebx, particles[i].ap, "LT_Mom_I_fac");
+        const double* omega = rebx_get_param(rebx, particles[i].ap, "LT_rot_rate");
+        const double* p_hat_x = rebx_get_param(rebx, particles[i].ap, "LT_p_hat_x");
+        const double* p_hat_y = rebx_get_param(rebx, particles[i].ap, "LT_p_hat_y");
+        const double* p_hat_z = rebx_get_param(rebx, particles[i].ap, "LT_p_hat_z");
+//      if (stark_acc != NULL){
+//          particles[i].ax += *stark_acc;
+//      }
+    }
+
+    double Omega_x, Omega_y, Omega_z;
+    double  v_x, v_y, v_z;
 
     Omega_x=0;
     Omega_y=0;
@@ -71,7 +85,7 @@ void rebx_lense_thirring(struct reb_simulation* const sim, struct rebx_force* co
     v_y = particles[1].vy;
     v_z = particles[1].vz;
 
-   particles[1].ax += 2.*Omega_y*v_z - Omega_z*v_y;
+   particles[1].ax += 2.*Omega_y*v_z - Omega_z*v_y+*p_hat_z;
    particles[1].ay += 2.*Omega_z*v_x - Omega_x*v_z;
    particles[1].az += 2.*Omega_x*v_y - Omega_y*v_x;
 
@@ -83,6 +97,7 @@ void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_
     rebx_J2(sim->extras, sim, gh, particles, N);
 }
 */
+
 
 /*
 static void rebx_calculate_J2_force(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double J2, const double R_eq, const int source_index){
