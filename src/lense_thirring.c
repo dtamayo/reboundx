@@ -1,9 +1,9 @@
-/** * @file gravitational_harmonics.c
- * @brief   Add J2n gravitational harmonics to particles
- * @author  Dan Tamayo <tamayo.daniel@gmail.com>
+/** * @file lense_thirring.c
+ * @brief   Add Lense-Thirring effect to particles
+ * @author  Arya Akmal <akmala@gmail.com>
  * 
  * @section     LICENSE
- * Copyright (c) 2015 Dan Tamayo, Hanno Rein
+ * Copyright (c) 2023 Arya Akmal, Dan Tamayo, Hanno Rein
  *
  * This file is part of reboundx.
  *
@@ -24,30 +24,37 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
- * $Gravity Fields$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ * $General Relativity$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
  *
  * ======================= ===============================================
- * Authors                 D. Tamayo
- * Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_. 
- * Based on                None
+ * Authors                 A. Akmal
+ * Implementation Paper    None
+ * Based on                `Park et al. <https://iopscience.iop.org/article/10.3847/1538-3881/abd414/>`_.
  * C Example               :ref:`c_example_J2`
  * Python Example          `J2.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/J2.ipynb>`_.
  * ======================= ===============================================
  * 
- * Adds azimuthally symmetric gravitational harmonics (J2, J4) to bodies in the simulation. Current implementation assumes everything is planar, i.e. spin pole of body aligned with z axis of simulation.
+ * Adds Lense-Thirring effect to massive rotating bodies in the simulation.
  *
  * **Effect Parameters**
  * 
- * None
+ * ============================ =========== ==================================================================
+ * Field (C type)               Required    Description
+ * ============================ =========== ==================================================================
+ * c (double)                   Yes         Speed of light in the units used for the simulation.
+ * ============================ =========== ==================================================================
  *
  * **Particle Parameters**
  *
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * J2 (double)                  No          J2 coefficient
- * J4 (double)                  No          J4 coefficient
- * R_eq (double)                No          Equatorial radius of nonspherical body used for calculating Jn harmonics
+ * omega (double)               No          J2 coefficient
+ * R_eq (double)                No          Equatorial radius of source body
+ * C_fac (double)               No          Moment of Inertia of source body over MR^2
+ * p_hat_x (double)             No          x-component of spin-pole unit vector
+ * p_hat_y (double)             No          y-component of spin-pole unit vector
+ * p_hat_z (double)             No          z-component of spin-pole unit vector
  * ============================ =========== ==================================================================
  * 
  */
@@ -62,47 +69,41 @@
 void rebx_lense_thirring(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
 
     struct rebx_extras* const rebx = sim->extras;
-    for (int i=0; i<N; i++){
-        const double* R_eq = rebx_get_param(rebx, particles[i].ap, "LT_R_eq");
-        const double* C_fac = rebx_get_param(rebx, particles[i].ap, "LT_Mom_I_fac");
-        const double* omega = rebx_get_param(rebx, particles[i].ap, "LT_rot_rate");
-        const double* p_hat_x = rebx_get_param(rebx, particles[i].ap, "LT_p_hat_x");
-        const double* p_hat_y = rebx_get_param(rebx, particles[i].ap, "LT_p_hat_y");
-        const double* p_hat_z = rebx_get_param(rebx, particles[i].ap, "LT_p_hat_z");
-//      if (stark_acc != NULL){
-//          particles[i].ax += *stark_acc;
-//      }
+    double* c = rebx_get_param(sim->extras, gr_potential->ap, "lt_c");
+    if (c == NULL){
+        reb_error(sim, "REBOUNDx Error: Need to set speed of light in LT effect.  See examples in documentation.\n");
     }
-
-    double Omega_x, Omega_y, Omega_z;
-    double  v_x, v_y, v_z;
-
-    Omega_x=0;
-    Omega_y=0;
-    Omega_z=0.01;
-    
-    v_x = particles[1].vx;
-    v_y = particles[1].vy;
-    v_z = particles[1].vz;
-
-   particles[1].ax += 2.*Omega_y*v_z - Omega_z*v_y+*p_hat_z;
-   particles[1].ay += 2.*Omega_z*v_x - Omega_x*v_z;
-   particles[1].az += 2.*Omega_x*v_y - Omega_y*v_x;
-
+    else{
+        const double C2 = (*c)*(*c);
+    }
+    for (int i=0; i<N; i++){
+        const double* omega = rebx_get_param(rebx, particles[i].ap, "lt_rot_rate");
+        if(omega != null){
+           const double* R_eq = rebx_get_param(rebx, particles[i].ap, "lt_R_eq");
+           if (R_eq != NULL){
+               const double* C_fac = rebx_get_param(rebx, particles[i].ap, "lt_Mom_I_fac");
+               if(C_fac != NULL){
+                  const double* p_hat_x = rebx_get_param(rebx, particles[i].ap, "lt_p_hat_x");
+                  if(p_hat_x != NULL){
+                     const double* p_hat_y = rebx_get_param(rebx, particles[i].ap, "lt_p_hat_y");
+                     if(p_hat_y != NULL){
+                        const double* p_hat_z = rebx_get_param(rebx, particles[i].ap, "lt_p_hat_z");
+                        if(p_hat_z != NULL){
+                           rebx_calculate_LT_force(sim, particles, N, *omega, *R_eq, *C_fac, *p_hat_x, *p_hat_y, *p_hat_z, i, C2);
+                        }
+                     }
+                  }
+               }
+           }
+        }
+    }
 }
 
-/*
-void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_force* const gh, struct reb_particle* const particles, const int N){
-
-    rebx_J2(sim->extras, sim, gh, particles, N);
-}
-*/
-
-
-/*
-static void rebx_calculate_J2_force(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double J2, const double R_eq, const int source_index){
+static void rebx_calculate_LT_force(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double omega, const double R_eq, 
+                                    const double C_fac, const double p_hat_x, const double p_hat_y, const double p_hat_z const int source_index, const double C2){
     const struct reb_particle source = particles[source_index];
     const double G = sim->G;
+    const double gamma = 1.000021   //hard-coded Eddington-Robertson-Shiff parameter for now
     for (int i=0; i<N; i++){
         if(i == source_index){
             continue;
@@ -113,29 +114,24 @@ static void rebx_calculate_J2_force(struct reb_simulation* const sim, struct reb
         const double dz = p.z - source.z;
         const double r2 = dx*dx + dy*dy + dz*dz;
         const double r = sqrt(r2);
-        const double costheta2 = dz*dz/r2;
-        const double prefac = 3.*J2*R_eq*R_eq/r2/r2/r/2.;
-        const double fac = 5.*costheta2-1.;
+        const double r3 = r2*r;
+        const double dvx = p.vx - source.vx;
+        const double dvy = p.vy - source.vy;
+        const double dvz = p.vz - source.vz;
+        const double Jx = C_fac*source.m * R_eq*R_eq*omega*p_hat_x ;
+        const double Jy = C_fac*source.m * R_eq*R_eq*omega*p_hat_y ;
+        const double Jz = C_fac*source.m * R_eq*R_eq*omega*p_hat_z ;
+        const double Omega_fac = (1.+gamma)*G/2/C2;
+        const double Omega_x = Omega_fac*(-Jx +3.*(Jx*dx+Jy*dy+Jz*dz)*dx/r2)/r3;
+        const double Omega_y = Omega_fac*(-Jy +3.*(Jx*dx+Jy*dy+Jz*dz)*dy/r2)/r3;
+        const double Omega_z = Omega_fac*(-Jz +3.*(Jx*dx+Jy*dy+Jz*dz)*dz/r2)/r3;
 
-        particles[i].ax += G*source.m*prefac*fac*dx;
-        particles[i].ay += G*source.m*prefac*fac*dy;
-        particles[i].az += G*source.m*prefac*(fac-2.)*dz;
-        particles[source_index].ax -= G*p.m*prefac*fac*dx;
-        particles[source_index].ay -= G*p.m*prefac*fac*dy;
-        particles[source_index].az -= G*p.m*prefac*(fac-2.)*dz;
+        particles[i].ax += 2.*Omega_y*v_z - Omega_z*v_y;
+        particles[i].ay += 2.*Omega_z*v_x - Omega_x*v_z;
+        particles[i].az += 2.*Omega_x*v_y - Omega_y*v_x;
+        particles[source_index].ax -= 2.*Omega_y*v_z - Omega_z*v_y; 
+        particles[source_index].ay -= 2.*Omega_z*v_x - Omega_x*v_z;
+        particles[source_index].az -= 2.*Omega_x*v_y - Omega_y*v_x;
     }
 }
 
-static void rebx_J2(struct rebx_extras* const rebx, struct reb_simulation* const sim, struct rebx_force* const gh, struct reb_particle* const particles, const int N){
-    for (int i=0; i<N; i++){
-        const double* const J2 = rebx_get_param(rebx, particles[i].ap, "J2");
-        if (J2 != NULL){
-            const double* const R_eq = rebx_get_param(rebx, particles[i].ap, "R_eq");
-            if (R_eq != NULL){
-                rebx_calculate_J2_force(sim, particles, N, *J2, *R_eq,i); 
-            }
-        }
-    }
-}
-
-*/
