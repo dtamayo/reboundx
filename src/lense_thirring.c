@@ -3,7 +3,7 @@
  * @author  Arya Akmal <akmala@gmail.com>
  * 
  * @section     LICENSE
- * Copyright (c) 2023 Arya Akmal, Dan Tamayo, Hanno Rein
+ * Copyright (c) 2023 Arya Akmal
  *
  * This file is part of reboundx.
  *
@@ -30,11 +30,11 @@
  * Authors                 A. Akmal
  * Implementation Paper    None
  * Based on                `Park et al. <https://iopscience.iop.org/article/10.3847/1538-3881/abd414/>`_.
- * C Example               :ref:`c_example_J2`
- * Python Example          `J2.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/J2.ipynb>`_.
+ * C Example               :ref:`c_example_lense_thirring`
+ * Python Example          `LT.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/LT.ipynb>`_.
  * ======================= ===============================================
  * 
- * Adds Lense-Thirring effect to massive rotating bodies in the simulation.
+ * Adds Lense-Thirring effect due to massive rotating bodies in the simulation.
  *
  * **Effect Parameters**
  * 
@@ -49,7 +49,7 @@
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * omega (double)               No          J2 coefficient
+ * omega (double)               No          rotation rate
  * R_eq (double)                No          Equatorial radius of source body
  * C_fac (double)               No          Moment of Inertia of source body over MR^2
  * p_hat_x (double)             No          x-component of spin-pole unit vector
@@ -124,7 +124,6 @@ void rebx_lense_thirring(struct reb_simulation* const sim, struct rebx_force* co
                         const double* p_hat_z = rebx_get_param(rebx, particles[i].ap, "lt_p_hat_z");
                         if(p_hat_z != NULL){
                            rebx_calculate_LT_force(sim, particles, N, *omega, *R_eq, *C_fac, *p_hat_x, *p_hat_y, *p_hat_z, i, C2);
-                         //rebx_calculate_LT_force(sim, particles, N, *omega, *R_eq, *C_fac, *p_hat_x, *p_hat_y, *p_hat_z, i, (*c)*(*c));
                         }
                      }
                   }
