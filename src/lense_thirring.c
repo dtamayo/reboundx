@@ -66,44 +66,10 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-void rebx_lense_thirring(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
-
-    struct rebx_extras* const rebx = sim->extras;
-    double* c = rebx_get_param(sim->extras, lense_thirring->ap, "lt_c");
-    if (c == NULL){
-        reb_error(sim, "REBOUNDx Error: Need to set speed of light in LT effect.  See examples in documentation.\n");
-    }
-    else{
-        const double C2 = (*c)*(*c);
-    }
-    for (int i=0; i<N; i++){
-        const double* omega = rebx_get_param(rebx, particles[i].ap, "lt_rot_rate");
-        if(omega != null){
-           const double* R_eq = rebx_get_param(rebx, particles[i].ap, "lt_R_eq");
-           if (R_eq != NULL){
-               const double* C_fac = rebx_get_param(rebx, particles[i].ap, "lt_Mom_I_fac");
-               if(C_fac != NULL){
-                  const double* p_hat_x = rebx_get_param(rebx, particles[i].ap, "lt_p_hat_x");
-                  if(p_hat_x != NULL){
-                     const double* p_hat_y = rebx_get_param(rebx, particles[i].ap, "lt_p_hat_y");
-                     if(p_hat_y != NULL){
-                        const double* p_hat_z = rebx_get_param(rebx, particles[i].ap, "lt_p_hat_z");
-                        if(p_hat_z != NULL){
-                           rebx_calculate_LT_force(sim, particles, N, *omega, *R_eq, *C_fac, *p_hat_x, *p_hat_y, *p_hat_z, i, C2);
-                        }
-                     }
-                  }
-               }
-           }
-        }
-    }
-}
-
-static void rebx_calculate_LT_force(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double omega, const double R_eq, 
-                                    const double C_fac, const double p_hat_x, const double p_hat_y, const double p_hat_z const int source_index, const double C2){
+static void rebx_calculate_LT_force(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double omega, const double R_eq, const double C_fac, const double p_hat_x, const double p_hat_y, const double p_hat_z, const int source_index, const double C2){
     const struct reb_particle source = particles[source_index];
     const double G = sim->G;
-    const double gamma = 1.000021   //hard-coded Eddington-Robertson-Shiff parameter for now
+    const double gamma = 1.000021;   //hard-coded Eddington-Robertson-Shiff parameter for now
     for (int i=0; i<N; i++){
         if(i == source_index){
             continue;
@@ -126,12 +92,46 @@ static void rebx_calculate_LT_force(struct reb_simulation* const sim, struct reb
         const double Omega_y = Omega_fac*(-Jy +3.*(Jx*dx+Jy*dy+Jz*dz)*dy/r2)/r3;
         const double Omega_z = Omega_fac*(-Jz +3.*(Jx*dx+Jy*dy+Jz*dz)*dz/r2)/r3;
 
-        particles[i].ax += 2.*Omega_y*v_z - Omega_z*v_y;
-        particles[i].ay += 2.*Omega_z*v_x - Omega_x*v_z;
-        particles[i].az += 2.*Omega_x*v_y - Omega_y*v_x;
-        particles[source_index].ax -= 2.*Omega_y*v_z - Omega_z*v_y; 
-        particles[source_index].ay -= 2.*Omega_z*v_x - Omega_x*v_z;
-        particles[source_index].az -= 2.*Omega_x*v_y - Omega_y*v_x;
+        particles[i].ax += 2.*Omega_y*dvz - Omega_z*dvy;
+        particles[i].ay += 2.*Omega_z*dvx - Omega_x*dvz;
+        particles[i].az += 2.*Omega_x*dvy - Omega_y*dvx;
+        particles[source_index].ax -= 2.*Omega_y*dvz - Omega_z*dvy; 
+        particles[source_index].ay -= 2.*Omega_z*dvx - Omega_x*dvz;
+        particles[source_index].az -= 2.*Omega_x*dvy - Omega_y*dvx;
     }
 }
+
+void rebx_lense_thirring(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
+
+    struct rebx_extras* const rebx = sim->extras;
+    double* c = rebx_get_param(sim->extras, force->ap, "lt_c");
+    if (c == NULL){
+        reb_error(sim, "REBOUNDx Error: Need to set speed of light in LT effect.  See examples in documentation.\n");
+    }
+    const double C2 = (*c)*(*c);
+
+    for (int i=0; i<N; i++){
+        const double* omega = rebx_get_param(rebx, particles[i].ap, "lt_rot_rate");
+        if(omega != NULL){
+           const double* R_eq = rebx_get_param(rebx, particles[i].ap, "lt_R_eq");
+           if (R_eq != NULL){
+               const double* C_fac = rebx_get_param(rebx, particles[i].ap, "lt_Mom_I_fac");
+               if(C_fac != NULL){
+                  const double* p_hat_x = rebx_get_param(rebx, particles[i].ap, "lt_p_hat_x");
+                  if(p_hat_x != NULL){
+                     const double* p_hat_y = rebx_get_param(rebx, particles[i].ap, "lt_p_hat_y");
+                     if(p_hat_y != NULL){
+                        const double* p_hat_z = rebx_get_param(rebx, particles[i].ap, "lt_p_hat_z");
+                        if(p_hat_z != NULL){
+                           rebx_calculate_LT_force(sim, particles, N, *omega, *R_eq, *C_fac, *p_hat_x, *p_hat_y, *p_hat_z, i, C2);
+                         //rebx_calculate_LT_force(sim, particles, N, *omega, *R_eq, *C_fac, *p_hat_x, *p_hat_y, *p_hat_z, i, (*c)*(*c));
+                        }
+                     }
+                  }
+               }
+           }
+        }
+    }
+}
+
 
