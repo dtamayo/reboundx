@@ -102,7 +102,6 @@ static void rebx_calculate_LT_force(struct reb_simulation* const sim, struct reb
 }
 
 void rebx_lense_thirring(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
-
     struct rebx_extras* const rebx = sim->extras;
     double* c = rebx_get_param(sim->extras, force->ap, "lt_c");
     if (c == NULL){
@@ -117,11 +116,11 @@ void rebx_lense_thirring(struct reb_simulation* const sim, struct rebx_force* co
            if (R_eq != NULL){
                const double* C_fac = rebx_get_param(rebx, particles[i].ap, "lt_Mom_I_fac");
                if(C_fac != NULL){
-                  const double* p_hat_x = rebx_get_param(rebx, particles[i].ap, "lt_p_hat_x");
+                  const double* p_hat_x = rebx_get_param(rebx, particles[i].ap, "lt_p_hatx");
                   if(p_hat_x != NULL){
-                     const double* p_hat_y = rebx_get_param(rebx, particles[i].ap, "lt_p_hat_y");
+                     const double* p_hat_y = rebx_get_param(rebx, particles[i].ap, "lt_p_haty");
                      if(p_hat_y != NULL){
-                        const double* p_hat_z = rebx_get_param(rebx, particles[i].ap, "lt_p_hat_z");
+                        const double* p_hat_z = rebx_get_param(rebx, particles[i].ap, "lt_p_hatz");
                         if(p_hat_z != NULL){
                            rebx_calculate_LT_force(sim, particles, N, *omega, *R_eq, *C_fac, *p_hat_x, *p_hat_y, *p_hat_z, i, C2);
                         }

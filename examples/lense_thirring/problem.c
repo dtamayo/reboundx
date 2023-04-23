@@ -22,7 +22,7 @@ int main(int argc, char* argv[]){
     double R_eq = 0.00465247264; //solar equatorial radius in AU
     double p_x = 0.0; //x-comp. of unit spin-pole direction
     double p_y = 0.0; //y-comp. of unit spin-pole direction
-    double p_z = 0.0; //z-comp. of unit spin-pole direction
+    double p_z = 1.0; //z-comp. of unit spin-pole direction
 
 
     struct reb_particle planet = {0};  // add a planet on a circular orbit (with default units where G=1)
