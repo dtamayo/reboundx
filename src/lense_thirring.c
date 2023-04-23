@@ -41,7 +41,7 @@
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * c (double)                   Yes         Speed of light in the units used for the simulation.
+ * lt_c (double)                   Yes         Speed of light in the units used for the simulation.
  * ============================ =========== ==================================================================
  *
  * **Particle Parameters**
@@ -49,12 +49,12 @@
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * omega (double)               No          rotation rate
- * R_eq (double)                No          Equatorial radius of source body
- * C_fac (double)               No          Moment of Inertia of source body over MR^2
- * p_hat_x (double)             No          x-component of spin-pole unit vector
- * p_hat_y (double)             No          y-component of spin-pole unit vector
- * p_hat_z (double)             No          z-component of spin-pole unit vector
+ * lt_rot_rate (double)         No          rotation rate, omega`
+ * lt_R_eq (double)             No          Equatorial radius of source body
+ * lt_Mom_I_fac (double)        No          Moment of Inertia of source body over MR^2
+ * lt_p_hatx (double)           No          x-component of spin-pole unit vector
+ * lt_p_haty (double)           No          y-component of spin-pole unit vector
+ * lt_p_hatz (double)           No          z-component of spin-pole unit vector
  * ============================ =========== ==================================================================
  * 
  */
