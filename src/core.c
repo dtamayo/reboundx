@@ -39,7 +39,7 @@
 #define str(s) #s
 
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string.
-const char* rebx_version_str = "3.9.2";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
+const char* rebx_version_str = "3.10.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
 
 
@@ -127,6 +127,14 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "I", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tau", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "ode", REBX_TYPE_ODE);
+    rebx_register_param(rebx, "gas_df_rhog", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "gas_df_alpha_rhog", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "gas_df_cs", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "gas_df_alpha_cs", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "gas_df_xmin", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "gas_df_hr", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "gas_df_Qd", REBX_TYPE_DOUBLE);
+
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -317,6 +325,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     }
     else if (strcmp(name, "yarkovsky_effect") == 0){
         force->update_accelerations = rebx_yarkovsky_effect;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "gas_dynamical_friction") == 0){
+        force->update_accelerations = rebx_gas_dynamical_friction;
         force->force_type = REBX_FORCE_VEL;
     }
     else{

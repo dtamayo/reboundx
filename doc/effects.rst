@@ -448,19 +448,22 @@ tides_spin
 
 ======================= ===============================================
 Authors                 Tiger Lu, Hanno Rein, D. Tamayo, Sam Hadden, Rosemary Mardling, Sarah Millholland, Gregory Laughlin
-Implementation Paper    Lu et al., 2023 (in review).
+Implementation Paper    `Lu et al., 2023 <https://arxiv.org/abs/2303.00006>`_.
 Based on                `Eggleton et al. 1998 <https://ui.adsabs.harvard.edu/abs/1998ApJ...499..853E/abstract>`_.
 C Example               :ref:`c_example_tides_spin_pseudo_synchronization`, :ref:`c_example_tides_spin_migration_driven_obliquity_tides`, :ref:`c_example_tides_spin_kozai`.
-Python Example          `SpinsIntro.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/SpinsIntro.ipynb>`_., `TidesSpinPseudoSynchronization.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesSpinPseudoSynchronization.ipynb>`_., `TidesSpinEarthMoon.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesSpinEarthMoon.ipynb>`_.
+Python Example          `SpinsIntro.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/SpinsIntro.ipynb>`_, `TidesSpinPseudoSynchronization.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesSpinPseudoSynchronization.ipynb>`_, `TidesSpinEarthMoon.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesSpinEarthMoon.ipynb>`_.
 ======================= ===============================================
 
 This effect consistently tracks both the spin and orbital evolution of bodies under constant-time lag tides raised on both the primary and on the orbiting bodies.
-In all cases, we need to set masses for all the particles that will feel these tidal forces. Particles with only mass are point particles
+In all cases, we need to set masses for all the particles that will feel these tidal forces. Particles with only mass are point particles.
+
 Particles are assumed to have structure (i.e - physical extent & distortion from spin) if the following parameters are set: physical radius particles[i].r, potential Love number of degree 2 k2 (Q/(1-Q) in Eggleton 1998), and the spin angular rotation frequency vector Omega.
 If we wish to evolve a body's spin components, the fully dimensional moment of inertia I must be set as well. If this parameter is not set, the spin components will be stationary.
 Finally, if we wish to consider the effects of tides raised on a specific body, we must set the constant time lag tau as well.
+
 For spins that are synchronized with a circular orbit, the constant time lag can be related to the tidal quality factor Q as tau = 1/(2*n*tau), with n the orbital mean motion.
 See Lu et. al (in review) and Eggleton et. al (1998) above for discussion.
+
 
 **Effect Parameters**
 
@@ -486,7 +489,7 @@ tides_constant_time_lag
 
 ======================= ===============================================
 Authors                 Stanley A. Baronett, D. Tamayo, Noah Ferich
-Implementation Paper    `Baronett et al., 2021 (in review) <https://arxiv.org/abs/2101.12277>`_.
+Implementation Paper    `Baronett et al., 2022 <https://ui.adsabs.harvard.edu/abs/2022MNRAS.510.6001B/abstract>`_.
 Based on                `Hut 1981 <https://ui.adsabs.harvard.edu/#abs/1981A&A....99..126H/abstract>`_, `Bolmont et al., 2015 <https://ui.adsabs.harvard.edu/abs/2015A%26A...583A.116B/abstract>`_.
 C Example               :ref:`c_example_tides_constant_time_lag`.
 Python Example          `TidesConstantTimeLag.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesConstantTimeLag.ipynb>`_.
@@ -578,6 +581,45 @@ J2 (double)                  No          J2 coefficient
 J4 (double)                  No          J4 coefficient
 R_eq (double)                No          Equatorial radius of nonspherical body used for calculating Jn harmonics
 ============================ =========== ==================================================================
+
+
+Gas Effects
+^^^^^^^^^^^^^^^^^^
+
+.. _gas_dynamical_friction:
+
+gas_dynamical_friction
+**********************
+
+======================= ===============================================
+Authors                 A. Generozov, H. Perets
+Implementation Paper    `Generozov and Perets 2022 <https://arxiv.org/abs/2212.11301>`_
+Based on                `Ostriker 1999 (with simplifications) <https://ui.adsabs.harvard.edu/abs/1999ApJ...513..252O/abstract>`_, `Just et al 2012 <https://ui.adsabs.harvard.edu/abs/2012ApJ...758...51J/abstract>`_.
+C Example               :ref:`c_example_gas_dynamical_friction`
+Python Example          `gas_dynamical_friction.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/gas_dynamical_friction.ipynb>`_
+                       
+
+======================= ===============================================
+
+
+**Effect Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+rhog (double)                Yes         Normalization of density. Density in the disk midplane is rhog*r^alpha_rhog
+alpha_rhog (double)          Yes         Power-law slope of the power-law density profile.
+cs (double)                  Yes         Normalization of the sound speed. Sound speed has profile cs*r^alpha_cs
+alpha_cs (double)            Yes         Power-law slope of the sound speed
+xmin (double)                Yes         Dimensionless parameter that determines the Coulomb logarithm (ln(L) =log (1/xmin))
+hr (double)                  Yes         Aspect ratio of the disk
+Qd (double)                  Yes         Prefactor for geometric drag
+============================ =========== ==================================================================
+
+
+**Particle Parameters**
+
+None.
 
 
 Integration Steppers
