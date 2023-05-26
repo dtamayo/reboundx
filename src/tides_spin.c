@@ -195,16 +195,20 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
             if (i != j){
                 struct reb_particle* pj = &sim->particles[j];
 
-                // di - dj
-                const double dx = pi->x - pj->x;
-                const double dy = pi->y - pj->y;
-                const double dz = pi->z - pj->z;
-
                 const double mi = pi->m;
                 const double mj = pj->m;
                 const double mu_ij = (mi * mj) / (mi + mj);
 
-                struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, sigma_in, Omega);
+		if (mi == 0 || mj == 0){
+		   continue;
+		}
+                
+		// di - dj
+                const double dx = pi->x - pj->x;
+                const double dy = pi->y - pj->y;
+                const double dz = pi->z - pj->z;
+                
+		struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, sigma_in, Omega);
                 // Eggleton et. al 1998 spin EoM (equation 36)
                 yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) * (-mu_ij / *I));
                 yDot[3*Nspins + 1] += ((dz * tf.x - dx * tf.z) * (-mu_ij / *I));
