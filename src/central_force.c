@@ -61,25 +61,35 @@
 #include "reboundx.h"
 
 static void rebx_calculate_central_force(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double A, const double gamma, const int source_index){
-    const struct reb_particle source = particles[source_index];
-    for (int i=0; i<N; i++){
-        if(i == source_index){
-            continue;
-        }
-        const struct reb_particle p = particles[i];
-        const double dx = p.x - source.x;
-        const double dy = p.y - source.y;
-        const double dz = p.z - source.z;
-        const double r2 = dx*dx + dy*dy + dz*dz;
-        const double prefac = A*pow(r2, (gamma-1.)/2.);
+    const struct reb_particle source = particles[0];
+    const struct reb_particle p1 = particles[1];
+    const struct reb_particle p2 = particles[2];
 
-        particles[i].ax += prefac*dx;
-        particles[i].ay += prefac*dy;
-        particles[i].az += prefac*dz;
-        particles[source_index].ax -= p.m/source.m*prefac*dx;
-        particles[source_index].ay -= p.m/source.m*prefac*dy;
-        particles[source_index].az -= p.m/source.m*prefac*dz;
-    }
+    const double dx1 = p1.x - source.x;
+    const double dy1 = p1.y - source.y;
+    const double dz1 = p1.z - source.z;
+    const double r21 = dx1*dx1 + dy1*dy1 + dz1*dz1;
+    const double prefac = A*pow(r21, (gamma-1.)/2.);
+
+    particles[1].ax += prefac*dx1;
+    particles[1].ay += prefac*dy1;
+    particles[1].az += prefac*dz1;
+    particles[0].ax -= p1.m/source.m*prefac*dx1;
+    particles[0].ay -= p1.m/source.m*prefac*dy1;
+    particles[0].az -= p1.m/source.m*prefac*dz1;
+    
+    const double dx2 = p2.x - source.x;
+    const double dy2 = p2.y - source.y;
+    const double dz2 = p2.z - source.z;
+    const double r22 = dx2*dx2 + dy2*dy2 + dz2*dz2;
+    const double prefac2 = A*pow(r22, (gamma-1.)/2.);
+
+    particles[2].ax -= prefac2*dx2;
+    particles[2].ay -= prefac2*dy2;
+    particles[2].az -= prefac2*dz2;
+    particles[0].ax += p2.m/source.m*prefac2*dx2;
+    particles[0].ay += p2.m/source.m*prefac2*dy2;
+    particles[0].az += p2.m/source.m*prefac2*dz2;
 }
 
 void rebx_central_force(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
