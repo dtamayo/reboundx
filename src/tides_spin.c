@@ -39,7 +39,7 @@
  * In all cases, we need to set masses for all the particles that will feel these tidal forces. Particles with only mass are point particles.
  *
  * Particles are assumed to have structure (i.e - physical extent & distortion from spin) if the following parameters are set: physical radius particles[i].r, potential Love number of degree 2 k2 (Q/(1-Q) in Eggleton 1998), and the spin angular rotation frequency vector Omega.
- * If we wish to evolve a body's spin components, the fully dimensional moment of inertia I must be set as well. If this parameter is not set, the spin components will be stationary.
+ * If we wish to evolve a body's spin components, the fully dimensional moment of inertia I must be set as well. If this parameter is not set, the spin components will be stationary. Note that if the body is a test particle, this is assumed to be the specific moment of inertia.
  * Finally, if we wish to consider the effects of tides raised on a specific body, we must set the constant time lag tau as well.
  *
  * For spins that are synchronized with a circular orbit, the constant time lag can be related to the tidal quality factor Q as tau = 1/(2*n*tau), with n the orbital mean motion.
@@ -58,7 +58,7 @@
  * particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
  * k2 (float)                   Yes         Potential Love number of degree 2.
  * Omega (reb_vec3d)            Yes         Angular rotation frequency
- * I (float)                    No          Moment of inertia
+ * I (float)                    No          Moment of inertia (for test particles, assumed to be the specific MoI)
  * tau (float)                  No          Constant time lag. If not set, defaults to 0
  * ============================ =========== ==================================================================
  *
@@ -197,17 +197,24 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
 
                 const double mi = pi->m;
                 const double mj = pj->m;
-                const double mu_ij = (mi * mj) / (mi + mj);
+                double mu_ij;
 
-		if (mi == 0 || mj == 0){
-		   continue;
-		}
-                
+            		if (mj == 0){
+            		   continue;
+            		}
+
+                if (mi == 0){ // If test particle, assume I = specific moment of inertia
+                  mu_ij = 1.;
+                }
+                else{
+                  mu_ij = (mi * mj) / (mi + mj);
+                }
+
 		// di - dj
                 const double dx = pi->x - pj->x;
                 const double dy = pi->y - pj->y;
                 const double dz = pi->z - pj->z;
-                
+
 		struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, sigma_in, Omega);
                 // Eggleton et. al 1998 spin EoM (equation 36)
                 yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) * (-mu_ij / *I));
@@ -232,8 +239,9 @@ static void rebx_spin_sync_pre(struct reb_ode* const ode, const double* const y0
     const int N_real = sim->N - sim->N_var;
     for (int i=0; i<N_real; i++){
         struct reb_particle* p = &sim->particles[i];
-        const double* k2 = rebx_get_param(rebx, p->ap, "k2");
-        if (k2 != NULL){
+        double* I = rebx_get_param(rebx, p->ap, "I");
+        struct reb_vec3d* Omega = rebx_get_param(rebx, p->ap, "Omega");
+        if (I != NULL && Omega != NULL){
             const struct reb_vec3d* Omega = rebx_get_param(rebx, p->ap, "Omega");
             ode->y[3*Nspins] = Omega->x;
             ode->y[3*Nspins+1] = Omega->y;
@@ -255,8 +263,9 @@ static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y
     const int N_real = sim->N - sim->N_var;
     for (int i=0; i<N_real; i++){
         struct reb_particle* p = &sim->particles[i];
-        const double* k2 = rebx_get_param(rebx, p->ap, "k2");
-        if (k2 != NULL){
+        double* I = rebx_get_param(rebx, p->ap, "I");
+        struct reb_vec3d* Omega = rebx_get_param(rebx, p->ap, "Omega");
+        if (I != NULL && Omega != NULL){
             rebx_set_param_vec3d(rebx, (struct rebx_node**)&p->ap, "Omega", (struct reb_vec3d){.x=y0[3*Nspins], .y=y0[3*Nspins+1], .z=y0[3*Nspins+2]});
             Nspins += 1;
         }
