@@ -58,7 +58,7 @@
  * particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
  * k2 (float)                   Yes         Potential Love number of degree 2.
  * Omega (reb_vec3d)            Yes         Angular rotation frequency
- * I (float)                    No          Moment of inertia (for test particles, assumed to be the specific MoI)
+ * I (float)                    No          Moment of inertia (for test particles, assumed to be the specific MoI I/m)
  * tau (float)                  No          Constant time lag. If not set, defaults to 0
  * ============================ =========== ==================================================================
  *
@@ -203,11 +203,13 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
             		   continue;
             		}
 
+                double I_specific;
                 if (mi == 0){ // If test particle, assume I = specific moment of inertia
-                  mu_ij = 1.;
+                    I_specific = *I;  
                 }
                 else{
                   mu_ij = (mi * mj) / (mi + mj);
+                  I_specific = *I / mu_ij;
                 }
 
 		// di - dj
@@ -217,9 +219,9 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
 
 		struct reb_vec3d tf = rebx_calculate_spin_orbit_accelerations(pi, pj, sim->G, *k2, sigma_in, Omega);
                 // Eggleton et. al 1998 spin EoM (equation 36)
-                yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) * (-mu_ij / *I));
-                yDot[3*Nspins + 1] += ((dz * tf.x - dx * tf.z) * (-mu_ij / *I));
-                yDot[3*Nspins + 2] += ((dx * tf.y - dy * tf.x) * (-mu_ij / *I));
+                yDot[3*Nspins] += ((dy * tf.z - dz * tf.y) / (-I_specific));
+                yDot[3*Nspins + 1] += ((dz * tf.x - dx * tf.z) / (-I_specific));
+                yDot[3*Nspins + 2] += ((dx * tf.y - dy * tf.x) / (-I_specific));
             }
           }
           Nspins += 1;
