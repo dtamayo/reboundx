@@ -42,7 +42,7 @@
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * c (double)                   Yes         Speed of light in the units used for the simulation.
+ * c (double)                   Yes         Speed of light, needs to be specified in the units used for the simulation.
  * ============================ =========== ==================================================================
  * 
  * **Particle Parameters**
