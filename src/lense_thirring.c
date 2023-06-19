@@ -31,17 +31,17 @@
  * Implementation Paper    None
  * Based on                `Park et al. <https://iopscience.iop.org/article/10.3847/1538-3881/abd414/>`_.
  * C Example               :ref:`c_example_lense_thirring`
- * Python Example          `LT.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/LT.ipynb>`_.
+ * Python Example          `LenseThirring.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/LenseThirring.ipynb>`_.
  * ======================= ===============================================
  * 
- * Adds Lense-Thirring effect due to massive rotating bodies in the simulation.
+ * Adds Lense-Thirring effect due to rotating central body in the simulation. Assumes the source body is particles[0]
  *
  * **Effect Parameters**
  * 
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * lt_c (double)                   Yes         Speed of light in the units used for the simulation.
+ * lt_c (double)                Yes         Speed of light in the units used for the simulation.
  * ============================ =========== ==================================================================
  *
  * **Particle Parameters**
@@ -49,12 +49,8 @@
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * lt_rot_rate (double)         No          rotation rate, omega`
- * lt_R_eq (double)             No          Equatorial radius of source body
- * lt_Mom_I_fac (double)        No          Moment of Inertia of source body over MR^2
- * lt_p_hatx (double)           No          x-component of spin-pole unit vector
- * lt_p_haty (double)           No          y-component of spin-pole unit vector
- * lt_p_hatz (double)           No          z-component of spin-pole unit vector
+ * I (double)                   Yes         Moment of Inertia of source body 
+ * Omega (reb_vec3d)            Yes         Angular rotation frequency (Omega_x, Omega_y, Omega_z) 
  * ============================ =========== ==================================================================
  * 
  */
@@ -66,14 +62,11 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-static void rebx_calculate_LT_force(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double omega, const double R_eq, const double C_fac, const double p_hat_x, const double p_hat_y, const double p_hat_z, const int source_index, const double C2){
-    const struct reb_particle source = particles[source_index];
+static void rebx_calculate_LT_force(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const struct reb_vec3d Omega, const double I, const double C2){
     const double G = sim->G;
     const double gamma = 1.000021;   //hard-coded Eddington-Robertson-Shiff parameter for now
-    for (int i=0; i<N; i++){
-        if(i == source_index){
-            continue;
-        }
+    const struct reb_particle source = particles[0]; // hard-code particles[0] as source particle
+    for (int i=1; i<N; i++){
         const struct reb_particle p = particles[i];
         const double dx = p.x - source.x;
         const double dy = p.y - source.y;
@@ -84,20 +77,25 @@ static void rebx_calculate_LT_force(struct reb_simulation* const sim, struct reb
         const double dvx = p.vx - source.vx;
         const double dvy = p.vy - source.vy;
         const double dvz = p.vz - source.vz;
-        const double Jx = C_fac*source.m * R_eq*R_eq*omega*p_hat_x ;
-        const double Jy = C_fac*source.m * R_eq*R_eq*omega*p_hat_y ;
-        const double Jz = C_fac*source.m * R_eq*R_eq*omega*p_hat_z ;
-        const double Omega_fac = (1.+gamma)*G/2/C2;
-        const double Omega_x = Omega_fac*(-Jx +3.*(Jx*dx+Jy*dy+Jz*dz)*dx/r2)/r3;
-        const double Omega_y = Omega_fac*(-Jy +3.*(Jx*dx+Jy*dy+Jz*dz)*dy/r2)/r3;
-        const double Omega_z = Omega_fac*(-Jz +3.*(Jx*dx+Jy*dy+Jz*dz)*dz/r2)/r3;
+        const double Jx = I*Omega.x; //C_fac*source.m * R_eq*R_eq*omega*p_hat_x ;
+        const double Jy = I*Omega.y; //C_fac*source.m * R_eq*R_eq*omega*p_hat_y ;
+        const double Jz = I*Omega.z; //C_fac*source.m * R_eq*R_eq*omega*p_hat_z ;
+        const double ms = source.m;
+        const double mt = p.m;
+        const double mtot = ms + mt;
+        const double mratio = mt/ms;
+        const double Omega_fac = ms/mtot*(1.+gamma)*G/2/C2/r3;
+        const double Jdotr = Jx*dx+Jy*dy+Jz*dz;
+        const double Omega_x = Omega_fac*(-Jx +3.*Jdotr*dx/r2);
+        const double Omega_y = Omega_fac*(-Jy +3.*Jdotr*dy/r2);
+        const double Omega_z = Omega_fac*(-Jz +3.*Jdotr*dz/r2);
 
-        particles[i].ax += 2.*Omega_y*dvz - Omega_z*dvy;
-        particles[i].ay += 2.*Omega_z*dvx - Omega_x*dvz;
-        particles[i].az += 2.*Omega_x*dvy - Omega_y*dvx;
-        particles[source_index].ax -= 2.*Omega_y*dvz - Omega_z*dvy; 
-        particles[source_index].ay -= 2.*Omega_z*dvx - Omega_x*dvz;
-        particles[source_index].az -= 2.*Omega_x*dvy - Omega_y*dvx;
+        particles[i].ax += 2.*(Omega_y*dvz - Omega_z*dvy);
+        particles[i].ay += 2.*(Omega_z*dvx - Omega_x*dvz);
+        particles[i].az += 2.*(Omega_x*dvy - Omega_y*dvx);
+        particles[0].ax -= mratio * 2. * (Omega_y*dvz - Omega_z*dvy); 
+        particles[0].ay -= mratio * 2. * (Omega_z*dvx - Omega_x*dvz);
+        particles[0].az -= mratio * 2. * (Omega_x*dvy - Omega_y*dvx);
     }
 }
 
@@ -109,25 +107,11 @@ void rebx_lense_thirring(struct reb_simulation* const sim, struct rebx_force* co
     }
     const double C2 = (*c)*(*c);
 
-    for (int i=0; i<N; i++){
-        const double* omega = rebx_get_param(rebx, particles[i].ap, "lt_rot_rate");
-        if(omega != NULL){
-           const double* R_eq = rebx_get_param(rebx, particles[i].ap, "lt_R_eq");
-           if (R_eq != NULL){
-               const double* C_fac = rebx_get_param(rebx, particles[i].ap, "lt_Mom_I_fac");
-               if(C_fac != NULL){
-                  const double* p_hat_x = rebx_get_param(rebx, particles[i].ap, "lt_p_hatx");
-                  if(p_hat_x != NULL){
-                     const double* p_hat_y = rebx_get_param(rebx, particles[i].ap, "lt_p_haty");
-                     if(p_hat_y != NULL){
-                        const double* p_hat_z = rebx_get_param(rebx, particles[i].ap, "lt_p_hatz");
-                        if(p_hat_z != NULL){
-                           rebx_calculate_LT_force(sim, particles, N, *omega, *R_eq, *C_fac, *p_hat_x, *p_hat_y, *p_hat_z, i, C2);
-                        }
-                     }
-                  }
-               }
-           }
+    const double* I = rebx_get_param(rebx, particles[0].ap, "I");
+    if (I != NULL){
+        const struct reb_vec3d* Omega  = rebx_get_param(rebx, particles[0].ap, "Omega");
+        if(Omega != NULL){
+            rebx_calculate_LT_force(sim, particles, N, *Omega, *I, C2);
         }
     }
 }
