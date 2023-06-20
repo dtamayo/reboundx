@@ -134,7 +134,13 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "gas_df_xmin", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "gas_df_hr", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "gas_df_Qd", REBX_TYPE_DOUBLE);
-
+    rebx_register_param(rebx, "lt_R_eq", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "lt_Mom_I_fac", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "lt_rot_rate", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "lt_p_hatx", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "lt_p_haty", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "lt_p_hatz", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "lt_c", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -329,6 +335,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     }
     else if (strcmp(name, "gas_dynamical_friction") == 0){
         force->update_accelerations = rebx_gas_dynamical_friction;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "lense_thirring") == 0){
+        force->update_accelerations = rebx_lense_thirring;
         force->force_type = REBX_FORCE_VEL;
     }
     else{
