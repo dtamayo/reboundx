@@ -199,6 +199,39 @@ em_afin (double)               Yes          Object's final semimajor axis
 General Relativity
 ^^^^^^^^^^^^^^^^^^
 
+.. _lense_thirring:
+
+lense_thirring
+**************
+
+======================= ===============================================
+Authors                 A. Akmal
+Implementation Paper    None
+Based on                `Park et al. <https://iopscience.iop.org/article/10.3847/1538-3881/abd414/>`_.
+C Example               :ref:`c_example_lense_thirring`
+Python Example          `LenseThirring.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/LenseThirring.ipynb>`_.
+======================= ===============================================
+
+Adds Lense-Thirring effect due to rotating central body in the simulation. Assumes the source body is particles[0]
+
+**Effect Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+lt_c (double)                Yes         Speed of light in the units used for the simulation.
+============================ =========== ==================================================================
+
+**Particle Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+I (double)                   Yes         Moment of Inertia of source body 
+Omega (reb_vec3d)            Yes         Angular rotation frequency (Omega_x, Omega_y, Omega_z) 
+============================ =========== ==================================================================
+
+
 .. _gr_potential:
 
 gr_potential
@@ -223,7 +256,7 @@ Nice if you have a single-star system, don't need to get GR exactly right, and w
 ============================ =========== ==================================================================
 Field (C type)               Required    Description
 ============================ =========== ==================================================================
-c (double)                   Yes         Speed of light in the units used for the simulation.
+c (double)                   Yes         Speed of light, needs to be specified in the units used for the simulation.
 ============================ =========== ==================================================================
 
 
@@ -251,7 +284,7 @@ Adding this effect to several bodies is NOT equivalent to using gr_full.
 ============================ =========== ==================================================================
 Field (C type)               Required    Description
 ============================ =========== ==================================================================
-c (double)                   Yes         Speed of light in the units used for the simulation.
+c (double)                   Yes         Speed of light, needs to be specified in the units used for the simulation.
 ============================ =========== ==================================================================
 
 
@@ -276,7 +309,7 @@ This algorithm incorporates the first-order post-newtonian effects from all bodi
 ============================ =========== ==================================================================
 Field (C type)               Required    Description
 ============================ =========== ==================================================================
-c (double)                   Yes         Speed of light in the units used for the simulation.
+c (double)                   Yes         Speed of light, needs to be specified in the units used for the simulation.
 ============================ =========== ==================================================================
 
 **Particle Parameters**
@@ -458,7 +491,7 @@ This effect consistently tracks both the spin and orbital evolution of bodies un
 In all cases, we need to set masses for all the particles that will feel these tidal forces. Particles with only mass are point particles.
 
 Particles are assumed to have structure (i.e - physical extent & distortion from spin) if the following parameters are set: physical radius particles[i].r, potential Love number of degree 2 k2 (Q/(1-Q) in Eggleton 1998), and the spin angular rotation frequency vector Omega.
-If we wish to evolve a body's spin components, the fully dimensional moment of inertia I must be set as well. If this parameter is not set, the spin components will be stationary.
+If we wish to evolve a body's spin components, the fully dimensional moment of inertia I must be set as well. If this parameter is not set, the spin components will be stationary. Note that if the body is a test particle, this is assumed to be the specific moment of inertia.
 Finally, if we wish to consider the effects of tides raised on a specific body, we must set the constant time lag tau as well.
 
 For spins that are synchronized with a circular orbit, the constant time lag can be related to the tidal quality factor Q as tau = 1/(2*n*tau), with n the orbital mean motion.
@@ -476,8 +509,8 @@ Field (C type)               Required    Description
 ============================ =========== ==================================================================
 particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
 k2 (float)                   Yes         Potential Love number of degree 2.
-Omega (reb_vec3d)            Yes         Angular rotation frequency
-I (float)                    No          Moment of inertia
+Omega (reb_vec3d)            Yes         Angular rotation frequency (Omega_x, Omega_y, Omega_z)
+I (float)                    No          Moment of inertia (for test particles, assumed to be the specific MoI I/m)
 tau (float)                  No          Constant time lag. If not set, defaults to 0
 ============================ =========== ==================================================================
 
