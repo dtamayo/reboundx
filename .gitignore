@@ -7,6 +7,7 @@
 *.cproject
 *.project
 *.settings
+*.txt
 nbody
 .DS_Store
 error.txt
