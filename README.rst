@@ -1,4 +1,4 @@
-.. image:: https://img.shields.io/badge/REBOUNDx-v3.10.1-green.svg?style=flat
+.. image:: https://img.shields.io/badge/REBOUNDx-v3.11.0-green.svg?style=flat
     :target: https://reboundx.readthedocs.org
 .. image:: https://badge.fury.io/py/reboundx.svg
     :target: https://badge.fury.io/py/reboundx
@@ -38,13 +38,4 @@ Please see the Attribution section at `https://reboundx.readthedocs.io <https://
 Changelog
 =========
 
-Version 3.1.0
--------------
-
-* Added interpolator object for interpolating parameters
-* Many improvements to the documentation
-
-Version 3.0.5
--------------
-
-* Generalized tides_precession effect to general constant time lag model (Hut 1981)
+3.11.0 Removed large files that had accumulated in repo. This required rewriting the commit history. If you cloned the REBOUNDx directory before version 3.11.0, you should back up any files you modified, delete your local REBOUNDx directory, and clone the repository again. 
