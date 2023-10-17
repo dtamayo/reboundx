@@ -1,20 +1,6 @@
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
-
-[tool.cibuildwheel]
-skip = "cp36-*"
-test-extras = "test"
-test-command = "pytest {project}/test"
-manylinux-x86_64-image = "manylinux2014"
-manylinux-i686-image = "manylinux2014"
-
-# Before Python 3.10, manylinux2010 is the most compatible
-[[tool.cibuildwheel.overrides]]
-select = "cp3?-*"
-manylinux-x86_64-image = "manylinux2010"
-manylinux-i686-image = "manylinux2010"
-
 [tool.cibuildwheel.linux]
 archs = ["x86_64"]
 before-build = "pip install https://github.com/sunnycase/auditwheel/releases/download/4.0.0-nncase-2/auditwheel-0.0.0-py3-none-any.whl"
