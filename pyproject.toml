@@ -13,7 +13,6 @@ manylinux-i686-image = "manylinux2014"
 select = "cp3?-*"
 manylinux-x86_64-image = "manylinux2010"
 manylinux-i686-image = "manylinux2010"
-[tool.cibuildwheel
 
 [tool.cibuildwheel.linux]
 archs = ["x86_64"]
