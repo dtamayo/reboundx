@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
 skip = "cp36*"
-manylinux-x86_64-image = "sunnycase/manylinux2014_x86_64:1.1"
+manylinux-x86_64-image = "manylinux2014"
 
 [tool.cibuildwheel.linux]
 archs = ["x86_64"]
