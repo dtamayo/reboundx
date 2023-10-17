@@ -2,8 +2,7 @@ from codecs import open
 import os
 import inspect
 import sys 
-from distutils import sysconfig
-from distutils.sysconfig import get_python_lib 
+import sysconfig
 
 try:
     from setuptools import setup, Extension
@@ -20,7 +19,7 @@ if suffix is None:
 try:
     import subprocess
     ghash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii")
-    ghash_arg = "-DREBXGITHASH="+ghash
+    ghash_arg = "-DREBXGITHASH="+ghash.strip()
 except:
     ghash_arg = "-DREBXGITHASH=476d3a1e14003cfb8b218afeca9f5abca4ac8eed" #GITHASHAUTOUPDATE
 
@@ -33,7 +32,7 @@ class build_ext(_build_ext):
         try:
             import rebound
         except ImportError:
-            print("REBOUNDx did not automatically install REBOUND.  Please let me know if this happens (tamayo.daniel@gmail.com), and try first installing REBOUND (https://rebound.readthedocs.org/en/latest/python_quickstart.html")
+            print("REBOUNDx did not automatically install REBOUND.  Please let me know if this happens (dtamayo@hmc.edu), and try first installing REBOUND (https://rebound.readthedocs.org/en/latest/python_quickstart.html")
             sys.exit(1)
         try:
             version = rebound.__version__ # Added in 2.12.1
@@ -43,7 +42,7 @@ class build_ext(_build_ext):
 
         rebdir = os.path.dirname(inspect.getfile(rebound))
         # get site-packages dir to add to paths in case reb & rebx installed simul in tmp dir
-        rebdirsp = get_python_lib()+'/'#[p for p in sys.path if p.endswith('site-packages')][0]+'/'
+        rebdirsp = sysconfig.get_path('platlib')+'/'
         self.include_dirs.append(rebdir)
         sources = [ 'src/modify_mass.c', 'src/integrator_euler.c', 'src/modify_orbits_forces.c', 'src/lense_thirring.c', 'src/integrator_rk2.c', 'src/track_min_distance.c', 'src/tides_spin.c', 'src/gas_dynamical_friction.c', 'src/rebxtools.c', 'src/inner_disk_edge.c', 'src/gravitational_harmonics.c', 'src/gr_potential.c', 'src/core.c', 'src/integrator_rk4.c', 'src/input.c', 'src/central_force.c', 'src/stochastic_forces.c', 'src/gr.c', 'src/modify_orbits_direct.c', 'src/tides_constant_time_lag.c', 'src/yarkovsky_effect.c', 'src/gr_full.c', 'src/steppers.c', 'src/integrate_force.c', 'src/interpolation.c', 'src/type_I_migration.c', 'src/output.c', 'src/radiation_forces.c', 'src/integrator_implicit_midpoint.c', 'src/exponential_migration.c', 'src/linkedlist.c'],
         
@@ -55,14 +54,21 @@ class build_ext(_build_ext):
             ext.runtime_library_dirs.append(rebdirsp)
             ext.extra_link_args.append('-Wl,-rpath,'+rebdirsp)
 
-from distutils.version import LooseVersion
-
 extra_link_args=[]
 if sys.platform == 'darwin':
-    from distutils import sysconfig
-    vars = sysconfig.get_config_vars()
-    vars['LDSHARED'] = vars['LDSHARED'].replace('-bundle', '-shared')
+    config_vars = sysconfig.get_config_vars()
+    config_vars['LDSHARED'] = config_vars['LDSHARED'].replace('-bundle', '-shared')
     extra_link_args.append('-Wl,-install_name,@rpath/libreboundx'+suffix)
+if sys.platform == 'win32':
+    extra_compile_args=[ghash_arg, '-DLIBREBOUNDX', '-D_GNU_SOURCE']
+else:
+    # Default compile args
+    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-Wno-unknown-pragmas', ghash_arg, '-DLIBREBOUNDX', '-D_GNU_SOURCE', '-fPIC']
+
+# Option to disable FMA in CLANG. 
+FFP_CONTRACT_OFF = os.environ.get("FFP_CONTRACT_OFF", None)
+if FFP_CONTRACT_OFF:
+    extra_compile_args.append('-ffp-contract=off')
 
 libreboundxmodule = Extension('libreboundx',
         sources = [ 'src/modify_mass.c', 'src/integrator_euler.c', 'src/modify_orbits_forces.c', 'src/lense_thirring.c', 'src/integrator_rk2.c', 'src/track_min_distance.c', 'src/tides_spin.c', 'src/gas_dynamical_friction.c', 'src/rebxtools.c', 'src/inner_disk_edge.c', 'src/gravitational_harmonics.c', 'src/gr_potential.c', 'src/core.c', 'src/integrator_rk4.c', 'src/input.c', 'src/central_force.c', 'src/stochastic_forces.c', 'src/gr.c', 'src/modify_orbits_direct.c', 'src/tides_constant_time_lag.c', 'src/yarkovsky_effect.c', 'src/gr_full.c', 'src/steppers.c', 'src/integrate_force.c', 'src/interpolation.c', 'src/type_I_migration.c', 'src/output.c', 'src/radiation_forces.c', 'src/integrator_implicit_midpoint.c', 'src/exponential_migration.c', 'src/linkedlist.c'],
@@ -71,7 +77,7 @@ libreboundxmodule = Extension('libreboundx',
                     runtime_library_dirs = ["."],
                     libraries=['rebound'+suffix[:suffix.rfind('.')]],
                     define_macros=[ ('LIBREBOUNDX', None) ],
-                    extra_compile_args=['-fstrict-aliasing', '-D_GNU_SOURCE', '-O3','-std=c99', '-fPIC', '-Wpointer-arith', ghash_arg],
+                    extra_compile_args=extra_compile_args,
                     extra_link_args=extra_link_args,
                     )
 
@@ -85,7 +91,7 @@ setup(name='reboundx',
     long_description=long_description,
     url='https://github.com/dtamayo/reboundx',
     author='Daniel Tamayo',
-    author_email='tamayo.daniel@gmail.com',
+    author_email='dtamayo@hmc.edu',
     license='GPL',
     classifiers=[
         # How mature is this project? Common values are
@@ -111,9 +117,9 @@ setup(name='reboundx',
     keywords='astronomy astrophysics nbody integrator',
     packages=['reboundx'],
     cmdclass={'build_ext':build_ext},
-    setup_requires=['rebound>=3.23.0', 'numpy'],
-    install_requires=['rebound>=3.23.0', 'numpy'],
-    tests_require=["numpy","matplotlib"],
+    setup_requires=['rebound>=3.23.0'],
+    install_requires=['rebound>=3.23.0'],
+    tests_require=['rebound>=3.23.0','numpy'],
     test_suite="reboundx.test",
     ext_modules = [libreboundxmodule],
     zip_safe=False)
