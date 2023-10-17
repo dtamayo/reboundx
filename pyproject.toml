@@ -1,8 +1,12 @@
+[project]
+requires-python = ">=3.6"
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
+skip = "cp36-*"
 test-extras = "test"
 test-command = "pytest {project}/test"
 manylinux-x86_64-image = "manylinux2014"
