@@ -1,6 +1,11 @@
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.cibuildwheel]
+skip = "cp36*"
+manylinux-x86_64-image = "sunnycase/manylinux2014_x86_64:1.1"
+
 [tool.cibuildwheel.linux]
 archs = ["x86_64"]
 before-build = "pip install https://github.com/sunnycase/auditwheel/releases/download/4.0.0-nncase-2/auditwheel-0.0.0-py3-none-any.whl"
