@@ -22,6 +22,7 @@ jobs:
       - name: Check if symbols in shared library have correct prefix
         if: ${{ contains(matrix.os, 'ubuntu') }}
         run: |
+          export REB_DIR=$GITHUB_WORKSPACE/rebound
           make
           nm -g --defined-only libreboundx.so | cut -d ' ' -f3
           ! nm -g --defined-only libreboundx.so | cut -d ' ' -f3 | grep -v "^rebx_"
