@@ -26,10 +26,9 @@ jobs:
            FFP_CONTRACT_OFF: 1
            CIBW_ARCHS_MACOS: x86_64 arm64
            CIBW_BEFORE_ALL: >
-             git clone https://github.com/hannorein/rebound.git &&
-             cd rebound &&
-             pip install -e . &&
-             export REPAIR_LIBRARY_PATH=$PWD
+             pip install rebound &&
+             export LD_LIBRARY_PATH=`python -c "import rebound; import os; import inspect; print(os.path.dirname(inspect.getfile(rebound)))"`
+             export REPAIR_LIBRARY_PATH=$LD_LIBRARY_PATH
            CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
              DYLD_LIBRARY_PATH=$REPAIR_LIBRARY_PATH delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}
       - uses: actions/upload-artifact@v3
