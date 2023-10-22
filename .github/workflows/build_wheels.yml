@@ -26,7 +26,7 @@ jobs:
            FFP_CONTRACT_OFF: 1
            CIBW_ARCHS_MACOS: x86_64 arm64
            CIBW_BEFORE_ALL: >
-             git clone git@github.com:hannorein/rebound.git &&
+             git clone https://github.com/hannorein/rebound.git &&
              cd rebound &&
              pip install -e . &&
              cp libreb* ../
