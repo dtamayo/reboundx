@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
 skip = "cp36*"
-#build = "cp38*, cp39*, cp310*, cp311*, cp312*"
+build = "cp38*"
 manylinux-x86_64-image = "manylinux2014"
 
 #[tool.cibuildwheel.macos]
