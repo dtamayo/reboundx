@@ -25,8 +25,7 @@ jobs:
         env:
            FFP_CONTRACT_OFF: 1
            CIBW_ARCHS_MACOS: x86_64 arm64
-           CIBW_BEFORE_BUILD: >
-             pip3 install rebound --no-binary :all: &&
+           CIBW_BEFORE_BUILD: pip3 install rebound --no-binary :all:
              #export LD_LIBRARY_PATH=`python3 -c "import rebound; import os; import inspect; print(os.path.dirname(inspect.getfile(rebound))+'/../')"` &&
              #export REPAIR_LIBRARY_PATH=$LD_LIBRARY_PATH &&
              #ls $LD_LIBRARY_PATH
