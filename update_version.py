@@ -67,3 +67,12 @@ with open("doc/conf.py") as f:
 
     with open("doc/conf.py", "w") as f:
         f.writelines(conflines)
+
+print("----")
+print("Changelog:\n")
+print(changelog.strip())
+print("----")
+print("Next:")
+print("\ngit commit -a -m \""+reboundversion+"\"")
+print("git tag "+reboundversion+" && git push --tags")
+print("gh release create "+reboundversion+" --notes-file _changelog.tmp")
