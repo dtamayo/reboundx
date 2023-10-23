@@ -25,7 +25,11 @@ jobs:
         env:
            FFP_CONTRACT_OFF: 1
            CIBW_ARCHS_MACOS: x86_64 arm64
-           CIBW_BEFORE_BUILD: pip3 install rebound --no-binary :all:
+           CIBW_BEFORE_BUILD: >
+             pip3 install rebound --no-binary :all: &&
+             export LD_LIBRARY_PATH=`python3 -c "import rebound; import os; import inspect; print(os.path.dirname(inspect.getfile(rebound))+'/../')"` &&
+             export REPAIR_LIBRARY_PATH=$LD_LIBRARY_PATH
+           CIBW_REPAIR_WHEEL_COMMAND_MACOS: DYLD_LIBRARY_PATH=$REPAIR_LIBRARY_PATH delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
