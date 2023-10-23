@@ -30,4 +30,29 @@ jobs:
           python ipynb2py.py CustomSplittingIntegrationSchemes.ipynb
           python ipynb2py.py Custom_Effects.ipynb
           python ipynb2py.py EccAndIncDamping.ipynb
-
+          python ipynb2py.py Exponential Migration.ipynb
+          python ipynb2py.py GeneralRelativity.ipynb
+          python ipynb2py.py GettingStartedParameters.ipynb
+          python ipynb2py.py InnerDiskEdge.ipynb
+          python ipynb2py.py IntegrateForce.ipynb
+          python ipynb2py.py J2.ipynb
+          python ipynb2py.py LenseThirring.ipynb
+          python ipynb2py.py Migration.ipynb
+          python ipynb2py.py ModifyMass.ipynb
+          python ipynb2py.py ObliquityEvolution.ipynb
+          python ipynb2py.py OperatorsOverview.ipynb
+          python ipynb2py.py ParameterInterpolation.ipynb
+          python ipynb2py.py Radiation_Forces_Circumplanetary_Dust.ipynb
+          python ipynb2py.py Radiation_Forces_Debris_Disk.ipynb
+          python ipynb2py.py SavingAndLoadingSimulations.ipynb
+          python ipynb2py.py SimulationArchive.ipynb
+          python ipynb2py.py SpinsIntro.ipynb
+          python ipynb2py.py StochasticForces.ipynb
+          python ipynb2py.py StochasticForcesCartesian.ipynb
+          python ipynb2py.py TidesConstantTimeLag.ipynb
+          python ipynb2py.py TidesSpinEarthMoon.ipynb
+          python ipynb2py.py TidesSpinPseudoSynchronization.ipynb
+          python ipynb2py.py TrackMinDistance.ipynb
+          python ipynb2py.py TypeIMigration.ipynb
+          python ipynb2py.py YarkovskyEffect.ipynb
+          python ipynb2py.py gas_dynamical_friction.ipynb
