@@ -46,12 +46,12 @@ jobs:
           python ipynb2py.py Radiation_Forces_Debris_Disk.ipynb
           python ipynb2py.py SavingAndLoadingSimulations.ipynb
           python ipynb2py.py SimulationArchive.ipynb
-          python ipynb2py.py SpinsIntro.ipynb
+          #python ipynb2py.py SpinsIntro.ipynb
           python ipynb2py.py StochasticForces.ipynb
           python ipynb2py.py StochasticForcesCartesian.ipynb
           python ipynb2py.py TidesConstantTimeLag.ipynb
-          python ipynb2py.py TidesSpinEarthMoon.ipynb
-          python ipynb2py.py TidesSpinPseudoSynchronization.ipynb
+          #python ipynb2py.py TidesSpinEarthMoon.ipynb
+          #python ipynb2py.py TidesSpinPseudoSynchronization.ipynb
           python ipynb2py.py TrackMinDistance.ipynb
           python ipynb2py.py TypeIMigration.ipynb
           python ipynb2py.py YarkovskyEffect.ipynb
