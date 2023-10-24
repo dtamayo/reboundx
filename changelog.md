@@ -7,7 +7,7 @@ This changelog only includes the most important changes in recent updates. For a
 * Updated unit tests
 
 ### Version 3.11.0
-* Added Lens-Thirring precession
+* Added Lense-Thirring effect
 
 ### Version 3.10.0
 * Added Gas dynamical friction (Generozov \& Perets 2022)
