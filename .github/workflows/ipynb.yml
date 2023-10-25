@@ -49,10 +49,10 @@ jobs:
           python ipynb2py.py SpinsIntro.ipynb
           python ipynb2py.py StochasticForces.ipynb
           python ipynb2py.py StochasticForcesCartesian.ipynb
-          #python ipynb2py.py TidesConstantTimeLag.ipynb
+          python ipynb2py.py TidesConstantTimeLag.ipynb
           python ipynb2py.py TidesSpinEarthMoon.ipynb
           python ipynb2py.py TidesSpinPseudoSynchronization.ipynb
           python ipynb2py.py TrackMinDistance.ipynb
           python ipynb2py.py TypeIMigration.ipynb
           python ipynb2py.py YarkovskyEffect.ipynb
-          #python ipynb2py.py gas_dynamical_friction.ipynb
+          python ipynb2py.py gas_dynamical_friction.ipynb
