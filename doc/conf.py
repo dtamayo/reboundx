@@ -200,9 +200,9 @@ master_doc = 'index'
 # built documents.
 #
 # The short X.Y version.
-version = '3.11'
+version = '3.12'
 # The full version, including alpha/beta/rc tags.
-release = '3.11.3'
+release = '3.12.0'
 
 # General information about the project.
 project = u"REBOUNDx ({0})".format(release)
