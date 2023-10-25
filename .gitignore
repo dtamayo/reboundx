@@ -41,3 +41,5 @@ Untitled*
 .vscode/*
 *.code-workspace
 .eggs/*
+_changelog.tmp
+*.whl
