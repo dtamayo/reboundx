@@ -24,14 +24,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
           pip install -r requirements.txt
-      - name: re-install REBOUND version that triggered (if triggered)
+      - name: Test
         run: |
           echo "ref: ${{ github.event.client_payload.ref }}"
+      - name: checkout REBOUND version that triggered (if triggered)
         uses: actions/checkout@v4
         with: 
           repository: hannorein/rebound
           ref: github.event.client_payload.ref
           path: ./rebound
+      - name: Build REBOUND
         run: |
           pip install -e ./rebound
       - name: Build package
