@@ -1,6 +1,6 @@
 name: REBOUNDx (python)
 
-on: [push, pull_request]
+on: [push, pull_request, repository_dispatch]
 
 jobs:
   build:
@@ -24,6 +24,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
           pip install -r requirements.txt
+      - name: re-install REBOUND version that triggered (if triggered)
+        run: |
+          echo "ref: ${{ github.event.client_payload.ref }}"
+        uses: actions/checkout@v4
+        with: 
+          repository: hannorein/rebound
+          ref: github.event.client_payload.ref
+          path: ./rebound
+        run: |
+          pip install -e ./rebound
       - name: Build package
         run: pip install -e .
       - name: Output package contents
