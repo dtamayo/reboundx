@@ -24,12 +24,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
           pip install numpy matplotlib
-      - name: checkout REBOUND version that triggered (if triggered)
+
+  build_rebound:
+    - name: Default build
+    if github.event.event_type == "trigger_rebx"
+    steps:   
+      - name: checkout REBOUND version that triggered
         uses: actions/checkout@v4
         with: 
           repository: hannorein/rebound
           ref: ${{ github.event.client_payload.ref }}
           path: ./rebound
+        run: echo yes
+        run: pip install -e ./rebound
 
   build_reboundx:
     - name: Build package
