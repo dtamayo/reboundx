@@ -1,9 +1,0 @@
-name: Triggered by REBOUND update
-on: [repository_dispatch]
-jobs:
-  cypress-run:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Triggering REBOUNDx CI"
-      - name: Checkout
-        uses: actions/checkout@v3
