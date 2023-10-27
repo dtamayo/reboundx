@@ -21,9 +21,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
+          echo ${{ github.event.event_type }}
           python -m pip install --upgrade pip
           pip install pytest
           pip install numpy matplotlib
+
+    steps:
       - name: checkout REBOUND version that triggered (if triggered)
         uses: actions/checkout@v4
         with: 
