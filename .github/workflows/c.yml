@@ -1,6 +1,6 @@
 name: REBOUNDx (C)
 
-on: [push, pull_request]
+on: [push, pull_request, repository_dispatch]
 
 jobs:
   build:
