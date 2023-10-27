@@ -27,7 +27,7 @@ jobs:
 
   build_rebound:
     - name: Default build
-    if github.event.event_type == "trigger_rebx"
+    if: github.event.event_type == "trigger_rebx"
     steps:   
       - name: checkout REBOUND version that triggered
         uses: actions/checkout@v4
