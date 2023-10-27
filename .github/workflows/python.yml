@@ -34,7 +34,6 @@ jobs:
           repository: hannorein/rebound
           ref: ${{ github.event.client_payload.ref }}
           path: ./rebound
-        run: echo yes
         run: pip install -e ./rebound
       - name: Install REBOUNDx
         run: pip install -e .
