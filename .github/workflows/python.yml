@@ -35,7 +35,7 @@ jobs:
       - name: Build REBOUND
         run: |
           cd rebound
-          git checkout -b ${{ github.event.client_payload.ref }}
+          git checkout -b testSHA ${{ github.event.client_payload.ref }}
           pip install -e ./rebound
       - name: Build package
         run: pip install -e .
