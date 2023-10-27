@@ -36,8 +36,9 @@ jobs:
         #run: pip install rebound
       - name: Trigger REBOUND version intall
         #if: github.event_name == 'workflow_dispatch' # if triggered, installed version checked out above
-        run: export REB_DIR="${PWD}/rebound"
-        run: pip install -e ./rebound
+        run: |
+          export REB_DIR="${PWD}/rebound"
+          pip install -e ./rebound
       - name: Install REBOUNDx
         run: pip install -e .
       - name: Output package contents
