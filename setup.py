@@ -49,11 +49,14 @@ class build_ext(_build_ext):
         
         self.library_dirs.append(rebdir+'/../')
         self.library_dirs.append(rebdirsp)
+        self.library_dirs.append('./rebound')
         for ext in self.extensions:
             ext.runtime_library_dirs.append(rebdir+'/../')
             ext.extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
             ext.runtime_library_dirs.append(rebdirsp)
             ext.extra_link_args.append('-Wl,-rpath,'+rebdirsp)
+            ext.runtime_library_dirs.append('./rebound')
+            ext.extra_link_args.append('-Wl,-rpath,'+'./rebound')
 
 extra_link_args=[]
 if sys.platform == 'darwin':
