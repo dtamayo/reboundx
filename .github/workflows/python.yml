@@ -36,6 +36,7 @@ jobs:
       - name: Trigger REBOUND version install
         if: github.event_name == 'repository_dispatch' # if triggered, installed version checked out above
         run: |
+          echo "Installing REBOUND SHA: ${{ github.event.client_payload.sha }}"
           pip install ./rebound
       - name: Install REBOUNDx
         run: |
