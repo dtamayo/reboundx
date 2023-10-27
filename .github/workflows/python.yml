@@ -21,23 +21,24 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          echo ${{ github.event.event_type }}
           python -m pip install --upgrade pip
           pip install pytest
           pip install numpy matplotlib
-
-    steps:
       - name: checkout REBOUND version that triggered (if triggered)
         uses: actions/checkout@v4
         with: 
           repository: hannorein/rebound
           ref: ${{ github.event.client_payload.ref }}
           path: ./rebound
+
+  build_reboundx:
       - name: Build package
         run: pip install -e .
       - name: Output package contents
         run: |
           pip show reboundx -vf
+
+  run_unit_tests:
       - name: Running unittests
         run: |
           python -m unittest discover -s reboundx/test/ -v
