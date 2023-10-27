@@ -24,8 +24,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
           pip install numpy matplotlib
-      - name: Checkout REBOUND version that triggered
-        if: github.event_name == 'workflow_dispatch' #if triggered by REBOUND, want new REBOUND version
+      - name: Clone REBOUND repo # in case we need to checkout version that triggered REBOUNDx CI
         uses: actions/checkout@v4
         with: 
           repository: hannorein/rebound
