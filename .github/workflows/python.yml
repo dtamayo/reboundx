@@ -24,21 +24,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
           pip install numpy matplotlib
-      - name: checkout REBOUND version that triggered (if triggered)
+      - name: Clone REBOUND repo # in case we need to checkout version that triggered REBOUNDx CI
         uses: actions/checkout@v4
         with: 
           repository: hannorein/rebound
           ref: ${{ github.event.client_payload.ref }}
           path: ./rebound
-
-  build_reboundx:
-      - name: Build package
-        run: pip install -e .
+      - name: Default REBOUND install
+        if: github.event_name != 'workflow_dispatch' # if not triggered by REBOUND, use latest PyPI version
+        run: pip install rebound
+      - name: Trigger REBOUND version intall
+        if: github.event_name == 'workflow_dispatch' # if triggered, installed version checked out above
+        run: |
+          pip install ./rebound
+      - name: Install REBOUNDx
+        run: |
+          pip install -e . 
       - name: Output package contents
-        run: |
-          pip show reboundx -vf
-
-  run_unit_tests:
-      - name: Running unittests
-        run: |
-          python -m unittest discover -s reboundx/test/ -v
+        run: pip show reboundx -vf
+      - name: Run unit tests
+        run: python -m unittest discover -s reboundx/test/ -v
