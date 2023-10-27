@@ -32,13 +32,16 @@ jobs:
           path: ./rebound
 
   build_reboundx:
-      - name: Build package
+    - name: Build package
+    steps:
+      - name: Install REBOUNDx
         run: pip install -e .
       - name: Output package contents
         run: |
           pip show reboundx -vf
 
   run_unit_tests:
-      - name: Running unittests
-        run: |
-          python -m unittest discover -s reboundx/test/ -v
+    - name: Running unittests
+    steps:
+      run: |
+        python -m unittest discover -s reboundx/test/ -v
