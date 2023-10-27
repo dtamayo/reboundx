@@ -26,7 +26,7 @@ jobs:
           pip install numpy matplotlib
 
   build_rebound:
-    - name: Default build
+    name: Default build
     if: github.event.event_type == "trigger_rebx"
     steps:   
       - name: checkout REBOUND version that triggered
@@ -39,7 +39,7 @@ jobs:
         run: pip install -e ./rebound
 
   build_reboundx:
-    - name: Build package
+    name: Build package
     steps:
       - name: Install REBOUNDx
         run: pip install -e .
@@ -48,7 +48,7 @@ jobs:
           pip show reboundx -vf
 
   run_unit_tests:
-    - name: Running unittests
+    name: Running unittests
     steps:
       run: |
         python -m unittest discover -s reboundx/test/ -v
