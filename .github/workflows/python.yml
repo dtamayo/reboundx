@@ -27,17 +27,17 @@ jobs:
       - name: echo
         run: echo ${{ github.event.event_type }}
       - name: Checkout REBOUND version that triggered
-        if: github.event.event_type != 'trigger_rebx'
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/checkout@v4
         with: 
           repository: hannorein/rebound
           ref: ${{ github.event.client_payload.ref }}
           path: ./rebound
       - name: Default REBOUND install
-        if: github.event.event_type != 'trigger_rebx'
+        if: github.event_name != 'workflow_dispatch'
         run: pip install rebound
       - name: Trigger REBOUND version intall
-        if: github.event.event_type != 'trigger_rebx'
+        if: github.event_name == 'workflow_dispatch'
         run: pip install -e ./rebound
       - name: Install REBOUNDx
         run: pip install -e .
