@@ -24,20 +24,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
           pip install numpy matplotlib
-      - name: echo
-        run: echo ${{ github.event.event_type }}
       - name: Checkout REBOUND version that triggered
-        if: github.event_name == 'workflow_dispatch'
+        #if: github.event_name == 'workflow_dispatch' #if triggered by REBOUND, want new REBOUND version
         uses: actions/checkout@v4
         with: 
           repository: hannorein/rebound
           ref: ${{ github.event.client_payload.ref }}
           path: ./rebound
-      - name: Default REBOUND install
-        if: github.event_name != 'workflow_dispatch'
-        run: pip install rebound
+        #- name: Default REBOUND install
+        #if: github.event_name != 'workflow_dispatch' # if not triggered by REBOUND, use latest PyPI version
+        #run: pip install rebound
       - name: Trigger REBOUND version intall
-        if: github.event_name == 'workflow_dispatch'
+        #if: github.event_name == 'workflow_dispatch' # if triggered, installed version checked out above
         run: pip install -e ./rebound
       - name: Install REBOUNDx
         run: pip install -e .
