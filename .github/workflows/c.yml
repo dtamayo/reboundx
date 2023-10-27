@@ -18,11 +18,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: hannorein/rebound
-          ref: ${{ github.event.client_payload.ref }}
+          ref: ${{ github.event.client_payload.sha }}
           path: ./rebound
       - name: Check if symbols in shared library have correct prefix
         if: ${{ contains(matrix.os, 'ubuntu') }}
         run: |
+          echo "Installing REBOUND SHA: ${{ github.event.client_payload.sha }}"
           export REB_DIR=$GITHUB_WORKSPACE/rebound
           make
           nm -g --defined-only libreboundx.so | cut -d ' ' -f3
