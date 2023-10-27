@@ -15,9 +15,10 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Checkout REBOUND
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: hannorein/rebound
+          ref: ${{ github.event.client_payload.ref }}
           path: ./rebound
       - name: Check if symbols in shared library have correct prefix
         if: ${{ contains(matrix.os, 'ubuntu') }}

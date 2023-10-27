@@ -30,10 +30,10 @@ jobs:
           repository: hannorein/rebound
           ref: ${{ github.event.client_payload.ref }}
           path: ./rebound
-      - name: Default REBOUND install
+      - name: Default PyPI REBOUND install
         if: github.event_name != 'repository_dispatch' # if not triggered by REBOUND, use latest PyPI version
         run: pip install rebound
-      - name: Trigger REBOUND version intall
+      - name: Trigger REBOUND version install
         if: github.event_name == 'repository_dispatch' # if triggered, installed version checked out above
         run: |
           pip install ./rebound
