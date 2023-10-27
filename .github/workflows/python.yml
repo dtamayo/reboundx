@@ -23,18 +23,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pytest
-          pip install -r requirements.txt
-      - name: Test
-        run: |
-          echo "ref: ${{ github.event.client_payload.ref }}"
+          pip install numpy matplotlib
       - name: checkout REBOUND version that triggered (if triggered)
         uses: actions/checkout@v4
         with: 
           repository: hannorein/rebound
-          path: ./rebound
+          path: ../rebound
       - name: Build REBOUND
         run: |
-          cd rebound
+          cd ../rebound
           git checkout -b testSHA ${{ github.event.client_payload.ref }}
           pip install -e .
       - name: Build package
