@@ -28,13 +28,8 @@ jobs:
         uses: actions/checkout@v4
         with: 
           repository: hannorein/rebound
+          ref: ${{ github.event.client_payload.ref }}
           path: ./rebound
-      - name: Build REBOUND
-        run: |
-          cd rebound
-          git checkout -b testSHA ${{ github.event.client_payload.ref }}
-          pip install -e .
-          cp librebound* ../
       - name: Build package
         run: pip install -e .
       - name: Output package contents
