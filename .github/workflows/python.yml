@@ -41,7 +41,7 @@ jobs:
           pip install -e ./rebound
       - name: Install REBOUNDx
         run: |
-          pip install -e .
+          pip install -e . -v 
           ls ./rebound
           echo "$(ldconfig -p | grep libreboundx* | tr ' ' '\n' | grep /)"
       - name: Output package contents
