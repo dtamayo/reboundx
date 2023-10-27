@@ -25,10 +25,10 @@ jobs:
           pip install pytest
           pip install numpy matplotlib
       - name: Default REBOUND install
-        if: ${{ github.event.event_type != "trigger_rebx"
+        if: github.event.event_type != "trigger_rebx"
         run: pip install rebound
       - name: Install REBOUND version that triggered
-        if: ${{ github.event.event_type != "trigger_rebx" 
+        if: github.event.event_type != "trigger_rebx" 
         uses: actions/checkout@v4
         with: 
           repository: hannorein/rebound
