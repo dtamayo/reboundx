@@ -60,7 +60,7 @@ script:
     - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py ModifyMass.ipynb; fi
     - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py GettingStartedParameters.ipynb; fi
     - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py TidesConstantTimeLag.ipynb; fi
-    - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py SimulationArchive.ipynb; fi
+    - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py Simulationarchive.ipynb; fi
     - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py SavingAndLoadingSimulations.ipynb; fi
     - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py TrackMinDistance.ipynb; fi
     - if [[ $TESTPART == "IPYTHON2" ]]; then cd $TRAVIS_BUILD_DIR/ipython_examples/ && python ipynb2py.py IntegrateForce.ipynb; fi

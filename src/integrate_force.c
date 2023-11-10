@@ -35,7 +35,7 @@ void rebx_integrate_force(struct reb_simulation* const sim, struct rebx_operator
     struct rebx_extras* rebx = sim->extras;
     struct rebx_force* force = rebx_get_param(rebx, operator->ap, "force");
     if (force == NULL){
-        reb_error(sim, "REBOUNDx Error: Force parameter not set in rebx_integrate operator. See examples for how to add as a parameter.\n");
+        reb_simulation_error(sim, "REBOUNDx Error: Force parameter not set in rebx_integrate operator. See examples for how to add as a parameter.\n");
     }
     enum rebx_integrator integrator = REBX_INTEGRATOR_EULER; // default
     enum rebx_integrator* integratorparam = rebx_get_param(rebx, operator->ap, "integrator");

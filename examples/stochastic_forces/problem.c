@@ -25,14 +25,14 @@ int main(int argc, char* argv[]){
     // timestep if it doesn't achieve an accuracy near machine precision. 
     // Because the stochastic forces are random, it might never converge.
 
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
     sim->integrator     = REB_INTEGRATOR_WHFAST;
     sim->dt             = 1e-2;          // At ~100 AU, orbital periods are ~1000 yrs, so here we use ~1% of that, in sec
     sim->heartbeat      = heartbeat;
     
-    reb_add_fmt(sim, "m", 1.); // Sun 
-    reb_add_fmt(sim, "m a", 1e-3, 1.0); // Jupiter mass planet at 1AU
-    reb_move_to_com(sim);
+    reb_simulation_add_fmt(sim, "m", 1.); // Sun 
+    reb_simulation_add_fmt(sim, "m a", 1e-3, 1.0); // Jupiter mass planet at 1AU
+    reb_simulation_move_to_com(sim);
 
     // Next, we add the `stochastic_forces` module in REBOUNDx
     struct rebx_extras* rebx = rebx_attach(sim);
@@ -54,18 +54,18 @@ int main(int argc, char* argv[]){
 
 
     // Let's integrate the system.
-    reb_integrate(sim, tmax);
+    reb_simulation_integrate(sim, tmax);
 
     rebx_free(rebx);                                
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
 }
 
 void heartbeat(struct reb_simulation* sim){
     // Periodically output the semi-major axis of the planet.
-    if(reb_output_check(sim, 1.e2*M_PI*2.0)){
-        reb_output_timing(sim, tmax);
+    if(reb_simulation_output_check(sim, 1.e2*M_PI*2.0)){
+        reb_simulation_output_timing(sim, tmax);
         FILE* f = fopen("orbit.txt", "a+");
-        struct reb_orbit o =  reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
+        struct reb_orbit o =  reb_orbit_from_particle(sim->G, sim->particles[1], sim->particles[0]);
         fprintf(f, "%.8e\t%.8e\n", sim->t, o.a);
         fclose(f);
     }

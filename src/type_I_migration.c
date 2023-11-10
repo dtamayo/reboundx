@@ -135,7 +135,7 @@ static struct reb_vec3d rebx_calculate_modify_orbits_with_type_I_migration(struc
 
     /* Accessing the calculated semi-major axis, eccentricity and inclination for each integration step, via modify_orbits_direct where they are calculated and returned*/
     int err=0;
-    struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, *p, *source, &err);
+    struct reb_orbit o = reb_orbit_from_particle_err(sim->G, *p, *source, &err);
   
     const double a0 = o.a;
     const double e0 = o.e;

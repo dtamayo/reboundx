@@ -65,7 +65,7 @@ double rebx_Edot(struct reb_particle* const ps, const int N){
 
 void rebx_com_force(struct reb_simulation* const sim, struct rebx_force* const force, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_vec3d (*calculate_force) (struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source), struct reb_particle* const particles, const int N){
     struct rebx_extras* const rebx = sim->extras;
-    struct reb_particle com = reb_get_com(sim); // Start with full com for jacobi and barycentric coordinates.
+    struct reb_particle com = reb_simulation_com(sim); // Start with full com for jacobi and barycentric coordinates.
 
     int refindex = -1;
     if(coordinates == REBX_COORDINATES_JACOBI){
@@ -83,7 +83,7 @@ void rebx_com_force(struct reb_simulation* const sim, struct rebx_force* const f
             if (i == N-1){
                 char str[200];
                 sprintf(str, "Coordinates set to REBX_COORDINATES_PARTICLE, but %s param was not found in any particle.  Need to set parameter.\n", reference_name);
-                reb_error(sim, str);
+                reb_simulation_error(sim, str);
             }
         }
     }
@@ -141,7 +141,7 @@ void rebx_com_force(struct reb_simulation* const sim, struct rebx_force* const f
                 particles[refindex].az -= massratio*a.z;
                 break;
             default:
-                reb_error(sim, "Coordinates not supported in REBOUNDx.\n");
+                reb_simulation_error(sim, "Coordinates not supported in REBOUNDx.\n");
         }
     }
 }
@@ -163,7 +163,7 @@ static inline void rebx_subtract_posvel(struct reb_particle* p, struct reb_parti
 void rebx_tools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* const operator, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_particle (*calculate_step) (struct reb_simulation* const sim, struct rebx_operator* const operator, struct reb_particle* p, struct reb_particle* source, const double dt), const double dt){
     struct rebx_extras* const rebx = sim->extras;
     const int N_real = sim->N - sim->N_var;
-    struct reb_particle com = reb_get_com(sim); // Start with full com for jacobi and barycentric coordinates.
+    struct reb_particle com = reb_simulation_com(sim); // Start with full com for jacobi and barycentric coordinates.
 
     int refindex = -1;
     if(coordinates == REBX_COORDINATES_JACOBI){
@@ -181,7 +181,7 @@ void rebx_tools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* 
             if (i == N_real-1){
                 char str[200];
                 sprintf(str, "Coordinates set to REBX_COORDINATES_PARTICLE, but %s param was not found in any particle.  Need to set parameter.\n", reference_name);
-                reb_error(sim, str);
+                reb_simulation_error(sim, str);
             }
         }
     }
@@ -235,7 +235,7 @@ void rebx_tools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* 
                 rebx_subtract_posvel(&sim->particles[refindex], &diff, massratio);
                 break;
             default:
-                reb_error(sim, "Coordinates not supported in REBOUNDx.\n");
+                reb_simulation_error(sim, "Coordinates not supported in REBOUNDx.\n");
         }
     }
 }

@@ -103,7 +103,7 @@ void rebx_lense_thirring(struct reb_simulation* const sim, struct rebx_force* co
     struct rebx_extras* const rebx = sim->extras;
     double* c = rebx_get_param(sim->extras, force->ap, "lt_c");
     if (c == NULL){
-        reb_error(sim, "REBOUNDx Error: Need to set speed of light in LT effect.  See examples in documentation.\n");
+        reb_simulation_error(sim, "REBOUNDx Error: Need to set speed of light in LT effect.  See examples in documentation.\n");
     }
     const double C2 = (*c)*(*c);
 

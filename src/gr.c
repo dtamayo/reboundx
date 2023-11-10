@@ -96,7 +96,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
     // Transform to Jacobi coordinates
     const struct reb_particle source = ps[0];
 	const double mu = G*source.m;
-    reb_transformations_inertial_to_jacobi_posvelacc(ps, ps_j, ps, N, N);
+    reb_particles_transform_inertial_to_jacobi_posvelacc(ps, ps_j, ps, N, N);
     
     for (int i=1; i<N; i++){
         struct reb_particle p = ps_j[i];
@@ -127,7 +127,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
         }
         const int default_max_iterations = 10;
         if(q==default_max_iterations){
-            reb_warning(sim, "REBOUNDx Warning: 10 iterations in gr.c failed to converge. This is typically because the perturbation is too strong for the current implementation.");
+            reb_simulation_warning(sim, "REBOUNDx Warning: 10 iterations in gr.c failed to converge. This is typically because the perturbation is too strong for the current implementation.");
         }
   
         const double B = (mu/ri - 1.5*vi2)*mu/(ri*ri*ri)/C2;
@@ -150,7 +150,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
     ps_j[0].ay = 0.;
     ps_j[0].az = 0.;
 
-    reb_transformations_jacobi_to_inertial_acc(ps, ps_j, ps, N, N);
+    reb_particles_transform_jacobi_to_inertial_acc(ps, ps_j, ps, N, N);
     for (int i=0; i<N; i++){
         particles[i].ax += ps[i].ax;
         particles[i].ay += ps[i].ay;
@@ -164,7 +164,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
 void rebx_gr(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
     double* c = rebx_get_param(sim->extras, force->ap, "c");
     if (c == NULL){
-        reb_error(sim, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
+        reb_simulation_error(sim, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
         return;
     }
     const double C2 = (*c)*(*c);
@@ -205,7 +205,7 @@ static double rebx_calculate_gr_hamiltonian(struct rebx_extras* const rebx, stru
 	const double mu = G*source.m;
     double* const m_j = malloc(N*sizeof(*m_j));
     rebx_calculate_jacobi_masses(ps, m_j, N);
-    reb_transformations_inertial_to_jacobi_posvel(ps, ps_j, ps, N, N);
+    reb_particles_transform_inertial_to_jacobi_posvel(ps, ps_j, ps, N, N);
 
     double T = 0.5*m_j[0]*(ps_j[0].vx*ps_j[0].vx + ps_j[0].vy*ps_j[0].vy + ps_j[0].vz*ps_j[0].vz);
     double V_PN = 0.;

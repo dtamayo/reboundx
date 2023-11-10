@@ -114,7 +114,7 @@ void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const si
     }
     const int default_max_iterations = 10;
     if(n==default_max_iterations){
-        reb_warning(sim, "REBOUNDx: 10 iterations in integrator_implicit_midpoint.c failed to converge. This is typically because the perturbation is too strong for the current implementation.");
+        reb_simulation_warning(sim, "REBOUNDx: 10 iterations in integrator_implicit_midpoint.c failed to converge. This is typically because the perturbation is too strong for the current implementation.");
     }
     for(int i=0; i<N; i++){
         sim->particles[i].vx = ps_final[i].vx;

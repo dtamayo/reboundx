@@ -10,17 +10,17 @@
 
 int main(int argc, char* argv[]){
     // We start by making a simulation and adding GR with REBOUNDx
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
 
     struct reb_particle star = {0};
     star.m     = 1.;   
-    reb_add(sim, star);
+    reb_simulation_add(sim, star);
 
     struct reb_particle planet = {0};
     planet.x = 1.;
     planet.vy = 1.;
 
-    reb_add(sim, planet);
+    reb_simulation_add(sim, planet);
     
     struct rebx_extras* rebx = rebx_attach(sim);
     struct rebx_force* gr = rebx_load_force(rebx, "gr");
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]){
     // After setting the parameters we want to set, we would integrate as usual. 
 
     double tmax = 10.;
-    reb_integrate(sim, tmax); 
+    reb_simulation_integrate(sim, tmax); 
 
     /* At any point, we can access the parameters we set (e.g., some effects could update these values as the simulation progresses). We get all parameter types back with rebx_get_param, which returns a void pointer that we are responsible for casting to the correct type. Since we are not modifying the linked list, we don't pass a reference to ap like above*/
 
@@ -122,5 +122,5 @@ int main(int argc, char* argv[]){
     /* One caveat is that since REBOUNDx does not know the structure definition, custom parameters will not be written or read from REBOUNDx binary files*/
 
     rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
 }

@@ -17,7 +17,7 @@ class TestMachineIndependent(unittest.TestCase):
         try:
             rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
             rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
-            sa = reboundx.SimulationArchive(rebbin, rebxbin)
+            sa = reboundx.Simulationarchive(rebbin, rebxbin)
         except:
             try:
                 sim = rebound.Simulation('binaries/twoplanets.bin')
@@ -31,7 +31,7 @@ class TestMachineIndependent(unittest.TestCase):
                 sim.move_to_com()
                 sim.save('binaries/twoplanets.bin')
            
-            sim.automateSimulationArchive('binaries/modify_orbits_forces.sa', interval=1e3, deletefile=True)
+            sim.automateSimulationarchive('binaries/modify_orbits_forces.sa', interval=1e3, deletefile=True)
             rebx = reboundx.Extras(sim)
             mod = rebx.load_force('binaries/modify_orbits_forces')
             rebx.add_force(mod)
@@ -42,7 +42,7 @@ class TestMachineIndependent(unittest.TestCase):
             ps[2].params['tau_inc'] = -1e3
             rebx.save('binaries/modify_orbits_forces.rebx')
             sim.integrate(1.e4)
-            sa = reboundx.SimulationArchive('binaries/modify_orbits_forces.sa', 'binaries/modify_orbits_forces.rebx')
+            sa = reboundx.Simulationarchive('binaries/modify_orbits_forces.sa', 'binaries/modify_orbits_forces.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]
@@ -54,10 +54,10 @@ class TestMachineIndependent(unittest.TestCase):
         try:
             rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
             rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
-            sa = reboundx.SimulationArchive(rebbin, rebxbin)
+            sa = reboundx.Simulationarchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
-            sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
+            sim.automateSimulationarchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
             rebx = reboundx.Extras(sim)
             force = rebx.load_force(name)
             rebx.add_force(force)
@@ -65,7 +65,7 @@ class TestMachineIndependent(unittest.TestCase):
             ps = sim.particles
             rebx.save('binaries/'+name+'.rebx')
             sim.integrate(1.e4)
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            sa = reboundx.Simulationarchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]
@@ -77,10 +77,10 @@ class TestMachineIndependent(unittest.TestCase):
         try:
             rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
             rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
-            sa = reboundx.SimulationArchive(rebbin, rebxbin)
+            sa = reboundx.Simulationarchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
-            sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
+            sim.automateSimulationarchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
             rebx = reboundx.Extras(sim)
             force = rebx.load_force(name)
             rebx.add_force(force)
@@ -88,7 +88,7 @@ class TestMachineIndependent(unittest.TestCase):
             ps = sim.particles
             rebx.save('binaries/'+name+'.rebx')
             sim.integrate(1.e4)
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            sa = reboundx.Simulationarchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]
@@ -100,10 +100,10 @@ class TestMachineIndependent(unittest.TestCase):
         try:
             rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
             rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
-            sa = reboundx.SimulationArchive(rebbin, rebxbin)
+            sa = reboundx.Simulationarchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
-            sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
+            sim.automateSimulationarchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
             rebx = reboundx.Extras(sim)
             force = rebx.load_force(name)
             rebx.add_force(force)
@@ -111,7 +111,7 @@ class TestMachineIndependent(unittest.TestCase):
             ps = sim.particles
             rebx.save('binaries/'+name+'.rebx')
             sim.integrate(1.e4)
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            sa = reboundx.Simulationarchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]
@@ -123,10 +123,10 @@ class TestMachineIndependent(unittest.TestCase):
         try:
             rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
             rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
-            sa = reboundx.SimulationArchive(rebbin, rebxbin)
+            sa = reboundx.Simulationarchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
-            sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
+            sim.automateSimulationarchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
             rebx = reboundx.Extras(sim)
             force = rebx.load_force(name)
             rebx.add_force(force)
@@ -136,7 +136,7 @@ class TestMachineIndependent(unittest.TestCase):
             ps[2].params['beta'] = 0.3
             rebx.save('binaries/'+name+'.rebx')
             sim.integrate(1.e4)
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            sa = reboundx.Simulationarchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]
@@ -148,10 +148,10 @@ class TestMachineIndependent(unittest.TestCase):
         try:
             rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
             rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
-            sa = reboundx.SimulationArchive(rebbin, rebxbin)
+            sa = reboundx.Simulationarchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
-            sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
+            sim.automateSimulationarchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
             rebx = reboundx.Extras(sim)
             force = rebx.load_force(name)
             rebx.add_force(force)
@@ -160,7 +160,7 @@ class TestMachineIndependent(unittest.TestCase):
             ps[0].params['gammacentral'] = -1
             rebx.save('binaries/'+name+'.rebx')
             sim.integrate(1.e4)
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            sa = reboundx.Simulationarchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]
@@ -172,10 +172,10 @@ class TestMachineIndependent(unittest.TestCase):
         try:
             rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
             rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
-            sa = reboundx.SimulationArchive(rebbin, rebxbin)
+            sa = reboundx.Simulationarchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
-            sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
+            sim.automateSimulationarchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
             rebx = reboundx.Extras(sim)
             force = rebx.load_force(name)
             rebx.add_force(force)
@@ -185,7 +185,7 @@ class TestMachineIndependent(unittest.TestCase):
             ps[0].params['R_eq'] = 1.e-3
             rebx.save('binaries/'+name+'.rebx')
             sim.integrate(1.e4)
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            sa = reboundx.Simulationarchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]
@@ -197,10 +197,10 @@ class TestMachineIndependent(unittest.TestCase):
         try:
             rebbin = os.path.join(THIS_DIR, 'binaries/'+name+'.sa')
             rebxbin = os.path.join(THIS_DIR, 'binaries/'+name+'.rebx')
-            sa = reboundx.SimulationArchive(rebbin, rebxbin)
+            sa = reboundx.Simulationarchive(rebbin, rebxbin)
         except:
             sim = rebound.Simulation('binaries/twoplanets.bin')
-            sim.automateSimulationArchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
+            sim.automateSimulationarchive('binaries/'+name+'.sa', interval=1e3, deletefile=True)
             rebx = reboundx.Extras(sim)
             mod = rebx.load_operator(name)
             rebx.add_operator(mod)
@@ -208,7 +208,7 @@ class TestMachineIndependent(unittest.TestCase):
             ps[0].params['tau_mass'] = -1e4
             rebx.save('binaries/'+name+'.rebx')
             sim.integrate(1.e4)
-            sa = reboundx.SimulationArchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
+            sa = reboundx.Simulationarchive('binaries/'+name+'.sa', 'binaries/'+name+'.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]

@@ -60,7 +60,7 @@
 
 static struct  reb_vec3d rebx_calculate_modify_orbits_forces_new(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p,  struct reb_particle* source){
 
-   struct reb_orbit o = reb_tools_particle_to_orbit(sim->G, *p, *source);
+   struct reb_orbit o = reb_orbit_from_particle(sim->G, *p, *source);
 
     double em_tau_a = INFINITY;
     double em_aini = 24.;

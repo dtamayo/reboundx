@@ -13,13 +13,13 @@
 #include "reboundx.h"
 
 int main(int argc, char* argv[]){
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
     sim->dt = 1.e-8;
 
     struct reb_particle star = {0};
     star.m     = 1.;   
     star.hash  = reb_hash("star");
-    reb_add(sim, star);
+    reb_simulation_add(sim, star);
 
     double m = 1.e-5;
     double a = 1.e-4; // put planet close to enhance precession so it's visible in visualization (this would put planet inside the Sun!)
@@ -29,10 +29,10 @@ int main(int argc, char* argv[]){
     double omega = 0.;
     double f = 0.;
     
-    struct reb_particle planet = reb_tools_orbit_to_particle(sim->G, star, m, a, e, inc, Omega, omega, f);
+    struct reb_particle planet = reb_particle_from_orbit(sim->G, star, m, a, e, inc, Omega, omega, f);
     planet.hash = reb_hash("planet");
-    reb_add(sim, planet);
-    reb_move_to_com(sim);
+    reb_simulation_add(sim, planet);
+    reb_simulation_move_to_com(sim);
     
     struct rebx_extras* rebx = rebx_attach(sim);
     // Could also add "gr" or "gr_full" here.  See documentation for details.
@@ -42,7 +42,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &gr->ap, "c", 10065.32);
 
     double tmax = 5.e-1;
-    reb_integrate(sim, tmax); 
+    reb_simulation_integrate(sim, tmax); 
     rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
 }

@@ -13,12 +13,12 @@
 #include "reboundx.h"
 
 int main(int argc, char* argv[]){
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
 
     struct reb_particle star = {0};
     star.m     = 1.;   
     star.hash  = reb_hash("star");
-    reb_add(sim, star);
+    reb_simulation_add(sim, star);
 
     double m = 0.;
     double a = 1.; 
@@ -28,10 +28,10 @@ int main(int argc, char* argv[]){
     double omega = 0.;
     double f = 0.;
     
-    struct reb_particle planet = reb_tools_orbit_to_particle(sim->G, star, m, a, e, inc, Omega, omega, f);
+    struct reb_particle planet = reb_particle_from_orbit(sim->G, star, m, a, e, inc, Omega, omega, f);
     planet.hash = reb_hash("planet");
-    reb_add(sim, planet);
-    reb_move_to_com(sim);
+    reb_simulation_add(sim, planet);
+    reb_simulation_move_to_com(sim);
     
     struct rebx_extras* rebx = rebx_attach(sim);
     struct rebx_force* gh = rebx_load_force(rebx, "gravitational_harmonics");
@@ -42,7 +42,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[0].ap, "R_eq", 0.01);
    
     double tmax = 1.e5;
-    reb_integrate(sim, tmax); 
+    reb_simulation_integrate(sim, tmax); 
     rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
 }

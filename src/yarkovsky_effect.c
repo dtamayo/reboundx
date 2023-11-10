@@ -125,11 +125,11 @@ static void rebx_calculate_yarkovsky_effect(struct reb_simulation* sim, struct r
         
         //makes sure all necessary parameters have been entered
         if (stef_boltz == NULL || rotation_period == NULL || Gamma == NULL || albedo == NULL || emissivity == NULL || k == NULL || sx == NULL || sy == NULL || sz == NULL) {
-            reb_error(sim, "REBOUNDx Error: One or more parameters missing for this version of the Yarkovsky effect in Rebx. Please make sure you've given values to all variables for this version before running simulations. See documentation and YarkovskyEffect.ipynb. If you'd rather use the simplified version of this effect (requires fewer parameters), then please set 'yark_flag' to -1 or 1.\n\n");
+            reb_simulation_error(sim, "REBOUNDx Error: One or more parameters missing for this version of the Yarkovsky effect in Rebx. Please make sure you've given values to all variables for this version before running simulations. See documentation and YarkovskyEffect.ipynb. If you'd rather use the simplified version of this effect (requires fewer parameters), then please set 'yark_flag' to -1 or 1.\n\n");
             return;
         }
         
-        struct reb_orbit o = reb_tools_particle_to_orbit(G, *target, *star);
+        struct reb_orbit o = reb_orbit_from_particle(G, *target, *star);
         
         yarkovsky_magnitude = (3*(*k)*q_yar*(*lstar))/(16*M_PI*radius*(*density)*(*c)*distance*distance);
 

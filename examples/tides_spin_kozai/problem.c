@@ -24,7 +24,7 @@ double tmax = 1e5; // kept short to run quickly.
                    // or 7e6 * 2 * M_PI to reproduce the paper plot
 
 int main(int argc, char* argv[]){
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
     // Initial conditions
     // Setup constants
     sim->dt                 = M_PI*1e-1;     // initial timestep
@@ -37,21 +37,21 @@ int main(int argc, char* argv[]){
     struct reb_particle star = {0};
     star.m  = 1;
     star.r = 0.00465;
-    reb_add(sim, star);
+    reb_simulation_add(sim, star);
 
     // struct reb_particle planet = {0};
     double planet_m  = 0.054 * 9.55e-4; // A Jupiter-like planet
     double planet_r = 0.3 * 4.676e-4;
     double planet_a = 2.;
     double planet_e = 0.001;
-    reb_add_fmt(sim, "m r a e", planet_m, planet_r, planet_a, planet_e);
+    reb_simulation_add_fmt(sim, "m r a e", planet_m, planet_r, planet_a, planet_e);
 
     // The perturber - treated as a point particle
     double perturber_m  = 1;
     double perturber_a = 50.;
     double perturber_e = 0.7 * M_PI / 180.;
     double perturber_inc = 80. * M_PI / 180.;
-    reb_add_fmt(sim, "m a e inc", perturber_m, perturber_a, perturber_e, perturber_inc);
+    reb_simulation_add_fmt(sim, "m a e inc", perturber_m, perturber_a, perturber_e, perturber_inc);
 
     // Add REBOUNDx effects
     // First tides_spin
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_vec3d(rebx, &sim->particles[0].ap, "Omega", (struct reb_vec3d){.z=solar_spin}); // Omega_x = Omega_y = 0 by default
 
     const double solar_Q = 1e6;
-    struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
+    struct reb_orbit orb = reb_orbit_from_particle(sim->G, sim->particles[1], sim->particles[0]);
     // In the case of a spin that is synchronous with a circular orbit, tau is related to the tidal quality factor Q through the orbital mean motion n (see Lu et al. 2023 for discussion). Clearly that's not the case here, but gives us a reasonable starting point to start turning this knob
     double solar_tau = 1 / (2 * solar_Q * orb.n);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "tau", solar_tau);
@@ -97,11 +97,11 @@ int main(int argc, char* argv[]){
     rebx_add_force(rebx, gr);
     rebx_set_param_double(rebx, &gr->ap, "c", 10065.32); // in default units
 
-    reb_move_to_com(sim);
+    reb_simulation_move_to_com(sim);
 
     // Let's create a reb_rotation object that rotates to new axes with newz pointing along the total ang. momentum, and x along the line of
     // nodes with the invariable plane (along z cross newz)
-    struct reb_vec3d newz = reb_vec3d_add(reb_tools_angular_momentum(sim), rebx_tools_spin_angular_momentum(rebx));
+    struct reb_vec3d newz = reb_vec3d_add(reb_simulation_angular_momentum(sim), rebx_tools_spin_angular_momentum(rebx));
     struct reb_vec3d newx = reb_vec3d_cross((struct reb_vec3d){.z =1}, newz);
     struct reb_rotation rot = reb_rotation_init_to_new_axes(newz, newx);
     rebx_simulation_irotate(rebx, rot); // This rotates our simulation into the invariable plane aligned with the total ang. momentum (including spin)
@@ -109,19 +109,19 @@ int main(int argc, char* argv[]){
     rebx_spin_initialize_ode(rebx, effect);
 
     system("rm -v output.txt");        // delete previous output file
-    reb_integrate(sim, tmax);
+    reb_simulation_integrate(sim, tmax);
 
     rebx_free(rebx);
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
 }
 
 void heartbeat(struct reb_simulation* sim){
     // Output spin and orbital information to file
-    if(reb_output_check(sim, 10)){        // outputs every 10 REBOUND years
+    if(reb_simulation_output_check(sim, 10)){        // outputs every 10 REBOUND years
       struct rebx_extras* const rebx = sim->extras;
       FILE* of = fopen("output.txt", "a");
       if (of==NULL){
-          reb_error(sim, "Can not open file.");
+          reb_simulation_error(sim, "Can not open file.");
           return;
       }
 
@@ -130,7 +130,7 @@ void heartbeat(struct reb_simulation* sim){
       struct reb_particle* pert = &sim->particles[2];
 
       // orbits
-      struct reb_orbit o1 = reb_tools_particle_to_orbit(sim->G, *p1, *sun);
+      struct reb_orbit o1 = reb_orbit_from_particle(sim->G, *p1, *sun);
       double a1 = o1.a;
       double e1 = o1.e;
       double i1 = o1.inc;
@@ -138,8 +138,8 @@ void heartbeat(struct reb_simulation* sim){
       double pom1 = o1.pomega;
       struct reb_vec3d n1 = o1.hvec;
 
-      struct reb_particle com = reb_get_com_of_pair(sim->particles[0],sim->particles[1]);
-      struct reb_orbit o2 = reb_tools_particle_to_orbit(sim->G, *pert, com);
+      struct reb_particle com = reb_particle_com_of_pair(sim->particles[0],sim->particles[1]);
+      struct reb_orbit o2 = reb_orbit_from_particle(sim->G, *pert, com);
       double a2 = o2.a;
       double e2 = o2.e;
       double i2 = o2.inc;
@@ -167,7 +167,7 @@ void heartbeat(struct reb_simulation* sim){
       fclose(of);
     }
 
-    if(reb_output_check(sim, 20.*M_PI)){        // outputs to the screen
-        reb_output_timing(sim, tmax);
+    if(reb_simulation_output_check(sim, 20.*M_PI)){        // outputs to the screen
+        reb_simulation_output_timing(sim, tmax);
     }
 }

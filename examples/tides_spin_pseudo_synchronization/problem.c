@@ -20,19 +20,19 @@ void heartbeat(struct reb_simulation* sim);
 double tmax = 1000 * 2 * M_PI;
 
 int main(int argc, char* argv[]){
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
 
     // Star
     const double solar_mass = 1.;
     const double solar_rad = 0.00465; // Bodies with structure require radius! This is one solar radius
-    reb_add_fmt(sim, "m r", solar_mass, solar_rad);// Central object
+    reb_simulation_add_fmt(sim, "m r", solar_mass, solar_rad);// Central object
 
     // Fiducial hot Jupiter
     const double p1_mass = 1. * 9.55e-4; // in Jupiter masses * 1 Jupiter Mass / 1 Solar Mass
     const double p1_rad = 1. * 4.676e-4; // in Jupiter rad * 1 jupiter rad / 1 AU
     const double p1_e = 0.01;
     const double p1_inc = 0.01;
-    reb_add_fmt(sim, "m a e inc r", p1_mass, 0.04072, p1_e, p1_inc, p1_rad); // Planet 1
+    reb_simulation_add_fmt(sim, "m a e inc r", p1_mass, 0.04072, p1_e, p1_inc, p1_rad); // Planet 1
 
     sim->N_active = 2;
     sim->integrator = REB_INTEGRATOR_WHFAST;
@@ -59,7 +59,7 @@ int main(int argc, char* argv[]){
 
     // Finally, the last parameter is the constant time lag tau
     const double solar_Q = 1e6; // Often tidal dissipation is expressed in terms of a tidal quality factor Q
-    struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
+    struct reb_orbit orb = reb_orbit_from_particle(sim->G, sim->particles[1], sim->particles[0]);
     // In the case of a spin that is synchronous with a circular orbit, tau is related to the tidal quality factor Q through the orbital mean motion n
     double solar_tau = 1 / (2 * solar_Q * orb.n);
     // See Lu et. al (2023) for discussion of the cases in which this approximation relating Q and tau is valid
@@ -91,36 +91,36 @@ int main(int argc, char* argv[]){
     rebx_set_param_vec3d(rebx, &sim->particles[1].ap, "Omega", Omega_1);
     rebx_set_param_double(rebx, &sim->particles[1].ap, "tau", 1./(2*planet_Q*orb.n));
 
-    reb_move_to_com(sim);
+    reb_simulation_move_to_com(sim);
 
     // Let's create a reb_rotation object that rotates our simulation to new axes with newz pointing along the total ang. momentum, and x along the line of
     // nodes with the invariable plane (along z cross newz)
-    struct reb_vec3d newz = reb_vec3d_add(reb_tools_angular_momentum(sim), rebx_tools_spin_angular_momentum(rebx));
+    struct reb_vec3d newz = reb_vec3d_add(reb_simulation_angular_momentum(sim), rebx_tools_spin_angular_momentum(rebx));
     struct reb_vec3d newx = reb_vec3d_cross((struct reb_vec3d){.z =1}, newz);
     struct reb_rotation rot = reb_rotation_init_to_new_axes(newz, newx);
     rebx_simulation_irotate(rebx, rot); // This rotates our simulation into the invariable plane aligned with the total ang. momentum (including spin)
     rebx_spin_initialize_ode(rebx, effect); // We must call this function before starting our integration to track the spins
     
     system("rm -v output.txt"); // remove previous output file
-    reb_integrate(sim, tmax);
+    reb_simulation_integrate(sim, tmax);
     rebx_free(rebx);
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
 }
 
 void heartbeat(struct reb_simulation* sim){
     // Output spin and orbital information to file
-    if(reb_output_check(sim, 10)){        // outputs every 10 REBOUND years
+    if(reb_simulation_output_check(sim, 10)){        // outputs every 10 REBOUND years
       struct rebx_extras* const rebx = sim->extras;
       FILE* of = fopen("output.txt", "a");
       if (of==NULL){
-          reb_error(sim, "Can not open file.");
+          reb_simulation_error(sim, "Can not open file.");
           return;
       }
 
       struct reb_particle* star = &sim->particles[0];
       struct reb_particle* p = &sim->particles[1];
 
-      struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, *p, *star);
+      struct reb_orbit orb = reb_orbit_from_particle(sim->G, *p, *star);
       double a = orb.a;
       double Om = orb.Omega;
       double inc = orb.inc;
@@ -146,7 +146,7 @@ void heartbeat(struct reb_simulation* sim){
       fclose(of);
     }
 
-    if(reb_output_check(sim, 20.*M_PI)){        // outputs to the screen
-        reb_output_timing(sim, tmax);
+    if(reb_simulation_output_check(sim, 20.*M_PI)){        // outputs to the screen
+        reb_simulation_output_timing(sim, tmax);
     }
 }

@@ -63,7 +63,7 @@ void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_operator* con
     sim->dt = 0.0001*dt; // start with a small timestep.
     
     while(sim->t < t_needed && fabs(sim->dt/old_dt)>1e-14 ){
-        reb_update_acceleration(sim);
+        reb_simulation_update_acceleration(sim);
         reb_integrator_ias15_part2(sim);
         if (sim->t+sim->dt > t_needed){
             sim->dt = t_needed-sim->t;
@@ -91,7 +91,7 @@ void rebx_jump_step(struct reb_simulation* const sim, struct rebx_operator* cons
 void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
     reb_integrator_whfast_init(sim);
     reb_integrator_whfast_from_inertial(sim);
-    reb_update_acceleration(sim);
+    reb_simulation_update_acceleration(sim);
     reb_whfast_interaction_step(sim, dt);
     reb_integrator_whfast_to_inertial(sim);
 }
@@ -108,7 +108,7 @@ void rebx_drift_step(struct reb_simulation* const sim, struct rebx_operator* con
 }
 
 void rebx_kick_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
-    reb_update_acceleration(sim);
+    reb_simulation_update_acceleration(sim);
 	const int N = sim->N;
 	struct reb_particle* restrict const particles = sim->particles;
 #pragma omp parallel for schedule(guided)

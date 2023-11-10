@@ -59,7 +59,7 @@ jobs:
           python ipynb2py.py Radiation_Forces_Circumplanetary_Dust.ipynb
           python ipynb2py.py Radiation_Forces_Debris_Disk.ipynb
           python ipynb2py.py SavingAndLoadingSimulations.ipynb
-          python ipynb2py.py SimulationArchive.ipynb
+          python ipynb2py.py Simulationarchive.ipynb
           python ipynb2py.py SpinsIntro.ipynb
           python ipynb2py.py StochasticForces.ipynb
           python ipynb2py.py StochasticForcesCartesian.ipynb

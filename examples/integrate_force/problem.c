@@ -18,12 +18,12 @@ void heartbeat(struct reb_simulation* sim);
 
 int main(int argc, char* argv[]){
     // We first set up a system similar to the EPIC system discussed in the REBOUNDx paper
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
     sim->G = 4*M_PI*M_PI;
 
     struct reb_particle star = {0};
     star.m     = 0.93;   
-    reb_add(sim, star);
+    reb_simulation_add(sim, star);
 
     double m = 1.35e-6;
     double a = 0.013; // put planet close to enhance precession so it's visible in visualization (this would put planet inside the Sun!)
@@ -33,16 +33,16 @@ int main(int argc, char* argv[]){
     double omega = 0.;
     double f = 0.;
     
-    struct reb_particle planet1 = reb_tools_orbit_to_particle(sim->G, star, m, a, e, inc, Omega, omega, f);
+    struct reb_particle planet1 = reb_particle_from_orbit(sim->G, star, m, a, e, inc, Omega, omega, f);
     
     m = 1.2e-5;
     a = 0.107; // put planet close to enhance precession so it's visible in visualization (this would put planet inside the Sun!)
     e = 0.01;
     
-    struct reb_particle planet2= reb_tools_orbit_to_particle(sim->G, star, m, a, e, inc, Omega, omega, f);
-    reb_add(sim, planet1);
-    reb_add(sim, planet2);
-    reb_move_to_com(sim);
+    struct reb_particle planet2= reb_particle_from_orbit(sim->G, star, m, a, e, inc, Omega, omega, f);
+    reb_simulation_add(sim, planet1);
+    reb_simulation_add(sim, planet2);
+    reb_simulation_move_to_com(sim);
     
     sim->dt = 1.e-4;
     sim->heartbeat = heartbeat;
@@ -63,13 +63,13 @@ int main(int argc, char* argv[]){
 
     double tmax = 10.;
     E0 = rebx_gr_hamiltonian(rebx, gr);
-    reb_integrate(sim, tmax); 
+    reb_simulation_integrate(sim, tmax); 
     rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
 }
 
 void heartbeat(struct reb_simulation* sim){
-    if(reb_output_check(sim, 0.1)){
+    if(reb_simulation_output_check(sim, 0.1)){
         struct rebx_force* gr = rebx_get_force(sim->extras, "gr");
         double E = rebx_gr_hamiltonian(sim->extras, gr);
         printf("t=%f\tEnergy Error=%e\n", sim->t, fabs((E-E0)/E0));

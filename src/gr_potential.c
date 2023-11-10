@@ -80,7 +80,7 @@ static void rebx_calculate_gr_potential(struct reb_particle* const particles, co
 void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_force* const gr_potential, struct reb_particle* const particles, const int N){
     double* c = rebx_get_param(sim->extras, gr_potential->ap, "c");
     if (c == NULL){
-        reb_error(sim, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
+        reb_simulation_error(sim, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
     }
     else{
         const double C2 = (*c)*(*c);

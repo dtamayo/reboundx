@@ -76,7 +76,7 @@ void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_opera
                 source = &sim->particles[0];
             }
             else{
-                source = reb_get_particle_by_hash(sim, *target);
+                source = reb_simulation_particle_by_hash(sim, *target);
             }
             const double dx = p->x-source->x;
             const double dy = p->y-source->y;
@@ -86,7 +86,7 @@ void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_opera
                 *min_distance = sqrt(r2);
                 struct reb_orbit* const orbit = rebx_get_param(rebx, p->ap, "min_distance_orbit");
                 if (orbit != NULL){
-                    *orbit = reb_tools_particle_to_orbit(sim->G, *p, *source);
+                    *orbit = reb_orbit_from_particle(sim->G, *p, *source);
                 }
             }
         }

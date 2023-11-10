@@ -13,7 +13,7 @@ and for reproducibility with the simulationarchive under those various modes.
 integrators = ['ias15', 'whfast']
 rebxintegrators = ['euler', 'rk2', 'rk4', 'implicit_midpoint']
 
-class TestSimulationArchive(unittest.TestCase):
+class TestSimulationarchive(unittest.TestCase):
     def setUp(self):
         self.sim = rebound.Simulation()
         self.sim.add(m=1.)
@@ -46,7 +46,7 @@ class TestSimulationArchive(unittest.TestCase):
                 self.sim.integrate(2000)
                 self.sim.simulationarchive_snapshot('test.sa')
 
-                sa = reboundx.SimulationArchive('test.sa', 'test.rebx')
+                sa = reboundx.Simulationarchive('test.sa', 'test.rebx')
                 simf, rebxf = sa[-1]
                 tmax = simf.t
                 sim, rebx = sa[0]
@@ -76,7 +76,7 @@ class TestSimulationArchive(unittest.TestCase):
                 self.sim.integrate(2000)
                 self.sim.simulationarchive_snapshot('test.sa')
 
-                sa = reboundx.SimulationArchive('test.sa', 'test.rebx')
+                sa = reboundx.Simulationarchive('test.sa', 'test.rebx')
                 simf, rebxf = sa[-1]
                 tmax = simf.t
                 sim, rebx = sa[0]
@@ -106,7 +106,7 @@ class TestSimulationArchive(unittest.TestCase):
                 self.sim.integrate(2000)
                 self.sim.simulationarchive_snapshot('test.sa')
 
-                sa = reboundx.SimulationArchive('test.sa', 'test.rebx')
+                sa = reboundx.Simulationarchive('test.sa', 'test.rebx')
                 simf, rebxf = sa[-1]
                 tmax = simf.t
                 sim, rebx = sa[0]
@@ -136,7 +136,7 @@ class TestSimulationArchive(unittest.TestCase):
                 self.sim.integrate(2000)
                 self.sim.simulationarchive_snapshot('test.sa')
 
-                sa = reboundx.SimulationArchive('test.sa', 'test.rebx')
+                sa = reboundx.Simulationarchive('test.sa', 'test.rebx')
                 simf, rebxf = sa[-1]
                 tmax = simf.t
                 sim, rebx = sa[0]
