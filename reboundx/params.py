@@ -8,7 +8,7 @@ from .extras import Param, Node, Force, Operator, Extras, REBX_CTYPES
 from . import clibreboundx
 from ctypes import byref, c_double, c_int, c_int32, c_int64, c_uint, c_uint32, c_longlong, c_char_p, POINTER, cast
 from ctypes import c_void_p, memmove, sizeof, addressof
-from rebound.tools import hash as rebhash
+from rebound import hash as rebhash
 
 class Params(MutableMapping):
     def __init__(self, parent):
