@@ -2,6 +2,9 @@
 
 This changelog only includes the most important changes in recent updates. For a full log of all changes, please refer to git.
 
+### Version 4.0.0
+* Added support for REBOUND version 4.0.0
+
 ### Version 3.12.0
 * Build REBOUNDx wheels for PyPI
 * Updated unit tests
