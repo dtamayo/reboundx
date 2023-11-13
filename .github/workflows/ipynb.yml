@@ -33,10 +33,10 @@ jobs:
         if: github.event_name == 'repository_dispatch' # if triggered, installed version checked out above
         run: |
           echo "Installing REBOUND SHA: ${{ github.event.client_payload.sha }}"
-          pip install ./rebound
+          pip install --no-build-isolation ./rebound
       - name: Install REBOUNDx
         run: |
-          pip install -e . 
+          pip install --no-build-isolation -e . 
       - name: Running jupyter notebooks
         run: |
           cd ipython_examples
