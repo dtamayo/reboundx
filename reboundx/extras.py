@@ -228,7 +228,7 @@ class Extras(Structure):
         Returns a list of the three (x,y,z) components of the spin angular momentum of all particles in the simulation with
         moment of inertia (I) and spin angular frequency vector (Omega) parameters set.
         """
-        clibreboundx.rebx_tools_spin_angular_momentum.restype = rebound.Vec3d
+        clibreboundx.rebx_tools_spin_angular_momentum.restype = rebound.Vec3dBasic
         return rebound.Vec3d(clibreboundx.rebx_tools_spin_angular_momentum(byref(self)))
 
     def process_messages(self):

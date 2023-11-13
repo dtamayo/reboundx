@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import warnings
 
 #Find suffix
 import sysconfig
@@ -27,7 +28,7 @@ try:
     moduleversion = pkg_resources.require("reboundx")[0].version
     libreboundxversion = __version__
     if moduleversion != libreboundxversion:
-        print("WARNING: python module and libreboundx have different version numbers: '%s' vs '%s'.\n".format(moduleversion, libreboundxversion))
+        warnings.warn("WARNING: python module and libreboundx have different version numbers: '%s' vs '%s'.\n" % (moduleversion, libreboundxversion), ImportWarning)
 except:
     pass    # this check fails in python 3. Problem with setuptools
 

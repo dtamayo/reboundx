@@ -41,10 +41,10 @@ class TestSimulationarchive(unittest.TestCase):
                 self.assertLess(np.abs((E-self.E0)/self.E0), 1.e-4, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
                
                 # test bitwise reproducibility starting from an intermediate snapshot
-                self.sim.simulationarchive_snapshot('test.sa', deletefile=True)
+                self.sim.save_to_file('test.sa', delete_file=True)
                 self.rebx.save('test.rebx')
                 self.sim.integrate(2000)
-                self.sim.simulationarchive_snapshot('test.sa')
+                self.sim.save_to_file('test.sa')
 
                 sa = reboundx.Simulationarchive('test.sa', 'test.rebx')
                 simf, rebxf = sa[-1]
@@ -71,10 +71,10 @@ class TestSimulationarchive(unittest.TestCase):
                 self.assertLess(np.abs((E-self.E0)/self.E0), 1.e-4, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
                
                 # test bitwise reproducibility starting from an intermediate snapshot
-                self.sim.simulationarchive_snapshot('test.sa', deletefile=True)
+                self.sim.save_to_file('test.sa', delete_file=True)
                 self.rebx.save('test.rebx')
                 self.sim.integrate(2000)
-                self.sim.simulationarchive_snapshot('test.sa')
+                self.sim.save_to_file('test.sa')
 
                 sa = reboundx.Simulationarchive('test.sa', 'test.rebx')
                 simf, rebxf = sa[-1]
@@ -101,10 +101,10 @@ class TestSimulationarchive(unittest.TestCase):
                 self.assertLess(np.abs((E-self.E0)/self.E0), 1.e-4, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
                
                 # test bitwise reproducibility starting from an intermediate snapshot
-                self.sim.simulationarchive_snapshot('test.sa', deletefile=True)
+                self.sim.save_to_file('test.sa', delete_file=True)
                 self.rebx.save('test.rebx')
                 self.sim.integrate(2000)
-                self.sim.simulationarchive_snapshot('test.sa')
+                self.sim.save_to_file('test.sa')
 
                 sa = reboundx.Simulationarchive('test.sa', 'test.rebx')
                 simf, rebxf = sa[-1]
@@ -131,10 +131,10 @@ class TestSimulationarchive(unittest.TestCase):
                 self.assertLess(np.abs((E-self.E0)/self.E0), 1.e-4, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
                
                 # test bitwise reproducibility starting from an intermediate snapshot
-                self.sim.simulationarchive_snapshot('test.sa', deletefile=True)
+                self.sim.save_to_file('test.sa', delete_file=True)
                 self.rebx.save('test.rebx')
                 self.sim.integrate(2000)
-                self.sim.simulationarchive_snapshot('test.sa')
+                self.sim.save_to_file('test.sa')
 
                 sa = reboundx.Simulationarchive('test.sa', 'test.rebx')
                 simf, rebxf = sa[-1]
