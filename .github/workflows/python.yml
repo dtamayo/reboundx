@@ -38,10 +38,10 @@ jobs:
         if: github.event_name == 'repository_dispatch' # if triggered, installed version checked out above
         run: |
           echo "Installing REBOUND SHA: ${{ github.event.client_payload.sha }}"
-          pip install --no-build-isolation ./rebound
+          pip install ./rebound
       - name: Install REBOUNDx
         run: |
-          pip install --no-build-isolation -e . -v 
+          pip install -e . -v 
       - name: Output package contents
         run: pip show reboundx -vf
       - name: Run unit tests
