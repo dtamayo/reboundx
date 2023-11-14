@@ -41,7 +41,7 @@ jobs:
           pip install ./rebound
       - name: Install REBOUNDx
         run: |
-          pip install -e . -v 
+          pip install --no-build-isolation -e . -v 
       - name: Output package contents
         run: pip show reboundx -vf
       - name: Run unit tests

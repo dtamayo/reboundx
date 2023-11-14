@@ -37,7 +37,7 @@ jobs:
           pip install ./rebound
       - name: Install REBOUNDx
         run: |
-          pip install -e . -v 
+          pip install --no-build-isolation -e . -v 
       - name: Running jupyter notebooks
         run: |
           cd ipython_examples
