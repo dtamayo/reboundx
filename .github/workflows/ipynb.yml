@@ -20,6 +20,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pytest matplotlib scipy 
+          pip install wheel setuptools
       - name: Clone REBOUND repo # in case we need to checkout version that triggered REBOUNDx CI
         uses: actions/checkout@v4
         with: 
@@ -36,7 +37,7 @@ jobs:
           pip install --no-build-isolation ./rebound
       - name: Install REBOUNDx
         run: |
-          pip install --no-build-isolation -e . 
+          pip install --no-build-isolation -e . -v 
       - name: Running jupyter notebooks
         run: |
           cd ipython_examples
