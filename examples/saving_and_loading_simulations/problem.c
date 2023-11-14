@@ -62,7 +62,7 @@ int main(int argc, char* argv[]){
     
     // We now have to save both a REBOUND binary (for the simulation) and a REBOUNDx one (for parameters and effects)
     reb_simulation_integrate(sim, 1.e-4);
-    reb_output_binary(sim, "reb.bin");
+    reb_simulation_save_to_file(sim, "reb.bin");
     rebx_output_binary(rebx, "rebx.bin");
     
     rebx_free(rebx);
