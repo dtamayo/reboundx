@@ -39,8 +39,7 @@ class Params(MutableMapping):
             if valptr is None:
                 raise AttributeError("REBOUNDx Error: Parameter '{0}' not found on object.".format(key))
             return valptr
-        
-        if param_type == "REBX_TYPE_VEC3D":
+        elif ctype == rebound.Vec3d:
             # Special case 
             valptr = cast(valptr, POINTER(rebound.Vec3dBasic))
         else:
@@ -50,7 +49,7 @@ class Params(MutableMapping):
             val = valptr.contents.value # return python int or float rather than c_int or c_double
         except AttributeError:
             val = valptr.contents # Structure, return ctypes object
-            if isinstance(val, rebound.Vec3d):
+            if isinstance(val, rebound.Vec3dBasic):
                 return rebound.Vec3d(val)
         except ValueError: # NULL access
             raise AttributeError("REBOUNDx Error: Parameter '{0}' not found on object.".format(key))
