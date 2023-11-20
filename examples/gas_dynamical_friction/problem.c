@@ -11,12 +11,12 @@
 #include "reboundx.h"
 
 int main(int argc, char* argv[]){
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
     sim->integrator = REB_INTEGRATOR_BS;
 
     struct reb_particle bh = {0};
     bh.m     = 4e6;   
-    reb_add(sim, bh);
+    reb_simulation_add(sim, bh);
 
     double m = 1;
     double a = 206000; 
@@ -26,9 +26,9 @@ int main(int argc, char* argv[]){
     double omega = 0.;
     double f = 0.;
     
-    struct reb_particle star = reb_tools_orbit_to_particle(sim->G, bh, m, a, e, inc, Omega, omega, f);
-    reb_add(sim, star);
-    reb_move_to_com(sim);
+    struct reb_particle star = reb_particle_from_orbit(sim->G, bh, m, a, e, inc, Omega, omega, f);
+    reb_simulation_add(sim, star);
+    reb_simulation_move_to_com(sim);
     
     struct rebx_extras* rebx = rebx_attach(sim);
     struct rebx_force* gdf = rebx_load_force(rebx, "gas_dynamical_friction");
@@ -44,11 +44,11 @@ int main(int argc, char* argv[]){
 
     double delta_t = 6.28e5;
     for (int i = 0; i < 100; i++){
-        reb_integrate(sim, sim->t + delta_t);
-        struct reb_orbit o = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
+        reb_simulation_integrate(sim, sim->t + delta_t);
+        struct reb_orbit o = reb_orbit_from_particle(sim->G, sim->particles[1], sim->particles[0]);
         printf("%f %f %f %e\n", sim->t, o.a, o.e, o.inc);
     }
 
     rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
 }

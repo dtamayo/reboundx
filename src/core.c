@@ -39,7 +39,7 @@
 #define str(s) #s
 
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string.
-const char* rebx_version_str = "3.12.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
+const char* rebx_version_str = "4.0.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
 
 
@@ -225,7 +225,7 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     sim->extras_cleanup = rebx_extras_cleanup;
 
     if(sim->additional_forces || sim->pre_timestep_modifications || sim->post_timestep_modifications){
-        reb_warning(sim, "REBOUNDx overwrites sim->additional_forces, sim->pre_timestep_modifications and sim->post_timestep_modifications whenever forces or operators that use them get added.  If you want to use REBOUNDx together with your own custom functions that use these callbacks, you should add them through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.");
+        reb_simulation_warning(sim, "REBOUNDx overwrites sim->additional_forces, sim->pre_timestep_modifications and sim->post_timestep_modifications whenever forces or operators that use them get added.  If you want to use REBOUNDx together with your own custom functions that use these callbacks, you should add them through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.");
     }
 }
 
@@ -477,7 +477,7 @@ int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force){
     node->object = force;
     rebx_add_node(&rebx->additional_forces, node);
     if (rebx->sim->additional_forces != NULL && rebx->sim->additional_forces != rebx_additional_forces){
-        reb_warning(rebx->sim, "REBOUNDx Warning: additional_forces was set and is being overwritten by REBOUNDx. To incorporate both, you can add your own custom effects through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.\n");
+        reb_simulation_warning(rebx->sim, "REBOUNDx Warning: additional_forces was set and is being overwritten by REBOUNDx. To incorporate both, you can add your own custom effects through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.\n");
     }
     rebx->sim->additional_forces = rebx_additional_forces;
 
@@ -519,7 +519,7 @@ int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* opera
     if (timing == REBX_TIMING_PRE){
         rebx_add_node(&rebx->pre_timestep_modifications, node);
         if (rebx->sim->pre_timestep_modifications != NULL && rebx->sim->pre_timestep_modifications != rebx_pre_timestep_modifications){
-            reb_warning(rebx->sim, "REBOUNDx Warning: pre_timestep_modifications was set in the simulation and is being overwritten by REBOUNDx. To incorporate both, you can add your own custom effects through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.\n");
+            reb_simulation_warning(rebx->sim, "REBOUNDx Warning: pre_timestep_modifications was set in the simulation and is being overwritten by REBOUNDx. To incorporate both, you can add your own custom effects through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.\n");
         }
         rebx->sim->pre_timestep_modifications = rebx_pre_timestep_modifications;
         return 1;
@@ -527,7 +527,7 @@ int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* opera
     if (timing == REBX_TIMING_POST){
         rebx_add_node(&rebx->post_timestep_modifications, node);
         if (rebx->sim->post_timestep_modifications != NULL && rebx->sim->post_timestep_modifications != rebx_post_timestep_modifications){
-            reb_warning(rebx->sim, "REBOUNDx Warning: post_timestep_modifications was set in the simulation and is being overwritten by REBOUNDx. To incorporate both, you can add your own custom effects through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.\n");
+            reb_simulation_warning(rebx->sim, "REBOUNDx Warning: post_timestep_modifications was set in the simulation and is being overwritten by REBOUNDx. To incorporate both, you can add your own custom effects through REBOUNDx.  See https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Custom_Effects.ipynb for a tutorial.\n");
         }
         rebx->sim->post_timestep_modifications = rebx_post_timestep_modifications;
         return 1;
@@ -572,7 +572,7 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
         case REB_INTEGRATOR_MERCURIUS: // half step pre and post
         {
             if (operator->operator_type == REBX_OPERATOR_UPDATER){
-                reb_error(sim, "REBOUNDx Error: Operators that affect particle trajectories are not supported with Mercurius. Must add as forces.\n");
+                reb_simulation_error(sim, "REBOUNDx Error: Operators that affect particle trajectories are not supported with Mercurius. Must add as forces.\n");
                 return 0;
             }
         }
@@ -700,7 +700,7 @@ struct rebx_param* rebx_get_param_struct(struct rebx_extras* const rebx, struct 
         current = current->next;
     }
 
-    return NULL;   // name not found. Don't want warnings for optional parameters so don't reb_error
+    return NULL;   // name not found. Don't want warnings for optional parameters so don't reb_simulation_error
 }
 
 void* rebx_get_param(struct rebx_extras* const rebx, struct rebx_node* ap, const char* const param_name){
@@ -962,7 +962,7 @@ void rebx_additional_forces(struct reb_simulation* sim){
     struct rebx_node* current = rebx->additional_forces;
     while(current != NULL){
         /*if(sim->force_is_velocity_dependent && sim->integrator==REB_INTEGRATOR_WHFAST){
-         reb_warning(sim, "REBOUNDx: Passing a velocity-dependent force to WHFAST. Need to apply as an operator.");
+         reb_simulation_warning(sim, "REBOUNDx: Passing a velocity-dependent force to WHFAST. Need to apply as an operator.");
          }*/
         struct rebx_force* force = current->object;
         const double N = sim->N - sim->N_var;
@@ -980,7 +980,7 @@ void rebx_pre_timestep_modifications(struct reb_simulation* sim){
         struct rebx_step* step = current->object;
         struct rebx_operator* operator = step->operator;
         if(sim->integrator==REB_INTEGRATOR_IAS15 && sim->ri_ias15.epsilon != 0 && operator->operator_type == REBX_OPERATOR_UPDATER){
-            reb_warning(sim, "REBOUNDx: Operators that affect particle trajectories with adaptive timesteps can give spurious results. Use sim.ri_ias15.epsilon=0 for fixed timestep with IAS, or use a different integrator.");
+            reb_simulation_warning(sim, "REBOUNDx: Operators that affect particle trajectories with adaptive timesteps can give spurious results. Use sim.ri_ias15.epsilon=0 for fixed timestep with IAS, or use a different integrator.");
         }
         operator->step_function(sim, operator, dt*step->dt_fraction);
         current = current->next;
@@ -996,7 +996,7 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
         struct rebx_step* step = current->object;
         struct rebx_operator* operator = step->operator;
         if(sim->integrator==REB_INTEGRATOR_IAS15 && sim->ri_ias15.epsilon != 0 && operator->operator_type == REBX_OPERATOR_UPDATER){
-            reb_warning(sim, "REBOUNDx: Operators that affect particle trajectories with adaptive timesteps can give spurious results. Use sim.ri_ias15.epsilon=0 for fixed timestep with IAS, or use a different integrator.");
+            reb_simulation_warning(sim, "REBOUNDx: Operators that affect particle trajectories with adaptive timesteps can give spurious results. Use sim.ri_ias15.epsilon=0 for fixed timestep with IAS, or use a different integrator.");
         }
         operator->step_function(sim, operator, dt*step->dt_fraction);
         current = current->next;
@@ -1096,6 +1096,6 @@ void rebx_error(struct rebx_extras* rebx, const char* const msg){
         fprintf(stderr, "REBOUNDx Error: A Simulation is no longer attached to this REBOUNDx extras instance. Most likely the Simulation has been freed.\n");
     }
     else{
-        reb_error(rebx->sim, msg);
+        reb_simulation_error(rebx->sim, msg);
     }
 }

@@ -12,13 +12,13 @@
 #include "core.h"
 
 int main(int argc, char* argv[]){
-    struct reb_simulation* sim = reb_create_simulation(); 
+    struct reb_simulation* sim = reb_simulation_create(); 
     /*sim units are ('yr', 'AU', 'Msun')*/
     sim->G = 4*M_PI*M_PI;
 
     struct reb_particle star = {0};
     star.m     = 1.;  
-    reb_add(sim, star);
+    reb_simulation_add(sim, star);
 
     double m = 0.00001;
     double a = 1;
@@ -28,9 +28,9 @@ int main(int argc, char* argv[]){
     double omega = 0.;
     double f = 0.;
 
-    struct reb_particle p1 = reb_tools_orbit_to_particle(sim->G, star, m, a, e, inc, Omega, omega, f);
-    reb_add(sim, p1);
-    reb_move_to_com(sim);
+    struct reb_particle p1 = reb_particle_from_orbit(sim->G, star, m, a, e, inc, Omega, omega, f);
+    reb_simulation_add(sim, p1);
+    reb_simulation_move_to_com(sim);
 
     sim->dt = 0.002;  //The period at the inner disk edge divided by 20, for a disk edge location at 0.1 AU
     sim->integrator = REB_INTEGRATOR_WHFAST;
@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "tau_a", -tmax);        
     rebx_set_param_double(rebx, &sim->particles[1].ap, "tau_e", -tmax/100.);     
 
-    reb_integrate(sim, tmax);
+    reb_simulation_integrate(sim, tmax);
     rebx_free(rebx);
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
 }

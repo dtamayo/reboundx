@@ -10,13 +10,13 @@
 #include "reboundx.h"
 
 int main(int argc, char* argv[]){
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
     struct rebx_extras* rebx = rebx_attach(sim);
 
     struct reb_particle star = {0};
     star.m     = 1.;   
     star.hash  = reb_hash("star");
-    reb_add(sim, star);
+    reb_simulation_add(sim, star);
 
     double m = 0.;
     double a = 1.;
@@ -26,9 +26,9 @@ int main(int argc, char* argv[]){
     double omega = 0.;
     double f = M_PI;
     
-    struct reb_particle planet = reb_tools_orbit_to_particle(sim->G, star, m, a, e, inc, Omega, omega, f);
-    reb_add(sim, planet);
-    reb_move_to_com(sim);
+    struct reb_particle planet = reb_particle_from_orbit(sim->G, star, m, a, e, inc, Omega, omega, f);
+    reb_simulation_add(sim, planet);
+    reb_simulation_move_to_com(sim);
     
     struct rebx_operator* track_min_distance = rebx_load_operator(rebx, "track_min_distance");
     rebx_add_operator(rebx, track_min_distance);
@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_pointer(rebx, &sim->particles[1].ap, "min_distance_orbit", &orbit);
 
     double tmax = 10.;
-    reb_integrate(sim, tmax);
+    reb_simulation_integrate(sim, tmax);
 
     // At any point in the integration, we can check the `min_distance` parameter and output it as needed.
     double* min_distance = rebx_get_param(rebx, sim->particles[1].ap, "min_distance");
@@ -56,5 +56,5 @@ int main(int argc, char* argv[]){
     printf("Semimajor axis and eccentricity at closest approach: a=%.2f, e=%.2f\n", orbitptr->a, orbitptr->e);
 
     rebx_free(rebx);    // this explicitly frees all the memory allocated by REBOUNDx 
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
 }

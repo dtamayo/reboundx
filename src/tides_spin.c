@@ -228,7 +228,7 @@ static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot,
       }
     }
     if (ode->length != Nspins*3){
-        reb_error(sim, "rebx_spin ODE is not of the expected length.\n");
+        reb_simulation_error(sim, "rebx_spin ODE is not of the expected length.\n");
         exit(1);
     }
 
@@ -253,7 +253,7 @@ static void rebx_spin_sync_pre(struct reb_ode* const ode, const double* const y0
     }
 
     if (ode->length != Nspins*3){
-        reb_error(sim, "rebx_spin ODE is not of the expected length.\n");
+        reb_simulation_error(sim, "rebx_spin ODE is not of the expected length.\n");
         exit(1);
     }
 }
@@ -273,7 +273,7 @@ static void rebx_spin_sync_post(struct reb_ode* const ode, const double* const y
         }
     }
     if (ode->length != Nspins*3){
-        reb_error(sim, "rebx_spin ODE is not of the expected length.\n");
+        reb_simulation_error(sim, "rebx_spin ODE is not of the expected length.\n");
         exit(0);
     }
 }
@@ -293,7 +293,7 @@ void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force*
     }
 
     if (Nspins > 0){
-        struct reb_ode* spin_ode = reb_create_ode(sim, Nspins*3);
+        struct reb_ode* spin_ode = reb_ode_create(sim, Nspins*3);
         spin_ode->ref = sim;
         spin_ode->derivatives = rebx_spin_derivatives;
         spin_ode->pre_timestep = rebx_spin_sync_pre;
@@ -309,7 +309,7 @@ void rebx_tides_spin(struct reb_simulation* const sim, struct rebx_force* const 
     // check if ODE is initialized
     struct reb_ode** ode = sim->odes;
     if (ode == NULL){
-      reb_warning(sim, "Spin axes are not being evolved. Call rebx_spin_initialize_ode to evolve\n");
+      reb_simulation_warning(sim, "Spin axes are not being evolved. Call rebx_spin_initialize_ode to evolve\n");
     }
 
     for (int i=0; i<N; i++){

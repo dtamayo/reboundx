@@ -83,7 +83,7 @@
 static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_operator* const operator, struct reb_particle* p, struct reb_particle* primary, const double dt){
     struct rebx_extras* const rebx = sim->extras;
     int err=0;
-    struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, *p, *primary, &err);
+    struct reb_orbit o = reb_orbit_from_particle_err(sim->G, *p, *primary, &err);
     if(err){        // mass of primary was 0 or p = primary.  Return same particle without doing anything.
         return *p;
     } 
@@ -129,7 +129,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 			o.a += 2.*a0*e0*e0*(*p_param)*dt/(*tau_e); // Coupling term between e and a
 		}
     }
-    return reb_tools_orbit_to_particle(sim->G, *primary, p->m, o.a, o.e, o.inc, o.Omega, o.omega, o.f);
+    return reb_particle_from_orbit(sim->G, *primary, p->m, o.a, o.e, o.inc, o.Omega, o.omega, o.f);
 }
 
 void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){

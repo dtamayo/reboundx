@@ -21,19 +21,19 @@ void heartbeat(struct reb_simulation* sim);
 double tmax = 100 * 2 * M_PI; // set short to run quickly. Set to 4e6 * 2 * M_PI in paper
 
 int main(int argc, char* argv[]){
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
     // Exact parameters from Millholland & Laughlin (2019)
     const double solar_mass = 1.;
     const double solar_rad = 0.00465;
-    reb_add_fmt(sim, "m r", solar_mass, solar_rad);// Central object
+    reb_simulation_add_fmt(sim, "m r", solar_mass, solar_rad);// Central object
 
     const double p1_mass = 5. * 3.0e-6; // in Earth masses * 1 Earth Mass / 1 Solar Mass
     const double p1_rad = 2.5 * 4.26e-5; // in Earth rad * 1 Earth rad / 1 AU
-    reb_add_fmt(sim, "m a e r inc Omega pomega M", p1_mass, 0.17308688, 0.01, p1_rad, 0.5 * (M_PI / 180.), 0.0 * (M_PI / 180.), 0.0 * (M_PI / 180.), 0.0 * (M_PI / 180.)); // Planet 1
+    reb_simulation_add_fmt(sim, "m a e r inc Omega pomega M", p1_mass, 0.17308688, 0.01, p1_rad, 0.5 * (M_PI / 180.), 0.0 * (M_PI / 180.), 0.0 * (M_PI / 180.), 0.0 * (M_PI / 180.)); // Planet 1
 
     const double p2_mass = 5. * 3.0e-6;
     const double p2_rad = 2.5 * 4.26e-5;
-    reb_add_fmt(sim, "m a e r inc Omega pomega M", p2_mass, 0.23290608, 0.01, p2_rad, -0.431 * (M_PI / 180.), 0.0 * (M_PI / 180.), 0.0 * (M_PI / 180.), 0.0 * (M_PI / 180.)); // Planet 2
+    reb_simulation_add_fmt(sim, "m a e r inc Omega pomega M", p2_mass, 0.23290608, 0.01, p2_rad, -0.431 * (M_PI / 180.), 0.0 * (M_PI / 180.), 0.0 * (M_PI / 180.), 0.0 * (M_PI / 180.)); // Planet 2
     sim->N_active = 3;
     sim->integrator = REB_INTEGRATOR_WHFAST;
     sim->dt = 1e-3;
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_vec3d(rebx, &sim->particles[0].ap, "Omega", (struct reb_vec3d){.z = solar_spin}); // Omega_x = Omega_y = 0 by default
 
     // We assume tau = 1/(2*n*Q) with n the mean motion, even though the spin is not synchronized with the orbit (see Lu et al. (2023))
-    struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
+    struct reb_orbit orb = reb_orbit_from_particle(sim->G, sim->particles[1], sim->particles[0]);
     rebx_set_param_double(rebx, &sim->particles[0].ap, "tau", 1./(2.*orb.n*solar_Q));
 
     // P1
@@ -75,7 +75,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[2].ap, "I", 0.25 * p2_mass * p2_rad * p2_rad);
     rebx_set_param_vec3d(rebx, &sim->particles[2].ap, "Omega", (struct reb_vec3d){.y=spin_2 * 0.0249736, .z=spin_2 * 0.99968811});
 
-    struct reb_orbit orb2 = reb_tools_particle_to_orbit(sim->G, sim->particles[2], sim->particles[0]);
+    struct reb_orbit orb2 = reb_orbit_from_particle(sim->G, sim->particles[2], sim->particles[0]);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "tau", 1./(2.*orb2.n*planet_Q));
 
     // And migration
@@ -86,11 +86,11 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &sim->particles[1].ap, "tau_a", -5e6 * 2 * M_PI);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "tau_a", (-5e6 * 2 * M_PI) / 1.1);
 
-    reb_move_to_com(sim);
+    reb_simulation_move_to_com(sim);
 
     // Let's create a reb_rotation object that rotates to new axes with newz pointing along the total ang. momentum, and x along the line of
     // nodes with the invariable plane (along z cross newz)
-    struct reb_vec3d newz = reb_vec3d_add(reb_tools_angular_momentum(sim), rebx_tools_spin_angular_momentum(rebx));
+    struct reb_vec3d newz = reb_vec3d_add(reb_simulation_angular_momentum(sim), rebx_tools_spin_angular_momentum(rebx));
     struct reb_vec3d newx = reb_vec3d_cross((struct reb_vec3d){.z =1}, newz);
     struct reb_rotation rot = reb_rotation_init_to_new_axes(newz, newx);
     rebx_simulation_irotate(rebx, rot); // This rotates our simulation into the invariable plane aligned with the total ang. momentum (including spin)
@@ -100,25 +100,25 @@ int main(int argc, char* argv[]){
     system("rm -v output_orbits.txt"); // remove previous output files
     system("rm -v output_spins.txt");
     
-    reb_integrate(sim, tmax/2);
+    reb_simulation_integrate(sim, tmax/2);
 
     printf("Migration Switching Off\n");
     rebx_set_param_double(rebx, &sim->particles[1].ap, "tau_a", INFINITY);
     rebx_set_param_double(rebx, &sim->particles[2].ap, "tau_a", INFINITY);
 
-    reb_integrate(sim, tmax);
+    reb_simulation_integrate(sim, tmax);
 
     rebx_free(rebx);
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
 }
 
 void heartbeat(struct reb_simulation* sim){
-  if(reb_output_check(sim, tmax/100000)){        // outputs every 100 REBOUND years
+  if(reb_simulation_output_check(sim, tmax/100000)){        // outputs every 100 REBOUND years
     struct rebx_extras* const rebx = sim->extras;
     FILE* of_orb = fopen("output_orbits.txt", "a");
     FILE* of_spins = fopen("output_spins.txt", "a");
     if (of_orb == NULL || of_spins == NULL){
-        reb_error(sim, "Can not open file.");
+        reb_simulation_error(sim, "Can not open file.");
         return;
     }
 
@@ -127,7 +127,7 @@ void heartbeat(struct reb_simulation* sim){
     struct reb_particle* p2 = &sim->particles[2];
 
     // Orbit information
-    struct reb_orbit o1 = reb_tools_particle_to_orbit(sim->G, *p1, *sun);
+    struct reb_orbit o1 = reb_orbit_from_particle(sim->G, *p1, *sun);
     double a1 = o1.a;
     double e1 = o1.e;
     double i1 = o1.inc;
@@ -135,7 +135,7 @@ void heartbeat(struct reb_simulation* sim){
     double pom1 = o1.pomega;
     struct reb_vec3d norm1 = o1.hvec;
 
-    struct reb_orbit o2 = reb_tools_particle_to_orbit(sim->G, *p2, *sun);
+    struct reb_orbit o2 = reb_orbit_from_particle(sim->G, *p2, *sun);
     double a2 = o2.a;
     double e2 = o2.e;
     double i2 = o2.inc;
@@ -175,7 +175,7 @@ void heartbeat(struct reb_simulation* sim){
     fclose(of_spins);
   }
 
-  if(reb_output_check(sim, 100.*M_PI)){        // outputs to the screen
-      reb_output_timing(sim, tmax);
+  if(reb_simulation_output_check(sim, 100.*M_PI)){        // outputs to the screen
+      reb_simulation_output_timing(sim, tmax);
   }
 }

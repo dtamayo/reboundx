@@ -69,6 +69,6 @@ void rebx_modify_mass(struct reb_simulation* const sim, struct rebx_operator* co
 		    p->m += p->m*dt/(*tau_mass);
         }
 	}
-    reb_move_to_com(sim);
+    reb_simulation_move_to_com(sim);
 }
 

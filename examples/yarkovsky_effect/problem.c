@@ -17,7 +17,7 @@
 
 int main(int argc, char* argv[]) {
 
-    struct reb_simulation* sim = reb_create_simulation(); //creates simulation
+    struct reb_simulation* sim = reb_simulation_create(); //creates simulation
 
     sim->G = 4*M_PI*M_PI;  // use units of AU, yr and solar masses
     sim->dt = .05;         //timestep for simulation in yrs
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     //following adds star with mass of Sun to sim
     struct reb_particle star = {0};
     star.m = 1.;
-    reb_add(sim, star);
+    reb_simulation_add(sim, star);
 
     //following variables are the orbital elements of only asteroid in sim
     double m = 0;
@@ -38,9 +38,9 @@ int main(int argc, char* argv[]) {
     double f = 0;
 
     //creates asteroid
-    struct reb_particle asteroid_1 = reb_tools_orbit_to_particle(sim->G, star, m, a, e, inc, Omega, omega, f);
+    struct reb_particle asteroid_1 = reb_particle_from_orbit(sim->G, star, m, a, e, inc, Omega, omega, f);
 
-    reb_add(sim,asteroid_1);
+    reb_simulation_add(sim,asteroid_1);
     
     struct reb_particle* const particles = sim->particles; //pointer for the particles in the sim
 
@@ -84,9 +84,9 @@ int main(int argc, char* argv[]) {
 
     double tmax = 100000;
     
-    reb_integrate(sim, tmax); //integrates system for tmax years
+    reb_simulation_integrate(sim, tmax); //integrates system for tmax years
     
-    struct reb_orbit o= reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]); //gives orbital parameters for asteroid after sim
+    struct reb_orbit o= reb_orbit_from_particle(sim->G, sim->particles[1], sim->particles[0]); //gives orbital parameters for asteroid after sim
     
     double final_a = o.a; //final semi-major axis of asteroid after sim
     double final_e = o.e;

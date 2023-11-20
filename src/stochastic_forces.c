@@ -96,9 +96,9 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
 
             // Get auto-correlation time
             int err=0;
-            struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, particles[i], com, &err);
+            struct reb_orbit o = reb_orbit_from_particle_err(sim->G, particles[i], com, &err);
             if (err){
-                reb_error(sim, "An error occured during the orbit calculation in rebx_stochastic_forces.\n");
+                reb_simulation_error(sim, "An error occured during the orbit calculation in rebx_stochastic_forces.\n");
                 return;
             }
             double tau = o.P; // Default is current orbital period.
@@ -118,7 +118,7 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
 
             double variance = 1.- prefac*prefac;
             if (variance <0.){
-                reb_error(sim, "Timestep is larger than the correlation time for stochastic forces.\n");
+                reb_simulation_error(sim, "Timestep is larger than the correlation time for stochastic forces.\n");
                 return;
             }
             double std = sqrt(variance);
@@ -146,7 +146,7 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
             particles[i].az += force_prefac*(*stochastic_force_r*dz/dr + *stochastic_force_phi*dvz/dv);
 
 
-		    com = reb_get_com_of_pair(com, p);
+		    com = reb_particle_com_of_pair(com, p);
         }
         double* kappa_x = rebx_get_param(rebx, particles[i].ap, "kappa_x");
         if (kappa_x != NULL){
@@ -158,7 +158,7 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
             
             double* tau_kappa_x = rebx_get_param(rebx, particles[i].ap, "tau_kappa_x");
             if (tau_kappa_x == NULL){
-                reb_error(sim, "Need to set tau_kappa_x to enable stochastic forces.\n");
+                reb_simulation_error(sim, "Need to set tau_kappa_x to enable stochastic forces.\n");
                 return;
             }
 
@@ -171,7 +171,7 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
             // Excitation
             double variance = 1.- prefac*prefac;
             if (variance <0.){
-                reb_error(sim, "Timestep is larger than the correlation time for stochastic forces.\n");
+                reb_simulation_error(sim, "Timestep is larger than the correlation time for stochastic forces.\n");
                 return;
             }
             double std = (*kappa_x)*sqrt(variance);
@@ -191,7 +191,7 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
             
             double* tau_kappa_y = rebx_get_param(rebx, particles[i].ap, "tau_kappa_y");
             if (tau_kappa_y == NULL){
-                reb_error(sim, "Need to set tau_kappa_y to enable stochastic forces.\n");
+                reb_simulation_error(sim, "Need to set tau_kappa_y to enable stochastic forces.\n");
                 return;
             }
 
@@ -204,7 +204,7 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
             // Excitation
             double variance = 1.- prefac*prefac;
             if (variance <0.){
-                reb_error(sim, "Timestep is larger than the correlation time for stochastic forces.\n");
+                reb_simulation_error(sim, "Timestep is larger than the correlation time for stochastic forces.\n");
                 return;
             }
             double std = (*kappa_y)*sqrt(variance);
@@ -224,7 +224,7 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
             
             double* tau_kappa_z = rebx_get_param(rebx, particles[i].ap, "tau_kappa_z");
             if (tau_kappa_z == NULL){
-                reb_error(sim, "Need to set tau_kappa_z to enable stochastic forces.\n");
+                reb_simulation_error(sim, "Need to set tau_kappa_z to enable stochastic forces.\n");
                 return;
             }
 
@@ -237,7 +237,7 @@ void rebx_stochastic_forces(struct reb_simulation* const sim, struct rebx_force*
             // Excitation
             double variance = 1.- prefac*prefac;
             if (variance <0.){
-                reb_error(sim, "Timestep is larger than the correlation time for stochastic forces.\n");
+                reb_simulation_error(sim, "Timestep is larger than the correlation time for stochastic forces.\n");
                 return;
             }
             double std = (*kappa_z)*sqrt(variance);

@@ -654,52 +654,52 @@ struct rebx_extras* rebx_create_extras_from_binary(struct reb_simulation* sim, c
     rebx_init_extras_from_binary(rebx, filename, &warnings);
     
     if (warnings & REBX_INPUT_BINARY_ERROR_NOFILE){
-        reb_error(sim,"REBOUNDx: Cannot open binary file. Check filename.");
+        reb_simulation_error(sim,"REBOUNDx: Cannot open binary file. Check filename.");
     }
     if (warnings & REBX_INPUT_BINARY_ERROR_CORRUPT){
-        reb_error(sim,"REBOUNDx: Binary file is unreadable. Please open an issue on Github mentioning the version of REBOUND and REBOUNDx you are using and include the binary file.");
+        reb_simulation_error(sim,"REBOUNDx: Binary file is unreadable. Please open an issue on Github mentioning the version of REBOUND and REBOUNDx you are using and include the binary file.");
     }
     if (warnings & REBX_INPUT_BINARY_ERROR_NO_MEMORY){
-        reb_error(sim,"REBOUNDx: Ran out of system memory.");
+        reb_simulation_error(sim,"REBOUNDx: Ran out of system memory.");
     }
     if (warnings & REBX_INPUT_BINARY_ERROR_REBX_NOT_LOADED){
-        reb_error(sim,"REBOUNDx: REBOUNDx structure couldn't be loaded.");
+        reb_simulation_error(sim,"REBOUNDx: REBOUNDx structure couldn't be loaded.");
     }
     if (warnings & REBX_INPUT_BINARY_ERROR_REGISTERED_PARAM_NOT_LOADED){
-        reb_error(sim,"REBOUNDx: At least one registered parameter was not loaded. This typically indicates the binary is corrupt or was saved with an incompatible version to the current one being used.");
+        reb_simulation_error(sim,"REBOUNDx: At least one registered parameter was not loaded. This typically indicates the binary is corrupt or was saved with an incompatible version to the current one being used.");
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_PARAM_NOT_LOADED){
-        reb_warning(sim,"REBOUNDx: At least one force or operator parameter was not loaded from the binary file. This typically indicates the binary is corrupt or was saved with an incompatible version to the current one being used.");
+        reb_simulation_warning(sim,"REBOUNDx: At least one force or operator parameter was not loaded from the binary file. This typically indicates the binary is corrupt or was saved with an incompatible version to the current one being used.");
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_PARTICLE_PARAMS_NOT_LOADED){
-        reb_warning(sim,"REBOUNDx: At least one particle's parameters were not loaded from the binary file.");
+        reb_simulation_warning(sim,"REBOUNDx: At least one particle's parameters were not loaded from the binary file.");
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_FORCE_NOT_LOADED){
-        reb_warning(sim,"REBOUNDx: At least one force was not loaded from the binary file. If binary was created with a newer version of REBOUNDx, a particular force may not be implemented in your current version of REBOUNDx.");
+        reb_simulation_warning(sim,"REBOUNDx: At least one force was not loaded from the binary file. If binary was created with a newer version of REBOUNDx, a particular force may not be implemented in your current version of REBOUNDx.");
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_OPERATOR_NOT_LOADED){
-        reb_warning(sim,"REBOUNDx: At least one operator was not loaded from the binary file. If binary was created with a newer version of REBOUNDx, a particular force may not be implemented in your current version of REBOUNDx.");
+        reb_simulation_warning(sim,"REBOUNDx: At least one operator was not loaded from the binary file. If binary was created with a newer version of REBOUNDx, a particular force may not be implemented in your current version of REBOUNDx.");
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_STEP_NOT_LOADED){
-        reb_warning(sim,"REBOUNDx: At least one operator step was not loaded from the binary file.");
+        reb_simulation_warning(sim,"REBOUNDx: At least one operator step was not loaded from the binary file.");
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_ADDITIONAL_FORCE_NOT_LOADED){
-        reb_warning(sim,"REBOUNDx: At least one force was not added to the simulation. If binary was created with a newer version of REBOUNDx, a particular force may not be implemented in your current version of REBOUNDx.");
+        reb_simulation_warning(sim,"REBOUNDx: At least one force was not added to the simulation. If binary was created with a newer version of REBOUNDx, a particular force may not be implemented in your current version of REBOUNDx.");
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_FIELD_UNKNOWN){
-        reb_warning(sim,"REBOUNDx: Unknown field found in binary file. Any unknown fields not loaded.  This can happen if the binary was created with a later version of REBOUNDx than the one used to read it.");
+        reb_simulation_warning(sim,"REBOUNDx: Unknown field found in binary file. Any unknown fields not loaded.  This can happen if the binary was created with a later version of REBOUNDx than the one used to read it.");
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_LIST_UNKNOWN){
-        reb_warning(sim,"REBOUNDx: Unknown list in the REBOUNDx structure wasn't loaded. This can happen if the binary was created with a later version of REBOUNDx than the one used to read it.");
+        reb_simulation_warning(sim,"REBOUNDx: Unknown list in the REBOUNDx structure wasn't loaded. This can happen if the binary was created with a later version of REBOUNDx than the one used to read it.");
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_PARAM_VALUE_NULL){
-        reb_warning(sim,"REBOUNDx: The value of at least one parameter was not loaded. This can happen if a custom structure was added by the user as a parameter. See Parameters.ipynb jupyter notebook example.");
+        reb_simulation_warning(sim,"REBOUNDx: The value of at least one parameter was not loaded. This can happen if a custom structure was added by the user as a parameter. See Parameters.ipynb jupyter notebook example.");
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_VERSION){
-        reb_warning(sim,"REBOUNDx: Binary file was saved with a different version of REBOUNDx. Binary format might have changed. Check that effects and parameters are loaded as expected.");
+        reb_simulation_warning(sim,"REBOUNDx: Binary file was saved with a different version of REBOUNDx. Binary format might have changed. Check that effects and parameters are loaded as expected.");
     }
     if (warnings & REBX_INPUT_BINARY_WARNING_FORCE_PARAM_NOT_LOADED){
-        reb_warning(sim,"REBOUNDx: A force parameter failed to load from the list of REBOUNDx implemented forces. Custom forces can't be saved to a REBOUNDx binary, and function points must be reset when a simulation is reloaded.");
+        reb_simulation_warning(sim,"REBOUNDx: A force parameter failed to load from the list of REBOUNDx implemented forces. Custom forces can't be saved to a REBOUNDx binary, and function points must be reset when a simulation is reloaded.");
     }
     return rebx;
 }

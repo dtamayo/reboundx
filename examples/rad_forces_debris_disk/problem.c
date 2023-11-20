@@ -16,7 +16,7 @@ void heartbeat(struct reb_simulation* r);
 double tmax = 3e12;                     // in sec, ~ 10^5 yrs
 
 int main(int argc, char* argv[]){
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
     // Setup constants
     double AU = 1.5e11;                 // in meters
     sim->integrator     = REB_INTEGRATOR_WHFAST;
@@ -29,7 +29,7 @@ int main(int argc, char* argv[]){
     // sun
     struct reb_particle sun = {0};
     sun.m  = 1.99e30;                   // mass of Sun in kg
-    reb_add(sim, sun);
+    reb_simulation_add(sim, sun);
     
     struct rebx_extras* rebx = rebx_attach(sim);
     struct rebx_force* rad = rebx_load_force(rebx, "radiation_forces");
@@ -67,14 +67,14 @@ int main(int argc, char* argv[]){
         f = 2*M_PI*(double)rand() / (double)RAND_MAX;
         
         double m=0;                     // We treat the dust grains as massless.
-        p = reb_tools_orbit_to_particle(sim->G, sim->particles[0], m, a, e, inc, Omega, pomega, f); 
-        reb_add(sim, p); 
+        p = reb_particle_from_orbit(sim->G, sim->particles[0], m, a, e, inc, Omega, pomega, f); 
+        reb_simulation_add(sim, p); 
                                         // Only particles with beta set will feel radiation forces 
         rebx_set_param_double(rebx, &sim->particles[i].ap, "beta", beta);    
     }
 
-    reb_move_to_com(sim);
-    reb_integrate(sim, tmax);
+    reb_simulation_move_to_com(sim);
+    reb_simulation_integrate(sim, tmax);
 
     /* Note that the debris disk will seem to undergo oscillations at first.  
      * This is actually the correct behavior.  We set up the
@@ -84,11 +84,11 @@ int main(int argc, char* argv[]){
      * takes a few cycles before the differential motion randomizes the phases. */
 
     rebx_free(rebx);                                
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
 }
 
 void heartbeat(struct reb_simulation* sim){
-    if(reb_output_check(sim, 1.e8)){
-        //reb_output_timing(sim, tmax);
+    if(reb_simulation_output_check(sim, 1.e8)){
+        //reb_simulation_output_timing(sim, tmax);
     }
 }

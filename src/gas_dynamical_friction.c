@@ -142,31 +142,31 @@ void rebx_gas_dynamical_friction(struct reb_simulation* const sim, struct rebx_f
     struct rebx_extras* const rebx = sim->extras;
     double* rhog= rebx_get_param(rebx, force->ap, "gas_df_rhog");
     if (rhog == NULL){
-        reb_error(sim, "Need to specify a gas density\n");
+        reb_simulation_error(sim, "Need to specify a gas density\n");
     }
     double* alpha_rhog= rebx_get_param(rebx, force->ap, "gas_df_alpha_rhog");
     if (alpha_rhog== NULL){
-        reb_error(sim, "Need to specify a profile for gas density\n");
+        reb_simulation_error(sim, "Need to specify a profile for gas density\n");
     }
     double* cs= rebx_get_param(rebx, force->ap, "gas_df_cs");
     if (cs == NULL){
-        reb_error(sim, "Need to set a sound speed.\n");
+        reb_simulation_error(sim, "Need to set a sound speed.\n");
     }
     double* alpha_cs= rebx_get_param(rebx, force->ap, "gas_df_alpha_cs");
     if (alpha_cs== NULL){
-        reb_error(sim, "Need to specify a profile for the sound speed\n");
+        reb_simulation_error(sim, "Need to specify a profile for the sound speed\n");
     }
     double* xmin= rebx_get_param(rebx, force->ap, "gas_df_xmin");
     if (xmin == NULL){
-        reb_error(sim, "Need to set a cutoff.\n");
+        reb_simulation_error(sim, "Need to set a cutoff.\n");
     }
     double* hr= rebx_get_param(rebx, force->ap, "gas_df_hr");
     if (hr == NULL){
-        reb_error(sim, "Need an aspect ratio.\n");
+        reb_simulation_error(sim, "Need an aspect ratio.\n");
     }
     double* Qd=rebx_get_param(rebx, force->ap, "gas_df_Qd");
     if (Qd == NULL){
-        reb_error(sim, "Need to specify Qd");
+        reb_simulation_error(sim, "Need to specify Qd");
     }
 
     rebx_calculate_gas_dynamical_friction(sim, particles, N, *rhog, *alpha_rhog, *cs, *alpha_cs, *xmin, *hr, *Qd);

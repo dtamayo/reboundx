@@ -18,7 +18,7 @@
 void heartbeat(struct reb_simulation* sim);
 
 int main(int argc, char* argv[]){
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
     // Setup constants
     sim->integrator = REB_INTEGRATOR_WHFAST;
     sim->dt             = 0.012;        // initial timestep.
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
 
     struct reb_particle p = {0}; 
     p.m     = 1.;   
-    reb_add(sim, p); 
+    reb_simulation_add(sim, p); 
 
     double m = 0.;
     double a1 = 1.;
@@ -37,11 +37,11 @@ int main(int argc, char* argv[]){
     double omega = 0.;
     double f = 0.;
 
-    struct reb_particle p1 = reb_tools_orbit_to_particle(sim->G, p, m, a1, e, inc, Omega, omega, f);
-    struct reb_particle p2 = reb_tools_orbit_to_particle(sim->G, p, m, a2, e, inc, Omega, omega, f);
-    reb_add(sim,p1);
-    reb_add(sim,p2);
-    reb_move_to_com(sim);
+    struct reb_particle p1 = reb_particle_from_orbit(sim->G, p, m, a1, e, inc, Omega, omega, f);
+    struct reb_particle p2 = reb_particle_from_orbit(sim->G, p, m, a2, e, inc, Omega, omega, f);
+    reb_simulation_add(sim,p1);
+    reb_simulation_add(sim,p2);
+    reb_simulation_move_to_com(sim);
 
     struct rebx_extras* rebx = rebx_attach(sim);
 
@@ -75,16 +75,16 @@ int main(int argc, char* argv[]){
 	rebx_set_param_double(rebx, &mo->ap, "p", 1.); // doesn't do anything for modify_orbits_forces
 	rebx_set_param_int(rebx, &sim->particles[0].ap, "primary", 1);
 
-    reb_integrate(sim, tmax);
+    reb_simulation_integrate(sim, tmax);
     rebx_free(rebx);    // Free all the memory allocated by rebx
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
 }
 
 void heartbeat(struct reb_simulation* sim){
     // output a e and pomega (Omega + omega) of inner body
-    if(reb_output_check(sim, 5.e2)){
+    if(reb_simulation_output_check(sim, 5.e2)){
         const struct reb_particle sun = sim->particles[0];
-        const struct reb_orbit orbit = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sun); // calculate orbit of particles[1]
+        const struct reb_orbit orbit = reb_orbit_from_particle(sim->G, sim->particles[1], sun); // calculate orbit of particles[1]
         printf("%f\t%f\t%f\t%f\n",sim->t,orbit.a, orbit.e, orbit.pomega);
     }
 }

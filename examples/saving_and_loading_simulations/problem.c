@@ -10,10 +10,10 @@
 #include "core.h"
 
 int main(int argc, char* argv[]){
-    struct reb_simulation* sim = reb_create_simulation(); // make a simple sim with star and 1 planet
+    struct reb_simulation* sim = reb_simulation_create(); // make a simple sim with star and 1 planet
     struct reb_particle p = {0};
     p.m     = 1.;   
-    reb_add(sim, p);
+    reb_simulation_add(sim, p);
     double m = 0.;
     double a = 1.e-4;
     double e = 0.2;
@@ -22,8 +22,8 @@ int main(int argc, char* argv[]){
     double omega = 0.;
     double f = 0.;
     
-    struct reb_particle p1 = reb_tools_orbit_to_particle(sim->G, p, m, a, e, inc, Omega, omega, f);
-    reb_add(sim, p1);
+    struct reb_particle p1 = reb_particle_from_orbit(sim->G, p, m, a, e, inc, Omega, omega, f);
+    reb_simulation_add(sim, p1);
     sim->dt = 1.e-8;
     sim->integrator = REB_INTEGRATOR_WHFAST;
     
@@ -61,15 +61,15 @@ int main(int argc, char* argv[]){
     printf("max_iterations: Original = %d\n", *max_iterations);
     
     // We now have to save both a REBOUND binary (for the simulation) and a REBOUNDx one (for parameters and effects)
-    reb_integrate(sim, 1.e-4);
-    reb_output_binary(sim, "reb.bin");
+    reb_simulation_integrate(sim, 1.e-4);
+    reb_simulation_save_to_file(sim, "reb.bin");
     rebx_output_binary(rebx, "rebx.bin");
     
     rebx_free(rebx);
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
    
     // We now reload the simulation and the rebx instance (which adds previously loaded effects to the simulation)
-    sim = reb_create_simulation_from_binary("reb.bin");
+    sim = reb_simulation_create_from_file("reb.bin", 0);
     rebx = rebx_create_extras_from_binary(sim, "rebx.bin");
 
     gr = rebx_get_force(rebx, "gr");
@@ -89,7 +89,7 @@ int main(int argc, char* argv[]){
     
     // You would now integrate as usual
     double tmax = 1.e-4;
-    reb_integrate(sim, tmax);
+    reb_simulation_integrate(sim, tmax);
     rebx_free(rebx);
-    reb_free_simulation(sim);
+    reb_simulation_free(sim);
 }

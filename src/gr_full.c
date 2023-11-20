@@ -219,7 +219,7 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
             break;
         }
         if (k==9){
-            reb_warning(sim, "10 loops in rebx_gr_full did not converge.\n");
+            reb_simulation_warning(sim, "10 loops in rebx_gr_full did not converge.\n");
         }
     }
     // update acceleration in particles
@@ -233,7 +233,7 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
 void rebx_gr_full(struct reb_simulation* const sim, struct rebx_force* const gr_full, struct reb_particle* const particles, const int N){
     double* c = rebx_get_param(sim->extras, gr_full->ap, "c");
     if (c == NULL){
-        reb_error(sim, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
+        reb_simulation_error(sim, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
         return;
     }
     const double C2 = (*c)*(*c);
@@ -256,7 +256,7 @@ double rebx_gr_full_hamiltonian(struct rebx_extras* const rebx, const struct reb
     struct reb_simulation* sim = rebx->sim;
     double* c = rebx_get_param(rebx, force->ap, "c");
     if (c == NULL){
-        reb_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
+        reb_simulation_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
     }
     const double C2 = (*c)*(*c);
     const int N = sim->N - sim->N_var;

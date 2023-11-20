@@ -60,7 +60,7 @@ Once you've set up your force, you still have to add it to the simulation. You d
 You can add as many effects as you'd like in the same simulation.
 Once you're done setting up all the effects you want, just run the REBOUND simulation as usual::
 
-    reb_integrate(sim, tmax);
+    reb_simulation_integrate(sim, tmax);
 
 Probably the quickest way to get up and running is to modify an existing example for your effect.
 You can find links to the appropriate examples here: :ref:`effects`, along with implementation descriptions.

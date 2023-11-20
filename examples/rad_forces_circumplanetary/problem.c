@@ -19,7 +19,7 @@ void heartbeat(struct reb_simulation* r);
 double tmax = 1e10;
 
 int main(int argc, char* argv[]){
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
     // Setup constants 
     sim->integrator     = REB_INTEGRATOR_IAS15;
     sim->G              = 6.674e-11;    // Use SI units
@@ -31,7 +31,7 @@ int main(int argc, char* argv[]){
     // sun
     struct reb_particle sun = {0};
     sun.m  = 1.99e30;                   // mass of Sun in kg
-    reb_add(sim, sun);
+    reb_simulation_add(sim, sun);
     
     // Saturn (simulation set up in Saturn's orbital plane, i.e., inc=0, so only need 4 orbital elements 
     double mass_sat = 5.68e26;          // Mass of Saturn 
@@ -41,9 +41,9 @@ int main(int argc, char* argv[]){
     double f_sat = 0.;                  // True anomaly of Saturn
     double inc = 0.;
     double Omega = 0.;
-    struct reb_particle saturn = reb_tools_orbit_to_particle(sim->G, sun, mass_sat, a_sat, e_sat, inc, Omega, pomega_sat, f_sat);
+    struct reb_particle saturn = reb_particle_from_orbit(sim->G, sun, mass_sat, a_sat, e_sat, inc, Omega, pomega_sat, f_sat);
 
-    reb_add(sim, saturn);
+    reb_simulation_add(sim, saturn);
 
     // Add REBOUNDx
     struct rebx_extras* rebx = rebx_attach(sim); 
@@ -71,15 +71,15 @@ int main(int argc, char* argv[]){
 
     // We first set up the orbit and add the particles
     double m_dust = 0.;                 // treat dust particles as massless
-    struct reb_particle p = reb_tools_orbit_to_particle(sim->G, sim->particles[1], m_dust, a_dust, e_dust, inc_dust, Omega_dust, omega_dust, f_dust); 
-    reb_add(sim, p); 
+    struct reb_particle p = reb_particle_from_orbit(sim->G, sim->particles[1], m_dust, a_dust, e_dust, inc_dust, Omega_dust, omega_dust, f_dust); 
+    reb_simulation_add(sim, p); 
 
     // For the first particle we simply specify beta directly.
     rebx_set_param_double(rebx, &sim->particles[2].ap, "beta", 0.1); 
 
     // We now add a 2nd particle on the same orbit, but set its beta using physical parameters.  
-    struct reb_particle p2 = reb_tools_orbit_to_particle(sim->G, sim->particles[1], 0., a_dust, e_dust, inc_dust, Omega_dust, omega_dust, f_dust); 
-    reb_add(sim, p2);
+    struct reb_particle p2 = reb_particle_from_orbit(sim->G, sim->particles[1], 0., a_dust, e_dust, inc_dust, Omega_dust, omega_dust, f_dust); 
+    reb_simulation_add(sim, p2);
 
     /* REBOUNDx has a convenience function to calculate beta given the gravitational constant G, the star's luminosity and mass, and the grain's physical radius, density and radiation pressure coefficient Q_pr (Burns et al. 1979). */
    
@@ -94,21 +94,21 @@ int main(int argc, char* argv[]){
 
     printf("Particle 2 has beta = %f\n", beta);
 
-    reb_move_to_com(sim);
+    reb_simulation_move_to_com(sim);
 
     printf("Time\t\tEcc (p)\t\tEcc (p2)\n");
-    reb_integrate(sim, tmax);
+    reb_simulation_integrate(sim, tmax);
     rebx_free(rebx);                /* free memory allocated by REBOUNDx */
 }
 
 void heartbeat(struct reb_simulation* sim){
-    if(reb_output_check(sim, 1.e8)){
+    if(reb_simulation_output_check(sim, 1.e8)){
         const struct reb_particle* particles = sim->particles;
         const struct reb_particle saturn = particles[1];
         const double t = sim->t;
-        struct reb_orbit orbit = reb_tools_particle_to_orbit(sim->G, sim->particles[2], saturn); /* calculate orbit of particles[2] around Saturn */
+        struct reb_orbit orbit = reb_orbit_from_particle(sim->G, sim->particles[2], saturn); /* calculate orbit of particles[2] around Saturn */
         double e2 = orbit.e;
-        orbit = reb_tools_particle_to_orbit(sim->G, sim->particles[3], saturn); 
+        orbit = reb_orbit_from_particle(sim->G, sim->particles[3], saturn); 
         double e3 = orbit.e;
         printf("%e\t%f\t%f\n", t, e2, e3);
     }

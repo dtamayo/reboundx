@@ -48,10 +48,10 @@ void simple_drag(struct reb_simulation* const sim, struct rebx_operator* const d
 
 
 int main(int argc, char* argv[]){
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
     struct reb_particle p = {0}; 
     p.m     = 1.;   
-    reb_add(sim, p); 
+    reb_simulation_add(sim, p); 
 
     double m = 0.;
     double a1 = 1.;
@@ -61,9 +61,9 @@ int main(int argc, char* argv[]){
     double omega = 0.;
     double f = 0.;
 
-    struct reb_particle p1 = reb_tools_orbit_to_particle(sim->G, p, m, a1, e, inc, Omega, omega, f);
-    reb_add(sim,p1);
-    reb_move_to_com(sim);
+    struct reb_particle p1 = reb_particle_from_orbit(sim->G, p, m, a1, e, inc, Omega, omega, f);
+    reb_simulation_add(sim,p1);
+    reb_simulation_move_to_com(sim);
 
     struct rebx_extras* rebx = rebx_attach(sim);  // first initialize rebx
 
@@ -107,6 +107,6 @@ int main(int argc, char* argv[]){
      */
 
     double tmax = 5.e4;
-    reb_integrate(sim, tmax);
+    reb_simulation_integrate(sim, tmax);
     rebx_free(rebx);                            // Free all the memory allocated by rebx
 }

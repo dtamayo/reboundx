@@ -143,9 +143,9 @@ double rebx_central_force_potential(struct rebx_extras* const rebx){
 double rebx_central_force_Acentral(const struct reb_particle p, const struct reb_particle primary, const double pomegadot, const double gamma){
     struct reb_simulation* sim = p.sim;
     const double G = sim->G;
-    const struct reb_orbit o = reb_tools_particle_to_orbit(G, p, primary);
+    const struct reb_orbit o = reb_orbit_from_particle(G, p, primary);
     if (fabs(gamma+2.) < DBL_EPSILON){  // precession goes to 0 at r^-2, so A diverges for gamma=-2
-        reb_error(sim, "Precession vanishes for force law varying as r^-2, so can't initialize Acentral from a precession rate for gamma=-2)\n");
+        reb_simulation_error(sim, "Precession vanishes for force law varying as r^-2, so can't initialize Acentral from a precession rate for gamma=-2)\n");
         return 0.;
     }
     return G*primary.m*pomegadot/(1.+gamma/2.)/pow(o.d, gamma+2.)/o.n;

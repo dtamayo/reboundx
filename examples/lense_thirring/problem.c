@@ -13,11 +13,11 @@
 #include "reboundx.h"
 
 int main(int argc, char* argv[]){
-    struct reb_simulation* sim = reb_create_simulation();
+    struct reb_simulation* sim = reb_simulation_create();
     sim->G = 4*M_PI*M_PI; // units of AU, yr, Msun
     struct reb_particle star = {0};
     star.m     = 1.;
-    reb_add(sim, star);
+    reb_simulation_add(sim, star);
     double omega = 90.361036076; //solar rotation rate in rad/year
     double C_I = 0.06884; //solar moment of inertia prefactor
     double R_eq = 0.00465247264; //solar equatorial radius in AU
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
     const double mp = 1.7e-7;   // approximate values for mercury in units of Msun and AU
     const double a = 0.39;
     const double e = 0.21;
-    reb_add_fmt(sim, "m a e", mp, a, e);
+    reb_simulation_add_fmt(sim, "m a e", mp, a, e);
 
     struct rebx_extras* rebx = rebx_attach(sim);  // first initialize rebx
     struct rebx_force* lense  = rebx_load_force(rebx, "lense_thirring"); // add our new force
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]){
     rebx_set_param_double(rebx, &lense->ap, "lt_c", 63241.077); // speed of light in AU/yr
 
     double tmax = 1000.;
-    reb_integrate(sim, tmax);
-    struct reb_orbit orb = reb_tools_particle_to_orbit(sim->G, sim->particles[1], sim->particles[0]);
+    reb_simulation_integrate(sim, tmax);
+    struct reb_orbit orb = reb_orbit_from_particle(sim->G, sim->particles[1], sim->particles[0]);
     printf("Pericenter precession rate = %.3f arcsec/century\n", orb.pomega*206265/10.);
 }
