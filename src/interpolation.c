@@ -29,7 +29,7 @@
  *
  * ======================= ===============================================
  * Authors                 S.A. Baronett, D. Tamayo, N. Ferich
- * Implementation Paper    Baronett et al., in prep.
+ * Implementation Paper    `Baronett et al., 2022 <https://ui.adsabs.harvard.edu/abs/2022MNRAS.510.6001B/abstract>`_.
  * Based on                `Press et al., 1992 <https://ui.adsabs.harvard.edu/abs/1992nrca.book.....P/abstract>`_. 
  * C Example               :ref:`c_example_parameter_interpolation`
  * Python Example          `ParameterInterpolation.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ParameterInterpolation.ipynb>`_.

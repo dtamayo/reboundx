@@ -16,6 +16,115 @@ Positive timescales correspond to growth / progression, negative timescales corr
 Semimajor axes, eccentricities and inclinations grow / damp exponentially.  
 Pericenters and nodes progress/regress linearly.
 
+.. _type_I_migration:
+
+type_I_migration
+****************
+
+======================= ===============================================
+Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
+Implementation Paper    `Kajtazi et al 2022 <https://ui.adsabs.harvard.edu/abs/2022arXiv221106181K/abstract>`_.
+Based on                `Cresswell & Nelson 2008 <https://ui.adsabs.harvard.edu/abs/2008A%26A...482..677C/abstract>`_, and `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>`_.
+C example               :ref:`c_example_type_I_migration`
+Python example          `TypeIMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TypeIMigration.ipynb>`_.
+======================= ===============================================
+
+This applies Type I migration, damping eccentricity, angular momentum and inclination.
+The base of the code is the same as the modified orbital forces one written by D. Tamayo, H. Rein.
+It also allows for parameters describing an inner disc edge, modeled using the implementation in inner_disk_edge.c.
+Note that this code is not machine independent since power laws were not possible to avoid all together.
+
+**Effect Parameters**
+
+===================================== =========== ==================================================================================================================
+Field (C type)                        Required    Description
+===================================== =========== ==================================================================================================================
+ide_position (double)                 No          The position of the inner disk edge in code units 
+ide_width (double)                    No          The disk edge width (planet will stop within ide_width of ide_position)
+tIm_surface_density_1 (double)        Yes         Disk surface density at one code unit from the star; used to find the surface density at any distance from the star
+tIm_scale_height_1 (double)           Yes         The scale height at one code unit from the star; used to find the aspect ratio at any distance from the star
+tIm_surface_density_exponent (double) Yes         Exponent of disk surface density, indicative of the surface density profile of the disk
+tIm_flaring_index (double)            Yes         The flaring index; 1 means disk is irradiated by only the stellar flux
+===================================== =========== ==================================================================================================================
+
+
+.. _exponential_migration:
+
+exponential_migration
+*********************
+
+======================= ===============================================
+Author                   Mohamad Ali-Dib
+Implementation Paper    `Ali-Dib et al., 2021 AJ <https://arxiv.org/abs/2104.04271>`_.
+Based on                `Hahn & Malhotra 2005 <https://ui.adsabs.harvard.edu/abs/2005AJ....130.2392H/abstract>`_.
+C Example               :ref:`c_example_exponential_migration`
+Python Example          `ExponentialMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ExponentialMigration.ipynb>`_.
+======================= ===============================================
+
+Continuous velocity kicks leading to exponential change in the object's semimajor axis. 
+One of the standard prescriptions often used in Neptune migration & Kuiper Belt formation models.
+Does not directly affect the eccentricity or inclination of the object.
+
+**Particle Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+em_tau_a (double)              Yes          Semimajor axis exponential growth/damping timescale
+em_aini (double)               Yes          Object's initial semimajor axis
+em_afin (double)               Yes          Object's final semimajor axis
+============================ =========== ==================================================================
+
+
+.. _modify_orbits_direct:
+
+modify_orbits_direct
+********************
+
+======================= ===============================================
+Authors                 D. Tamayo
+Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_. 
+Based on                `Lee & Peale 2002 <http://labs.adsabs.harvard.edu/adsabs/abs/2002ApJ...567..596L/>`_. 
+C Example               :ref:`c_example_modify_orbits`
+Python Example          `Migration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Migration.ipynb>`_,
+                        `EccAndIncDamping.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/EccAndIncDamping.ipynb>`_.
+======================= ===============================================
+
+This updates particles' positions and velocities between timesteps to achieve the desired changes to the osculating orbital elements (exponential growth/decay for a, e, inc, linear progression/regression for Omega/omega.
+This nicely isolates changes to particular osculating elements, making it easier to interpret the resulting dynamics.  
+One can also adjust the coupling parameter `p` between eccentricity and semimajor axis evolution, as well as whether the damping is done on Jacobi, barycentric or heliocentric elements.
+Since this method changes osculating (i.e., two-body) elements, it can give unphysical results in highly perturbed systems.
+
+**Effect Parameters**
+
+If p is not set, it defaults to 0.  If coordinates not set, defaults to using Jacobi coordinates.
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+p (double)                   No          Coupling parameter between eccentricity and semimajor axis evolution
+                                         (see Deck & Batygin 2015). `p=0` corresponds to no coupling, `p=1` to
+                                         eccentricity evolution at constant angular momentum.
+coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
+                                         See the examples for usage.
+============================ =========== ==================================================================
+
+**Particle Parameters**
+
+One can pick and choose which particles have which parameters set.  
+For each particle, any unset parameter is ignored.
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+tau_a (double)               No          Semimajor axis exponential growth/damping timescale
+tau_e (double)               No          Eccentricity exponential growth/damping timescale
+tau_inc (double)             No          Inclination axis exponential growth/damping timescale
+tau_Omega (double)           No          Period of linear nodal precession/regression
+tau_omega (double)           No          Period of linear apsidal precession/regression
+============================ =========== ==================================================================
+
+
 .. _modify_orbits_forces:
 
 modify_orbits_forces
@@ -87,117 +196,35 @@ ide_width (double)           Yes         The disk edge width (planet will stop w
 ============================ =========== ===================================================================================
 
 
-.. _modify_orbits_direct:
-
-modify_orbits_direct
-********************
-
-======================= ===============================================
-Authors                 D. Tamayo
-Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_. 
-Based on                `Lee & Peale 2002 <http://labs.adsabs.harvard.edu/adsabs/abs/2002ApJ...567..596L/>`_. 
-C Example               :ref:`c_example_modify_orbits`
-Python Example          `Migration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Migration.ipynb>`_,
-                        `EccAndIncDamping.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/EccAndIncDamping.ipynb>`_.
-======================= ===============================================
-
-This updates particles' positions and velocities between timesteps to achieve the desired changes to the osculating orbital elements (exponential growth/decay for a, e, inc, linear progression/regression for Omega/omega.
-This nicely isolates changes to particular osculating elements, making it easier to interpret the resulting dynamics.  
-One can also adjust the coupling parameter `p` between eccentricity and semimajor axis evolution, as well as whether the damping is done on Jacobi, barycentric or heliocentric elements.
-Since this method changes osculating (i.e., two-body) elements, it can give unphysical results in highly perturbed systems.
-
-**Effect Parameters**
-
-If p is not set, it defaults to 0.  If coordinates not set, defaults to using Jacobi coordinates.
-
-============================ =========== ==================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================
-p (double)                   No          Coupling parameter between eccentricity and semimajor axis evolution
-                                         (see Deck & Batygin 2015). `p=0` corresponds to no coupling, `p=1` to
-                                         eccentricity evolution at constant angular momentum.
-coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
-                                         See the examples for usage.
-============================ =========== ==================================================================
-
-**Particle Parameters**
-
-One can pick and choose which particles have which parameters set.  
-For each particle, any unset parameter is ignored.
-
-============================ =========== ==================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================
-tau_a (double)               No          Semimajor axis exponential growth/damping timescale
-tau_e (double)               No          Eccentricity exponential growth/damping timescale
-tau_inc (double)             No          Inclination axis exponential growth/damping timescale
-tau_Omega (double)           No          Period of linear nodal precession/regression
-tau_omega (double)           No          Period of linear apsidal precession/regression
-============================ =========== ==================================================================
-
-
-.. _type_I_migration:
-
-type_I_migration
-****************
-
-======================= ===============================================
-Authors                 Kajtazi, Kaltrina and D. Petit, C. Antoine
-Implementation Paper    `Kajtazi et al 2022 <https://ui.adsabs.harvard.edu/abs/2022arXiv221106181K/abstract>`_.
-Based on                `Cresswell & Nelson 2008 <https://ui.adsabs.harvard.edu/abs/2008A%26A...482..677C/abstract>`_, and `Pichierri et al 2018 <https://ui.adsabs.harvard.edu/abs/2018CeMDA.130...54P/abstract>`_.
-C example               :ref:`c_example_type_I_migration`
-Python example          `TypeIMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TypeIMigration.ipynb>`_.
-======================= ===============================================
-
-This applies Type I migration, damping eccentricity, angular momentum and inclination.
-The base of the code is the same as the modified orbital forces one written by D. Tamayo, H. Rein.
-It also allows for parameters describing an inner disc edge, modeled using the implementation in inner_disk_edge.c.
-Note that this code is not machine independent since power laws were not possible to avoid all together.
-
-**Effect Parameters**
-
-===================================== =========== ==================================================================================================================
-Field (C type)                        Required    Description
-===================================== =========== ==================================================================================================================
-ide_position (double)                 No          The position of the inner disk edge in code units 
-ide_width (double)                    No          The disk edge width (planet will stop within ide_width of ide_position)
-tIm_surface_density_1 (double)        Yes         Disk surface density at one code unit from the star; used to find the surface density at any distance from the star
-tIm_scale_height_1 (double)           Yes         The scale height at one code unit from the star; used to find the aspect ratio at any distance from the star
-tIm_surface_density_exponent (double) Yes         Exponent of disk surface density, indicative of the surface density profile of the disk
-tIm_flaring_index (double)            Yes         The flaring index; 1 means disk is irradiated by only the stellar flux
-===================================== =========== ==================================================================================================================
-
-
-.. _exponential_migration:
-
-exponential_migration
-*********************
-
-======================= ===============================================
-Author                   Mohamad Ali-Dib
-Implementation Paper    `Ali-Dib et al., 2021 AJ <https://arxiv.org/abs/2104.04271>`_.
-Based on                `Hahn & Malhotra 2005 <https://ui.adsabs.harvard.edu/abs/2005AJ....130.2392H/abstract>`_.
-C Example               :ref:`c_example_exponential_migration`
-Python Example          `ExponentialMigration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ExponentialMigration.ipynb>`_.
-======================= ===============================================
-
-Continuous velocity kicks leading to exponential change in the object's semimajor axis. 
-One of the standard prescriptions often used in Neptune migration & Kuiper Belt formation models.
-Does not directly affect the eccentricity or inclination of the object.
-
-**Particle Parameters**
-
-============================ =========== ==================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================
-em_tau_a (double)              Yes          Semimajor axis exponential growth/damping timescale
-em_aini (double)               Yes          Object's initial semimajor axis
-em_afin (double)               Yes          Object's final semimajor axis
-============================ =========== ==================================================================
-
-
 General Relativity
 ^^^^^^^^^^^^^^^^^^
+
+.. _gr_full:
+
+gr_full
+*******
+
+======================= ===============================================
+Authors                 P. Shi, H. Rein, D. Tamayo
+Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
+Based on                `Newhall et al. 1983 <http://labs.adsabs.harvard.edu/adsabs/abs/1983A%26A...125..150N/>`_.
+C Example               :ref:`c_example_gr`
+Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
+======================= ===============================================
+
+This algorithm incorporates the first-order post-newtonian effects from all bodies in the system, and is necessary for multiple massive bodies like stellar binaries.
+
+**Effect Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+c (double)                   Yes         Speed of light, needs to be specified in the units used for the simulation.
+============================ =========== ==================================================================
+
+**Particle Parameters**
+
+*None*
 
 .. _lense_thirring:
 
@@ -232,35 +259,6 @@ Omega (reb_vec3d)            Yes         Angular rotation frequency (Omega_x, Om
 ============================ =========== ==================================================================
 
 
-.. _gr_potential:
-
-gr_potential
-************
-
-======================= ===============================================
-Authors                 H. Rein, D. Tamayo
-Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
-Based on                `Nobili and Roxburgh 1986 <http://labs.adsabs.harvard.edu/adsabs/abs/1986IAUS..114..105N/>`_.
-C Example               :ref:`c_example_gr`
-Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
-======================= ===============================================
-
-This is the simplest potential you can use for general relativity.
-It assumes that the masses are dominated by a single central body.
-It gets the precession right, but gets the mean motion wrong by :math:`\mathcal{O}(GM/ac^2)`.  
-It's the fastest option, and because it's not velocity-dependent, it automatically keeps WHFast symplectic.  
-Nice if you have a single-star system, don't need to get GR exactly right, and want speed.
-
-**Effect Parameters**
-
-============================ =========== ==================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================
-c (double)                   Yes         Speed of light, needs to be specified in the units used for the simulation.
-============================ =========== ==================================================================
-
-
-
 .. _gr:
 
 gr
@@ -289,20 +287,24 @@ c (double)                   Yes         Speed of light, needs to be specified i
 
 
 
-.. _gr_full:
+.. _gr_potential:
 
-gr_full
-*******
+gr_potential
+************
 
 ======================= ===============================================
-Authors                 P. Shi, H. Rein, D. Tamayo
+Authors                 H. Rein, D. Tamayo
 Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
-Based on                `Newhall et al. 1983 <http://labs.adsabs.harvard.edu/adsabs/abs/1983A%26A...125..150N/>`_.
+Based on                `Nobili and Roxburgh 1986 <http://labs.adsabs.harvard.edu/adsabs/abs/1986IAUS..114..105N/>`_.
 C Example               :ref:`c_example_gr`
 Python Example          `GeneralRelativity.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GeneralRelativity.ipynb>`_.
 ======================= ===============================================
 
-This algorithm incorporates the first-order post-newtonian effects from all bodies in the system, and is necessary for multiple massive bodies like stellar binaries.
+This is the simplest potential you can use for general relativity.
+It assumes that the masses are dominated by a single central body.
+It gets the precession right, but gets the mean motion wrong by :math:`\mathcal{O}(GM/ac^2)`.  
+It's the fastest option, and because it's not velocity-dependent, it automatically keeps WHFast symplectic.  
+Nice if you have a single-star system, don't need to get GR exactly right, and want speed.
 
 **Effect Parameters**
 
@@ -312,9 +314,7 @@ Field (C type)               Required    Description
 c (double)                   Yes         Speed of light, needs to be specified in the units used for the simulation.
 ============================ =========== ==================================================================
 
-**Particle Parameters**
 
-*None*
 
 Radiation Forces
 ^^^^^^^^^^^^^^^^
@@ -474,6 +474,40 @@ tau_mass (double)            Yes         e-folding mass loss (<0) or growth (>0)
 Tides
 ^^^^^^^^^^^^^^^^^^
 
+.. _tides_constant_time_lag:
+
+tides_constant_time_lag
+***********************
+
+======================= ===============================================
+Authors                 Stanley A. Baronett, D. Tamayo, Noah Ferich
+Implementation Paper    `Baronett et al., 2022 <https://ui.adsabs.harvard.edu/abs/2022MNRAS.510.6001B/abstract>`_.
+Based on                `Hut 1981 <https://ui.adsabs.harvard.edu/#abs/1981A&A....99..126H/abstract>`_, `Bolmont et al., 2015 <https://ui.adsabs.harvard.edu/abs/2015A%26A...583A.116B/abstract>`_.
+C Example               :ref:`c_example_tides_constant_time_lag`.
+Python Example          `TidesConstantTimeLag.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesConstantTimeLag.ipynb>`_.
+======================= ===============================================
+
+This adds constant time lag tidal interactions between orbiting bodies in the simulation and the primary, both from tides raised on the primary and on the other bodies.
+In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' physical radius particles[i].r, k2 (potential Love number of degree 2), constant time lag tau, and rotation rate Omega. See Baronett et al. (2021), Hut (1981), and Bolmont et al. 2015 above.
+
+If tau is not set, it will default to zero and yield the conservative piece of the tidal potential.
+
+**Effect Parameters**
+
+None
+
+**Particle Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
+tctl_k2 (float)              Yes         Potential Love number of degree 2.
+tctl_tau (float)             No          Constant time lag. If not set will default to 0 and give conservative tidal potential.
+OmegaMag (float)             No          Angular rotation frequency. If not set will default to 0.
+============================ =========== ==================================================================
+
+
 .. _tides_spin:
 
 tides_spin
@@ -512,40 +546,6 @@ k2 (float)                   Yes         Potential Love number of degree 2.
 Omega (reb_vec3d)            Yes         Angular rotation frequency (Omega_x, Omega_y, Omega_z)
 I (float)                    No          Moment of inertia (for test particles, assumed to be the specific MoI I/m)
 tau (float)                  No          Constant time lag. If not set, defaults to 0
-============================ =========== ==================================================================
-
-
-.. _tides_constant_time_lag:
-
-tides_constant_time_lag
-***********************
-
-======================= ===============================================
-Authors                 Stanley A. Baronett, D. Tamayo, Noah Ferich
-Implementation Paper    `Baronett et al., 2022 <https://ui.adsabs.harvard.edu/abs/2022MNRAS.510.6001B/abstract>`_.
-Based on                `Hut 1981 <https://ui.adsabs.harvard.edu/#abs/1981A&A....99..126H/abstract>`_, `Bolmont et al., 2015 <https://ui.adsabs.harvard.edu/abs/2015A%26A...583A.116B/abstract>`_.
-C Example               :ref:`c_example_tides_constant_time_lag`.
-Python Example          `TidesConstantTimeLag.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesConstantTimeLag.ipynb>`_.
-======================= ===============================================
-
-This adds constant time lag tidal interactions between orbiting bodies in the simulation and the primary, both from tides raised on the primary and on the other bodies.
-In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' physical radius particles[i].r, k2 (potential Love number of degree 2), constant time lag tau, and rotation rate Omega. See Baronett et al. (2021), Hut (1981), and Bolmont et al. 2015 above.
-
-If tau is not set, it will default to zero and yield the conservative piece of the tidal potential.
-
-**Effect Parameters**
-
-None
-
-**Particle Parameters**
-
-============================ =========== ==================================================================
-Field (C type)               Required    Description
-============================ =========== ==================================================================
-particles[i].r (float)       Yes         Physical radius (required for contribution from tides raised on the body).
-tctl_k2 (float)              Yes         Potential Love number of degree 2.
-tctl_tau (float)             No          Constant time lag. If not set will default to 0 and give conservative tidal potential.
-OmegaMag (float)             No          Angular rotation frequency. If not set will default to 0.
 ============================ =========== ==================================================================
 
 
@@ -696,7 +696,7 @@ interpolation
 
 ======================= ===============================================
 Authors                 S.A. Baronett, D. Tamayo, N. Ferich
-Implementation Paper    Baronett et al., in prep.
+Implementation Paper    `Baronett et al., 2022 <https://ui.adsabs.harvard.edu/abs/2022MNRAS.510.6001B/abstract>`_.
 Based on                `Press et al., 1992 <https://ui.adsabs.harvard.edu/abs/1992nrca.book.....P/abstract>`_. 
 C Example               :ref:`c_example_parameter_interpolation`
 Python Example          `ParameterInterpolation.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ParameterInterpolation.ipynb>`_.
