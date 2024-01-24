@@ -1,6 +1,6 @@
 name: REBOUNDx (ipynb)
 
-on: [push, pull_request, repository_dispatch]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -21,23 +21,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest matplotlib scipy 
           pip install wheel setuptools
-      - name: Clone REBOUND repo # in case we need to checkout version that triggered REBOUNDx CI
-        uses: actions/checkout@v4
-        with: 
-          repository: hannorein/rebound
-          ref: ${{ github.event.client_payload.sha }}
-          path: ./rebound
       - name: Default PyPI REBOUND install
-        if: github.event_name != 'repository_dispatch' # if not triggered by REBOUND, use latest PyPI version
         run: pip install rebound
-      - name: Trigger REBOUND version install
-        if: github.event_name == 'repository_dispatch' # if triggered, installed version checked out above
-        run: |
-          echo "Installing REBOUND SHA: ${{ github.event.client_payload.sha }}"
-          pip install ./rebound
       - name: Install REBOUNDx
         run: |
-          pip install --no-build-isolation -e . -v 
+          pip install -e . -v 
       - name: Running jupyter notebooks
         run: |
           cd ipython_examples
