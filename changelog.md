@@ -2,6 +2,10 @@
 
 This changelog only includes the most important changes in recent updates. For a full log of all changes, please refer to git.
 
+### Version 4.1.0
+* Fixed inneredge effect
+* Updated documentation and github actions
+
 ### Version 4.0.0
 * Added support for REBOUND version 4.0.0
 
