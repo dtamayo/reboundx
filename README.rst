@@ -38,4 +38,4 @@ Please see the Attribution section at `https://reboundx.readthedocs.io <https://
 Changelog
 =========
 
-`https://github.com/dtamayo/reboundx/blob/main/changelog.md`_
+`https://github.com/dtamayo/reboundx/blob/main/changelog.md <https://github.com/dtamayo/reboundx/blob/main/changelog.md>`_
