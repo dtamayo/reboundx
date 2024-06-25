@@ -12,7 +12,7 @@ jobs:
         os: [ubuntu-latest, macos-13]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Checkout REBOUND
         uses: actions/checkout@v4
