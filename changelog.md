@@ -2,6 +2,9 @@
 
 This changelog only includes the most important changes in recent updates. For a full log of all changes, please refer to git.
 
+### Version 4.2.1
+* Fixed clang error, remove commented code
+
 ### Version 4.2.0
 * Removed wheels. Installation is now from source to avoid conflicts with different versions of REBOUND
 * Fixed gr\_full errors when Simulation was not in center of mass frame. Convergence was also improved and effect is now a bit faster.
