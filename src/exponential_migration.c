@@ -73,10 +73,10 @@ static struct  reb_vec3d rebx_calculate_modify_orbits_forces_new(struct reb_simu
     const double dvx = p->vx - source->vx;
     const double dvy = p->vy - source->vy;
     const double dvz = p->vz - source->vz;
-    const double dx = p->x-source->x;
-    const double dy = p->y-source->y;
-    const double dz = p->z-source->z;
-    const double r2 = dx*dx + dy*dy + dz*dz;
+    //const double dx = p->x-source->x;
+    //const double dy = p->y-source->y;
+    //const double dz = p->z-source->z;
+    //const double r2 = dx*dx + dy*dy + dz*dz;
     
     if(em_tau_a_ptr != NULL){
         em_tau_a = *em_tau_a_ptr;

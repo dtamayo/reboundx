@@ -376,7 +376,7 @@ static int rebx_load_particle(struct rebx_extras* rebx, FILE* inf, enum rebx_inp
         switch (field.type){
             case REBX_BINARY_FIELD_TYPE_PARAM_LIST:
             {
-                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_PARAM, &p->ap, inf, warnings)){
+                if (!rebx_load_list(rebx, REBX_BINARY_FIELD_TYPE_PARAM, (struct rebx_node **)(&p->ap), inf, warnings)){
                     return 0;
                 }
                 break;

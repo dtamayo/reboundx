@@ -58,80 +58,82 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-static void reb_particles_transform_inertial_to_barycentric_posvelacc(const struct reb_particle* const particles, struct reb_particle* const p_b, const unsigned int N, const unsigned int N_active){
-    double x0  = 0.;
-    double y0  = 0.;
-    double z0  = 0.;
-    double vx0 = 0.;
-    double vy0 = 0.;
-    double vz0 = 0.;
-    double ax0 = 0.;
-    double ay0 = 0.;
-    double az0 = 0.;
-    double m0  = 0.;
-#pragma omp parallel for reduction(+:x0) reduction(+:y0) reduction(+:z0) reduction(+:vx0) reduction(+:vy0) reduction(+:vz0) reduction(+:ax0) reduction(+:ay0) reduction(+:az0) reduction(+:m0)
-    for (unsigned int i=0;i<N_active;i++){
-        double m = particles[i].m;
-        x0  += particles[i].x *m;
-        y0  += particles[i].y *m;
-        z0  += particles[i].z *m;
-        vx0 += particles[i].vx*m;
-        vy0 += particles[i].vy*m;
-        vz0 += particles[i].vz*m;
-        ax0 += particles[i].ax*m;
-        ay0 += particles[i].ay*m;
-        az0 += particles[i].az*m;
-        m0  += m;
-    }
-    p_b[0].x  = x0/m0;
-    p_b[0].y  = y0/m0;
-    p_b[0].z  = z0/m0;
-    p_b[0].vx = vx0/m0;
-    p_b[0].vy = vy0/m0;
-    p_b[0].vz = vz0/m0;
-    p_b[0].ax = ax0/m0;
-    p_b[0].ay = ay0/m0;
-    p_b[0].az = az0/m0;
-    p_b[0].m = m0;
-    
-#pragma omp parallel for 
-    for (unsigned int i=1;i<N;i++){
-        p_b[i].x  = particles[i].x  - p_b[0].x;
-        p_b[i].y  = particles[i].y  - p_b[0].y;
-        p_b[i].z  = particles[i].z  - p_b[0].z;
-        p_b[i].vx = particles[i].vx - p_b[0].vx;
-        p_b[i].vy = particles[i].vy - p_b[0].vy;
-        p_b[i].vz = particles[i].vz - p_b[0].vz;
-        p_b[i].ax = particles[i].ax - p_b[0].ax;
-        p_b[i].ay = particles[i].ay - p_b[0].ay;
-        p_b[i].az = particles[i].az - p_b[0].az;
-        p_b[i].m  = particles[i].m;
-    }
-}
-
-static void reb_particles_transform_barycentric_to_inertial_acc(struct reb_particle* const particles, const struct reb_particle* const p_b, const unsigned int N, const unsigned int N_active){
-    const double mtot = p_b[0].m;
-    double ax0  = 0.;
-    double ay0  = 0.;
-    double az0  = 0.;
-#pragma omp parallel for reduction(+:ax0) reduction(+:ay0) reduction(+:az0) 
-    for (unsigned int i=1;i<N_active;i++){
-        double m = p_b[i].m;
-        ax0 += p_b[i].ax*m/mtot;
-        ay0 += p_b[i].ay*m/mtot;
-        az0 += p_b[i].az*m/mtot;
-        particles[i].m = m; // in case of merger/mass change
-    }
-    particles[0].ax  = p_b[0].ax - ax0;
-    particles[0].ay  = p_b[0].ay - ay0;
-    particles[0].az  = p_b[0].az - az0;
-#pragma omp parallel for 
-    for (unsigned int i=1;i<N;i++){
-        particles[i].ax = p_b[i].ax+particles[0].ax;
-        particles[i].ay = p_b[i].ay+particles[0].ay;
-        particles[i].az = p_b[i].az+particles[0].az;
-    }
-}
+// The following functions are not used.
+//
+//static void reb_particles_transform_inertial_to_barycentric_posvelacc(const struct reb_particle* const particles, struct reb_particle* const p_b, const unsigned int N, const unsigned int N_active){
+//    double x0  = 0.;
+//    double y0  = 0.;
+//    double z0  = 0.;
+//    double vx0 = 0.;
+//    double vy0 = 0.;
+//    double vz0 = 0.;
+//    double ax0 = 0.;
+//    double ay0 = 0.;
+//    double az0 = 0.;
+//    double m0  = 0.;
+//#pragma omp parallel for reduction(+:x0) reduction(+:y0) reduction(+:z0) reduction(+:vx0) reduction(+:vy0) reduction(+:vz0) reduction(+:ax0) reduction(+:ay0) reduction(+:az0) reduction(+:m0)
+//    for (unsigned int i=0;i<N_active;i++){
+//        double m = particles[i].m;
+//        x0  += particles[i].x *m;
+//        y0  += particles[i].y *m;
+//        z0  += particles[i].z *m;
+//        vx0 += particles[i].vx*m;
+//        vy0 += particles[i].vy*m;
+//        vz0 += particles[i].vz*m;
+//        ax0 += particles[i].ax*m;
+//        ay0 += particles[i].ay*m;
+//        az0 += particles[i].az*m;
+//        m0  += m;
+//    }
+//    p_b[0].x  = x0/m0;
+//    p_b[0].y  = y0/m0;
+//    p_b[0].z  = z0/m0;
+//    p_b[0].vx = vx0/m0;
+//    p_b[0].vy = vy0/m0;
+//    p_b[0].vz = vz0/m0;
+//    p_b[0].ax = ax0/m0;
+//    p_b[0].ay = ay0/m0;
+//    p_b[0].az = az0/m0;
+//    p_b[0].m = m0;
+//    
+//#pragma omp parallel for 
+//    for (unsigned int i=1;i<N;i++){
+//        p_b[i].x  = particles[i].x  - p_b[0].x;
+//        p_b[i].y  = particles[i].y  - p_b[0].y;
+//        p_b[i].z  = particles[i].z  - p_b[0].z;
+//        p_b[i].vx = particles[i].vx - p_b[0].vx;
+//        p_b[i].vy = particles[i].vy - p_b[0].vy;
+//        p_b[i].vz = particles[i].vz - p_b[0].vz;
+//        p_b[i].ax = particles[i].ax - p_b[0].ax;
+//        p_b[i].ay = particles[i].ay - p_b[0].ay;
+//        p_b[i].az = particles[i].az - p_b[0].az;
+//        p_b[i].m  = particles[i].m;
+//    }
+//}
+//
+//static void reb_particles_transform_barycentric_to_inertial_acc(struct reb_particle* const particles, const struct reb_particle* const p_b, const unsigned int N, const unsigned int N_active){
+//    const double mtot = p_b[0].m;
+//    double ax0  = 0.;
+//    double ay0  = 0.;
+//    double az0  = 0.;
+//#pragma omp parallel for reduction(+:ax0) reduction(+:ay0) reduction(+:az0) 
+//    for (unsigned int i=1;i<N_active;i++){
+//        double m = p_b[i].m;
+//        ax0 += p_b[i].ax*m/mtot;
+//        ay0 += p_b[i].ay*m/mtot;
+//        az0 += p_b[i].az*m/mtot;
+//        particles[i].m = m; // in case of merger/mass change
+//    }
+//    particles[0].ax  = p_b[0].ax - ax0;
+//    particles[0].ay  = p_b[0].ay - ay0;
+//    particles[0].az  = p_b[0].az - az0;
+//#pragma omp parallel for 
+//    for (unsigned int i=1;i<N;i++){
+//        particles[i].ax = p_b[i].ax+particles[0].ax;
+//        particles[i].ay = p_b[i].ay+particles[0].ay;
+//        particles[i].az = p_b[i].az+particles[0].az;
+//    }
+//}
 
 static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double C2, const double G, const int max_iterations, const int gravity_ignore_10){
     
@@ -275,7 +277,7 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
                     const double dzij = ps_b[i].z - ps_b[j].z;
                     const double rij = sqrt(dxij*dxij + dyij*dyij + dzij*dzij);
                     const double rij3 = rij*rij*rij;
-                    const dotproduct = dxij*ps_b[j].ax+dyij*ps_b[j].ay+dzij*ps_b[j].az;
+                    const double dotproduct = dxij*ps_b[j].ax+dyij*ps_b[j].ay+dzij*ps_b[j].az;
 
                     non_constx += (G*particles[j].m*dxij/rij3)*dotproduct/(2.*C2) + (7./(2.*C2))*G*particles[j].m*ps_b[j].ax/rij;
                     non_consty += (G*particles[j].m*dyij/rij3)*dotproduct/(2.*C2) + (7./(2.*C2))*G*particles[j].m*ps_b[j].ay/rij;
@@ -370,18 +372,19 @@ double rebx_gr_full_hamiltonian(struct rebx_extras* const rebx, const struct reb
             
             double vtildei2 = vtilde[i].x*vtilde[i].x + vtilde[i].y*vtilde[i].y + vtilde[i].z*vtilde[i].z;
             double A = (1. - 0.5*vtildei2/C2);
-            
-            double sumk = 0.;
-            for (int k=0;k<N;k++){
-                if (k!=i){
-                    struct reb_particle pk = particles[k];
-                    double xik = pk.x - pi.x;
-                    double yik = pk.y - pi.y;
-                    double zik = pk.z - pi.z;
-                    double rik = sqrt(xik*xik + yik*yik + zik*zik);
-                    sumk -= 2.*G*pk.m/rik;
-                }
-            }
+           
+            // The result of the following calculation is never used.
+            //double sumk = 0.;
+            //for (int k=0;k<N;k++){
+            //    if (k!=i){
+            //        struct reb_particle pk = particles[k];
+            //        double xik = pk.x - pi.x;
+            //        double yik = pk.y - pi.y;
+            //        double zik = pk.z - pi.z;
+            //        double rik = sqrt(xik*xik + yik*yik + zik*zik);
+            //        sumk -= 2.*G*pk.m/rik;
+            //    }
+            //}
             
             struct reb_vec3d dv_pn = {0.};
             for (int j=0;j<N;j++){
