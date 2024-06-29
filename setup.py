@@ -4,6 +4,27 @@ import inspect
 import sys 
 import sysconfig
 
+def get_reb_paths(sitepackagesdir):
+    try:
+        import rebound
+        rebdir = os.path.dirname(inspect.getfile(rebound))
+        version = rebound.__version__ 
+    except:
+        raise AttributeError("REBOUND was not installed.")
+
+    try: # try to get local rebound directory if using editable pip installs
+        with open(sitepackagesdir+'rebound-'+version+".dist-info/direct_url.json") as f:
+            lines = f.readlines()
+            for l in lines:
+                blocks = l.split('"')
+                if 'url' in blocks:
+                    for block in blocks:
+                        if block.startswith('file://'):
+                            path = block.strip('file:')
+        return rebdir, path+'/'
+    except:
+        return rebdir, ""
+
 try:
     from setuptools import setup, Extension
     from setuptools.command.build_ext import build_ext as _build_ext
@@ -28,32 +49,26 @@ class build_ext(_build_ext):
         _build_ext.finalize_options(self)
         if "PYODIDE" in os.environ:
             return None
-
-        try:
-            import rebound
-        except ImportError:
-            print("REBOUNDx did not automatically install REBOUND.  Please let me know if this happens (dtamayo@hmc.edu), and try first installing REBOUND (https://rebound.readthedocs.org/en/latest/python_quickstart.html")
-            sys.exit(1)
-        try:
-            version = rebound.__version__ # Added in 2.12.1
-        except AttributeError:
-            print("REBOUNDx did not automatically install a recent enough version of REBOUND.  Please let me know if this happens (tamayo.daniel@gmail.com), and try upgrading REBOUND.  See 5.3 in https://rebound.readthedocs.org/en/latest/python_quickstart.html")
-            sys.exit(1)
-
-        rebdir = os.path.dirname(inspect.getfile(rebound))
+       
         # get site-packages dir to add to paths in case reb & rebx installed simul in tmp dir
-        rebdirsp = sysconfig.get_path('platlib')+'/'
-        print("***", rebdir, "***", rebdirsp, "***")
+        sitepackagesdir = sysconfig.get_path('platlib')+'/'
+        rebdir, editable_rebdir = get_reb_paths(sitepackagesdir)
+
+        print("***", rebdir, "***", sitepackagesdir, "***", editable_rebdir, "***")
         self.include_dirs.append(rebdir)
+        self.include_dirs.append(editable_rebdir)
         sources = [ 'src/modify_mass.c', 'src/integrator_euler.c', 'src/modify_orbits_forces.c', 'src/lense_thirring.c', 'src/integrator_rk2.c', 'src/track_min_distance.c', 'src/tides_spin.c', 'src/gas_dynamical_friction.c', 'src/rebxtools.c', 'src/inner_disk_edge.c', 'src/gravitational_harmonics.c', 'src/gr_potential.c', 'src/core.c', 'src/integrator_rk4.c', 'src/input.c', 'src/central_force.c', 'src/stochastic_forces.c', 'src/gr.c', 'src/modify_orbits_direct.c', 'src/tides_constant_time_lag.c', 'src/yarkovsky_effect.c', 'src/gr_full.c', 'src/steppers.c', 'src/integrate_force.c', 'src/interpolation.c', 'src/type_I_migration.c', 'src/output.c', 'src/radiation_forces.c', 'src/integrator_implicit_midpoint.c', 'src/exponential_migration.c', 'src/linkedlist.c'],
         
         self.library_dirs.append(rebdir+'/../')
-        self.library_dirs.append(rebdirsp)
+        self.library_dirs.append(sitepackagesdir)
+        self.library_dirs.append(editable_rebdir)
         for ext in self.extensions:
             ext.runtime_library_dirs.append(rebdir+'/../')
             ext.extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
-            ext.runtime_library_dirs.append(rebdirsp)
-            ext.extra_link_args.append('-Wl,-rpath,'+rebdirsp)
+            ext.runtime_library_dirs.append(sitepackagesdir)
+            ext.extra_link_args.append('-Wl,-rpath,'+sitepackagesdir)
+            ext.runtime_library_dirs.append(editable_rebdir)
+            ext.extra_link_args.append('-Wl,-rpath,'+editable_rebdir)
 
 extra_link_args=[]
 if sys.platform == 'darwin':
