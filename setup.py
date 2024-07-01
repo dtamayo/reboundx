@@ -56,19 +56,19 @@ class build_ext(_build_ext):
 
         print("***", rebdir, "***", sitepackagesdir, "***", editable_rebdir, "***")
         self.include_dirs.append(rebdir)
-        self.include_dirs.append(editable_rebdir)
+        #self.include_dirs.append(editable_rebdir)
         sources = [ 'src/modify_mass.c', 'src/integrator_euler.c', 'src/modify_orbits_forces.c', 'src/lense_thirring.c', 'src/integrator_rk2.c', 'src/track_min_distance.c', 'src/tides_spin.c', 'src/gas_dynamical_friction.c', 'src/rebxtools.c', 'src/inner_disk_edge.c', 'src/gravitational_harmonics.c', 'src/gr_potential.c', 'src/core.c', 'src/integrator_rk4.c', 'src/input.c', 'src/central_force.c', 'src/stochastic_forces.c', 'src/gr.c', 'src/modify_orbits_direct.c', 'src/tides_constant_time_lag.c', 'src/yarkovsky_effect.c', 'src/gr_full.c', 'src/steppers.c', 'src/integrate_force.c', 'src/interpolation.c', 'src/type_I_migration.c', 'src/output.c', 'src/radiation_forces.c', 'src/integrator_implicit_midpoint.c', 'src/exponential_migration.c', 'src/linkedlist.c'],
         
         self.library_dirs.append(rebdir+'/../')
         self.library_dirs.append(sitepackagesdir)
-        self.library_dirs.append(editable_rebdir)
+        #self.library_dirs.append(editable_rebdir)
         for ext in self.extensions:
             ext.runtime_library_dirs.append(rebdir+'/../')
             ext.extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
             ext.runtime_library_dirs.append(sitepackagesdir)
             ext.extra_link_args.append('-Wl,-rpath,'+sitepackagesdir)
-            ext.runtime_library_dirs.append(editable_rebdir)
-            ext.extra_link_args.append('-Wl,-rpath,'+editable_rebdir)
+            #ext.runtime_library_dirs.append(editable_rebdir)
+            #ext.extra_link_args.append('-Wl,-rpath,'+editable_rebdir)
 
 extra_link_args=[]
 if sys.platform == 'darwin':
