@@ -61,14 +61,17 @@ class build_ext(_build_ext):
         
         self.library_dirs.append(rebdir+'/../')
         self.library_dirs.append(sitepackagesdir)
-        #self.library_dirs.append(editable_rebdir)
         for ext in self.extensions:
             ext.runtime_library_dirs.append(rebdir+'/../')
             ext.extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
             ext.runtime_library_dirs.append(sitepackagesdir)
             ext.extra_link_args.append('-Wl,-rpath,'+sitepackagesdir)
-            #ext.runtime_library_dirs.append(editable_rebdir)
-            #ext.extra_link_args.append('-Wl,-rpath,'+editable_rebdir)
+        if editable_rebdir:
+            self.library_dirs.append(editable_rebdir)
+            for ext in self.extensions:
+                ext.runtime_library_dirs.append(editable_rebdir)
+                ext.extra_link_args.append('-Wl,-rpath,'+editable_rebdir)
+
 
 extra_link_args=[]
 if sys.platform == 'darwin':
