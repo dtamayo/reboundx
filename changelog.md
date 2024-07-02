@@ -2,6 +2,9 @@
 
 This changelog only includes the most important changes in recent updates. For a full log of all changes, please refer to git.
 
+### Version 4.2.2
+* Set path to local REBOUND installation when installing in editable mode
+
 ### Version 4.2.1
 * Fixed clang error, remove commented code
 
