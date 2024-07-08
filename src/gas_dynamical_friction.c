@@ -123,7 +123,7 @@ static void rebx_calculate_gas_dynamical_friction(struct reb_simulation* const s
         //scale height is defined by user-defined aspect ratio. Truncate the disc vertically
         //at 10 scale heights...
         const double h=hr*rcyl;
-        const double vert=(abs(diff.z)<(10*h))?exp(-diff.z*diff.z/(2.0*h*h)):0;
+        const double vert=(fabs(diff.z)<(10*h))?exp(-diff.z*diff.z/(2.0*h*h)):0;
         const double rhog_loc=rhog*pow(rcyl, alpha_rhog)*vert;
         const double mp = p.m;
         const double rstar = p.r;

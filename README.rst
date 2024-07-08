@@ -1,4 +1,4 @@
-.. image:: https://img.shields.io/badge/REBOUNDx-v4.1.0-green.svg?style=flat
+.. image:: https://img.shields.io/badge/REBOUNDx-v4.2.2-green.svg?style=flat
     :target: https://reboundx.readthedocs.org
 .. image:: https://badge.fury.io/py/reboundx.svg
     :target: https://badge.fury.io/py/reboundx
@@ -38,4 +38,4 @@ Please see the Attribution section at `https://reboundx.readthedocs.io <https://
 Changelog
 =========
 
-3.11.0 Removed large files that had accumulated in repo. This required rewriting the commit history. If you cloned the REBOUNDx directory before version 3.11.0, you should back up any files you modified, delete your local REBOUNDx directory, and clone the repository again. 
+`https://github.com/dtamayo/reboundx/blob/main/changelog.md <https://github.com/dtamayo/reboundx/blob/main/changelog.md>`_

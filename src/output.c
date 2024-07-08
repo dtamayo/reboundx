@@ -252,6 +252,9 @@ static void rebx_write_list(struct rebx_extras* rebx, enum rebx_binary_field_typ
                 rebx_write_step(rebx, current->object, of);
                 break;
             }
+            default:
+                // Should implement a check for other types here
+                break;
         }
         N--;
     }

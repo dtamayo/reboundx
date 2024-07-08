@@ -39,7 +39,7 @@
 #define str(s) #s
 
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string.
-const char* rebx_version_str = "4.1.0";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
+const char* rebx_version_str = "4.2.2";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
 
 
@@ -580,7 +580,10 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
                 reb_simulation_error(sim, "REBOUNDx Error: Operators that affect particle trajectories are not supported with Mercurius. Must add as forces.\n");
                 return 0;
             }
+            break;
         }
+        default:
+            break;
     }
     return 0; // didn't reach a successful outcome
 }
@@ -859,7 +862,7 @@ void rebx_free_ap(struct rebx_node** ap){
 }
 
 void rebx_free_particle_ap(struct reb_particle* p){
-    rebx_free_ap(&p->ap);
+    rebx_free_ap((struct rebx_node **)(&p->ap));
 }
 
 void rebx_free_force(struct rebx_extras* rebx, struct rebx_force* force){
