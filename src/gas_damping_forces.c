@@ -50,12 +50,10 @@
  *
  * **Particle Parameters**
  *
- * 
- *
  * ============================ =========== ==============================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==============================================================================
- * gdf_damp_coeff (double)          Yes         Damping coefficient d in Equation 16 from Dawson et al. 2016;
+ * d_factor (double)            Yes         Depletion factor d in Equation 16 from Dawson et al. 2016;
  *                                              d=1 corresponds roughly to the full minimum mass solar nebula
  *                                              with Sigma_gas (surface gas density) = 1700 g cm^-2 at 1 AU [for d=1];
  *                                              d>1 corresponds to a more depleted nebula
@@ -74,7 +72,7 @@ static struct reb_vec3d rebx_calculate_gas_damping_forces(struct reb_simulation*
     struct rebx_extras* const rebx = sim->extras;
     struct reb_orbit o = reb_orbit_from_particle(sim->G, *planet, *star);
 
-    const double* const gdf_damp_coeff = rebx_get_param(rebx, planet->ap, "gdf_damp_coeff");
+    const double* const d_factor = rebx_get_param(rebx, planet->ap, "d_factor");
 
     // initialize damping timescales
     double invtau_a = 0.0;
@@ -115,7 +113,7 @@ static struct reb_vec3d rebx_calculate_gas_damping_forces(struct reb_simulation*
         }
     }
 
-    double tau_e = -0.003*(*gdf_damp_coeff)*pow(a0, 2.)*(starMass/planetMass)*2.*M_PI*coeff;
+    double tau_e = -0.003*(*d_factor)*pow(a0, 2.)*(starMass/planetMass)*2.*M_PI*coeff;
     double tau_inc = tau_e/2.;
 
     if (e0 <= 1.e-7){
