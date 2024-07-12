@@ -25,20 +25,17 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
- * $Gas Damping Forces$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ * $Gas Effects$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
  *
  * ======================= ===============================================
  * Authors                 Phoebe Sandhaus
  * Implementation Paper    `Sandhaus et al. in prep`
- * Based on                `Dawson et al. 2016 <https://ui.adsabs.harvard.edu/abs/2016ApJ...822...54D/abstract>`_. 
+ * Based on                `Dawson et al. 2016 <https://ui.adsabs.harvard.edu/abs/2016ApJ...822...54D/abstract>`_
  * C Example               :ref:`c_example_gas_damping_forces`
- * Python Example          `GasDampingForces.ipynb`
+ * Python Example          `GasDampingForces.ipynb <https://github.com/PhoebeSandhaus/reboundx_gas_damping/tree/main/ipython_examples/GasDampingForces.ipynb>`_
  * ======================= ===============================================
  * 
- * This updates particles' positions and velocities between timesteps by first calculating a damping timescale for each
- * individual particle, and then applying the timescale to damp both the eccentricity and inclination of the particle
- * Note: The timescale of damping should be much greater than a particle's orbital period.
- *       The damping force should also be small as compared to the gravitational forces on the particle.
+ * This updates particles' positions and velocities between timesteps by first calculating a damping timescale for each individual particle, and then applying the timescale to damp both the eccentricity and inclination of the particle. Note: The timescale of damping should be much greater than a particle's orbital period. The damping force should also be small as compared to the gravitational forces on the particle.
  * 
  * **Effect Parameters**
  * 
@@ -53,10 +50,7 @@
  * ============================ =========== ==============================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==============================================================================
- * d_factor (double)            Yes         Depletion factor d in Equation 16 from Dawson et al. 2016;
- *                                              d=1 corresponds roughly to the full minimum mass solar nebula
- *                                              with Sigma_gas (surface gas density) = 1700 g cm^-2 at 1 AU [for d=1];
- *                                              d>1 corresponds to a more depleted nebula
+ * d_factor (double)            Yes         Depletion factor d in Equation 16 from Dawson et al. 2016; d=1 corresponds roughly to the full minimum mass solar nebula with Sigma_gas (surface gas density) = 1700 g cm^-2 at 1 AU [for d=1]; d>1 corresponds to a more depleted nebula
  * ============================ =========== ==============================================================================
  * 
  */
