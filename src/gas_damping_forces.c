@@ -30,7 +30,7 @@
  * ======================= ===============================================
  * Authors                 Phoebe Sandhaus
  * Implementation Paper    `Sandhaus et al. in prep`
- * Based on                `Dawson et al. 2016 <https://ui.adsabs.harvard.edu/abs/2016ApJ...822...54D/abstract>`_
+ * Based on                `Dawson et al. 2016 <https://ui.adsabs.harvard.edu/abs/2016ApJ...822...54D/abstract>; Kominami & Ida 2002 <https://ui.adsabs.harvard.edu/abs/2002Icar..157...43K/abstract>`_
  * C Example               :ref:`c_example_gas_damping_forces`
  * Python Example          `GasDampingForces.ipynb <https://github.com/PhoebeSandhaus/reboundx_gas_damping/tree/main/ipython_examples/GasDampingForces.ipynb>`_
  * ======================= ===============================================
@@ -108,7 +108,7 @@ static struct reb_vec3d rebx_calculate_gas_damping_forces(struct reb_simulation*
     }
 
     double tau_e = -0.003*(*d_factor)*pow(a0, 2.)*(starMass/planetMass)*2.*M_PI*coeff;
-    double tau_inc = tau_e/2.;
+    double tau_inc = 2.*tau_e;  // from Kominami & Ida 2002 [Eqs. 2.9 and 2.10]
 
     if (e0 <= 1.e-7){
         tau_e = INFINITY;
