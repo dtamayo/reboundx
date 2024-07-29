@@ -294,8 +294,8 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->update_accelerations = rebx_modify_orbits_forces;
         force->force_type = REBX_FORCE_VEL;
     }
-    else if (strcmp(name, "gas_damping_forces") == 0){
-        force->update_accelerations = rebx_gas_damping_forces;
+    else if (strcmp(name, "gas_damping_timescale") == 0){
+        force->update_accelerations = rebx_gas_damping_timescale;
         force->force_type = REBX_FORCE_VEL;
     }
     else if (strcmp(name, "exponential_migration") == 0){

@@ -1,5 +1,5 @@
 /**
- * @file    gas_damping_forces.c
+ * @file    gas_damping_timescale.c
  * @brief   Update orbits with prescribed timescales by directly changing orbital elements after each timestep
  * @author  Phoebe Sandhaus <pjs5535@psu.edu>
  * 
@@ -31,8 +31,8 @@
  * Authors                 Phoebe Sandhaus
  * Implementation Paper    `Sandhaus et al. in prep`
  * Based on                `Dawson et al. 2016 <https://ui.adsabs.harvard.edu/abs/2016ApJ...822...54D/abstract>; Kominami & Ida 2002 <https://ui.adsabs.harvard.edu/abs/2002Icar..157...43K/abstract>`_
- * C Example               :ref:`c_example_gas_damping_forces`
- * Python Example          `GasDampingForces.ipynb <https://github.com/PhoebeSandhaus/reboundx_gas_damping/tree/main/ipython_examples/GasDampingForces.ipynb>`_
+ * C Example               :ref:`c_example_gas_damping_timescale`
+ * Python Example          `GasDampingTimescale.ipynb <https://github.com/PhoebeSandhaus/reboundx_gas_damping/tree/main/ipython_examples/GasDampingTimescale.ipynb>`_
  * ======================= ===============================================
  * 
  * This updates particles' positions and velocities between timesteps by first calculating a damping timescale for each individual particle, and then applying the timescale to damp both the eccentricity and inclination of the particle. Note: The timescale of damping should be much greater than a particle's orbital period. The damping force should also be small as compared to the gravitational forces on the particle.
@@ -62,7 +62,7 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
-static struct reb_vec3d rebx_calculate_gas_damping_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* planet, struct reb_particle* star){
+static struct reb_vec3d rebx_calculate_gas_damping_timescale(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* planet, struct reb_particle* star){
     struct rebx_extras* const rebx = sim->extras;
     struct reb_orbit o = reb_orbit_from_particle(sim->G, *planet, *star);
 
@@ -134,7 +134,7 @@ static struct reb_vec3d rebx_calculate_gas_damping_forces(struct reb_simulation*
     return a;
 }
 
-void rebx_gas_damping_forces(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
+void rebx_gas_damping_timescale(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
     int* ptr = rebx_get_param(sim->extras, force->ap, "coordinates");
     enum REBX_COORDINATES coordinates = REBX_COORDINATES_JACOBI; // Default
     if (ptr != NULL){
@@ -142,5 +142,5 @@ void rebx_gas_damping_forces(struct reb_simulation* const sim, struct rebx_force
     }
     const int back_reactions_inclusive = 1;
     const char* reference_name = "primary";
-    rebx_com_force(sim, force, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_gas_damping_forces, particles, N);
+    rebx_com_force(sim, force, coordinates, back_reactions_inclusive, reference_name, rebx_calculate_gas_damping_timescale, particles, N);
 }
