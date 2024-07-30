@@ -67,9 +67,15 @@ static struct reb_vec3d rebx_calculate_gas_damping_timescale(struct reb_simulati
     struct reb_orbit o = reb_orbit_from_particle(sim->G, *planet, *star);
 
     const double* const d_factor = rebx_get_param(rebx, planet->ap, "d_factor");
+    const double* const cs_coeff = rebx_get_param(rebx, force->ap, "cs_coeff");
+    const double* const d_coeff = rebx_get_param(rebx, force->ap, "d_coeff");
+    
+    struct reb_vec3d a = {0};
 
-    // initialize damping timescales
-    double invtau_a = 0.0;
+    if (d_factor == NULL || cs_coeff == NULL || d_coeff == NULL){
+        rebx_error(rebx, "Need to set d_factor, cs_coeff, d_coeff parameters.  See examples in documentation.\n");
+        return a;
+    }
 
     // initialize positions and velocities
     const double dvx = planet->vx - star->vx;
@@ -88,26 +94,26 @@ static struct reb_vec3d rebx_calculate_gas_damping_timescale(struct reb_simulati
     const double planetMass = planet->m;
 
     // eccentricity and inclination timescales from Dawson+16 Eqn 16
-    const double cs_coeff = 0.272125; // 1.29 km s^-1 in AU yr^-1
     double coeff;
 
-    double v = sqrt(pow(e0, 2.)+pow(inc0, 2.))*pow(starMass, 1./2.)*pow(a0, -1./2.);
-    double cs = cs_coeff/(2.*M_PI)*pow(a0, -1./4.);
+    double vk = sqrt(sim->G*starMass/a0);
+    double v = sqrt(e0*e0+inc0*inc0)*vk;
+    double cs = *cs_coeff/sqrt(sqrt(a0));
     double v_over_cs = v/cs;
 
     if (v <= cs){
         coeff = 1.;
     }
     else {
-        if (inc0 < cs/v) {
-            coeff = pow(v_over_cs, 3.);
+        if (inc0 < cs/vk) {
+            coeff = v_over_cs*v_over_cs*v_over_cs;
         }
         else {
-            coeff = pow(v_over_cs, 4.);
+            coeff = v_over_cs*v_over_cs*v_over_cs*v_over_cs;
         }
     }
 
-    double tau_e = -0.003*(*d_factor)*pow(a0, 2.)*(starMass/planetMass)*2.*M_PI*coeff;
+    double tau_e = -*d_coeff*(*d_factor)*a0*a0*(starMass/planetMass)*coeff;
     double tau_inc = 2.*tau_e;  // from Kominami & Ida 2002 [Eqs. 2.9 and 2.10]
 
     if (e0 <= 1.e-7){
@@ -118,12 +124,6 @@ static struct reb_vec3d rebx_calculate_gas_damping_timescale(struct reb_simulati
         tau_inc = INFINITY;
     }
     
-    struct reb_vec3d a = {0};
-
-    a.x =  dvx*invtau_a/(2.);
-    a.y =  dvy*invtau_a/(2.);
-    a.z =  dvz*invtau_a/(2.);
-
     if (tau_e < INFINITY || tau_inc < INFINITY){
         const double vdotr = dx*dvx + dy*dvy + dz*dvz;
         const double prefac = 2*vdotr/r2/tau_e;

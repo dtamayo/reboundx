@@ -63,6 +63,8 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "coordinates", REBX_TYPE_INT);
     rebx_register_param(rebx, "p", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "d_factor", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "cs_coeff", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "d_coeff", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tau_a", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tau_e", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tau_inc", REBX_TYPE_DOUBLE);
