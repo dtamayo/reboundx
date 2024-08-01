@@ -70,7 +70,7 @@ static struct reb_vec3d rebx_calculate_gas_damping_timescale(struct reb_simulati
 
     const double* const d_factor = rebx_get_param(rebx, planet->ap, "d_factor");
     const double* const cs_coeff = rebx_get_param(rebx, force->ap, "cs_coeff");
-    const double* const d_coeff = rebx_get_param(rebx, force->ap, "tau_coeff");
+    const double* const tau_coeff = rebx_get_param(rebx, force->ap, "tau_coeff");
     
     struct reb_vec3d a = {0};
 
