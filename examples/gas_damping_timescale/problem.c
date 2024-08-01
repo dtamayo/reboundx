@@ -1,7 +1,7 @@
 /**
  * Gas Damping Timescale Example
  *
- * This example shows how to add gas damping forces to a REBOUND simulation.
+ * This example shows how to add gas damping to a REBOUND simulation.
  *
  */
 #include <stdio.h>
@@ -19,6 +19,9 @@ int main(int argc, char* argv[]){
     /* start the rebound simulation here */
     struct reb_simulation* sim = reb_simulation_create();
 
+    // set units to use throughout the simulation
+    sim->G = 4*M_PI*M_PI;  //  Gravitational constant in AU^3/M_sun/yr^2
+
     sim->heartbeat = heartbeat;
 
     // add the host star
@@ -26,7 +29,7 @@ int main(int argc, char* argv[]){
     star.m     = 1.;   
     reb_simulation_add(sim, star); 
 
-    double m = 3.e-6;          // roughly 1 Earth Mass in Solar Masses
+    double m = 3.e-6;                // roughly 1 Earth Mass in Solar Masses
     double a = 0.1;
     double e = 0.05;
     double inc = 5.*M_PI/180.;        // 5 degrees in radians
@@ -46,10 +49,14 @@ int main(int argc, char* argv[]){
     rebx_add_force(rebx, gd);
 
     // Set the total simulation time  
-    double tmax = 5.e2*2*M_PI;      // 500 years in yr/2pi
+    double tmax = 5.e2;      // 500 years
+
+    // Set parameters for simulation
+    rebx_set_param_double(rebx, &gd->ap, "cs_coeff", 0.272);         // set speed sound coefficient to 0.272 AU^(3/4) yr^-1
+    rebx_set_param_double(rebx, &gd->ap, "tau_coeff", 0.003);        // set timescale coefficient to 0.003 yr AU^-2
 
     // Set parameter for particle
-    rebx_set_param_double(rebx, &sim->particles[1].ap, "d_factor", 10.);         // set depletion factor to 10
+    rebx_set_param_double(rebx, &sim->particles[1].ap, "d_factor", 5.);         // set depletion factor to 5
 
     // integrate simulation
     reb_simulation_integrate(sim, tmax);
@@ -59,7 +66,7 @@ int main(int argc, char* argv[]){
 
 void heartbeat(struct reb_simulation* sim){
     // output a e i of the planet
-    if(reb_simulation_output_check(sim, 50.*2*M_PI)){
+    if(reb_simulation_output_check(sim, 50.)){
         const struct reb_particle star = sim->particles[0];
         const struct reb_orbit orbit = reb_orbit_from_particle(sim->G, sim->particles[1], star); // calculate orbit of planet
         printf("%f\t%f\t%f\t%f\n",sim->t, orbit.a, orbit.e, orbit.inc);
