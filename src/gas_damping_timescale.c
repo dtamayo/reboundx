@@ -110,14 +110,6 @@ static struct reb_vec3d rebx_calculate_gas_damping_timescale(struct reb_simulati
     double tau_e = -0.003*(*d_factor)*pow(a0, 2.)*(starMass/planetMass)*2.*M_PI*coeff;
     double tau_inc = 2.*tau_e;  // from Kominami & Ida 2002 [Eqs. 2.9 and 2.10]
 
-    if (e0 <= 1.e-7){
-        tau_e = INFINITY;
-    }
-    
-    if (inc0 <= 1.e-7){
-        tau_inc = INFINITY;
-    }
-    
     struct reb_vec3d a = {0};
 
     a.x =  dvx*invtau_a/(2.);
