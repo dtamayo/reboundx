@@ -51,6 +51,8 @@
  * Field (C type)               Required    Description
  * ============================ =========== ==============================================================================
  * d_factor (double)            Yes         Depletion factor d in Equation 16 from Dawson et al. 2016; d=1 corresponds roughly to the full minimum mass solar nebula with Sigma_gas (surface gas density) = 1700 g cm^-2 at 1 AU [for d=1]; d>1 corresponds to a more depleted nebula
+ * cs_coeff (double)            Yes         Sound speed coefficient; Changing the value will change assumed units; Example: If you are using the units: AU, M_sun, yr -->  cs_coeff = 0.272  # AU^(3/4) yr^-1
+ * tau_coeff (double)           Yes         Timescale coefficient;   Changing the value will change assumed units; Example: If you are using the units: AU, M_sun, yr --> tau_coeff = 0.003  #  yr AU^-2
  * ============================ =========== ==============================================================================
  * 
  */
@@ -68,12 +70,12 @@ static struct reb_vec3d rebx_calculate_gas_damping_timescale(struct reb_simulati
 
     const double* const d_factor = rebx_get_param(rebx, planet->ap, "d_factor");
     const double* const cs_coeff = rebx_get_param(rebx, force->ap, "cs_coeff");
-    const double* const d_coeff = rebx_get_param(rebx, force->ap, "d_coeff");
+    const double* const d_coeff = rebx_get_param(rebx, force->ap, "tau_coeff");
     
     struct reb_vec3d a = {0};
 
-    if (d_factor == NULL || cs_coeff == NULL || d_coeff == NULL){
-        rebx_error(rebx, "Need to set d_factor, cs_coeff, d_coeff parameters.  See examples in documentation.\n");
+    if (d_factor == NULL || cs_coeff == NULL || tau_coeff == NULL){
+        rebx_error(rebx, "Need to set d_factor, cs_coeff, tau_coeff parameters.  See examples in documentation.\n");
         return a;
     }
 
@@ -113,7 +115,7 @@ static struct reb_vec3d rebx_calculate_gas_damping_timescale(struct reb_simulati
         }
     }
 
-    double tau_e = -*d_coeff*(*d_factor)*a0*a0*(starMass/planetMass)*coeff;
+    double tau_e = -*tau_coeff*(*d_factor)*a0*a0*(starMass/planetMass)*coeff;
     double tau_inc = 2.*tau_e;  // from Kominami & Ida 2002 [Eqs. 2.9 and 2.10]
 
 
