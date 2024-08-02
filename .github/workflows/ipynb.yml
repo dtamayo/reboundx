@@ -58,4 +58,5 @@ jobs:
           python ipynb2py.py TrackMinDistance.ipynb
           python ipynb2py.py TypeIMigration.ipynb
           python ipynb2py.py YarkovskyEffect.ipynb
-          python ipynb2py.py gas_dynamical_friction.ipynb
+          python ipynb2py.py GasDynamicalFriction.ipynb
+          python ipynb2py.py GasDampingTimescale.ipynb

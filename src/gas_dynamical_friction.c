@@ -32,7 +32,7 @@
  * Implementation Paper    `Generozov and Perets 2022 <https://arxiv.org/abs/2212.11301>`_
  * Based on                `Ostriker 1999 (with simplifications) <https://ui.adsabs.harvard.edu/abs/1999ApJ...513..252O/abstract>`_, `Just et al 2012 <https://ui.adsabs.harvard.edu/abs/2012ApJ...758...51J/abstract>`_.
  * C Example               :ref:`c_example_gas_dynamical_friction`
- * Python Example          `gas_dynamical_friction.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/gas_dynamical_friction.ipynb>`_
+ * Python Example          `GasDynamicalFriction.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GasDynamicalFriction.ipynb>`_
  *                        
  * 
  * ======================= ===============================================
