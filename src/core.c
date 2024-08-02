@@ -62,6 +62,9 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "R_eq", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "coordinates", REBX_TYPE_INT);
     rebx_register_param(rebx, "p", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "d_factor", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "cs_coeff", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "tau_coeff", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tau_a", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tau_e", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tau_inc", REBX_TYPE_DOUBLE);
@@ -291,6 +294,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     }
     else if (strcmp(name, "modify_orbits_forces") == 0){
         force->update_accelerations = rebx_modify_orbits_forces;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "gas_damping_timescale") == 0){
+        force->update_accelerations = rebx_gas_damping_timescale;
         force->force_type = REBX_FORCE_VEL;
     }
     else if (strcmp(name, "exponential_migration") == 0){
