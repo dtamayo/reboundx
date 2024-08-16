@@ -260,6 +260,7 @@ struct rebx_extras {
     struct rebx_node* allocated_operators;          ///< For memory management
 };
 
+
 /****************************************
   General REBOUNDx Functions
 *****************************************/

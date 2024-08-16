@@ -144,7 +144,16 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "lt_p_haty", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "lt_p_hatz", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "lt_c", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_M_last", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_num_periapse", REBX_TYPE_INT);
+    rebx_register_param(rebx, "td_c_imag", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_c_real", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_dP_hat", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_EB0", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_E_max", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_E_resid", REBX_TYPE_DOUBLE);
 }
+
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
 
@@ -440,6 +449,10 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
     else if (strcmp(name, "track_min_distance") == 0){
         operator->step_function = rebx_track_min_distance;
         operator->operator_type = REBX_OPERATOR_RECORDER;
+    }
+    else if (strcmp(name, "tides_dynamical") == 0){
+        operator->step_function = rebx_tides_dynamical;
+        operator->operator_type = REBX_OPERATOR_UPDATER;
     }
     else{
         char str[300];
