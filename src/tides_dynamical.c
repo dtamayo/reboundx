@@ -79,7 +79,9 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
-double[] rebx_calculate_tides_dynamical_params(struct reb_simulation* const sim, struct reb_particle* p, struct reb_particle* primary)
+
+
+struct rebx_tides_dynamical_params rebx_calculate_tides_dynamical_params(struct reb_simulation* const sim, struct reb_particle* p, struct reb_particle* primary)
 {
 
     struct rebx_extras* const rebx = sim->extras;
@@ -129,16 +131,24 @@ double[] rebx_calculate_tides_dynamical_params(struct reb_simulation* const sim,
     double EBk = -sim->G * p->m * primary->m / (2 * a);
     double dP = 1.5 * sigma * P * maxE / (-EBk);
 
-    return {dP, dE_alpha, sigma};
+    struct rebx_tides_dynamical_params toReturn;
+    toReturn.dP = dP;
+    toReturn.dE_alpha = dE_alpha;
+    toReturn.sigma = sigma;
+
+    return toReturn;
 }
 
-double rebx_calculate_tides_dynamical_calc_mode_evolution(double[] modes, double dc_tilde, double P, double sigma)
+struct rebx_tides_dynamical_mode rebx_calculate_tides_dynamical_mode_evolution(double old_real, double old_imag, double dc_tilde, double P, double sigma)
 {
-    double old_real = modes[0];
-    double old_imag = modes[1];
-    double new_real = (modes[0] + dc_tilde) * cos(sigma * P) + modes[1] * sin(sigma * P);
-    double new_imag = -(modes[0] + dc_tilde) * sin(sigma * P) + modes[1] * cos(sigma * P);
-    return {new_real, new_imag};
+    double new_real = (old_real + dc_tilde) * cos(sigma * P) + old_imag * sin(sigma * P);
+    double new_imag = -(old_real + dc_tilde) * sin(sigma * P) + old_imag * cos(sigma * P);
+
+    struct rebx_tides_dynamical_mode mode;
+    mode.real = new_real;
+    mode.imag = new_imag;
+
+    return mode;
 }
 
 
@@ -153,6 +163,7 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_operator
     struct reb_orbit o = reb_orbit_from_particle(sim->G, *p, *source);
 
     // Set default parameter values
+
     if (rebx_get_param(rebx, p->ap, "td_EB0") == NULL)
     {
         double EB0 = -sim->G * p->m * source->m / (2 * o.a);
@@ -164,7 +175,7 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_operator
     }
     if (rebx_get_param(rebx, p->ap, "td_c_real") == NULL)
     {
-        rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_c_real", 0);    
+        rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_c_real", 0);   
     }
     if (rebx_get_param(rebx, p->ap, "td_c_imag") == NULL)
     {
@@ -173,18 +184,22 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_operator
     if (rebx_get_param(rebx, p->ap, "td_dP_crit") == NULL)
     {
         rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_dP_crit", 0.01);    
+
     }
     if (rebx_get_param(rebx, p->ap, "td_E_max") == NULL)
     {
         double E_bind = sim->G * p->m * p->m / p->r;
-        rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_E_max", E_bind / 10);    
+        rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_E_max", E_bind / 10); 
     }
     if (rebx_get_param(rebx, p->ap, "td_E_resid") == NULL)
     {
         double E_bind = sim->G * p->m * p->m / p->r;
-        rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_E_resid", E_bind / 1000);    
+        rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_E_resid", E_bind / 1000);   
     }
-
+    if (rebx_get_param(rebx, p->ap, "td_dP_hat") == NULL)
+    {
+        rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_dP_hat", 0);
+    }
 
     if (rebx_get_param(rebx, p->ap, "td_M_last") != NULL)
     {       
@@ -197,34 +212,38 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_operator
             int* num_periapse = rebx_get_param(rebx, p->ap, "td_num_periapse");
             rebx_set_param_int(rebx, (struct rebx_node**)&p->ap, "td_num_periapse", *num_periapse + 1);
 
-            double* dP_crit = rebx_get_param(rebx, p->ap, "dP_crit");
-            double[] dynamical_params = rebx_calculate_tides_dynamical_params(sim, p, source);
-            double dP = dynamical_parmas[0];
+            double* dP_crit = rebx_get_param(rebx, p->ap, "td_dP_crit");
+            struct rebx_tides_dynamical_params dynamical_params = rebx_calculate_tides_dynamical_params(sim, p, source);
+            double dP = dynamical_params.dP;
+            double dE_alpha = dynamical_params.dE_alpha;
+            
             rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_dP_hat", dP);
+            rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_dE_last", dE_alpha);
 
             // If system is in chaotic regime, evolve dynamical tides
-            if (dP >= dP_crit)
+            if (dP >= *dP_crit)
             {
+                double sigma = dynamical_params.sigma;
+
                 double* EB0 = rebx_get_param(rebx, p->ap, "td_EB0");
                 double EBk = -sim->G * p->m * source->m / (2 * o.a);
-                double dE_alpha = dynamical_params[1];
-                double dc_tilde = pow(dE_alpha / -EB0, 0.5);
-                double dE_alpha_tilde = dE_alpha / -EB0;
+                double dc_tilde = pow(dE_alpha / -*EB0, 0.5);
+                double dE_alpha_tilde = dE_alpha / -*EB0;
                 double* c_real = rebx_get_param(rebx, p->ap, "td_c_real"); 
                 double* c_imag = rebx_get_param(rebx, p->ap, "td_c_imag");
 
                 // Calculate new orbital energy
-                double EB_new = EBk - (-Ebk) * (dE_alpha_tilde + 2 * pow(dE_alpha_tilde, 0.5) * c_real);
-                double E_ratio = EBk / E_B;
+                double EB_new = EBk - (-EBk) * (dE_alpha_tilde + 2 * pow(dE_alpha_tilde, 0.5) * *c_real);
+                double E_ratio = EBk / EB_new;
 
                 // If amplitude is sufficiently high, non-linear dissipation
                 double* E_max = rebx_get_param(rebx, p->ap, "td_E_max"); 
                 double* E_resid = rebx_get_param(rebx, p->ap, "td_E_resid");
                 if (-(pow(*c_real, 2) + pow(*c_imag, 2)) * *EB0 >= *E_max)
                 {
-                    double E_dis_ratio = -E_resid / *EB0;
-                    *c_real = pow(E_dis_ratio / (1 + pow(*c_imag, 2) / pow(*c_real, 2)));
-                    *c_imag = pow(E_dis_ratio / (1 + pow(*c_real, 2) / pow(*c_imag, 2)));
+                    double E_dis_ratio = -*E_resid / *EB0;
+                    *c_real = pow(E_dis_ratio / (1 + pow(*c_imag, 2) / pow(*c_real, 2)), 0.5);
+                    *c_imag = pow(E_dis_ratio / (1 + pow(*c_real, 2) / pow(*c_imag, 2)), 0.5);
                 }
 
                 // Calculate new orbital elements
@@ -233,9 +252,18 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_operator
                 double P_prime = o.P * pow(E_ratio, -1.5);
 
                 // Evolve modes
-                double[] new_modes = rebx_calculate_tides_dynamical_calc_mode_evolution({*c_real, *c_imag}, dc_tilde, P, sigma);
-                rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_c_real", new_modes[0]);  
-                rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_c_imag", new_modes[1]);  
+                struct rebx_tides_dynamical_mode new_modes = rebx_calculate_tides_dynamical_mode_evolution(*c_real, *c_imag, dc_tilde, P_prime, sigma);
+                rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_c_real", new_modes.real);  
+                rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_c_imag", new_modes.imag);  
+
+                // Update positions/velocities
+                struct reb_particle new_particle = reb_particle_from_orbit(sim->G, *source, p->m, a_prime, e_prime, o.inc, o.Omega, o.omega, o.f);
+                p->x = new_particle.x;
+                p->y = new_particle.y;
+                p->z = new_particle.z;
+                p->vx = new_particle.vx;
+                p->vy = new_particle.vy;
+                p->vz = new_particle.vz;
             }
         }
 

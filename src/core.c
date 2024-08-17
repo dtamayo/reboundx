@@ -149,9 +149,11 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "td_c_imag", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_c_real", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_dP_hat", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_dP_crit", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_EB0", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_E_max", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_E_resid", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_dE_last", REBX_TYPE_DOUBLE);
 }
 
 
