@@ -1,7 +1,7 @@
 /**
- * @file    modify_orbits_direct.c
- * @brief   Update orbital with prescribed timescales by directly changing orbital elements after each timestep.
- * @author  Dan Tamayo <tamayo.daniel@gmail.com>
+ * @file    tides_dynamical.c
+ * @brief   Update body's orbital and modal evolution due to the presence of dynamical tides.
+ * @author  Donald J. Liveoak <donaldliveoak1@gmail.com>
  * 
  * @section     LICENSE
  * Copyright (c) 2015 Dan Tamayo, Hanno Rein
@@ -25,49 +25,39 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
- * $Orbit Modifications$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ * $Tides$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
  *
  * ======================= ===============================================
- * Authors                 D. Tamayo
- * Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_. 
- * Based on                `Lee & Peale 2002 <http://labs.adsabs.harvard.edu/adsabs/abs/2002ApJ...567..596L/>`_. 
- * C Example               :ref:`c_example_modify_orbits`
- * Python Example          `Migration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Migration.ipynb>`_,
- *                         `EccAndIncDamping.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/EccAndIncDamping.ipynb>`_.
+ * Authors                 D. Liveoak & S. Millholland
+ * Implementation Paper    
+ * Based on                `Vick et al. 2019 <https://academic.oup.com/mnras/article/484/4/5645/5306464/>`_. 
+ * C Example               
+ * Python Example          
  * ======================= ===============================================
  * 
- * This updates particles' positions and velocities between timesteps to achieve the desired changes to the osculating orbital elements (exponential growth/decay for a, e, inc, linear progression/regression for Omega/omega.
- * This nicely isolates changes to particular osculating elements, making it easier to interpret the resulting dynamics.  
- * One can also adjust the coupling parameter `p` between eccentricity and semimajor axis evolution, as well as whether the damping is done on Jacobi, barycentric or heliocentric elements.
- * Since this method changes osculating (i.e., two-body) elements, it can give unphysical results in highly perturbed systems.
+ * This updates body's orbital and modal evolution due to the presence of dynamical tides.
+ * Particles are modeled by a gamma=4/3 polytrope, and the f-mode is evolved at each pericentre passage.
+ * The dissipation of orbital energy due to dynamical tides is modeled as an angular momentum-conserving kick at periapse.
+ * When mode energy grows to exceed `td_E_max`, it is non-linearly dissipated in one orbital period to `td_E_resid`.
+ * To isolate the effects of chaotic model evolution, one can set `dP_hat_crit` to disable dynamical tides whenever chaos is unlikely (see Vick et al. (2019))
  * 
- * **Effect Parameters**
- *
- * If p is not set, it defaults to 0.  If coordinates not set, defaults to using Jacobi coordinates.
- *
- * ============================ =========== ==================================================================
- * Field (C type)               Required    Description
- * ============================ =========== ==================================================================
- * p (double)                   No          Coupling parameter between eccentricity and semimajor axis evolution
- *                                          (see Deck & Batygin 2015). `p=0` corresponds to no coupling, `p=1` to
- *                                          eccentricity evolution at constant angular momentum.
- * coordinates (enum)           No          Type of elements to use for modification (Jacobi, barycentric or particle).
- *                                          See the examples for usage.
- * ============================ =========== ==================================================================
- *
+ * 
  * **Particle Parameters**
  *
  * One can pick and choose which particles have which parameters set.  
- * For each particle, any unset parameter is ignored.
+ * For each particle, any unset parameter is replaced by its default value.
+ * Particles with index 0 will not experience dynamical tides.
  *
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
- * tau_a (double)               No          Semimajor axis exponential growth/damping timescale
- * tau_e (double)               No          Eccentricity exponential growth/damping timescale
- * tau_inc (double)             No          Inclination axis exponential growth/damping timescale
- * tau_Omega (double)           No          Period of linear nodal precession/regression
- * tau_omega (double)           No          Period of linear apsidal precession/regression
+ * particles[i].r (float)       Yes         Radius of ith particle
+ * td_dP_crit (double)          No          Critical mode phase change to evolve tides (see Vick et al. (2019), default 0.01)
+ * td_c_imag (double)           No          Imaginary part of initial mode amplitude (default: 0.0)
+ * td_c_real (double)           No          Real part of initial mode amplitude (default: 0.0)
+ * td_EB0 (double)              No          Intitial orbital energy (default: -GMm / (2a_0))
+ * td_E_max (double)            No          Maximum mode energy (default: 0.1 * E_bind)
+ * td_E_resid (double)          No          Residual mode energy after non-linear dissipation (default: 1E-3 * E_bind)
  * ============================ =========== ==================================================================
  * 
  */
@@ -79,15 +69,13 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
-
-
 struct rebx_tides_dynamical_params rebx_calculate_tides_dynamical_params(struct reb_simulation* const sim, struct reb_particle* p, struct reb_particle* primary)
 {
 
     struct rebx_extras* const rebx = sim->extras;
     const double EulerConstant = 2.718281828459;
 
-    // Calculate orbit
+    // Calculate orbital elements
     struct reb_orbit o = reb_orbit_from_particle(sim->G, *p, *primary);
     double e = o.e;
     double a = o.a;
