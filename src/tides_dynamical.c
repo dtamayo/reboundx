@@ -143,15 +143,12 @@ struct rebx_tides_dynamical_mode rebx_calculate_tides_dynamical_mode_evolution(d
 void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
 
    	struct rebx_extras* const rebx = sim->extras;
-
-    // update the momentum of the first particle
     struct reb_particle* const source = &sim->particles[0];
     struct reb_particle* const p = &sim->particles[1];
 
     struct reb_orbit o = reb_orbit_from_particle(sim->G, *p, *source);
 
     // Set default parameter values
-
     if (rebx_get_param(rebx, p->ap, "td_EB0") == NULL)
     {
         double EB0 = -sim->G * p->m * source->m / (2 * o.a);
@@ -172,7 +169,6 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_operator
     if (rebx_get_param(rebx, p->ap, "td_dP_crit") == NULL)
     {
         rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_dP_crit", 0.01);    
-
     }
     if (rebx_get_param(rebx, p->ap, "td_E_max") == NULL)
     {
@@ -187,6 +183,10 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_operator
     if (rebx_get_param(rebx, p->ap, "td_dP_hat") == NULL)
     {
         rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_dP_hat", 0);
+    }
+    if (rebx_get_param(rebx, p->ap, "td_migrate") == NULL)
+    {
+        rebx_set_param_int(rebx, (struct rebx_node**)&p->ap, "td_migrate", 1);
     }
 
     if (rebx_get_param(rebx, p->ap, "td_M_last") != NULL)
@@ -221,7 +221,7 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_operator
                 double* c_imag = rebx_get_param(rebx, p->ap, "td_c_imag");
 
                 // Calculate new orbital energy
-                double EB_new = EBk - (-EBk) * (dE_alpha_tilde + 2 * pow(dE_alpha_tilde, 0.5) * *c_real);
+                double EB_new = EBk - (-*EB0) * (dE_alpha_tilde + 2 * pow(dE_alpha_tilde, 0.5) * *c_real);
                 double E_ratio = EBk / EB_new;
 
                 // If amplitude is sufficiently high, non-linear dissipation

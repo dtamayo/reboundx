@@ -154,6 +154,7 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "td_E_max", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_E_resid", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_dE_last", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_migrate", REBX_TYPE_INT);
 }
 
 
