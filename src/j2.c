@@ -57,9 +57,9 @@
 #include "reboundx.h"
 
 /*
- * From Fabrycky (2010), Eq. (4):
+ * From Fabrycky (2010), Eq. (4), w. a correction of 1/2 -> 3:
  *
- * f_R = -1/2 k_L Omega_rot^2 R^5 / r^5 \vec r
+ * f_R = -3 k_L Omega_rot^2 R^5 / r^5 \vec r
  *
  * J2 = -C20
  * n = sqrt(GM/R^3)
@@ -96,7 +96,7 @@ void rebx_j2_phoebe(struct reb_simulation* const sim, struct rebx_force* const f
             const double dz = pj.z - pi.z;
             const double r2 = dx*dx + dy*dy + dz*dz;
             const double r = sqrt(r2);
-            double fac = -0.5*(*J2)*G*pi.m*(*R_eq)*(*R_eq)/r2/r2/r;
+            double fac = -3.0*(*J2)*G*pi.m*(*R_eq)*(*R_eq)/r2/r2/r;
 
             particles[j].ax += fac*dx;
             particles[j].ay += fac*dy;
