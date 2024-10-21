@@ -60,8 +60,39 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-void rebx_j2(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N){
+inline void j2_func(double G, double m, const double* J2, const double* R_eq, double r, double r2, double costheta2, double du, double dv, double dw, double* au, double* av, double* aw) {
 
+    if (J2 == NULL) { return; }
+    if (*J2 == 0.0) { return; }
+
+    const double f1 = 3.0/2.0*G*m*(*J2)*(*R_eq)*(*R_eq)/r2/r2/r;
+    const double f2 = 5.0*costheta2 - 1.0;
+    const double f3 = f2 - 2.0;
+
+    *au += f1*f2*du;
+    *av += f1*f2*dv;
+    *aw += f1*f3*dw;
+
+    return;
+}
+
+inline void j4_func(double G, double m, const double* J4, const double* R_eq, double r, double r2, double costheta2, double du, double dv, double dw, double* au, double* av, double* aw) {
+
+    if (J4 == NULL) { return; }
+    if (*J4 == 0.0) { return; }
+
+    const double f1 = 5.0/8.0*G*m*(*J4)*(*R_eq)*(*R_eq)*(*R_eq)*(*R_eq)/r2/r2/r2/r;
+    const double f2 = 63.0*costheta2*costheta2 - 42.0*costheta2 + 3.0;
+    const double f3 = f2 - 28.0*costheta2 + 12.0;
+
+    *au += f1*f2*du;
+    *av += f1*f2*dv;
+    *aw += f1*f3*dw;
+
+    return;
+}
+
+void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_force* const gh, struct reb_particle* const particles, const int N){
     const double G = sim->G;
     struct rebx_extras* const rebx = sim->extras;
 
@@ -70,6 +101,10 @@ void rebx_j2(struct reb_simulation* const sim, struct rebx_force* const force, s
         if (J2 == NULL){
             continue;
         }
+        if (*J2 == 0.0){
+            continue;
+        }
+        const double* const J4 = rebx_get_param(rebx, particles[i].ap, "J4");
         const double* const R_eq = rebx_get_param(rebx, particles[i].ap, "R_eq");
         if (R_eq == NULL){
             continue;
@@ -139,14 +174,14 @@ void rebx_j2(struct reb_simulation* const sim, struct rebx_force* const force, s
             const double dv = hatv.x*dx + hatv.y*dy + hatv.z*dz;
             const double dw = hatw.x*dx + hatw.y*dy + hatw.z*dz;
             const double costheta = dw/r;
+            const double costheta2 = costheta*costheta;
 
-            const double f1 = 3.0/2.0*G*pi.m*(*J2)*(*R_eq)*(*R_eq)/r2/r2/r;
-            const double f2 = 5.0*costheta*costheta - 1.0;
-            const double f3 = f2 - 2.0;
+            double au = 0.0;
+            double av = 0.0;
+            double aw = 0.0;
 
-            const double au = f1*f2*du;
-            const double av = f1*f2*dv;
-            const double aw = f1*f3*dw;
+            j2_func(G, pi.m, J2, R_eq, r, r2, costheta2, du, dv, dw, &au, &av, &aw);
+            j4_func(G, pi.m, J4, R_eq, r, r2, costheta2, du, dv, dw, &au, &av, &aw);
 
             /* old coordinates */
             const double ax = hatx_.x*au + haty_.x*av + hatz_.x*aw;
@@ -165,9 +200,4 @@ void rebx_j2(struct reb_simulation* const sim, struct rebx_force* const force, s
         }
     }
 }
-
-void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_force* const gh, struct reb_particle* const particles, const int N){
-    rebx_j2(sim, gh, particles, N);
-}
-
 
