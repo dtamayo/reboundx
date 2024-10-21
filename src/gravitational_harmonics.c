@@ -104,9 +104,9 @@ void rebx_j2(struct reb_simulation* const sim, struct rebx_force* const force, s
             hatu.y = 0.0;
             hatu.z = 0.0;
         }
-        hatv.x = hatu.y*hatw.z - hatu.z*hatw.y;
-        hatv.y = hatu.z*hatw.x - hatu.x*hatw.z;
-        hatv.z = hatu.x*hatw.y - hatu.y*hatw.x;
+        hatv.x = -(hatu.y*hatw.z - hatu.z*hatw.y);
+        hatv.y = -(hatu.z*hatw.x - hatu.x*hatw.z);
+        hatv.z = -(hatu.x*hatw.y - hatu.y*hatw.x);
 
         /* old basis (') in new coordinates */
         struct reb_vec3d hatx_ = {0};
