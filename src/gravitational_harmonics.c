@@ -92,6 +92,38 @@ inline void j4_func(double G, double m, const double* J4, const double* R_eq, do
     return;
 }
 
+inline void uvw(const struct reb_vec3d* Omega, struct reb_vec3d* hatu, struct reb_vec3d* hatv, struct reb_vec3d* hatw) {
+
+    const double omega2 = Omega->x*Omega->x + Omega->y*Omega->y + Omega->z*Omega->z;
+    const double omega = sqrt(omega2);
+
+    struct reb_vec3d s = {0};
+    s.x = Omega->x/omega;
+    s.y = Omega->y/omega;
+    s.z = Omega->z/omega;
+
+    hatw->x = s.x;
+    hatw->y = s.y;
+    hatw->z = s.z;
+
+    double fac = sqrt(s.x*s.x + s.y*s.y);
+    if (fac != 0.0) {
+        hatu->x = -s.y/fac;
+        hatu->y = s.x/fac;
+        hatu->z = 0.0;
+    } else {
+        hatu->x = 1.0;
+        hatu->y = 0.0;
+        hatu->z = 0.0;
+    }
+
+    hatv->x = -(hatu->y*hatw->z - hatu->z*hatw->y);
+    hatv->y = -(hatu->z*hatw->x - hatu->x*hatw->z);
+    hatv->z = -(hatu->x*hatw->y - hatu->y*hatw->x);
+
+    return;
+}
+
 void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_force* const gh, struct reb_particle* const particles, const int N){
     const double G = sim->G;
     struct rebx_extras* const rebx = sim->extras;
@@ -115,38 +147,18 @@ void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_
         }
         const struct reb_particle pi = particles[i];
 
-        const double omega2 = Omega->x*Omega->x + Omega->y*Omega->y + Omega->z*Omega->z;
-        const double omega = sqrt(omega2);
-        struct reb_vec3d s = {0};
-        s.x = Omega->x/omega;
-        s.y = Omega->y/omega;
-        s.z = Omega->z/omega;
-
         /* new coordinate basis (body-fixed) */
         struct reb_vec3d hatu = {0};
         struct reb_vec3d hatv = {0};
         struct reb_vec3d hatw = {0};
-        hatw.x = s.x;
-        hatw.y = s.y;
-        hatw.z = s.z;
-        double fac = sqrt(s.x*s.x + s.y*s.y);
-        if (fac != 0.0) {
-            hatu.x = -s.y/fac;
-            hatu.y = s.x/fac;
-            hatu.z = 0.0;
-        } else {
-            hatu.x = 1.0;
-            hatu.y = 0.0;
-            hatu.z = 0.0;
-        }
-        hatv.x = -(hatu.y*hatw.z - hatu.z*hatw.y);
-        hatv.y = -(hatu.z*hatw.x - hatu.x*hatw.z);
-        hatv.z = -(hatu.x*hatw.y - hatu.y*hatw.x);
+
+        uvw(Omega, &hatu, &hatv, &hatw);
 
         /* old basis (') in new coordinates */
         struct reb_vec3d hatx_ = {0};
         struct reb_vec3d haty_ = {0};
         struct reb_vec3d hatz_ = {0};
+
         hatx_.x = hatu.x;
         hatx_.y = hatv.x;
         hatx_.z = hatw.x;
@@ -192,7 +204,7 @@ void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_
             particles[j].ay += ay;
             particles[j].az += az;
 
-            fac = pj.m/pi.m;
+            const double fac = pj.m/pi.m;
 
             particles[i].ax -= fac*ax;
             particles[i].ay -= fac*ay;
@@ -200,4 +212,92 @@ void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_
         }
     }
 }
+
+inline void j2_potential_func(double G, double mi, double mj, const double* J2, const double* R_eq, double r, double r2, double costheta2, double* H) {
+
+    if (J2 == NULL) { return; }
+    if (*J2 == 0.0) { return; }
+
+    const double f1 = G*mi*mj*(*J2)*(*R_eq)*(*R_eq)/r2/r;
+    const double f2 = 1.0/2.0*(3.0*costheta2 - 1.0);
+
+    *H += f1*f2;
+
+    return;
+}
+
+inline void j4_potential_func(double G, double mi, double mj, const double* J4, const double* R_eq, double r, double r2, double costheta2, double* H) {
+
+    if (J4 == NULL) { return; }
+    if (*J4 == 0.0) { return; }
+
+    const double f1 = G*mi*mj*(*J4)*(*R_eq)*(*R_eq)*(*R_eq)*(*R_eq)/r2/r2/r;
+    const double f2 = 1.0/8.0*(35.0*costheta2*costheta2 - 30.0*costheta2 + 3.0);
+
+    *H += f1*f2;
+
+    return;
+}
+
+double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx){
+    if (rebx->sim == NULL){
+        rebx_error(rebx, "");
+        return 0;
+    }
+    const struct reb_simulation* const sim = rebx->sim;
+    const struct reb_particle* const particles = sim->particles;
+    const double G = sim->G;
+    const int N = sim->N;
+    double H;
+
+    for (int i=0; i<N; i++){
+        const double* const J2 = rebx_get_param(rebx, particles[i].ap, "J2");
+        if (J2 == NULL){
+            continue;
+        }
+        if (*J2 == 0.0){
+            continue;
+        }
+        const double* const J4 = rebx_get_param(rebx, particles[i].ap, "J4");
+        const double* const R_eq = rebx_get_param(rebx, particles[i].ap, "R_eq");
+        if (R_eq == NULL){
+            continue;
+        }
+        const struct reb_vec3d* Omega = rebx_get_param(rebx, particles[i].ap, "Omega");
+        if (Omega == NULL){
+            continue;
+        }
+        const struct reb_particle pi = particles[i];
+
+        /* new coordinate basis (body-fixed) */
+        struct reb_vec3d hatu = {0};
+        struct reb_vec3d hatv = {0};
+        struct reb_vec3d hatw = {0};
+
+        uvw(Omega, &hatu, &hatv, &hatw);
+
+        for (int j=0; j<N; j++){
+            if (j == i){
+                continue;
+            }
+            const struct reb_particle pj = particles[j];
+
+            const double dx = pj.x - pi.x;
+            const double dy = pj.y - pi.y;
+            const double dz = pj.z - pi.z;
+            const double r2 = dx*dx + dy*dy + dz*dz;
+            const double r = sqrt(r2);
+
+            /* new coordinates */
+            const double dw = hatw.x*dx + hatw.y*dy + hatw.z*dz;
+            const double costheta = dw/r;
+            const double costheta2 = costheta*costheta;
+
+            j2_potential_func(G, pi.m, pj.m, J2, R_eq, r, r2, costheta2, &H);
+            j4_potential_func(G, pi.m, pj.m, J4, R_eq, r, r2, costheta2, &H);
+        }
+    }
+    return H;
+}
+
 
