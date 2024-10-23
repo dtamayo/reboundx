@@ -92,15 +92,15 @@ inline void j4_func(double G, double m, const double* J4, const double* R_eq, do
     return;
 }
 
-inline void uvw(const struct reb_vec3d* Omega, struct reb_vec3d* hatu, struct reb_vec3d* hatv, struct reb_vec3d* hatw) {
+inline void uvw(struct reb_vec3d Omega, struct reb_vec3d* hatu, struct reb_vec3d* hatv, struct reb_vec3d* hatw) {
 
-    const double omega2 = Omega->x*Omega->x + Omega->y*Omega->y + Omega->z*Omega->z;
+    const double omega2 = Omega.x*Omega.x + Omega.y*Omega.y + Omega.z*Omega.z;
     const double omega = sqrt(omega2);
 
     struct reb_vec3d s = {0};
-    s.x = Omega->x/omega;
-    s.y = Omega->y/omega;
-    s.z = Omega->z/omega;
+    s.x = Omega.x/omega;
+    s.y = Omega.y/omega;
+    s.z = Omega.z/omega;
 
     hatw->x = s.x;
     hatw->y = s.y;
@@ -141,9 +141,12 @@ void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_
         if (R_eq == NULL){
             continue;
         }
-        const struct reb_vec3d* Omega = rebx_get_param(rebx, particles[i].ap, "Omega");
-        if (Omega == NULL){
-            continue;
+        struct reb_vec3d Omega = {0.0, 0.0, 1.0};
+        const struct reb_vec3d* Omegaptr = rebx_get_param(rebx, particles[i].ap, "Omega");
+        if (Omegaptr != NULL){
+            Omega.x = Omegaptr->x;
+            Omega.y = Omegaptr->y;
+            Omega.z = Omegaptr->z;
         }
         const struct reb_particle pi = particles[i];
 
@@ -263,9 +266,12 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx){
         if (R_eq == NULL){
             continue;
         }
-        const struct reb_vec3d* Omega = rebx_get_param(rebx, particles[i].ap, "Omega");
-        if (Omega == NULL){
-            continue;
+        struct reb_vec3d Omega = {0.0, 0.0, 1.0};
+        const struct reb_vec3d* Omegaptr = rebx_get_param(rebx, particles[i].ap, "Omega");
+        if (Omegaptr != NULL){
+            Omega.x = Omegaptr->x;
+            Omega.y = Omegaptr->y;
+            Omega.z = Omegaptr->z;
         }
         const struct reb_particle pi = particles[i];
 
