@@ -250,8 +250,8 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx){
     const struct reb_simulation* const sim = rebx->sim;
     const struct reb_particle* const particles = sim->particles;
     const double G = sim->G;
-    const int N = sim->N;
-    double H;
+    const int N = sim->N - sim->N_var;
+    double H = 0.0;
 
     for (int i=0; i<N; i++){
         const double* const J2 = rebx_get_param(rebx, particles[i].ap, "J2");
