@@ -60,6 +60,8 @@
 #include "rebound.h"
 #include "reboundx.h"
 
+#define DEFAULTOMEGA {0.0, 0.0, 1.0}
+
 inline void j2_func(double G, double m, const double* J2, const double* R_eq, double r, double r2, double costheta2, double du, double dv, double dw, double* au, double* av, double* aw) {
 
     if (J2 == NULL) { return; }
@@ -141,7 +143,7 @@ void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_
         if (R_eq == NULL){
             continue;
         }
-        struct reb_vec3d Omega = {0.0, 0.0, 1.0};
+        struct reb_vec3d Omega = DEFAULTOMEGA;
         const struct reb_vec3d* Omegaptr = rebx_get_param(rebx, particles[i].ap, "Omega");
         if (Omegaptr != NULL){
             Omega.x = Omegaptr->x;
@@ -266,7 +268,7 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx){
         if (R_eq == NULL){
             continue;
         }
-        struct reb_vec3d Omega = {0.0, 0.0, 1.0};
+        struct reb_vec3d Omega = DEFAULTOMEGA;
         const struct reb_vec3d* Omegaptr = rebx_get_param(rebx, particles[i].ap, "Omega");
         if (Omegaptr != NULL){
             Omega.x = Omegaptr->x;
