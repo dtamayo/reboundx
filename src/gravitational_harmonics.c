@@ -201,9 +201,9 @@ void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_
             j4_func(G, pi.m, J4, R_eq, r, r2, costheta2, du, dv, dw, &au, &av, &aw);
 
             /* old coordinates */
-            const double ax = hatx_.x*au + haty_.x*av + hatz_.x*aw;
-            const double ay = hatx_.y*au + haty_.y*av + hatz_.y*aw;
-            const double az = hatx_.z*au + haty_.z*av + hatz_.z*aw;
+            const double ax = hatx_.x*au + hatx_.y*av + hatx_.z*aw;
+            const double ay = haty_.x*au + haty_.y*av + haty_.z*aw;
+            const double az = hatz_.x*au + hatz_.y*av + hatz_.z*aw;
 
             particles[j].ax += ax;
             particles[j].ay += ay;
