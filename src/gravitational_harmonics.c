@@ -34,7 +34,14 @@
  * Python Example          `J2.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/J2.ipynb>`_.
  * ======================= ===============================================
  * 
- * Adds azimuthally symmetric gravitational harmonics (J2, J4) to bodies in the simulation.
+ * Allows the user to add azimuthally symmetric gravitational harmonics (J2, J4) to bodies in the simulation. 
+ * These interact with all other bodies in the simulation (treated as point masses). 
+ * The implementation allows the user to specify an arbitrary spin axis orientation for each oblate body, which defines the axis of symmetry.
+ * This is specified through the angular rotation rate vector Omega.
+ * The rotation rate Omega is not currently used other than to specify the spin axis orientation.
+ * In particular, the current implementation applies the appropriate torque from the body's oblateness to the orbits of all the other planets, but does not account for the equal and opposite torque on the body's spin angular momentum.
+ * The bodies spins therefore remain constant in the current implementation.
+ * This is a good approximation in the limit where the bodies' spin angular momenta are much greater than the orbital angular momenta involved.
  *
  * **Effect Parameters**
  * 
