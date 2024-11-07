@@ -1,3 +1,5 @@
+*.sa
+*.rebx
 *.o
 *.so
 *.pyc
