@@ -2,6 +2,9 @@
 
 This changelog only includes the most important changes in recent updates. For a full log of all changes, please refer to git.
 
+### Version 4.4.0
+* Added the ability to set the spin axis orientation to the gravitational harmonics (J2/J4) effect
+
 ### Version 4.3.0
 * Added Gas Damping Forces effect
 
