@@ -14,7 +14,7 @@ from ctypes import *
 #clibreboundx = cdll.LoadLibrary(pymodulespath + '/../libreboundx' + suffix)
 pymodulepath = os.path.dirname(os.path.abspath(__file__))
 pymodulepath = os.path.abspath(os.path.join(pymodulepath, os.pardir))
-__libpath__ = os.path.join(pymodulepath, "librebound"+suffix)
+__libpath__ = os.path.join(pymodulepath, "/../librebound"+suffix)
 clibrebound = cdll.LoadLibrary(__libpath__)
 
 # Version
