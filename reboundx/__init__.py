@@ -18,8 +18,8 @@ __libpath__ = os.path.join(pymodulepath, "libreboundx"+suffix)
 clibreboundx = cdll.LoadLibrary(__libpath__)
 
 # Version
-__version__ = c_char_p.in_dll(clibreboundx, "rebx_version_str").value.decode('ascii')
-
+#__version__ = c_char_p.in_dll(clibreboundx, "rebx_version_str").value.decode('ascii')
+__version__ = 'install'
 # Build
 __build__ = c_char_p.in_dll(clibreboundx, "rebx_build_str").value.decode('ascii')
 # Check for version
