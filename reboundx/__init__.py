@@ -9,9 +9,13 @@ if suffix is None:
 
 #Import shared C library
 import os
-pymodulespath = os.path.dirname(__file__)
+#pymodulespath = os.path.dirname(__file__)
 from ctypes import *
-clibreboundx = cdll.LoadLibrary(pymodulespath + '/../libreboundx' + suffix)
+#clibreboundx = cdll.LoadLibrary(pymodulespath + '/../libreboundx' + suffix)
+pymodulepath = os.path.dirname(os.path.abspath(__file__))
+pymodulepath = os.path.abspath(os.path.join(pymodulepath, os.pardir))
+__libpath__ = os.path.join(pymodulepath, "librebound"+suffix)
+clibrebound = cdll.LoadLibrary(__libpath__)
 
 # Version
 __version__ = c_char_p.in_dll(clibreboundx, "rebx_version_str").value.decode('ascii')
