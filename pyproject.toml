@@ -7,13 +7,5 @@ skip = "cp36*"
 build = "cp38*"
 manylinux-x86_64-image = "manylinux2014"
 
-#[tool.cibuildwheel.macos]
-#repair-wheel-command = """\
-#delocate-wheel \
-#--require-archs {delocate_archs} -w {dest_dir} -v {wheel} --ignore-missing-dependencies\
-#"""
-
-#[tool.cibuildwheel.linux]
-#archs = ["x86_64"]
-#before-build = "pip install auditwheel"
-###repair-wheel-command = "LD_LIBRARY_PATH=/usr/lib64 auditwheel repair -w {dest_dir} {wheel} --exclude librebound.cpython-37m-x86_64-linux-gnu.so --exclude librebound.cpython-39-x86_64-linux-gnu.so --exclude librebound.cpython-310-x86_64-linux-gnu.so --exclude librebound.cpython-311-x86_64-linux-gnu.so --exclude librebound.cpython-312-x86_64-linux-gnu.so --exclude librebound.pypy311-pp73-x86_64-linux-gnu.so --exclude librebound.cpython-311-x86_64-linux-musl.so"
+[tool.uv]
+no-build-isolation = true
