@@ -2,6 +2,9 @@
 
 This changelog only includes the most important changes in recent updates. For a full log of all changes, please refer to git.
 
+### Version 4.3.1
+* Modified installation files for uv
+
 ### Version 4.3.0
 * Added Gas Damping Forces effect
 
