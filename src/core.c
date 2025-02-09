@@ -144,6 +144,21 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "lt_p_haty", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "lt_p_hatz", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "lt_c", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_M_last", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_num_periapse", REBX_TYPE_INT);
+    rebx_register_param(rebx, "td_c_imag", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_c_real", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_dP_hat", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_dP_crit", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_EB0", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_E_max", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_E_resid", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_dE_last", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_last_periapse", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_drag_coef", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_drag_exp", REBX_TYPE_INT);
+    rebx_register_param(rebx, "td_debug_Eb_last", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_dc_tilde_last", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -346,6 +361,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     }
     else if (strcmp(name, "lense_thirring") == 0){
         force->update_accelerations = rebx_lense_thirring;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "tides_dynamical") == 0){
+        force->update_accelerations = rebx_tides_dynamical;
         force->force_type = REBX_FORCE_VEL;
     }
     else{

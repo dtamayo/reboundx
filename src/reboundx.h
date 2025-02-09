@@ -564,6 +564,22 @@ double rebx_central_force_potential(struct rebx_extras* const rebx);
  */
 double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
 
+struct rebx_tides_dynamical_params
+{
+    double dP;
+    double dE_alpha;
+    double sigma;
+};
+struct rebx_tides_dynamical_mode
+{
+    double real;
+    double imag;
+    char mode;
+};
+struct rebx_tides_dynamical_params rebx_calculate_tides_dynamical_params(struct reb_simulation* const sim, struct reb_particle* p, struct reb_particle* primary);
+struct rebx_tides_dynamical_mode rebx_calculate_tides_dynamical_mode_evolution(double old_real, double old_imag, double dc_tilde, double P, double sigma);
+double rebx_calculate_tides_dynamical_drag_integral(double e, double n);
+
 /** @} */
 /** @} */
 
