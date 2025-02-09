@@ -284,10 +284,37 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
     double* drag_coef = rebx_get_param(rebx, p->ap, "td_drag_coef");
     int* drag_exp = rebx_get_param(rebx, p->ap, "td_drag_exp");
 
-    double r = pow(p->x*p->x + p->y*p->y + p->z*p->z, 0.5);
-    double Fx = -*drag_coef * p->vx / pow(r, *drag_exp);
-    double Fy = -*drag_coef * p->vy / pow(r, *drag_exp);
-    double Fz = -*drag_coef * p->vz / pow(r, *drag_exp);
+    // Compute CoM
+    double comx = 0;
+    double comy = 0;
+    double comz = 0;
+    double comvx = 0;
+    double comvy = 0;
+    double comvz = 0;
+    double total_m = 0;
+
+    for (int i = 0; i < sim->N; i++)
+    {
+        comx += particles[i].m * particles[i].x;
+        comy += particles[i].m * particles[i].y;
+        comz += particles[i].m * particles[i].z;
+        comvx += particles[i].m * particles[i].vx;
+        comvy += particles[i].m * particles[i].vy;
+        comvz += particles[i].m * particles[i].vz;
+        total_m += particles[i].m;
+    }
+
+    double x = particles[1]->x - comx;
+    double y = particles[1]->y - comy;
+    double z = particles[1]->z - comz;
+    double vx = particles[1]->vx - comvx;
+    double vy = particles[1]->vy - comvy;
+    double vz = particles[1]->vz - comvz;
+
+    double r = pow(x*x + y*y + z*z, 0.5);
+    double Fx = -*drag_coef * vx / pow(r, *drag_exp);
+    double Fy = -*drag_coef * vy / pow(r, *drag_exp);
+    double Fz = -*drag_coef * vz / pow(r, *drag_exp);
 
     // Apply drag to particle
     particles[1].ax += Fx / particles[1].m;
