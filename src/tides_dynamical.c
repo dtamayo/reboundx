@@ -304,12 +304,12 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
         total_m += particles[i].m;
     }
 
-    double x = particles[1]->x - comx;
-    double y = particles[1]->y - comy;
-    double z = particles[1]->z - comz;
-    double vx = particles[1]->vx - comvx;
-    double vy = particles[1]->vy - comvy;
-    double vz = particles[1]->vz - comvz;
+    double x = particles[1].x - comx / total_m;
+    double y = particles[1].y - comy / total_m;
+    double z = particles[1].z - comz / total_m;
+    double vx = particles[1].vx - comvx / total_m;
+    double vy = particles[1].vy - comvy / total_m;
+    double vz = particles[1].vz - comvz / total_m;
 
     double r = pow(x*x + y*y + z*z, 0.5);
     double Fx = -*drag_coef * vx / pow(r, *drag_exp);
