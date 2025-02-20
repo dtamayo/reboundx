@@ -72,9 +72,10 @@ struct rebx_tides_dynamical_params rebx_calculate_tides_dynamical_params(struct 
 
     // Calculate some useful distances
     double R = p->r; // radius of planet
-    double R_tide = R * pow(primary->m / p->m, 1 / 3); // tidal radius
+    double R_tide = R * pow(primary->m / p->m, 0.33333); // tidal radius
     double R_p = a * (1 - e); // pericenter distance
     double eta = R_p / R_tide; // pericenter distance in units of tidal radius
+
 
     if (eta <= 2.5) // Tidal disruption occured
     {
@@ -105,6 +106,9 @@ struct rebx_tides_dynamical_params rebx_calculate_tides_dynamical_params(struct 
     double z = pow(2, 0.5) * sigma / Omega_peri;
     double K_22 = 2 * pow(z, 1.5) * pow(eta, 1.5) * pow(EulerConstant, -2 * z / 3) * (1 - pow(M_PI, 0.5) / (4 * pow(z, 0.5))) / (pow(15, 0.5));
     double T = 2 * M_PI * M_PI * Q * Q * K_22 * K_22 * sigma / epsilon;
+
+    
+    
 
     // Calculate change in mode energy, assuming 0 mode amplitude
     double dE_alpha = sim->G * primary->m * primary->m * pow(R, 5) * T / pow(R_p, 6);
@@ -293,7 +297,7 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
     double comvz = 0;
     double total_m = 0;
 
-    for (int i = 0; i < sim->N; i++)
+    for (int i = 0; i < 2; i++)
     {
         comx += particles[i].m * particles[i].x;
         comy += particles[i].m * particles[i].y;
