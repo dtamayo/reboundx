@@ -1,7 +1,7 @@
 /**
  * @file    tides_dynamical.c
  * @brief   Update body's orbital and modal evolution due to the presence of dynamical tides.
- * @author  Donald J. Liveoak <donaldliveoak1@gmail.com>
+ * @author  Donald J. Liveoak <dliveoak@umich.edu>
  * 
  * @section     LICENSE
  * Copyright (c) 2015 Dan Tamayo, Hanno Rein
@@ -28,7 +28,7 @@
  * $Tides$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
  *
  * ======================= ===============================================
- * Authors                 D. Liveoak & S. Millholland
+ * Authors                 D. Liveoak, S. Millholland, M. Vick, D. Tamayo
  * Implementation Paper    
  * Based on                `Vick et al. 2019 <https://academic.oup.com/mnras/article/484/4/5645/5306464/>`_. 
  * C Example               
@@ -36,17 +36,27 @@
  * ======================= ===============================================
  * 
  * This updates body's orbital and modal evolution due to the presence of dynamical tides.
- * Particles are modeled by a gamma=4/3 polytrope, and the f-mode is evolved at each pericentre passage.
+ * Particles are modeled by a gamma=2 polytrope, and the f-mode is evolved at each pericentre passage.
  * The dissipation of orbital energy due to dynamical tides is modeled as an angular momentum-conserving kick at periapse.
  * When mode energy grows to exceed `td_E_max`, it is non-linearly dissipated in one orbital period to `td_E_resid`.
  * To isolate the effects of chaotic model evolution, one can set `dP_hat_crit` to disable dynamical tides whenever chaos is unlikely (see Vick et al. (2019))
  * 
+ * *Effect Parameters**
+ * 
+ * None
  * 
  * **Particle Parameters**
  *
- * One can pick and choose which particles have which parameters set.  
- * For each particle, any unset parameter is replaced by its default value.
- * Particles with index 0 will not experience dynamical tides.
+ * ============================ =========== ==================================================================
+ * Field (C type)               Required    Description
+ * ============================ =========== ==================================================================
+ * particles[1].r (float)       Yes         Physical radius
+ * td_E_max (float)             No          Maximum mode energy before non-linear dissipation (default: 0.1 * E_bind)
+ * td_E_resid (float)           No          Residual mode energy after non-linear dissipation (default: 0.001 * E_bind)
+ * td_c_real (float)            No          Real component of mode (default: 0)
+ * td_c_imag (float)            No          Imaginary component of mode (default: 0)
+ * td_dP_crit                   No          Critical change in mode phase to enable dynamical tides (default: 0)
+ * ============================ =========== ==================================================================
  * 
  */
 
@@ -75,7 +85,6 @@ struct rebx_tides_dynamical_params rebx_calculate_tides_dynamical_params(struct 
     double R_tide = R * pow(primary->m / p->m, 0.33333); // tidal radius
     double R_p = a * (1 - e); // pericenter distance
     double eta = R_p / R_tide; // pericenter distance in units of tidal radius
-
 
     if (eta <= 2.5) // Tidal disruption occured
     {
@@ -108,8 +117,6 @@ struct rebx_tides_dynamical_params rebx_calculate_tides_dynamical_params(struct 
     double T = 2 * M_PI * M_PI * Q * Q * K_22 * K_22 * sigma / epsilon;
 
     
-    
-
     // Calculate change in mode energy, assuming 0 mode amplitude
     double dE_alpha = sim->G * primary->m * primary->m * pow(R, 5) * T / pow(R_p, 6);
 
@@ -141,25 +148,18 @@ struct rebx_tides_dynamical_mode rebx_calculate_tides_dynamical_mode_evolution(d
     return mode;
 }
 
-double rebx_calculate_tides_dynamical_drag_integral(double e, double n)
+// drag integral, eq. 6 of Samsing et al. (2018)
+double rebx_calculate_tides_dynamical_drag_integral(double e)
 {
-    if (n == 4)
-    {
-        return M_PI * (2 + 7 * e*e + e*e*e*e) / 2;
-    }
-    if (n == 10)
-    {
-        return M_PI * (128 + 2944*e*e + 10528*pow(e, 4) + 8960*pow(e, 6) + 1715*pow(e, 8) + 35*pow(e, 10)) / 128;
-    }
-    return 0;
+    return M_PI * (128 + 2944*e*e + 10528*pow(e, 4) + 8960*pow(e, 6) + 1715*pow(e, 8) + 35*pow(e, 10)) / 128;
 }
 
 void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N)
 {
+    // compute orbit
    	struct rebx_extras* const rebx = sim->extras;
     struct reb_particle* const source = &sim->particles[0];
     struct reb_particle* const p = &sim->particles[1];
-
     struct reb_orbit o = reb_orbit_from_particle(sim->G, *p, *source);
 
     // Set default parameter values
@@ -168,9 +168,9 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
         double EB0 = -sim->G * p->m * source->m / (2 * o.a);
         rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_EB0", EB0);    
     }
-    if (rebx_get_param(rebx, p->ap, "td_num_periapse") == NULL)
+    if (rebx_get_param(rebx, p->ap, "td_num_apoapsis") == NULL)
     {
-        rebx_set_param_int(rebx, (struct rebx_node**)&p->ap, "td_num_periapse", 0);    
+        rebx_set_param_int(rebx, (struct rebx_node**)&p->ap, "td_num_apoapsis", 0);    
     }
     if (rebx_get_param(rebx, p->ap, "td_c_real") == NULL)
     {
@@ -202,34 +202,21 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
     {
         rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_drag_coef", 0);
     }
-    if (rebx_get_param(rebx, p->ap, "td_drag_exp") == NULL)
+    if (rebx_get_param(rebx, p->ap, "td_last_apoapsis") == NULL)
     {
-        rebx_set_param_int(rebx, (struct rebx_node**)&p->ap, "td_drag_exp", 4);
-    }
-    if (rebx_get_param(rebx, p->ap, "td_last_periapse") == NULL)
-    {
-        rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_last_periapse", 0);
-    }
-    if (rebx_get_param(rebx, p->ap, "td_debug_Eb_last") == NULL)
-    {
-        double EB0 = -sim->G * p->m * source->m / (2 * o.a);
-        rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_debug_Eb_last", EB0);
-    }
-    if (rebx_get_param(rebx, p->ap, "td_dc_tilde_last") == NULL)
-    {
-        rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_dc_tilde_last", 0);
+        rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_last_apoapsis", 0);
     }
 
     if (rebx_get_param(rebx, p->ap, "td_M_last") != NULL)
     {       
         double* M_last = rebx_get_param(rebx, p->ap, "td_M_last");
         double drag = 0;
-        double* last_periapse_time = rebx_get_param(rebx, p->ap, "td_last_periapse");
-        if ((o.M >= M_PI && *M_last < M_PI) && o.M - M_PI <= 1 && sim->t - *last_periapse_time >= sim->dt)        //if (o.M < *M_last)
+        double* last_apoapsis_time = rebx_get_param(rebx, p->ap, "td_last_apoapsis");
+        if ((o.M >= M_PI && *M_last < M_PI) && o.M - M_PI <= 1 && sim->t - *last_apoapsis_time >= sim->dt)        //if (o.M < *M_last)
         {
-            // Count periapse passages
-            int* num_periapse = rebx_get_param(rebx, p->ap, "td_num_periapse");
-            rebx_set_param_int(rebx, (struct rebx_node**)&p->ap, "td_num_periapse", *num_periapse + 1);
+            // Count apoapsis passages
+            int* num_apoapsis = rebx_get_param(rebx, p->ap, "td_num_apoapsis");
+            rebx_set_param_int(rebx, (struct rebx_node**)&p->ap, "td_num_apoapsis", *num_apoapsis + 1);
 
             double* dP_crit = rebx_get_param(rebx, p->ap, "td_dP_crit");
             struct rebx_tides_dynamical_params dynamical_params = rebx_calculate_tides_dynamical_params(sim, p, source);
@@ -249,35 +236,31 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
                 double dE_alpha_tilde = dE_alpha / -*EB0;
                 double* c_real = rebx_get_param(rebx, p->ap, "td_c_real"); 
                 double* c_imag = rebx_get_param(rebx, p->ap, "td_c_imag");
-                rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_dc_tilde_last", dc_tilde);
 
                 // Evolve modes
                 double sigma = dynamical_params.sigma;
                 struct rebx_tides_dynamical_mode new_modes = rebx_calculate_tides_dynamical_mode_evolution(*c_real, *c_imag, dc_tilde, o.P, sigma);
                 double dEb = (-*EB0) * (new_modes.real*new_modes.real + new_modes.imag*new_modes.imag - *c_real* *c_real - *c_imag * *c_imag);
                 double* EB_last = rebx_get_param(rebx, p->ap, "td_debug_Eb_last");
-                rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_debug_Eb_last", EBk);
 
+                // If mode energy is too high, non-linear dissipation
                 double* E_max = rebx_get_param(rebx, p->ap, "td_E_max"); 
                 double* E_resid = rebx_get_param(rebx, p->ap, "td_E_resid");
                 if (-(pow(new_modes.real, 2) + pow(new_modes.imag, 2)) * *EB0 >= *E_max)
                 {
+                    // re-scale modes so that E_mode = E_resid
                     double E_dis_ratio = -*E_resid / *EB0;
                     new_modes.real = pow(E_dis_ratio / (1 + pow(new_modes.imag, 2) / pow(new_modes.real, 2)), 0.5);
                     new_modes.imag = pow(E_dis_ratio / (1 + pow(new_modes.real, 2) / pow(new_modes.imag, 2)), 0.5);
-
                 }
 
                 rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_c_real", new_modes.real);
                 rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_c_imag", new_modes.imag);  
-                rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_last_periapse", sim->t);
-
+                rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_last_apoapsis", sim->t);
 
                 // Compute drag parameter
-                int* n = rebx_get_param(rebx, p->ap, "td_drag_exp");
-                double I = rebx_calculate_tides_dynamical_drag_integral(o.e, *n);
-                
-                drag = dEb * pow((o.a) * (1 - o.e * o.e), *n - 0.5) / (2 * pow(sim->G * (p->m + source->m), 0.5) * I);
+                double I = rebx_calculate_tides_dynamical_drag_integral(o.e);
+                drag = dEb * pow((o.a) * (1 - o.e * o.e), 10 - 0.5) / (2 * pow(sim->G * (p->m + source->m), 0.5) * I);
             }
             rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_drag_coef", drag);
         }
@@ -286,7 +269,6 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
     rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_M_last", o.M);    
 
     double* drag_coef = rebx_get_param(rebx, p->ap, "td_drag_coef");
-    int* drag_exp = rebx_get_param(rebx, p->ap, "td_drag_exp");
 
     // Compute CoM
     double comx = 0;
@@ -316,9 +298,9 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
     double vz = particles[1].vz - comvz / total_m;
 
     double r = pow(x*x + y*y + z*z, 0.5);
-    double Fx = -*drag_coef * vx / pow(r, *drag_exp);
-    double Fy = -*drag_coef * vy / pow(r, *drag_exp);
-    double Fz = -*drag_coef * vz / pow(r, *drag_exp);
+    double Fx = -*drag_coef * vx / pow(r, 10);
+    double Fy = -*drag_coef * vy / pow(r, 10);
+    double Fz = -*drag_coef * vz / pow(r, 10);
 
     // Apply drag to particle
     particles[1].ax += Fx / particles[1].m;

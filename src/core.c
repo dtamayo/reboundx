@@ -145,7 +145,7 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "lt_p_hatz", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "lt_c", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_M_last", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "td_num_periapse", REBX_TYPE_INT);
+    rebx_register_param(rebx, "td_num_apoapsis", REBX_TYPE_INT);
     rebx_register_param(rebx, "td_c_imag", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_c_real", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_dP_hat", REBX_TYPE_DOUBLE);
@@ -154,11 +154,8 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "td_E_max", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_E_resid", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_dE_last", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "td_last_periapse", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_last_apoapsis", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_drag_coef", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "td_drag_exp", REBX_TYPE_INT);
-    rebx_register_param(rebx, "td_debug_Eb_last", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "td_dc_tilde_last", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
