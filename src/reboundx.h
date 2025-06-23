@@ -220,6 +220,17 @@ struct rebx_operator{
 };
 
 /**
+ * @brief Structure for REBOUNDx collision_resolve function.
+ */
+struct rebx_collision_resolve{
+    char* name;                 ///< For searching linked lists and informative errors
+    struct rebx_node* ap;       ///< Additional parameters linked list
+    struct reb_simulation* sim; ///< Pointer to attached sim. Needed for error checks
+    // See comments in params.py in __init__
+    int (*collision_resolve) (struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision); ///< Function pointer to collision resolve function
+};
+
+/**
  * @brief Structure for a REBOUNDx step.
  * @details A step is just a combination of an operator with a fraction of a timestep (see Sec. 6 of REBOUNdx paper). Can use same operator for different steps of different lengths to build higher order splitting schemes.
  */
@@ -254,6 +265,7 @@ struct rebx_extras {
     struct rebx_node* additional_forces;            ///< Linked list of extra forces
     struct rebx_node* pre_timestep_modifications;   ///< Linked list of rebx_steps to apply before each timestep
 	struct rebx_node* post_timestep_modifications;  ///< Linked list of rebx_steps to apply after each timestep
+    struct rebx_collision_resolve* collision_resolve; ///< The collision_resolve module to be used (there can only be one, thus no list)
 
     struct rebx_node* registered_params;            ///< Linked list of rebx_params with all the parameter names registered with their type (for type safety)
     struct rebx_node* allocated_forces;             ///< For memory management
@@ -296,6 +308,7 @@ void rebx_free(struct rebx_extras* rebx);
 
 int rebx_remove_force(struct rebx_extras* rebx, struct rebx_force* force);
 int rebx_remove_operator(struct rebx_extras* rebx, struct rebx_operator* operator);
+int rebx_remove_collision_resolve(struct rebx_extras* rebx, struct rebx_collision_resolve* collision_resolve);
 
 /**
  * @brief Save a binary file with all the effects in the simulation, as well as all particle and effect parameters.
@@ -344,10 +357,13 @@ void rebx_init_extras_from_binary(struct rebx_extras* rebx, const char* const fi
 int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator);
 int rebx_add_operator_step(struct rebx_extras* rebx, struct rebx_operator* operator, const double dt_fraction, enum rebx_timing timing);
 int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force);
+int rebx_add_collision_resolve(struct rebx_extras* rebx, struct rebx_collision_resolve* collision_resolve);
 struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const char* name);
 struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* name);
+struct rebx_collision_resolve* rebx_load_collision_resolve(struct rebx_extras* const rebx, const char* name);
 struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const char* name);
 struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char* name);
+struct rebx_collision_resolve* rebx_create_collision_resolve(struct rebx_extras* const rebx, const char* name);
 /**
  * @brief Function for adding a custom force in REBOUNDx.
  * @param rebx Pointer to the rebx_extras instance
