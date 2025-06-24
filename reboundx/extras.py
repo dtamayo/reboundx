@@ -100,6 +100,18 @@ class Extras(Structure):
         ptr = clibreboundx.rebx_create_operator(byref(self), c_char_p(name.encode('ascii')))
         self.process_messages()
         return ptr.contents
+    
+    def load_collision_resolve(self, name):
+        clibreboundx.rebx_load_collision_resolve.restype = POINTER(CollisionResolve)
+        ptr = clibreboundx.rebx_load_collision_resolve(byref(self), c_char_p(name.encode('ascii')))
+        self.process_messages()
+        return ptr.contents
+
+    def create_collision_resolve(self, name):
+        clibreboundx.rebx_create_collision_resolve.restype = POINTER(CollisionResolve)
+        ptr = clibreboundx.rebx_create_collision_resolve(byref(self), c_char_p(name.encode('ascii')))
+        self.process_messages()
+        return ptr.contents
 
     def add_force(self, force):
         if not isinstance(force, reboundx.extras.Force):
@@ -116,7 +128,13 @@ class Extras(Structure):
             timingint = REBX_TIMING[timing]
             clibreboundx.rebx_add_operator_step(byref(self), byref(operator), c_double(dtfraction), c_int(timingint))
         self.process_messages()
-
+    
+    def add_collision_resolve(self, collision_resolve):
+        if not isinstance(collision_resolve, reboundx.extras.CollisionResolve):
+            raise TypeError("REBOUNDx Error: Object passed to rebx.add_collision_resolve is not a reboundx.CollisionResolve instance.")
+        clibreboundx.rebx_add_collision_resolve(byref(self), byref(collision_resolve))
+        self.process_messages()
+    
     def get_force(self, name):
         clibreboundx.rebx_get_force.restype = POINTER(Force)
         ptr = clibreboundx.rebx_get_force(byref(self), c_char_p(name.encode('ascii')))
@@ -133,6 +151,15 @@ class Extras(Structure):
             return ptr.contents
         else:
             raise AttributeError("REBOUNDx Error: Operator {0} passed to rebx.get_operator not found.".format(name))
+    
+    def get_collision_resolve(self, name):
+        clibreboundx.rebx_get_collision_resolve.restype = POINTER(CollisionResolve)
+        ptr = clibreboundx.rebx_get_collision_resolve(byref(self), c_char_p(name.encode('ascii')))
+        self.process_messages()
+        if ptr:
+            return ptr.contents
+        else:
+            raise AttributeError("REBOUNDx Error: CollisionResolve {0} passed to rebx.get_collision_resolve not found.".format(name))
 
     def remove_force(self, force):
         if not isinstance(force, reboundx.extras.Force):
