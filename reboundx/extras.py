@@ -285,6 +285,30 @@ Operator._fields_ = [   ("name", c_char_p),
                         ("_sim", POINTER(rebound.Simulation)),
                         ("_operator_type", c_int),
                         ("_step_function", STEPFUNCPTR)]
+
+class CollisionResolve(Structure):
+    @property
+    def collision_resolve(self):
+        return self._collision_resolve
+
+    @collision_resolve.setter
+    def collision_resolve(self, func):
+        self._sfp = COLLISIONRESOLVEFUNCPTR(func) # keep a reference to func so it doesn't get garbage collected
+        self._collision_resolve = self._sfp
+
+    @property
+    def params(self):
+        params = Params(self)
+        return params
+
+COLLISIONRESOLVEFUNCPTR = CFUNCTYPE(c_int, POINTER(rebound.Simulation), POINTER(CollisionResolve), rebound.CollisionS)
+
+CollisionResolve._fields_ = [   ("name", c_char_p),
+                        ("ap", POINTER(Node)),
+                        ("_sim", POINTER(rebound.Simulation)),
+                        ("_collision_resolve", COLLISIONRESOLVEFUNCPTR)]
+
+
 class Force(Structure):
     @property
     def force_type(self):
@@ -321,6 +345,7 @@ Extras._fields_ =  [("_sim", POINTER(rebound.Simulation)),
                     ("_additional_forces", POINTER(Node)),
                     ("_pre_timestep_modifications", POINTER(Node)),
                     ("_post_timestep_modifications", POINTER(Node)),
+                    ("_collision_resolve", POINTER(CollisionResolve)),
                     ("_registered_params", POINTER(Node)),
                     ("_allocated_forces", POINTER(Node)),
                     ("_allocated_operators", POINTER(Node))]
