@@ -259,6 +259,23 @@ struct reb_vec3d rebx_tools_spin_angular_momentum(struct rebx_extras* const rebx
 	return L;
 }
 
+double rebx_tools_spin_energy(struct rebx_extras* const rebx){
+    struct reb_simulation* const sim = rebx->sim;
+    // Add spin energy of any particles with spin parameters set
+    const int N_real = sim->N - sim->N_var;
+    double E = 0;
+    for (int i=0;i<N_real;i++){
+		struct reb_particle* pi = &sim->particles[i];
+        const struct reb_vec3d* Omega = rebx_get_param(rebx, pi->ap, "Omega");
+        const double* I = rebx_get_param(rebx, pi->ap, "I");
+
+        if (Omega != NULL && I != NULL){
+          E += 0.5 * (*I) * ((Omega->x) * (Omega->x) + (Omega->y) * (Omega->y) + (Omega->z) * (Omega->z));
+        }
+	}
+	return E;
+}
+
 void rebx_simulation_irotate(struct rebx_extras* const rebx, const struct reb_rotation q){
     // Modified from celmech nbody_simulation_utilities.py to include spin angular momentum
     struct reb_simulation* const sim = rebx->sim;
