@@ -72,6 +72,7 @@ double get_mag(double x, double y, double z){
     return sqrt(pow(x,2)+pow(y,2)+pow(z,2));
 }  
 
+double separation_distance_scale = 4;
 
 int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
     struct reb_particle* pi = &(sim->particles[c.p1]); //First object in collision
@@ -92,7 +93,12 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     }
 
     struct reb_particle com = reb_particle_com_of_pair(*target, *projectile); //Center of mass (COM) of target and projectile
-    double initial_mass = target -> m + projectile -> m; //Sum of mass of two objects
+    double target_mass = target->m; //target initial mass
+    double projectile_mass = projectile->m; //projectile initial mass
+    double initial_mass = target_mass + projectile_mass; //initial mass of two colliders
+    double target_r = target->r;
+    double projectile_r = projectile->r;
+    double r_tot = target_r + projectile_r;
     double Mlr; //Mass of the largest remnant
     double remaining_mass = initial_mass - Mlr; //Remaning mass, will turn into fragments
     double rho = target->m/(4./3*M_PI*pow(target ->r, 3)); //Target's density
@@ -188,7 +194,19 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     normal_to_vrel[1] = normal_to_vrel[1]/normal_to_vrel_mag;
     normal_to_vrel[2] = normal_to_vrel[2]/normal_to_vrel_mag;
 
-    //NOTE: continue with fragment velocity, then adding fragments
+    //Compute magnitude of fragment velocity. Here, we choose 5% more than the escape velocity.
+    double G = sim->G;
+    //escape velocity = (G.M_total/R_total)^(1/2)
+    double V_esc = pow(2.*G*(initial_mass)/(r_tot), .5);
+    //Separation distance is the distance between largest remnant and each fragment
+    double separation_distance = separation_distance_scale * r_tot;
+    //Fragment velocity, refer to Childs and Steffen (2022) eq. 1 for a similar computation of impact velocity. 
+    //In summary, we need to subtract the potential energy, which is different at the moment of contact (where the 
+    //distance between two particles is r_tot) and when the fragments are placed and leaving the largest remnant
+    //(where the distance between lr and frag is = separation distance).
+    double frag_velocity =sqrt(1.1*pow(V_esc,2) - 2 * G* initial_mass * (1./(r_tot) - 1./(separation_distance)));
+    
+    //NOTE: now need to place fragments
 
 
     return 2; // Remove 2 particle from simulation
