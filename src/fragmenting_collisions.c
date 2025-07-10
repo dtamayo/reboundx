@@ -89,6 +89,8 @@ double get_radii(double m, double rho){
 //Global parameters, need to be used defined
 double separation_distance_scale = 4;
 double min_frag_mass = 1.4e-8;
+double rho1 = 1.684e6; //Msun/AU^3 
+double cstar = 1.8; 
 
 /*
 * Function to get mass of the largest remnant, based on the energy involved in the collision.
@@ -177,20 +179,37 @@ double get_mass_of_largest_remnant(struct reb_simulation* const sim, struct reb_
     //Mass ratio of target and projectile, Chambers (2013) eq. 6
     double gamma = projectile->m/target->m;  
 
-    double Rc1 = pow((M_tot*3)/(4.*M_PI*rho1), 1./3.);  //Chambers Eq. 4, combined radius of target and projectile with constant density
-    double Q0 = .8*cstar*M_PI*rho1*G*pow(Rc1,2);  //Chambers Eq. 3, critical value of impact energy for head-on collisions
-    double Q_star = pow(mu/alphamu, 1.5)*(pow(1+gamma, 2)/ (4*gamma))*Q0;  //Chambers Eq. 5, critical value for oblique or different mass collisons.  
+    //Chambers (2013) Eq. 4, combined radius of target and projectile with constant density
+    double Rc1 = pow((initial_mass * 3)/(4. * M_PI * rho1), 1./3.);  
+
+    //Chambers (2013) Eq. 3, critical value of impact energy for head-on collisions
+    double Q0 = 0.8 * cstar * M_PI * rho1 * G * pow(Rc1,2); 
+
+    //Chambers (2013) Eq. 5, critical impact energy for oblique or different mass collisons.  
+    double Q_star = pow(mu/alphamu, 1.5)*(pow(1+gamma, 2)/ (4*gamma))*Q0; 
     if (alpha == 0.0){
-        reb_simulation_error(r, "alpha = 0");
+        reb_simulation_error(sim, "alpha (interacting mass fraction) = 0");
         return 0;
     }
 
+    //For equal mass and head-on collisions Q* = Q0.
+    if (b == 0 && target->m == projectile->m){
+        Q_star = Q0;
+    }
+
+    //Mass of largest remnant is derived based on Q and Q* ratio. (Chambers (2013) eq. 8)
+    double qratio = Q/Q_star;
+    if (qratio < 1.8){
+        Mlr = initial_mass*(1.0-.5*qratio);
+    }else{
+        Mlr = 0.1 * initial_mass * pow(qratio/1.8, -1.5);  
+    }
     return Mlr;
 }
 
 
 
-int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c, double largest_remnant_mass){
+int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
     struct reb_particle* pi = &(sim->particles[c.p1]); //First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); //Second object in collison
 
@@ -211,7 +230,7 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     struct reb_particle com = reb_particle_com_of_pair(*target, *projectile); //Center of mass (COM) of target and projectile
     double initial_mass = target->m + projectile->m; //initial mass of two colliders
     double r_tot = target->r + projectile->r; //Sum of radii or two colliders
-    double Mlr = largest_remnant_mass; //Mass of the largest remnant
+    double Mlr = get_mass_of_largest_remnant(sim, c); //Mass of the largest remnant
     double remaining_mass = initial_mass - Mlr; //Remaning mass, will turn into fragments
     double rho = target->m/(4./3*M_PI*pow(target ->r, 3)); //Target's density
 

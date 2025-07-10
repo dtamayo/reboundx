@@ -93,6 +93,7 @@ void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_opera
  Collision resolve prototypes
  *****************************************/
 int rebx_merging_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision collision);
+int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision collision);
 
 /****************************************
  Integrator prototypes

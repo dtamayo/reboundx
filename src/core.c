@@ -485,6 +485,9 @@ struct rebx_collision_resolve* rebx_load_collision_resolve(struct rebx_extras* c
     if (strcmp(name, "merging_collisions") == 0){
         collision_resolve->collision_resolve = rebx_merging_collisions;
     }
+    if (strcmp(name, "fragmenting_collisions") == 0){
+        collision_resolve->collision_resolve = rebx_fragmenting_collisions;
+    }
     else{
         char str[300];
         sprintf(str, "REBOUNDx error: Collision resolve '%s' not found in REBOUNDx library.\n", name);
