@@ -1,7 +1,7 @@
 .. _effects:
 
-Implemented Effects
-===================
+Astrophysical Effects
+=====================
 
 Below are descriptions for each of the effects included in REBOUNDx.
 Different implementations for the same effect are grouped together.
@@ -17,50 +17,34 @@ Positive timescales correspond to growth / progression, negative timescales corr
 Semimajor axes, eccentricities and inclinations grow / damp exponentially.  
 Pericenters and nodes progress/regress linearly.
 
-$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$
 General Relativity
 ^^^^^^^^^^^^^^^^^^
 
-$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$
 Radiation Forces
 ^^^^^^^^^^^^^^^^
 
-$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$
 Stochastic Forces
 ^^^^^^^^^^^^^^^^^
 
-$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$
 Mass Modifications
 ^^^^^^^^^^^^^^^^^^
 
-$$$$$$$$$$$$
+$$$$$
 Tides
-^^^^^^^^^^^^^^^^^^
+^^^^^
 
-$$$$$$$$$$$$
+$$$$$$$$$$$$$
 Central Force
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
 
-$$$$$$$$$$$$
+$$$$$$$$$$$$$$
 Gravity Fields
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 
-$$$$$$$$$$$$
+$$$$$$$$$$$
 Gas Effects
-^^^^^^^^^^^^^^^^^^
-
-$$$$$$$$$$$$$$$$$$$$
-Integration Steppers
-^^^^^^^^^^^^^^^^^^^^
-
-These are wrapper functions to taking steps with several of REBOUND's integrators in order to build custom splitting schemes.
-
-$$$$$$$$$$$$$$$$$$$$$$$
-Parameter Interpolation
-^^^^^^^^^^^^^^^^^^^^^^^
-
-This isn't an effect that's loaded like the others, but an object that facilitates machine-independent interpolation of parameters that can be shared by both the C and Python versions. See the examples below for how to use them.
-
-$$$$$$$$$$$$
-Miscellaneous Utilities
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^

@@ -154,6 +154,78 @@ with open("effects.rst", "w") as f:
                     else:
                         j += 1
 
+with open("collisions.rst", "w") as f:
+    f.write('.. _collisions:\n\n')
+    f.write('Collisions\n')
+    f.write('==========\n\n')
+    f.write('Below are each of the functions for resolving collisions implemented in REBOUNDx.\n\n')
+    for source in sources:
+        category = "Collisions"
+        with open("../src/" + source + ".c", "r") as fs: # search sources that match category
+            sourcelines = fs.readlines()
+            j=0
+            while "#include" not in sourcelines[j]:
+                if "$$$" in sourcelines[j]: # start of documentation block
+                    j += 1
+                    while sourcelines[j].strip() == "*": # skip empty lines
+                        j += 1
+                    res = re.search(r'\$(.*)\$', cleanline(sourcelines[j])) # search for category between dollar signs
+                    if res is not None:
+                        cat = res.group(1)
+                        if cat.strip().lower() == category.strip().lower(): # source is in category, need to document
+                            j += 1
+                            f.write(".. _"+source+":\n\n") # write tag
+                            f.write(source+"\n") # write implementation heading
+                            for k in range(len(source)):
+                                f.write("*")
+                            f.write("\n")
+                            while " */" not in sourcelines[j]:
+                                f.write(cleanline(sourcelines[j]))
+                                j += 1
+                            f.write("\n")
+                        else: # category doesn't match
+                           break
+                    else: # first non-empty line doesn't have category
+                        break
+                else:
+                    j += 1
+
+with open("misc.rst", "w") as f:
+    f.write('.. _misc:\n\n')
+    f.write('Miscellaneous Utilities\n')
+    f.write('=======================\n\n')
+    f.write('Below are various miscellaneous utilities implemented in REBOUNDx.\n\n')
+    for source in sources:
+        category = "Misc"
+        with open("../src/" + source + ".c", "r") as fs: # search sources that match category
+            sourcelines = fs.readlines()
+            j=0
+            while "#include" not in sourcelines[j]:
+                if "$$$" in sourcelines[j]: # start of documentation block
+                    j += 1
+                    while sourcelines[j].strip() == "*": # skip empty lines
+                        j += 1
+                    res = re.search(r'\$(.*)\$', cleanline(sourcelines[j])) # search for category between dollar signs
+                    if res is not None:
+                        cat = res.group(1)
+                        if cat.strip().lower() == category.strip().lower(): # source is in category, need to document
+                            j += 1
+                            f.write(".. _"+source+":\n\n") # write tag
+                            f.write(source+"\n") # write implementation heading
+                            for k in range(len(source)):
+                                f.write("*")
+                            f.write("\n")
+                            while " */" not in sourcelines[j]:
+                                f.write(cleanline(sourcelines[j]))
+                                j += 1
+                            f.write("\n")
+                        else: # category doesn't match
+                           break
+                    else: # first non-empty line doesn't have category
+                        break
+                else:
+                    j += 1
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -215,7 +287,7 @@ copyright = u"{0} {1}".format(year, author)
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en' 
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:

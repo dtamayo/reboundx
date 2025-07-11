@@ -25,7 +25,7 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
- * $Integration Steppers$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ * $Misc$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
  *
  * ======================= ===============================================
  * Authors                 D. Tamayo, H. Rein
