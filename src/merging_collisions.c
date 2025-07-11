@@ -25,12 +25,12 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
- * $Merging Collisions$     // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script). 
+ * $Collisions$     // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script). 
  * 
  * ======================= ===============================================
  * Authors                 H. Rein 
  * Based on                None
- * C Example               :ref:`c_merging_collisions`
+ * C Example               :ref:`c_example_merging_collisions`
  * ======================= ===============================================
  * 
  * This is a simple example implementation of a REBOUNDx collision module.
