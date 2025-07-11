@@ -230,6 +230,14 @@ class Extras(Structure):
         """
         clibreboundx.rebx_tools_spin_angular_momentum.restype = rebound.Vec3dBasic
         return rebound.Vec3d(clibreboundx.rebx_tools_spin_angular_momentum(byref(self)))
+    
+    def spin_energy(self):
+        """
+        Returns the spin energy of all particles in the simulation with moment of inertia (I) and spin angular frequency 
+        vector (Omega) parameters set.
+        """
+        clibreboundx.rebx_tools_spin_energy.restype = c_double
+        return clibreboundx.rebx_tools_spin_energy(byref(self))
 
     def process_messages(self):
         try:
