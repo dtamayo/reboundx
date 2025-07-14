@@ -124,7 +124,7 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "ye_spin_axis_x", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "ye_spin_axis_y", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "ye_spin_axis_z", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "OmegaMag", REBX_TYPE_VEC3D);
+    rebx_register_param(rebx, "OmegaMag", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "Omega", REBX_TYPE_VEC3D);
     rebx_register_param(rebx, "k2", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "I", REBX_TYPE_DOUBLE);
