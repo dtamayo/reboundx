@@ -44,7 +44,7 @@ def params(self):
 
 rebound.Particle.params = params
 
-from .extras import Extras, Param, Node, Force, Operator, integrators, Interpolator
+from .extras import Extras, Param, Node, Force, Operator, CollisionResolve, integrators, Interpolator
 from .simulationarchive import Simulationarchive
 from .tools import coordinates, install_test
 from .params import Params

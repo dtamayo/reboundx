@@ -53,6 +53,7 @@ void rebx_init_interpolator(struct rebx_extras* const rebx, struct rebx_interpol
 void rebx_additional_forces(struct reb_simulation* sim);                       // Calls all the forces that have been added to the simulation.
 void rebx_pre_timestep_modifications(struct reb_simulation* sim);   // Calls all the pre-timestep modifications that have been added to the simulation.
 void rebx_post_timestep_modifications(struct reb_simulation* sim);  // Calls all the post-timestep modifications that have been added to the simulation.
+int rebx_collision_resolver(struct reb_simulation* const sim, struct reb_collision); // Calls the one collision_resolve module added.
 
 /***********************************************************************************
  * Miscellaneous Functions
@@ -89,6 +90,11 @@ void rebx_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_ope
 void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt);
 
 /****************************************
+ Collision resolve prototypes
+ *****************************************/
+int rebx_merging_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision collision);
+
+/****************************************
  Integrator prototypes
  *****************************************/
 
@@ -102,6 +108,7 @@ void rebx_free_ap(struct rebx_node** ap);
 void rebx_free_particle_ap(struct reb_particle* p);
 void rebx_free_force(struct rebx_extras* rebx, struct rebx_force* force);
 void rebx_free_operator(struct rebx_operator* operator);
+void rebx_free_collision_resolve(struct rebx_extras* rebx, struct rebx_collision_resolve* collision_resolve);
 void rebx_free_step(struct rebx_step* step);
 void rebx_free_pointers(struct rebx_extras* rebx);
 void rebx_free_param(struct rebx_param* param);
