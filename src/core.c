@@ -1000,7 +1000,7 @@ void rebx_pre_timestep_modifications(struct reb_simulation* sim){
 void rebx_post_timestep_modifications(struct reb_simulation* sim){
     struct rebx_extras* rebx = sim->extras;
     struct rebx_node* current = rebx->post_timestep_modifications;
-    const double dt = sim->dt;
+    const double dt = sim->dt_last_done;
 
     while(current != NULL){
         struct rebx_step* step = current->object;
