@@ -112,12 +112,9 @@ static double rebx_calculate_gr_potential_potential(struct reb_simulation* const
 double rebx_gr_potential_potential(struct rebx_extras* const rebx, const struct rebx_force* const gr_potential){
     double* c = rebx_get_param(rebx, gr_potential->ap, "c");
     if (c == NULL){
-        rebx_error(rebx, "Need to set speed of light in gr effect.  See examples in documentation.\n");
-    }
-    const double C2 = (*c)*(*c);
-    if (rebx->sim == NULL){
-        rebx_error(rebx, ""); // rebx_error gives meaningful err
+        rebx_error(rebx, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
         return 0;
     }
+    const double C2 = (*c)*(*c);
     return rebx_calculate_gr_potential_potential(rebx->sim, C2);
 }
