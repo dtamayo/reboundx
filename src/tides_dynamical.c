@@ -149,9 +149,16 @@ struct rebx_tides_dynamical_mode rebx_calculate_tides_dynamical_mode_evolution(d
 }
 
 // drag integral, eq. 6 of Samsing et al. (2018)
-double rebx_calculate_tides_dynamical_drag_integral(double e)
+double rebx_calculate_tides_dynamical_drag_integral(double e, double n)
 {
-    return M_PI * (128 + 2944*e*e + 10528*pow(e, 4) + 8960*pow(e, 6) + 1715*pow(e, 8) + 35*pow(e, 10)) / 128;
+    if (n == 10)
+    {
+        return M_PI * (128 + 2944*e*e + 10528*pow(e, 4) + 8960*pow(e, 6) + 1715*pow(e, 8) + 35*pow(e, 10)) / 128;
+    }
+    if (n == 3)
+    {
+        return M_PI * (1 + 2*e*e);
+    }
 }
 
 void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N)
@@ -207,6 +214,8 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
         rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_last_apoapsis", 0);
     }
 
+    double n = 10;
+
     if (rebx_get_param(rebx, p->ap, "td_M_last") != NULL)
     {       
         double* M_last = rebx_get_param(rebx, p->ap, "td_M_last");
@@ -259,8 +268,8 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
                 rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_last_apoapsis", sim->t);
 
                 // Compute drag parameter
-                double I = rebx_calculate_tides_dynamical_drag_integral(o.e);
-                drag = dEb * pow((o.a) * (1 - o.e * o.e), 10 - 0.5) / (2 * pow(sim->G * (p->m + source->m), 0.5) * I);
+                double I = rebx_calculate_tides_dynamical_drag_integral(o.e, n);
+                drag = dEb * pow((o.a) * (1 - o.e * o.e), n - 0.5) / (2 * pow(sim->G * (p->m + source->m), 0.5) * I);
             }
             rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_drag_coef", drag);
         }
@@ -298,9 +307,9 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
     double vz = particles[1].vz - comvz / total_m;
 
     double r = pow(x*x + y*y + z*z, 0.5);
-    double Fx = -*drag_coef * vx / pow(r, 10);
-    double Fy = -*drag_coef * vy / pow(r, 10);
-    double Fz = -*drag_coef * vz / pow(r, 10);
+    double Fx = -*drag_coef * vx / pow(r, n);
+    double Fy = -*drag_coef * vy / pow(r, n);
+    double Fz = -*drag_coef * vz / pow(r, n);
 
     // Apply drag to particle
     particles[1].ax += Fx / particles[1].m;
