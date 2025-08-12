@@ -221,7 +221,8 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
         double* M_last = rebx_get_param(rebx, p->ap, "td_M_last");
         double drag = 0;
         double* last_apoapsis_time = rebx_get_param(rebx, p->ap, "td_last_apoapsis");
-        if ((o.M >= M_PI && *M_last < M_PI) && o.M - M_PI <= 1 && sim->t - *last_apoapsis_time >= sim->dt) 
+        if ((o.M >= M_PI && *M_last < M_PI) && o.M - M_PI <= 1 && sim->t - *last_apoapsis_time >= sim->dt)
+        { 
             // Count apoapsis passages
             int* num_apoapsis = rebx_get_param(rebx, p->ap, "td_num_apoapsis");
             rebx_set_param_int(rebx, (struct rebx_node**)&p->ap, "td_num_apoapsis", *num_apoapsis + 1);
