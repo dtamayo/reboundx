@@ -1,5 +1,5 @@
 /**
- * @file    merging_collisions.c
+ * @file    fragmenting_collisions.c
  * @brief   Adds a REBOUNDx collision module which always merges particles
  * @author  Hanno Rein <hanno.rein@utoronto.ca>
  * 
@@ -25,7 +25,7 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
- * $Fragmenting collisions$     // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script). 
+ * $Fragmenting Collisions$     // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script). 
  * 
  * ======================= ===============================================
  * Authors                 H. Rein 
@@ -92,124 +92,28 @@ double min_frag_mass = 1.4e-8;
 double rho1 = 1.684e6; //Msun/AU^3 
 double cstar = 1.8; 
 
-/*
-* Function to get mass of the largest remnant, based on the energy involved in the collision.
-* Equations are derived from Leinhardt and Stewart (2011) and Chambers (2013).
-*/
-double get_mass_of_largest_remnant(struct reb_simulation* const sim, struct reb_collision c){
-    double Mlr;
-    struct reb_particle* pi = &(sim->particles[c.p1]); //First object in collision
-    struct reb_particle* pj = &(sim->particles[c.p2]); //Second object in collison
+int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
+    struct reb_particle* pi = &(sim->particles[c.p1]); // First object in collision
+    struct reb_particle* pj = &(sim->particles[c.p2]); // Second object in collison
 
-    //Object with the higher mass will be the target, and object with lower mass will be the projectile
-    struct reb_particle* target;     
-    struct reb_particle* projectile; 
+    double invmass = 1.0/(pi->m + pj->m);
 
-    //Object with the higher mass will be the target, and object with lower mass will be the projectile
-    if (pi->m >= pj->m){
-        target = pi;    
-        projectile = pj;
-    }
-    else{
-        target = pj;   
-        projectile = pi; 
-    }
+    // Merge by conserving mass, volume and momentum
+    double targ_rho = pi->m/(4./3*M_PI*pow(pi->r,3));  // New body recieves density of the target
+    pi->vx = (pi->vx*pi->m + pj->vx*pj->m)*invmass;
+    pi->vy = (pi->vy*pi->m + pj->vy*pj->m)*invmass;
+    pi->vz = (pi->vz*pi->m + pj->vz*pj->m)*invmass;
+    pi->x  = (pi->x*pi->m + pj->x*pj->m)*invmass;
+    pi->y  = (pi->y*pi->m + pj->y*pj->m)*invmass;
+    pi->z  = (pi->z*pi->m + pj->z*pj->m)*invmass;
+    pi->m  = pi->m + pj->m;
+    pi->r  = cbrt(pi->r*pi->r*pi->r + pj->r*pj->r*pj->r);
+    pi->last_collision = sim->t;
 
-    //Some useful parameters
-    double initial_mass = target->m + projectile->m; //initial mass of two colliders
-    double r_tot = target->r + projectile->r; //sum of radii of colliders
-    double G = sim->G; //gravitational constant
-
-    //Relative positions
-    double dx = target->x - projectile->x;
-    double dy = target->y - projectile->y;
-    double dz = target->z - projectile->z;
-    double distance_mag = get_mag(dx, dy, dz);
-
-    //Relative velocities
-    double dvx = target->vx - projectile->vx;
-    double dvy = target->vy - projectile->vy;
-    double dvz = target->vz - projectile->vz;
-    double dv_mag = get_mag(dvx, dvy, dvz);
-
-    //Angular momentum vector, cross product of relative velocity and position
-    double hx, hy, hz;
-    get_cross_product(dvx, dvy, dvz, dx, dy, dz, &hx, &hy, &hz);
-    double h_mag = get_mag(hx, hy, hz);
-
-    //Impact velocity (refer to eq. 1 in Childs and Steffen (2022))
-    double v_imp = sqrt(dv_mag*dv_mag + 2 * G * initial_mass * (1./r_tot - 1./distance_mag));
-    //If collision is detected after physical contact,
-    //then the distance between two objects is less than sum of their radii. 
-    //In this case impact velocity is just relative velocity.
-    if (1./r_tot < 1./distance_mag){
-        v_imp = dv_mag;
-    }
-
-    //Impact parameter. Refer to Figure 2. in Leinhardt and Stewart 2011.
-    double b = h_mag/v_imp; 
-    if (isnan(b)){
-        reb_simulation_error(sim, "b is not a number.");
-        return 0;
-    }
-
-    //The following are steps to find collision energy, and derive largest remnant mass accordingly
-    //Refer to Leinhardt and Stewart (2011) for the full description.
-    //Refer to Chambers (2013) for a shortened description of equations. 
-    //Chambers (2013) Eq. 2, reduced mass
-    double mu = (target->m * projectile->m)/initial_mass;
-
-    //Leinhardt and Stewart (2011) Eq. 7, the projected length of the projectile overlapping the target
-    double l = r_tot-b;
-    l = MIN(l, 2*projectile->r);
-
-    //Leinhardt and Stewart (2011) Eq. 11, interacting mass fraction
-    double alpha = (pow(l,2)*(3*projectile->r - l))/(4*pow(projectile->r, 3));
-    alpha = MIN(1., alpha);
-
-    //Specific energy per unit mass Q, Chambers (2013) eq. 1.
-    double Q = 0.5 * pow(v_imp,2) * target->m * projectile->m / pow(initial_mass,2);
-
-    //Mutual escape velocity of target and projectcile
-    double V_esc = pow(2.*G*initial_mass/r_tot, 0.5);
-
-    //Leinhardt and Stewart (2011) Eq. 12, reduced interacting mass for oblique impacts.
-    double alphamu = (alpha * target->m * projectile->m)/(alpha * projectile->m + target->m);
-
-    //Mass ratio of target and projectile, Chambers (2013) eq. 6
-    double gamma = projectile->m/target->m;  
-
-    //Chambers (2013) Eq. 4, combined radius of target and projectile with constant density
-    double Rc1 = pow((initial_mass * 3)/(4. * M_PI * rho1), 1./3.);  
-
-    //Chambers (2013) Eq. 3, critical value of impact energy for head-on collisions
-    double Q0 = 0.8 * cstar * M_PI * rho1 * G * pow(Rc1,2); 
-
-    //Chambers (2013) Eq. 5, critical impact energy for oblique or different mass collisons.  
-    double Q_star = pow(mu/alphamu, 1.5)*(pow(1+gamma, 2)/ (4*gamma))*Q0; 
-    if (alpha == 0.0){
-        reb_simulation_error(sim, "alpha (interacting mass fraction) = 0");
-        return 0;
-    }
-
-    //For equal mass and head-on collisions Q* = Q0.
-    if (b == 0 && target->m == projectile->m){
-        Q_star = Q0;
-    }
-
-    //Mass of largest remnant is derived based on Q and Q* ratio. (Chambers (2013) eq. 8)
-    double qratio = Q/Q_star;
-    if (qratio < 1.8){
-        Mlr = initial_mass*(1.0-.5*qratio);
-    }else{
-        Mlr = 0.1 * initial_mass * pow(qratio/1.8, -1.5);  
-    }
-    return Mlr;
+    return 2; // Remove 2 particle from simulation
 }
 
-
-
-int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
+int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
     struct reb_particle* pi = &(sim->particles[c.p1]); //First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); //Second object in collison
 
@@ -340,14 +244,14 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     //Compute magnitude of fragment velocity. Here, we choose 5% more than the escape velocity.
     double G = sim->G;
     //escape velocity = (G.M_total/R_total)^(1/2)
-    double V_esc = pow(2.*G*(initial_mass)/(r_tot), .5);
+    double v_esc = pow(2.*G*(initial_mass)/(r_tot), .5);
     //Separation distance is the distance between largest remnant and each fragment
     double separation_distance = separation_distance_scale * r_tot;
     //Fragment velocity, refer to Childs and Steffen (2022) eq. 1 for a similar computation of impact velocity. 
     //In summary, we need to subtract the potential energy, which is different at the moment of contact (where the 
     //distance between two particles is r_tot) and when the fragments are placed and leaving the largest remnant
     //(where the distance between lr and frag is = separation distance).
-    double frag_velocity =sqrt(1.1*pow(V_esc,2) - 2 * G* initial_mass * (1./(r_tot) - 1./(separation_distance)));
+    double frag_velocity =sqrt(1.1*pow(v_esc,2) - 2 * G* initial_mass * (1./(r_tot) - 1./(separation_distance)));
     //Seperation angle between fragments
     double theta_sep = (2.*M_PI)/n_frag;
 
@@ -417,6 +321,132 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
         sim->particles[i].vz += voff[2]*mass_fraction;
     }
 
-    return 1; // Remove 1 particle from simulation (projectile)
+    return 2; // Remove 2 particle from simulation (projectile)
+}
+
+/*
+* Main function to decide the collision outcome, derive new masses, positions and velocities.
+* Equations are derived from Leinhardt and Stewart (2011) and Chambers (2013).
+*/
+int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
+    double Mlr;
+    struct reb_particle* pi = &(sim->particles[c.p1]); //First object in collision
+    struct reb_particle* pj = &(sim->particles[c.p2]); //Second object in collison
+
+    //Object with the higher mass will be the target, and object with lower mass will be the projectile
+    struct reb_particle* target;     
+    struct reb_particle* projectile; 
+
+    //Object with the higher mass will be the target, and object with lower mass will be the projectile
+    if (pi->m >= pj->m){
+        target = pi;    
+        projectile = pj;
+    }
+    else{
+        target = pj;   
+        projectile = pi; 
+    }
+
+    //Some useful parameters
+    double initial_mass = target->m + projectile->m; //initial mass of two colliders
+    double r_tot = target->r + projectile->r; //sum of radii of colliders
+    double G = sim->G; //gravitational constant
+
+    //Relative positions
+    double dx = target->x - projectile->x;
+    double dy = target->y - projectile->y;
+    double dz = target->z - projectile->z;
+    double distance_mag = get_mag(dx, dy, dz);
+
+    //Relative velocities
+    double dvx = target->vx - projectile->vx;
+    double dvy = target->vy - projectile->vy;
+    double dvz = target->vz - projectile->vz;
+    double dv_mag = get_mag(dvx, dvy, dvz);
+
+    //Angular momentum vector, cross product of relative velocity and position
+    double hx, hy, hz;
+    get_cross_product(dvx, dvy, dvz, dx, dy, dz, &hx, &hy, &hz);
+    double h_mag = get_mag(hx, hy, hz);
+
+    //Impact velocity (refer to eq. 1 in Childs and Steffen (2022))
+    double v_imp = sqrt(dv_mag*dv_mag + 2 * G * initial_mass * (1./r_tot - 1./distance_mag));
+    //If collision is detected after physical contact,
+    //then the distance between two objects is less than sum of their radii. 
+    //In this case impact velocity is just relative velocity.
+    if (1./r_tot < 1./distance_mag){
+        v_imp = dv_mag;
+    }
+
+    //Impact parameter. Refer to Figure 2. in Leinhardt and Stewart 2011.
+    double b = h_mag/v_imp; 
+    if (isnan(b)){
+        reb_simulation_error(sim, "b is not a number.");
+        return 0;
+    }
+
+    //The following are steps to find collision energy, and derive largest remnant mass accordingly
+    //Refer to Leinhardt and Stewart (2011) for the full description.
+    //Refer to Chambers (2013) for a shortened description of equations. 
+    //Chambers (2013) Eq. 2, reduced mass
+    double mu = (target->m * projectile->m)/initial_mass;
+
+    //Leinhardt and Stewart (2011) Eq. 7, the projected length of the projectile overlapping the target
+    double l = r_tot-b;
+    l = MIN(l, 2*projectile->r);
+
+    //Leinhardt and Stewart (2011) Eq. 11, interacting mass fraction
+    double alpha = (pow(l,2)*(3*projectile->r - l))/(4*pow(projectile->r, 3));
+    alpha = MIN(1., alpha);
+
+    //Specific energy per unit mass Q, Chambers (2013) eq. 1.
+    double Q = 0.5 * pow(v_imp,2) * target->m * projectile->m / pow(initial_mass,2);
+
+    //Mutual escape velocity of target and projectcile
+    double v_esc = pow(2.*G*initial_mass/r_tot, 0.5);
+
+    //Leinhardt and Stewart (2011) Eq. 12, reduced interacting mass for oblique impacts.
+    double alphamu = (alpha * target->m * projectile->m)/(alpha * projectile->m + target->m);
+
+    //Mass ratio of target and projectile, Chambers (2013) eq. 6
+    double gamma = projectile->m/target->m;  
+
+    //Chambers (2013) Eq. 4, combined radius of target and projectile with constant density
+    double Rc1 = pow((initial_mass * 3)/(4. * M_PI * rho1), 1./3.);  
+
+    //Chambers (2013) Eq. 3, critical value of impact energy for head-on collisions
+    double Q0 = 0.8 * cstar * M_PI * rho1 * G * pow(Rc1,2); 
+
+    //Chambers (2013) Eq. 5, critical impact energy for oblique or different mass collisons.  
+    double Q_star = pow(mu/alphamu, 1.5)*(pow(1+gamma, 2)/ (4*gamma))*Q0; 
+    if (alpha == 0.0){
+        reb_simulation_error(sim, "alpha (interacting mass fraction) = 0");
+        return 0;
+    }
+
+    //For equal mass and head-on collisions Q* = Q0.
+    if (b == 0 && target->m == projectile->m){
+        Q_star = Q0;
+    }
+
+    //Mass of largest remnant is derived based on Q and Q* ratio. (Chambers (2013) eq. 8)
+    double qratio = Q/Q_star;
+    if (qratio < 1.8){
+        Mlr = initial_mass*(1.0-.5*qratio);
+    }else{
+        Mlr = 0.1 * initial_mass * pow(qratio/1.8, -1.5);  
+    }
+    
+    int collision_type;
+    if (v_imp <= v_esc){
+        collision_type = 1;
+        merge(sim, "fragmenting_collisions", c);
+    }
+
+    else{
+        make_fragments(sim, "fragmenting_collisions", c); //will need to change this to have more conditions
+    }
+
+return collision_type;
 }
 
