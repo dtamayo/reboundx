@@ -1,5 +1,5 @@
 /**
- * Merging collisions
+ * Fragmenting Collisions
  *
  * A simple example showing how to use a REBOUNDx collision module.
  */
@@ -15,7 +15,7 @@
 int main(int argc, char* argv[]) {
 
     struct reb_simulation* sim = reb_simulation_create(); //creates simulation
-    sim->integrator = REB_INTEGRATOR_LEAPFROG;
+    sim->integrator = REB_INTEGRATOR_MERCURIUS;
     sim->collision = REB_COLLISION_DIRECT;
     sim->dt = 1.0;
 
