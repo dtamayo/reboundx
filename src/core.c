@@ -451,6 +451,56 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
     return operator;
 }
 
+struct rebx_collision_resolve* rebx_create_collision_resolve(struct rebx_extras* const rebx, const char* name){
+    if (rebx->sim == NULL){
+        rebx_error(rebx, ""); // rebx_error gives meaningful err
+        return NULL;
+    }
+    struct rebx_collision_resolve* collision_resolve = rebx_malloc(rebx, sizeof(struct rebx_collision_resolve));
+    if (collision_resolve == NULL){
+        return NULL;
+    }
+    collision_resolve->ap = NULL;
+    collision_resolve->sim = rebx->sim;
+    collision_resolve->name = NULL;
+    if(name != NULL){
+        collision_resolve->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
+        if (collision_resolve->name == NULL){
+            rebx_free_collision_resolve(rebx, collision_resolve);
+            return NULL;
+        }
+        else{
+            strcpy(collision_resolve->name, name);
+        }
+    }
+
+    return collision_resolve;
+}
+
+struct rebx_collision_resolve* rebx_load_collision_resolve(struct rebx_extras* const rebx, const char* name){
+    struct rebx_collision_resolve* collision_resolve = rebx_create_collision_resolve(rebx, name);
+    if (collision_resolve == NULL){
+        return NULL;
+    }
+    if (strcmp(name, "merging_collisions") == 0){
+        collision_resolve->collision_resolve = rebx_merging_collisions;
+    }
+    else if (strcmp(name, "test") == 0){
+        collision_resolve->collision_resolve = rebx_test;
+    }
+    else if (strcmp(name, "fragmenting_collisions") == 0){
+        collision_resolve->collision_resolve = rebx_fragmenting_collisions;
+    }
+    else{
+        char str[300];
+        sprintf(str, "REBOUNDx error: Collision resolve '%s' not found in REBOUNDx library.\n", name);
+        rebx_error(rebx, str);
+        rebx_remove_collision_resolve(rebx, collision_resolve); // Not free_op. 
+        return NULL;
+    }
+    return collision_resolve;
+}
+
 int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force){
     if (rebx->sim == NULL){
         rebx_error(rebx, ""); // rebx_error gives meaningful err
@@ -588,6 +638,28 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
             break;
     }
     return 0; // didn't reach a successful outcome
+}
+
+int rebx_add_collision_resolve(struct rebx_extras* rebx, struct rebx_collision_resolve* collision_resolve){
+    if (rebx->sim == NULL){
+        rebx_error(rebx, ""); // rebx_error gives meaningful err
+        return 0;
+    }
+
+    if (collision_resolve == NULL){
+        rebx_error(rebx, "REBOUNDx error: Passed NULL pointer to rebx_add_collision_resolve.\n");
+        return 0;
+    }
+
+    if (collision_resolve->collision_resolve == NULL){
+        rebx_error(rebx, "REBOUNDx error: Need to set collision_resolve function pointer on collision_resolve before calling rebx_add_collision_resolve. See custom effects example.\n");
+        return 0;
+    }
+
+    rebx->sim->collision_resolve = rebx_collision_resolver;
+    rebx->collision_resolve = collision_resolve;
+
+    return 1;
 }
 
 /*****************************************************************
@@ -825,6 +897,16 @@ int rebx_remove_operator(struct rebx_extras* rebx, struct rebx_operator* operato
     return success;
 }
 
+int rebx_remove_collision_resolve(struct rebx_extras* rebx, struct rebx_collision_resolve* collision_resolve){
+    if (rebx->collision_resolve){
+        rebx_free_collision_resolve(rebx, collision_resolve);
+        rebx->collision_resolve = NULL;
+        return 1; // Success
+    }else{
+        return 0;
+    }
+}
+
 /***************************************************************
  * Internal Memory Handling Routines
  ******************************************************************/
@@ -885,6 +967,18 @@ void rebx_free_operator(struct rebx_operator* operator){
     }
     rebx_free_ap(&operator->ap);
     free(operator);
+}
+
+void rebx_free_collision_resolve(struct rebx_extras* rebx, struct rebx_collision_resolve* collision_resolve){
+    void (*free_arrays)(struct rebx_extras* rebx, struct rebx_collision_resolve* collision_resolve) = rebx_get_param(rebx, collision_resolve->ap, "free_arrays");
+    if (free_arrays){
+        free_arrays(rebx, collision_resolve);
+    }
+    if(collision_resolve->name){
+        free(collision_resolve->name);
+    }
+    rebx_free_ap(&collision_resolve->ap);
+    free(collision_resolve);
 }
 
 void rebx_free_step(struct rebx_step* step){
@@ -981,6 +1075,17 @@ void rebx_additional_forces(struct reb_simulation* sim){
         const double N = sim->N - sim->N_var;
         force->update_accelerations(sim, force, sim->particles, N);
         current = current->next;
+    }
+}
+
+int rebx_collision_resolver(struct reb_simulation* const sim, struct reb_collision collision){
+    struct rebx_extras* rebx = sim->extras;
+    struct rebx_collision_resolve* collision_resolve = rebx->collision_resolve;
+    if (collision_resolve){
+        return collision_resolve->collision_resolve(sim, collision_resolve, collision);
+    }{
+        reb_simulation_warning(sim, "REBOUNDx: Collision resolve function pointer not set.");
+        return 0;
     }
 }
 
