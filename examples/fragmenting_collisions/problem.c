@@ -39,13 +39,11 @@ int main(int argc, char* argv[]) {
     reb_simulation_integrate(sim, 30); //integrates system for 1 timestep
     
     printf("Number of particles left in simulation: %d \n", sim->N); // Only one particle left.
-    struct reb_particle p1_f = sim->particles[0]; 
-    struct reb_particle p2_f = sim->particles[1]; 
-    struct reb_particle p3_f = sim->particles[2]; 
-    if(sim->N == 3){
-    printf("Mass of p1: %f \n", p1_f.m); // Only one particle left.
-    printf("Mass of p2: %f \n", p2_f.m); // Only one particle left.
-    printf("Mass of p3: %f \n", p3_f.m); // Only one particle left.
+    struct reb_particle p_temp; 
+    for (int i=0; i < sim->N; i++){
+        p_temp = sim->particles[i];
+        float p_mass = p_temp.m;
+        printf("Particle %d mass = %f \n", i, p_mass);
     }
     
 }
