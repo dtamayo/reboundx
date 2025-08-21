@@ -52,11 +52,22 @@
 #include "rebound.h"
 #include "reboundx.h"
 
+//Global parameters, need to be used defined
+double separation_distance_scale = 4;
+double min_frag_mass = 0.05;
+double rho1 = 1.684e6; //Msun/AU^3 
+double cstar = 1.8; 
+
 /** 
 * Function to get cross product of two vectors.
 * First vector is (Ax, Ay, Ax) and second one is (Bx, By, Bz)
 * Results will be saved in resultX, resultY and resultZ 
 */
+
+#define MIN(a, b) ((a) > (b) ? (b) : (a))    // Returns the minimum of a and b
+#define MAX(a, b) ((a) > (b) ? (a) : (b))    // Returns the maximum of a and b
+
+
 void get_cross_product(double Ax, double Ay, double Az,
                              double Bx, double By, double Bz,
                              double* resultX, double* resultY, double* resultZ) {
@@ -86,12 +97,6 @@ double get_radii(double m, double rho){
     return pow((3.*m)/(4.*M_PI*rho),1./3.);
 }   
 
-//Global parameters, need to be used defined
-double separation_distance_scale = 4;
-double min_frag_mass = 1.4e-8;
-double rho1 = 1.684e6; //Msun/AU^3 
-double cstar = 1.8; 
-
 int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
     struct reb_particle* pi = &(sim->particles[c.p1]); // First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); // Second object in collison
@@ -113,7 +118,7 @@ int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const
     return 2; // Remove 2 particle from simulation
 }
 
-int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
+int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c, double Mlr){
     struct reb_particle* pi = &(sim->particles[c.p1]); //First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); //Second object in collison
 
@@ -134,7 +139,7 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     struct reb_particle com = reb_particle_com_of_pair(*target, *projectile); //Center of mass (COM) of target and projectile
     double initial_mass = target->m + projectile->m; //initial mass of two colliders
     double r_tot = target->r + projectile->r; //Sum of radii or two colliders
-    double Mlr = get_mass_of_largest_remnant(sim, c); //Mass of the largest remnant
+    //double Mlr = 1; //Mass of the largest remnant
     double remaining_mass = initial_mass - Mlr; //Remaning mass, will turn into fragments
     double rho = target->m/(4./3*M_PI*pow(target ->r, 3)); //Target's density
 
@@ -329,7 +334,6 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
 * Equations are derived from Leinhardt and Stewart (2011) and Chambers (2013).
 */
 int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
-    double Mlr;
     struct reb_particle* pi = &(sim->particles[c.p1]); //First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); //Second object in collison
 
@@ -402,7 +406,7 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     //Specific energy per unit mass Q, Chambers (2013) eq. 1.
     double Q = 0.5 * pow(v_imp,2) * target->m * projectile->m / pow(initial_mass,2);
 
-    //Mutual escape velocity of target and projectcile
+    //Mutual escape velocity of target and projectile
     double v_esc = pow(2.*G*initial_mass/r_tot, 0.5);
 
     //Leinhardt and Stewart (2011) Eq. 12, reduced interacting mass for oblique impacts.
@@ -428,8 +432,8 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     if (b == 0 && target->m == projectile->m){
         Q_star = Q0;
     }
-
     //Mass of largest remnant is derived based on Q and Q* ratio. (Chambers (2013) eq. 8)
+    double Mlr;
     double qratio = Q/Q_star;
     if (qratio < 1.8){
         Mlr = initial_mass*(1.0-.5*qratio);
@@ -444,7 +448,7 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     }
 
     else{
-        make_fragments(sim, "fragmenting_collisions", c); //will need to change this to have more conditions
+        make_fragments(sim, "fragmenting_collisions", c, Mlr); //will need to change this to have more conditions
     }
 
 return collision_type;
