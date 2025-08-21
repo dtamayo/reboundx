@@ -1,7 +1,7 @@
 /**
  * @file    fragmenting_collisions.c
- * @brief   Adds a REBOUNDx collision module which always merges particles
- * @author  Hanno Rein <hanno.rein@utoronto.ca>
+ * @brief   Adds a REBOUNDx collision module which resolves collisions based on their impact energy
+ * @author  Haniyeh Tajer <tajer.1@osu.edu>
  * 
  * @section     LICENSE
  * Copyright (c) 2015 Dan Tamayo, Hanno Rein
@@ -25,16 +25,16 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
- * $Fragmenting Collisions$     // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script). 
+ * $Collisions$     // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script). 
  * 
  * ======================= ===============================================
- * Authors                 H. Rein 
+ * Authors                 H. Tajer, H. Rein, T. Lu
  * Based on                None
- * C Example               :ref:`c_fragmenting_collisions`
+ * C Example               :ref:`c_example_fragmenting_collisions`
  * ======================= ===============================================
  * 
  * This is a simple example implementation of a REBOUNDx collision module.
- * The outcome is a largest remnant and multiple fragments.
+ * The outcome is based on the collision prescription of Leinhardt & Stewart (2012).
  * 
  * **Effect Parameters**
  * 
@@ -58,16 +58,14 @@ double min_frag_mass = 0.05;
 double rho1 = 1.684e6; //Msun/AU^3 
 double cstar = 1.8; 
 
+#define MIN(a, b) ((a) > (b) ? (b) : (a))    // Returns the minimum of a and b
+#define MAX(a, b) ((a) > (b) ? (a) : (b))    // Returns the maximum of a and b
+
 /** 
 * Function to get cross product of two vectors.
 * First vector is (Ax, Ay, Ax) and second one is (Bx, By, Bz)
 * Results will be saved in resultX, resultY and resultZ 
 */
-
-#define MIN(a, b) ((a) > (b) ? (b) : (a))    // Returns the minimum of a and b
-#define MAX(a, b) ((a) > (b) ? (a) : (b))    // Returns the maximum of a and b
-
-
 void get_cross_product(double Ax, double Ay, double Az,
                              double Bx, double By, double Bz,
                              double* resultX, double* resultY, double* resultZ) {
@@ -331,7 +329,7 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
 
 /*
 * Main function to decide the collision outcome, derive new masses, positions and velocities.
-* Equations are derived from Leinhardt and Stewart (2011) and Chambers (2013).
+* Equations are derived from Leinhardt and Stewart (2012) and Chambers (2013).
 */
 int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
     struct reb_particle* pi = &(sim->particles[c.p1]); //First object in collision
@@ -382,7 +380,7 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
         v_imp = dv_mag;
     }
 
-    //Impact parameter. Refer to Figure 2. in Leinhardt and Stewart 2011.
+    //Impact parameter. Refer to Figure 2. in Leinhardt and Stewart 2012.
     double b = h_mag/v_imp; 
     if (isnan(b)){
         reb_simulation_error(sim, "b is not a number.");
@@ -390,16 +388,16 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     }
 
     //The following are steps to find collision energy, and derive largest remnant mass accordingly
-    //Refer to Leinhardt and Stewart (2011) for the full description.
+    //Refer to Leinhardt and Stewart (2012) for the full description.
     //Refer to Chambers (2013) for a shortened description of equations. 
     //Chambers (2013) Eq. 2, reduced mass
     double mu = (target->m * projectile->m)/initial_mass;
 
-    //Leinhardt and Stewart (2011) Eq. 7, the projected length of the projectile overlapping the target
+    //Leinhardt and Stewart (2012) Eq. 7, the projected length of the projectile overlapping the target
     double l = r_tot-b;
     l = MIN(l, 2*projectile->r);
 
-    //Leinhardt and Stewart (2011) Eq. 11, interacting mass fraction
+    //Leinhardt and Stewart (2012) Eq. 11, interacting mass fraction
     double alpha = (pow(l,2)*(3*projectile->r - l))/(4*pow(projectile->r, 3));
     alpha = MIN(1., alpha);
 
@@ -409,7 +407,7 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     //Mutual escape velocity of target and projectile
     double v_esc = pow(2.*G*initial_mass/r_tot, 0.5);
 
-    //Leinhardt and Stewart (2011) Eq. 12, reduced interacting mass for oblique impacts.
+    //Leinhardt and Stewart (2012) Eq. 12, reduced interacting mass for oblique impacts.
     double alphamu = (alpha * target->m * projectile->m)/(alpha * projectile->m + target->m);
 
     //Mass ratio of target and projectile, Chambers (2013) eq. 6
@@ -440,6 +438,13 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     }else{
         Mlr = 0.1 * initial_mass * pow(qratio/1.8, -1.5);  
     }
+
+    //Should we add this?
+    //if (Mlr < min_frag_mass){
+    //    Mlr = min_frag_mass;
+    //}
+
+    //The following part definately need editing. 
     
     int collision_type;
     if (v_imp <= v_esc){
@@ -448,8 +453,16 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     }
 
     else{
-        make_fragments(sim, "fragmenting_collisions", c, Mlr); //will need to change this to have more conditions
+        if (initial_mass - Mlr < min_frag_mass){ //if fragments fall less than minimum fragment mass, merge them
+            collision_type = 1;
+            merge(sim, "fragmenting_collisions", c);
+        }
+        else{ //if not, make fragments
+            collision_type = 3;
+            make_fragments(sim, "fragmenting_collisions", c, Mlr); //will need to change this to have more conditions
+        }
     }
+       
 
 return collision_type;
 }
