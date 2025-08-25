@@ -11,8 +11,10 @@ class TestTides(unittest.TestCase):
         self.sim.add(m=1.e-3, a=0.05, e=0.1, r=0.0005)
         self.sim.move_to_com()
         self.rebx = reboundx.Extras(self.sim)
-        self.force = self.rebx.load_force("tides_constant_time_lag")
+        self.force = self.rebx.load_force("tides_spin")
         self.rebx.add_force(self.force)
+        self.rebx.initialize_spin_ode(self.force)
+        self.sim.particles[0].params['Omega'] = rebound.spherical_to_xyz(magnitude=2*np.pi/(3/365), theta=np.radians(0), phi=np.radians(30))
 
     def test_conservation_star_highmratio(self):
         self.sim = rebound.Simulation()
@@ -20,10 +22,12 @@ class TestTides(unittest.TestCase):
         self.sim.add(m=1., a=0.2, e=0.1, r=0.005)
         self.sim.move_to_com()
         self.rebx = reboundx.Extras(self.sim)
-        self.force = self.rebx.load_force("tides_constant_time_lag")
+        self.force = self.rebx.load_force("tides_spin")
         self.rebx.add_force(self.force)
+        self.rebx.initialize_spin_ode(self.force)
         ps = self.sim.particles
-        ps[0].params['tctl_k2'] = 0.04
+        ps[0].params['k2'] = 0.04
+        self.sim.particles[0].params['Omega'] = rebound.spherical_to_xyz(magnitude=2*np.pi/(3/365), theta=np.radians(0), phi=np.radians(30))
         self.do_test_conservation()
 
     def test_conservation_planet_highmratio(self):
@@ -32,20 +36,24 @@ class TestTides(unittest.TestCase):
         self.sim.add(m=1., a=0.2, e=0.1, r=0.005)
         self.sim.move_to_com()
         self.rebx = reboundx.Extras(self.sim)
-        self.force = self.rebx.load_force("tides_constant_time_lag")
+        self.force = self.rebx.load_force("tides_spin")
         self.rebx.add_force(self.force)
+        self.rebx.initialize_spin_ode(self.force)
         ps = self.sim.particles
-        ps[1].params['tctl_k2'] = 0.04
+        ps[1].params['k2'] = 0.04
+        self.sim.particles[1].params['Omega'] = rebound.spherical_to_xyz(magnitude=2*np.pi/(3/365), theta=np.radians(0), phi=np.radians(30))
         self.do_test_conservation()
 
     def test_conservation_star(self):
         ps = self.sim.particles
-        ps[0].params['tctl_k2'] = 0.04
+        ps[0].params['k2'] = 0.04
+        ps[0].params['Omega'] = [1e-10, 0, 0]
         self.do_test_conservation()
 
     def test_conservation_planet(self):
         ps = self.sim.particles
-        ps[1].params['tctl_k2'] = 0.4
+        ps[1].params['k2'] = 0.4
+        ps[1].params['Omega'] = [1e-10, 0, 0]
         self.do_test_conservation()
 
     def test_conservation_star_movecom(self):
@@ -60,9 +68,9 @@ class TestTides(unittest.TestCase):
         self.test_conservation_planet()
 
     def do_test_conservation(self):
-        H0 = self.sim.energy() + self.rebx.tides_constant_time_lag_potential()
+        H0 = self.sim.energy() + self.rebx.tides_spin_energy()
         self.sim.integrate(1.e3*self.sim.particles[1].P)
-        H = self.sim.energy() + self.rebx.tides_constant_time_lag_potential()
+        H = self.sim.energy() + self.rebx.tides_spin_energy()
         self.assertLess(abs((H-H0)/H0), 1.e-12)
         self.assertGreater(self.sim.particles[1].pomega, 1.e-6)
 
@@ -75,20 +83,20 @@ class TestTidesAnalytic(unittest.TestCase):
         ps = self.sim.particles
 
         self.rebx = reboundx.Extras(self.sim)
-        self.tides = self.rebx.load_force("tides_constant_time_lag")
+        self.tides = self.rebx.load_force("tides_spin")
         self.rebx.add_force(self.tides)
-        ps[0].params["tctl_k2"] = 0.023 # in AU
-        ps[0].params["tctl_tau"] = 0.3
-        ps[0].params["OmegaMag"] = 0 # test that we can set, but not needed (default=0)
+        ps[0].params["k2"] = 0.023 # in AU
+        ps[0].params["tau"] = 0.3
+        ps[0].params["Omega"] = [0.,0.,0.]
 
         self.q = (ps[1].m/ps[0].m)
-        self.T = ps[0].r**3/self.sim.G/ps[0].m/ps[0].params["tctl_tau"]
-        self.taua = self.T/6/ps[0].params["tctl_k2"]/self.q/(1+self.q)*(ps[1].a/ps[0].r)**8
+        self.T = ps[0].r**3/self.sim.G/ps[0].m/ps[0].params["tau"]
+        self.taua = self.T/6/ps[0].params["k2"]/self.q/(1+self.q)*(ps[1].a/ps[0].r)**8
 
     def test_adamping(self):
         ps = self.sim.particles
         tmax = 2e4*ps[1].P
-        apred = ps[0].r*((ps[1].a/ps[0].r)**8 - 48.*ps[0].params["tctl_k2"]*self.q*(1+self.q)*tmax/self.T)**(1./8.)
+        apred = ps[0].r*((ps[1].a/ps[0].r)**8 - 48.*ps[0].params["k2"]*self.q*(1+self.q)*tmax/self.T)**(1./8.)
 
         self.sim.integrate(tmax)
         self.assertLess(abs((ps[1].a-apred)/apred), 1.e-2) # 1%

@@ -124,7 +124,7 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "ye_spin_axis_x", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "ye_spin_axis_y", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "ye_spin_axis_z", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "OmegaMag", REBX_TYPE_VEC3D);
+    rebx_register_param(rebx, "OmegaMag", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "Omega", REBX_TYPE_VEC3D);
     rebx_register_param(rebx, "k2", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "I", REBX_TYPE_DOUBLE);
@@ -1047,7 +1047,7 @@ void rebx_free_pointers(struct rebx_extras* rebx){
 }
 
 /**********************************************
- Internal Functions executing forces & ptm each timestep
+ Internal Functions executing forces & pre/post timestep modifications  each timestep
  *********************************************/
 
 void rebx_reset_accelerations(struct reb_particle* const ps, const int N){
@@ -1059,12 +1059,15 @@ void rebx_reset_accelerations(struct reb_particle* const ps, const int N){
 }
 
 void rebx_additional_forces(struct reb_simulation* sim){
+    if(sim->N_var != 0){
+        reb_simulation_warning(sim, "REBOUNDx: Variational particles have been added to the simulation but are not implemented in REBOUNDx and will not be evolved self-consistently.");
+    }
     struct rebx_extras* rebx = sim->extras;
     struct rebx_node* current = rebx->additional_forces;
     while(current != NULL){
-        /*if(sim->force_is_velocity_dependent && sim->integrator==REB_INTEGRATOR_WHFAST){
-         reb_simulation_warning(sim, "REBOUNDx: Passing a velocity-dependent force to WHFAST. Need to apply as an operator.");
-         }*/
+        if(sim->force_is_velocity_dependent && sim->integrator==REB_INTEGRATOR_WHFAST){
+            reb_simulation_warning(sim, "REBOUNDx: Passing a velocity-dependent force to WHFAST. Need to apply as an operator. See REBOUNDx paper sec 5.1.");
+        }
         struct rebx_force* force = current->object;
         const double N = sim->N - sim->N_var;
         force->update_accelerations(sim, force, sim->particles, N);
@@ -1084,6 +1087,9 @@ int rebx_collision_resolver(struct reb_simulation* const sim, struct reb_collisi
 }
 
 void rebx_pre_timestep_modifications(struct reb_simulation* sim){
+    if(sim->N_var != 0){
+        reb_simulation_warning(sim, "REBOUNDx: Variational particles have been added to the simulation but are not implemented in REBOUNDx and will not be evolved self-consistently.");
+    }
     struct rebx_extras* rebx = sim->extras;
     struct rebx_node* current = rebx->pre_timestep_modifications;
     const double dt = sim->dt;
@@ -1100,6 +1106,9 @@ void rebx_pre_timestep_modifications(struct reb_simulation* sim){
 }
 
 void rebx_post_timestep_modifications(struct reb_simulation* sim){
+    if(sim->N_var != 0){
+        reb_simulation_warning(sim, "REBOUNDx: Variational particles have been added to the simulation but are not implemented in REBOUNDx and will not be evolved self-consistently.");
+    }
     struct rebx_extras* rebx = sim->extras;
     struct rebx_node* current = rebx->post_timestep_modifications;
     const double dt = sim->dt;

@@ -30,7 +30,7 @@
  * Authors                 M. Broz
  * Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_. 
  * Based on                None
- * C Example               :ref:`c_example_J2`
+ * C Example               :ref:`c_example_j2`
  * Python Example          `J2.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/J2.ipynb>`_.
  * ======================= ===============================================
  * 
