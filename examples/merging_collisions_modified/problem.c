@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
     printf("Number of particles left in simulation: %d \n", sim->N); // Only one particle left.
     struct reb_particle p_temp;
     double tot_mass_f = 0; //final total mass
-    for (int i=0; i < sim->N; i++){ //this should technically be i < N, but I'm printing more cause they exist?!
+    for (int i=0; i < sim->N ; i++){ //this should technically be i < N, but I'm printing more cause they exist?!
         p_temp = sim->particles[i];
         tot_mass_f += p_temp.m;
         printf("Particle %d mass = %f \n", i, p_temp.m);
