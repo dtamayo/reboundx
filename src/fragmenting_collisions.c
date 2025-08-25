@@ -450,16 +450,19 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     if (v_imp <= v_esc){
         collision_type = 1;
         merge(sim, "fragmenting_collisions", c);
+        printf("Merging collision detected.\n");
     }
 
     else{
         if (initial_mass - Mlr < min_frag_mass){ //if fragments fall less than minimum fragment mass, merge them
             collision_type = 1;
             merge(sim, "fragmenting_collisions", c);
+            printf("Merging collision detected.\n");
         }
         else{ //if not, make fragments
             collision_type = 3;
             make_fragments(sim, "fragmenting_collisions", c, Mlr); //will need to change this to have more conditions
+            printf("erosive collision detected.\n");
         }
     }
        
