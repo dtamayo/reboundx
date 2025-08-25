@@ -17,15 +17,14 @@ int main(int argc, char* argv[]) {
     struct reb_simulation* sim = reb_simulation_create(); //creates simulation
     sim->integrator = REB_INTEGRATOR_MERCURIUS;
     sim->collision = REB_COLLISION_DIRECT;
-    sim->dt = 0.1;
-    sim->rand_seed = 42;
+    sim->dt = 1;
+    sim->rand_seed = 1;
     double tot_mass_i = 0; //initial total mass
 
-    // Add particle 1
+    // Add particle 0
     struct reb_particle p = {0};
     p.r = 1.;
-    p.m = 0.2;
-    p.x = 0;
+    p.m = 1.;
     tot_mass_i += p.m;
     printf("Particle 0 mass = %f \n", p.m);
     printf("Particle 0 xvelocity = %f \n", p.vx);
@@ -33,15 +32,11 @@ int main(int argc, char* argv[]) {
     reb_simulation_add(sim, p);
 
 
-    // Add particle 2
+    // Add particle 1
     p.r = 1.;
-    p.x = 10;
-    int deltax = p.x; //save this to get number of timesteps for integration
-    //set p.vx = -30 for fragmentation to occur
-    //set p.vx = -2 (or some other low number) for merging to occur
-    p.vx = -30.;
-    int v = p.vx; //save this to get n_timesteps for integration
-    p.m = 0.2;
+    p.x = 2.5;
+    p.vx = -1.;
+    p.m = 1.;
     tot_mass_i += p.m;
     printf("Particle 1 mass = %f \n", p.m);
     printf("Particle 1 xvelocity = %f \n", p.vx);
@@ -57,7 +52,7 @@ int main(int argc, char* argv[]) {
     printf("Total mass before collision = %f \n", tot_mass_i);
 
     //integrate system until collision happens
-    int n_timesteps = (int)(abs(deltax) / abs(v) / (sim->dt));
+    int n_timesteps = 1;
     printf("n_tsteps = %d \n", n_timesteps);
     reb_simulation_integrate(sim, n_timesteps);
 

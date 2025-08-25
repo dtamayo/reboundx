@@ -125,13 +125,16 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     struct reb_particle* projectile; 
 
     //Object with the higher mass will be the target, and object with lower mass will be the projectile
+    int remove = 0;
     if (pi->m >= pj->m){
         target = pi;    
         projectile = pj;
+        remove = 2;
     }
     else{
         target = pj;   
-        projectile = pi; 
+        projectile = pi;
+        remove = 1; 
     }
 
     struct reb_particle com = reb_particle_com_of_pair(*target, *projectile); //Center of mass (COM) of target and projectile
@@ -156,6 +159,7 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     //We replace target with the largest remnant, and assign it the position and velocity of COM
     target -> last_collision = sim->t; //Update time of last collision
     target -> m = Mlr; //Update target mass with Mlr
+    printf("target_m = %f and mlr = %f\n", target->m, Mlr);
     target -> r = get_radii(Mlr, rho); //Update target radius, keeping density
     //Update target position with COM
     target->x = com.x; 
@@ -324,7 +328,7 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
         sim->particles[i].vz += voff[2]*mass_fraction;
     }
 
-    return 2; // Remove 2 particle from simulation (projectile)
+    return remove; // Remove 2 particle from simulation (projectile)
 }
 
 /*
@@ -447,26 +451,27 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     //The following part definately need editing. 
     
     int collision_type;
+    int remove = 0;
     if (v_imp <= v_esc){
         collision_type = 1;
-        merge(sim, "fragmenting_collisions", c);
+        remove = merge(sim, "fragmenting_collisions", c);
         printf("Merging collision detected.\n");
     }
 
     else{
         if (initial_mass - Mlr < min_frag_mass){ //if fragments fall less than minimum fragment mass, merge them
-            collision_type = 1;
-            merge(sim, "fragmenting_collisions", c);
+            //collision_type = 1;
+            remove = merge(sim, "fragmenting_collisions", c);
             printf("Merging collision detected.\n");
         }
         else{ //if not, make fragments
-            collision_type = 3;
-            make_fragments(sim, "fragmenting_collisions", c, Mlr); //will need to change this to have more conditions
+            //collision_type = 3;
+            remove = make_fragments(sim, "fragmenting_collisions", c, Mlr); //will need to change this to have more conditions
             printf("erosive collision detected.\n");
         }
     }
        
 
-return collision_type;
+return remove;
 }
 
