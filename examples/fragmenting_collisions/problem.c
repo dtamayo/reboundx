@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
     printf("Total mass before collision = %f \n", tot_mass_i);
 
     //integrate system until collision happens
-    int n_timesteps = (int)(fabs(deltax) / fabs(v) / (sim->dt));
+    int n_timesteps = (int)(abs(deltax) / abs(v) / (sim->dt));
     printf("n_tsteps = %d \n", n_timesteps);
     reb_simulation_integrate(sim, n_timesteps);
 
