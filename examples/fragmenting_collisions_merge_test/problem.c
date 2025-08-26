@@ -32,7 +32,7 @@ void test_merge(int type){
             reb_simulation_add_fmt(sim, "m r", 1.1, 1.0); // primary (slightly heavier)
         case 2: // equal mass
             reb_simulation_add_fmt(sim, "m r x vx vy vz", 1.0, 1.0, 2.5, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
-            reb_simulation_add_fmt(sim, "m r", 1.0, 1.0); // primary (slightly heavier)
+            reb_simulation_add_fmt(sim, "m r", 1.0, 1.0);
             break;
     }
 
