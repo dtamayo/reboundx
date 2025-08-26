@@ -30,6 +30,7 @@ void test_merge(int type){
         case 1: // order swapped
             reb_simulation_add_fmt(sim, "m r x vx vy vz", 1.0, 1.0, 2.5, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             reb_simulation_add_fmt(sim, "m r", 1.1, 1.0); // primary (slightly heavier)
+            break;
         case 2: // equal mass
             reb_simulation_add_fmt(sim, "m r x vx vy vz", 1.0, 1.0, 2.5, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             reb_simulation_add_fmt(sim, "m r", 1.0, 1.0);
@@ -48,6 +49,9 @@ void test_merge(int type){
     assert(fabs((com_i.m-com_f.m)/com_i.m)<1e-16); // Check mass conservation 
     assert(fabs((com_i.vx-com_f.vx)/com_i.vx)<1e-16); // Check x momentum conservation 
     assert(fabs((com_i.vy-com_f.vy)/com_i.vy)<1e-16); // Check y momentum conservation 
+
+    printf("com_i.vz = %e \n", com_i.vz);
+    printf("momentum z = %e \n", fabs((com_i.vz-com_f.vz)/com_i.vz));
     assert(fabs((com_i.vz-com_f.vz)/com_i.vz)<1e-16); // Check z momentum conservation 
 }
     
@@ -55,7 +59,7 @@ void test_merge(int type){
 
 int main(int argc, char* argv[]) {
     for (int type=0;type<3;type++){
-        test_merge(0);
+        test_merge(type);
         printf("test_merge(%d) passed.\n", type);
     }
 }
