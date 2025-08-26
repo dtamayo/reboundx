@@ -12,61 +12,50 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-int main(int argc, char* argv[]) {
 
+void test_merge(int type){
+    // This function tests mass and momentum conservation for various setups.
     struct reb_simulation* sim = reb_simulation_create(); //creates simulation
     sim->integrator = REB_INTEGRATOR_MERCURIUS;
     sim->collision = REB_COLLISION_DIRECT;
     sim->dt = 1;
     sim->rand_seed = 1;
-    double tot_mass_i = 0; //initial total mass
 
-    // Add particle 0
-    struct reb_particle p = {0};
-    p.r = 1.;
-    p.m = 1.;
-    tot_mass_i += p.m;
-    printf("Particle 0 mass = %f \n", p.m);
-    printf("Particle 0 xvelocity = %f \n", p.vx);
-    printf("Particle 0 x = %f \n", p.x);
-    reb_simulation_add(sim, p);
-
-
-    // Add particle 1
-    p.r = 1.;
-    p.x = 2.5;
-    p.vx = -1.;
-    p.m = 1.;
-    tot_mass_i += p.m;
-    printf("Particle 1 mass = %f \n", p.m);
-    printf("Particle 1 xvelocity = %f \n", p.vx);
-    printf("Particle 1 x = %f \n", p.x);
-    reb_simulation_add(sim, p);
-
+    // Add particles
+    switch (type){
+        case 0:
+            reb_simulation_add_fmt(sim, "m r", 1.1, 1.0); // primary (slightly heavier)
+            reb_simulation_add_fmt(sim, "m r x vx vy vz", 1.0, 1.0, 2.5, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            break;
+        case 1: // order swapped
+            reb_simulation_add_fmt(sim, "m r x vx vy vz", 1.0, 1.0, 2.5, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            reb_simulation_add_fmt(sim, "m r", 1.1, 1.0); // primary (slightly heavier)
+        case 2: // equal mass
+            reb_simulation_add_fmt(sim, "m r x vx vy vz", 1.0, 1.0, 2.5, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            reb_simulation_add_fmt(sim, "m r", 1.0, 1.0); // primary (slightly heavier)
+            break;
+    }
 
     struct rebx_extras* rebx = rebx_attach(sim);
     struct rebx_collision_resolve* fragmenting = rebx_load_collision_resolve(rebx, "fragmenting_collisions");
     rebx_add_collision_resolve(rebx, fragmenting);
-
-    printf("Number of particles before collision: %d \n", sim->N);
-    printf("Total mass before collision = %f \n", tot_mass_i);
-
-    //integrate system until collision happens
-    int n_timesteps = 1;
-    printf("n_tsteps = %d \n", n_timesteps);
-    reb_simulation_integrate(sim, n_timesteps);
-
-
-    printf("Number of particles left in simulation: %d \n", sim->N);
-    struct reb_particle p_temp;
-    double tot_mass_f = 0; //final total mass
-    for (int i=0; i < sim->N; i++){ //this should technically be i < N, but I'm printing more cause they exist?!
-        p_temp = sim->particles[i];
-        tot_mass_f += p_temp.m;
-        printf("Particle %d mass = %f \n", i, p_temp.m);
-        printf("Particle %d xvelocity = %f \n", i, p_temp.vx);
-        printf("Particle %d x = %f \n", i, p_temp.x);
-    }
-    printf("Total mass after collision = %f \n", tot_mass_f);
     
+    struct reb_particle com_i = reb_simulation_com(sim); //initial center of mass
+    reb_simulation_integrate(sim, 1);
+    struct reb_particle com_f = reb_simulation_com(sim); //final center of mass
+
+    assert(sim->N == 1); // Check that merge did occur
+    assert(fabs((com_i.m-com_f.m)/com_i.m)<1e-16); // Check mass conservation 
+    assert(fabs((com_i.vx-com_f.vx)/com_i.vx)<1e-16); // Check x momentum conservation 
+    assert(fabs((com_i.vy-com_f.vy)/com_i.vy)<1e-16); // Check y momentum conservation 
+    assert(fabs((com_i.vz-com_f.vz)/com_i.vz)<1e-16); // Check z momentum conservation 
+}
+    
+
+
+int main(int argc, char* argv[]) {
+    for (int type=0;type<3;type++){
+        test_merge(0);
+        printf("test_merge(%d) passed.\n", type);
+    }
 }
