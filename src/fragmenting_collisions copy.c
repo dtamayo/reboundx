@@ -116,7 +116,7 @@ int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const
     return 2; // Remove 2 particle from simulation
 }
 
-int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve,struct reb_collision c, double Mlr, double Mslr){
+int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c, double Mlr){
     struct reb_particle* pi = &(sim->particles[c.p1]); //First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); //Second object in collison
 
@@ -331,8 +331,7 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     return remove; // Remove 2 particle from simulation (projectile)
 }
 
-int hit_and_run(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c,
-    double Mlr, double b, double l, double Vi, double V_esc){
+int hit_and_run(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c, double Mlr){
     struct reb_particle* pi = &(sim->particles[c.p1]); //First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); //Second object in collison
 
@@ -352,81 +351,6 @@ int hit_and_run(struct reb_simulation* const sim, struct rebx_collision_resolve*
         projectile = pi;
         remove = 1; 
     }
-    //phi helps with finding part of the projectile that is NOT crossing the target
-    double phi = 2*acos((l-projectile->r)/projectile->r);
-
-    //Leinhardt Eq. 46; cross section of projectile interacting with the target
-    double A_interact = pow(projectile->r, 2)*((M_PI-(phi-sin(phi))/2.));  
-
-    //Leinhardt Eq. 47, interacting length
-    double L_interact = 2.*pow(pow(target->r,2)-(pow(target->r-l/2.,2)), .5);
-
-    //Leinhardt Eq. 48, used in Chambers Eq. 11
-    double beta = ((A_interact*L_interact) * rho_t)/target->m;
-
-    //Based on Chambers Eq. 11
-    double Rc1 = pow(3./(4.*M_PI*rho1)*(beta*target->m + projectile->m), 1./3.);
-
-    //Chambers Eq. 11
-    double Q0 = .8*cstar*M_PI*rho1*r->G*pow(Rc1, 2); 
-
-    //Based on Chambers Eq. 11
-    double gamma = (beta*target->m)/projectile->m;
-    
-    //Chambers Eq. 10
-    double Q_star = (pow(1+gamma, 2)/4*gamma)* Q0; 
-
-    //Chambers Eq. 13
-    double mu = (beta*target->m*projectile->m)/(beta*target->m+projectile->m);  
-
-    //Chambers Eq. 12
-    double Q = .5*(mu*pow(Vi,2))/(beta*target->m+projectile->m); 
-
-    /* If  velocity in the hit-and-run regime is very low, the collision
-     * might eventually lead to a merger. Here, we compute the threshhold velocity for this event,
-     * called critical velocity. If v < v_crit, then we have a "graze and merge" event.
-     */
-
-    //c1 to c4 are constants used in Chambers Eq. 17
-    double c1 = 2.43; 
-    double c2 = -0.0408;
-    double c3 = 1.86;
-    double c4 = 1.08;
-
-    //Chambers eq. 16
-    double zeta = pow((1 - gamma)/(1 + gamma),2);
-
-    //This helps with writing Chambers eq. 15
-    double fac = pow(1-b/(target->r + projectile->r),2.5);
-
-    //Velocity threshhold between graze-and-merge and hit-and-run, Chambers Eq. 15
-    double v_crit = V_esc*(c1*zeta*fac + c2*zeta +c3*fac + c4);
-
-    //If impact velocity is less than v_crit, we have graze-and-merge
-    if (Vi <= v_crit){        
-        merge(sim, "fragmenting_collisions", c);
-        return remove;
-    }else{
-        //Hit-and-run happening
-        //(Mlr_dag) Second largest remnant mass, Chambers Eq. 14
-        double Mlr_dag;
-        if (Q < 1.8*Q_star){
-            Mlr_dag = (beta*target->m + projectile->m)*(1 - Q/ (2*Q_star));
-        }else{
-            Mlr_dag = (beta*target->m + projectile->m)/10 * pow(Q/(1.8*Q_star), -1.5);
-        }
-
-        //Need to check for minimum fragment mass threshold
-        //If Mlr_dag or fragment masses fall bellow min_frag_mass, just make fragments
-        //with min_frag_mass
-        if((Mlr_dag < min_frag_mass) || (M_rem - Mlr_dag < min_frag_mass)){
-            Mlr_dag = 0;
-            remove = make_fragments(sim, "fragmenting_collisions", c, Mlr, Mlr_dag);
-        }else{
-            remove = make_fragments(sim, "fragmenting_collisions", c, Mlr, Mlr_dag)
-        }
-    }
-    return remove;
 }
 
 /*
