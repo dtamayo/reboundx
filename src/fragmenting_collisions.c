@@ -56,7 +56,7 @@
 double separation_distance_scale = 4;
 double min_frag_mass = 0.05;
 double rho1 = 1.684e6; //Msun/AU^3 
-double cstar = 1.8; 
+double cstar = 1.8;
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))    // Returns the minimum of a and b
 #define MAX(a, b) ((a) > (b) ? (a) : (b))    // Returns the maximum of a and b
@@ -102,7 +102,6 @@ int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const
     double invmass = 1.0/(pi->m + pj->m);
 
     // Merge by conserving mass, volume and momentum
-    double targ_rho = pi->m/(4./3*M_PI*pow(pi->r,3));  // New body recieves density of the target
     pi->vx = (pi->vx*pi->m + pj->vx*pj->m)*invmass;
     pi->vy = (pi->vy*pi->m + pj->vy*pj->m)*invmass;
     pi->vz = (pi->vz*pi->m + pj->vz*pj->m)*invmass;
@@ -140,15 +139,22 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     struct reb_particle com = reb_particle_com_of_pair(*target, *projectile); //Center of mass (COM) of target and projectile
     double initial_mass = target->m + projectile->m; //initial mass of two colliders
     double r_tot = target->r + projectile->r; //Sum of radii or two colliders
-    //double Mlr = 1; //Mass of the largest remnant
-    double remaining_mass = initial_mass - Mlr; //Remaning mass, will turn into fragments
+    double remaining_mass = initial_mass - Mlr - Mslr; //Remaning mass, will turn into fragments
     double rho = target->m/(4./3*M_PI*pow(target ->r, 3)); //Target's density
-
-    //NOTE: There is a note about hit-and-run collisions and tracking the "big fragment" but we ignore this for now
     
-    //We divide the remaning mass into equal mass fragments
-    int n_frag = remaining_mass/min_frag_mass; //number of fragments
-    double m_frag = remaining_mass/n_frag; //mass of each fragment
+    //If Mslr is non-zero, then we have a big fragment with mass Mslr
+    //And a few small fragments
+    double n_big_frag = 0;
+    if(Mslr > 0){
+        n_big_frag = 1;
+    }
+
+    //Divide the remaning mass into equal mass fragments
+    int n_small_frag = remaining_mass/min_frag_mass; //number of fragments
+    double m_frag = remaining_mass/n_small_frag; //mass of each fragment
+    
+    //n_frag is total number of fragments
+    double n_frag = n_small_frag + n_big_frag;
 
     //Define mxsum variable to keep track of center of mass (mass times position)
     double mxsum[3] = {0, 0, 0}; // For x, y, z
@@ -159,7 +165,6 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     //We replace target with the largest remnant, and assign it the position and velocity of COM
     target -> last_collision = sim->t; //Update time of last collision
     target -> m = Mlr; //Update target mass with Mlr
-    printf("target_m = %f and mlr = %f\n", target->m, Mlr);
     target -> r = get_radii(Mlr, rho); //Update target radius, keeping density
     //Update target position with COM
     target->x = com.x; 
@@ -203,7 +208,6 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     double dx = target->x - projectile->x;
     double dy = target->y - projectile->y;
     double dz = target->z - projectile->z;
-    double distance_mag = get_mag(dx, dy, dz);
 
     //Vector in the direction of relative velocity between target and projectile (unit vector of relative v)
     double unit_dvx = dvx/dv_mag;
@@ -263,15 +267,48 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     double theta_sep = (2.*M_PI)/n_frag;
 
     //Add fragments to the simulation
-    for (int j=1; j < n_frag + 1; j++){          
-        struct reb_particle fragment = {0};
+    //fragments are placed in the collision plane, in a circle with radius of separation distance.
+    //Relative velocity unit vector and the vector orthogonal to that (normal_to_vrel) are used as
+    //the reference frame to place fragments.
+    //Fragments are placed with equal angular distances of each other (theta_sep).  
+    //Add big fragment, if exists
+    if (n_big_frag == 1){
+        struct reb_particle big_frag = {0};
+        big_frag.m = Mslr;
 
-        //fragment mass computed above.
+        big_frag.x = com.x + separation_distance * unit_dvx;
+        big_frag.y = com.y + separation_distance * unit_dvy;
+        big_frag.z = com.z + separation_distance * unit_dvz;
+
+        big_frag.vx = com.vx + frag_velocity * unit_dvx;
+        big_frag.vy = com.vy + frag_velocity * unit_dvy;
+        big_frag.vz = com.vz + frag_velocity * unit_dvz;
+
+        big_frag.r = get_radii(Mslr, rho);
+
+        //Record collision
+        big_frag.last_collision = sim->t;
+
+        //Add to mxsum vector to keep track of COM
+        mxsum[0] +=big_frag.m * big_frag.x;
+        mxsum[1] += big_frag.m * big_frag.y;    
+        mxsum[2] += big_frag.m * big_frag.z;
+
+        //Add to mvsum vector to keep track of momentum
+        mvsum[0] += big_frag.m * big_frag.vx;
+        mvsum[1] += big_frag.m * big_frag.vy;    
+        mvsum[2] += big_frag.m * big_frag.vz;
+
+        //Add particle to simulation.
+        reb_simulation_add(sim, big_frag);
+    }
+
+    //Add small fragments
+    //j = 0 is reserved for big_frag, if exists
+    for (int j=1; j <= n_frag - n_big_frag; j++){          
+        struct reb_particle fragment = {0};
         fragment.m = m_frag; 
-        //fragments are placed in the collision plane, in a circle with radius of separation distance.
-        //Relative velocity unit vector and the vector orthogonal to that (normal_to_vrel) are used as
-        //the reference frame to place fragments.
-        //Fragments are placed with equal angular distances of each other (theta_sep).                
+              
         fragment.x = com.x + separation_distance*(cos(theta_sep*j)*unit_dvx + sin(theta_sep*j)*normal_to_vrel[0]);
         fragment.y = com.y + separation_distance*(cos(theta_sep*j)*unit_dvy + sin(theta_sep*j)*normal_to_vrel[1]);
         fragment.z = com.z + separation_distance*(cos(theta_sep*j)*unit_dvz + sin(theta_sep*j)*normal_to_vrel[2]);
@@ -280,7 +317,8 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
         fragment.vz = com.vz + frag_velocity*(cos(theta_sep*j)*unit_dvz + sin(theta_sep*j)*normal_to_vrel[2]);
 
         //Fragment radius is derived based on target's density
-        fragment.r = get_radii(m_frag, rho);
+        double targ_rho = target->m/(4./3*M_PI*pow(target->r,3));
+        fragment.r = get_radii(m_frag, targ_rho);
 
         //Record collision
         fragment.last_collision = sim->t;
@@ -352,6 +390,9 @@ int hit_and_run(struct reb_simulation* const sim, struct rebx_collision_resolve*
         projectile = pi;
         remove = 1; 
     }
+    //target's density
+    double targ_rho = target->m/(4./3*M_PI*pow(target->r,3));
+
     //phi helps with finding part of the projectile that is NOT crossing the target
     double phi = 2*acos((l-projectile->r)/projectile->r);
 
@@ -362,13 +403,13 @@ int hit_and_run(struct reb_simulation* const sim, struct rebx_collision_resolve*
     double L_interact = 2.*pow(pow(target->r,2)-(pow(target->r-l/2.,2)), .5);
 
     //Leinhardt Eq. 48, used in Chambers Eq. 11
-    double beta = ((A_interact*L_interact) * rho_t)/target->m;
+    double beta = ((A_interact*L_interact) * targ_rho)/target->m;
 
     //Based on Chambers Eq. 11
     double Rc1 = pow(3./(4.*M_PI*rho1)*(beta*target->m + projectile->m), 1./3.);
 
     //Chambers Eq. 11
-    double Q0 = .8*cstar*M_PI*rho1*r->G*pow(Rc1, 2); 
+    double Q0 = .8*cstar*M_PI*rho1*sim->G*pow(Rc1, 2); 
 
     //Based on Chambers Eq. 11
     double gamma = (beta*target->m)/projectile->m;
@@ -419,11 +460,12 @@ int hit_and_run(struct reb_simulation* const sim, struct rebx_collision_resolve*
         //Need to check for minimum fragment mass threshold
         //If Mlr_dag or fragment masses fall bellow min_frag_mass, just make fragments
         //with min_frag_mass
+        double M_rem = target->m + projectile->m - Mlr; //remaining mass
         if((Mlr_dag < min_frag_mass) || (M_rem - Mlr_dag < min_frag_mass)){
             Mlr_dag = 0;
             remove = make_fragments(sim, "fragmenting_collisions", c, Mlr, Mlr_dag);
         }else{
-            remove = make_fragments(sim, "fragmenting_collisions", c, Mlr, Mlr_dag)
+            remove = make_fragments(sim, "fragmenting_collisions", c, Mlr, Mlr_dag);
         }
     }
     return remove;
@@ -550,22 +592,29 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     
     int collision_type;
     int remove = 0;
+    //If v_imp <= v_esc, merge.
     if (v_imp <= v_esc){
         collision_type = 1;
         remove = merge(sim, "fragmenting_collisions", c);
         printf("Merging collision detected.\n");
     }
-
+    //If not, do eroding fragments fall above min_frag_mass?
     else{
-        if (initial_mass - Mlr < min_frag_mass){ //if fragments fall less than minimum fragment mass, merge them
-            //collision_type = 1;
+        if (initial_mass - Mlr < min_frag_mass){ //if not, merge
             remove = merge(sim, "fragmenting_collisions", c);
             printf("Merging collision detected.\n");
         }
-        else{ //if not, make fragments
-            //collision_type = 3;
-            remove = make_fragments(sim, "fragmenting_collisions", c, Mlr); //will need to change this to have more conditions
-            printf("erosive collision detected.\n");
+        //If min mass threshold is met,
+        //is the impact parameter b bigger than critical value b_crit = R_t?
+        else{
+            if(b > target->r){//If yes, hit-and-run
+                remove = hit_and_run(sim, "fragmenting_collisions", c, Mlr, b, l, v_imp, v_esc);
+                printf("hit-and-run collision detected.\n");
+            }
+            else{//If no, erosion
+                remove = make_fragments(sim, "fragmenting_collisions", c, Mlr, 0); //will need to change this to have more conditions
+                printf("erosive collision detected.\n");
+            }
         }
     }
        
