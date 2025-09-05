@@ -292,6 +292,14 @@ void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force*
         }
     }
 
+    // Search for previous spin ode
+    for (int i=0; i<sim->N_odes; i++){
+        if (sim->odes[i]->derivatives == rebx_spin_derivatives){
+            reb_ode_free(sim->odes[i]);
+            i--;
+        }
+    }
+
     if (Nspins > 0){
         struct reb_ode* spin_ode = reb_ode_create(sim, Nspins*3);
         spin_ode->ref = sim;
