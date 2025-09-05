@@ -587,6 +587,10 @@ double rebx_central_force_potential(struct rebx_extras* const rebx);
  */
 double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
 
+
+
+int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct rebx_collision_resolve* const collision_resolve, struct reb_particle* p);
+
 /** @} */
 /** @} */
 
