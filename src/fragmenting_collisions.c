@@ -51,12 +51,15 @@
 #include <math.h>
 #include "rebound.h"
 #include "reboundx.h"
+#include <stdbool.h>
+
 
 //Global parameters, need to be used defined
 double separation_distance_scale = 4;
 double min_frag_mass = 0.05;
 double rho1 = 1.684e6; //Msun/AU^3 
 double cstar = 1.8;
+int print_flag = 1; //1 for printing collision data, 0 for not printing
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))    // Returns the minimum of a and b
 #define MAX(a, b) ((a) > (b) ? (a) : (b))    // Returns the maximum of a and b
@@ -587,21 +590,20 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     //if (Mlr < min_frag_mass){
     //    Mlr = min_frag_mass;
     //}
-
-    //The following part definately need editing. 
     
     int collision_type;
     int remove = 0;
     //If v_imp <= v_esc, merge.
     if (v_imp <= v_esc){
-        collision_type = 1;
         remove = merge(sim, "fragmenting_collisions", c);
+        collision_type = 1;
         printf("Merging collision detected.\n");
     }
     //If not, do eroding fragments fall above min_frag_mass?
     else{
         if (initial_mass - Mlr < min_frag_mass){ //if not, merge
             remove = merge(sim, "fragmenting_collisions", c);
+            collision_type = 1;
             printf("Merging collision detected.\n");
         }
         //If min mass threshold is met,
@@ -609,16 +611,57 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
         else{
             if(b > target->r){//If yes, hit-and-run
                 remove = hit_and_run(sim, "fragmenting_collisions", c, Mlr, b, l, v_imp, v_esc);
+                collision_type = 2;
                 printf("hit-and-run collision detected.\n");
             }
             else{//If no, erosion
-                remove = make_fragments(sim, "fragmenting_collisions", c, Mlr, 0); //will need to change this to have more conditions
+                remove = make_fragments(sim, "fragmenting_collisions", c, Mlr, 0);
+                collision_type = 3;
                 printf("erosive collision detected.\n");
             }
         }
     }
-       
+
+if(print_flag == 1){
+    bool write_header = false;
+
+    // Try to open file in read mode to check existence
+    FILE* check = fopen("collision_report.csv", "r");
+    if (check == NULL) {
+        // File doesn't exist, so we will need to write a header
+        write_header = true;
+    } else {
+        fclose(check);
+    }
+
+    // Now open for appending (creates file if missing)
+    FILE* of = fopen("collision_report.csv", "a");
+    if (of == NULL) {
+        perror("Error opening file");
+        return -1;
+    }
+
+    // Write header if this is the first time
+    if (write_header) {
+        fprintf(of, "time, collision_type, b, v_esc/v_imp, mlr, hash_t, m_t, r_t, hash_p, m_p, r_p, hash_frags, m_frags, r_frags\n");
+    }
+
+    // Write main collision info
+    fprintf(of, "%e,", sim->t);     
+    fprintf(of, "%u,", collision_type);
+    fprintf(of, "%e,", b);                       
+    fprintf(of, "%e,", v_esc/v_imp);  
+    fprintf(of, "%e,", Mlr);
+    fprintf(of, "%u,", target->hash);
+    fprintf(of, "%e,", target->m);
+    fprintf(of, "%e,", target->r);
+    fprintf(of, "%u,", projectile->hash);
+    fprintf(of, "%e,", projectile->m);
+    fprintf(of, "%e,", projectile->r);
+    fprintf(of, "\n");   
+    fclose(of);
+}
+
 
 return remove;
 }
-
