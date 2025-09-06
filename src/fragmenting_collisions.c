@@ -516,9 +516,13 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     }
 
     //Some useful parameters
-    double initial_mass = target->m + projectile->m; //initial mass of two colliders
+    double target_initial_mass = target->m; //to later save for user
+    double projectile_initial_mass = projectile->m; //same as above
+    double initial_mass = target_initial_mass + projectile_initial_mass; //initial mass of two colliders
     double r_tot = target->r + projectile->r; //sum of radii of colliders
     double G = sim->G; //gravitational constant
+    int target_id = *(int*) rebx_get_param(sim->extras, target->ap, "fc_id");
+    int projectile_id = *(int*) rebx_get_param(sim->extras, projectile->ap, "fc_id");
 
     //Relative positions
     double dx = target->x - projectile->x;
@@ -662,7 +666,7 @@ if(print_flag == 1){
 
     // Write header if this is the first time
     if (write_header) {
-        fprintf(of, "time, collision_type, b, v_esc/v_imp, mlr, hash_t, m_t, r_t, hash_p, m_p, r_p, hash_frags, m_frags, r_frags\n");
+        fprintf(of, "time, collision_type, b, v_esc/v_imp, mlr, id_t, m_t_i, id_p, m_p_i,\n");
         // TODO: Update header
     }
 
@@ -672,12 +676,13 @@ if(print_flag == 1){
     fprintf(of, "%e,", b);                       
     fprintf(of, "%e,", v_esc/v_imp);  
     fprintf(of, "%e,", Mlr);
-    fprintf(of, "%e,", target->m);
-    fprintf(of, "%e,", target->r);
-    fprintf(of, "%e,", projectile->m);
-    fprintf(of, "%e,", projectile->r);
+    fprintf(of, "%d,", target_id);
+    fprintf(of, "%e,", target_initial_mass);
+    fprintf(of, "%d,", projectile_id);
+    fprintf(of, "%e,", projectile_initial_mass);
     fprintf(of, "\n");   
     fclose(of);
+
 }
 
 

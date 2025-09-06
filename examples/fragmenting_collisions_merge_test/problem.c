@@ -54,9 +54,6 @@ void test_merge(int type){
     assert(fabs((com_i.m-com_f.m)/com_i.m)<1e-16); // Check mass conservation 
     assert(fabs((com_i.vx-com_f.vx)/com_i.vx)<1e-16); // Check x momentum conservation 
     assert(fabs((com_i.vy-com_f.vy)/com_i.vy)<1e-16); // Check y momentum conservation 
-
-    printf("com_i.vz = %e \n", com_i.vz);
-    printf("momentum z = %e \n", fabs((com_i.vz-com_f.vz)/com_i.vz));
     assert(fabs((com_i.vz-com_f.vz)/com_i.vz)<1e-16); // Check z momentum conservation 
 
     // ID checks
