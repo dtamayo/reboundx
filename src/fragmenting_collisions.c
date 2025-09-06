@@ -98,6 +98,19 @@ double get_radii(double m, double rho){
     return pow((3.*m)/(4.*M_PI*rho),1./3.);
 }   
 
+int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct rebx_collision_resolve* const collision_resolve, struct reb_particle* p){
+    int* fc_id_max = rebx_get_param(sim->extras, collision_resolve->ap, "fc_id_max");
+    if (!fc_id_max){ // First call? 
+        rebx_set_param_int(sim->extras, &collision_resolve->ap, "fc_id_max", 0);
+        fc_id_max = rebx_get_param(sim->extras, collision_resolve->ap, "fc_id_max");
+    }
+    int new_id = *fc_id_max;
+    rebx_set_param_int(sim->extras,  (struct rebx_node**) &(p->ap), "fc_id", new_id);
+    (*fc_id_max)++;
+    return new_id;
+}
+
+
 int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
     struct reb_particle* pi = &(sim->particles[c.p1]); // First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); // Second object in collison
@@ -114,6 +127,8 @@ int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const
     pi->m  = pi->m + pj->m;
     pi->r  = cbrt(pi->r*pi->r*pi->r + pj->r*pj->r*pj->r);
     pi->last_collision = sim->t;
+
+    rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, pi);
 
     return 2; // Remove 2 particle from simulation
 }
@@ -177,6 +192,8 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     target->vx = com.vx;
     target->vy = com.vy;
     target->vz = com.vz;
+    
+    rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, target);
 
     //NOTE: Childs code swaps Mlr and fragment, if Mlr falls below min_frag_mass. Need to address this later.
 
@@ -304,6 +321,7 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
 
         //Add particle to simulation.
         reb_simulation_add(sim, big_frag);
+        rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, &sim->particles[-1]);
     }
 
     //Add small fragments
@@ -339,6 +357,7 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
 
         //Finally add fragment to simulation.
         reb_simulation_add(sim, fragment); 
+        rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, &sim->particles[-1]);
     }
 
     //Now we correct for the COM and momentum offsets.
@@ -448,7 +467,7 @@ int hit_and_run(struct reb_simulation* const sim, struct rebx_collision_resolve*
 
     //If impact velocity is less than v_crit, we have graze-and-merge
     if (Vi <= v_crit){        
-        merge(sim, "fragmenting_collisions", c);
+        merge(sim, collision_resolve, c);
         return remove;
     }else{
         //Hit-and-run happening
@@ -466,9 +485,9 @@ int hit_and_run(struct reb_simulation* const sim, struct rebx_collision_resolve*
         double M_rem = target->m + projectile->m - Mlr; //remaining mass
         if((Mlr_dag < min_frag_mass) || (M_rem - Mlr_dag < min_frag_mass)){
             Mlr_dag = 0;
-            remove = make_fragments(sim, "fragmenting_collisions", c, Mlr, Mlr_dag);
+            remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
         }else{
-            remove = make_fragments(sim, "fragmenting_collisions", c, Mlr, Mlr_dag);
+            remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
         }
     }
     return remove;
@@ -595,14 +614,14 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     int remove = 0;
     //If v_imp <= v_esc, merge.
     if (v_imp <= v_esc){
-        remove = merge(sim, "fragmenting_collisions", c);
+        remove = merge(sim, collision_resolve, c);
         collision_type = 1;
         printf("Merging collision detected.\n");
     }
     //If not, do eroding fragments fall above min_frag_mass?
     else{
         if (initial_mass - Mlr < min_frag_mass){ //if not, merge
-            remove = merge(sim, "fragmenting_collisions", c);
+            remove = merge(sim, collision_resolve, c);
             collision_type = 1;
             printf("Merging collision detected.\n");
         }
@@ -610,12 +629,12 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
         //is the impact parameter b bigger than critical value b_crit = R_t?
         else{
             if(b > target->r){//If yes, hit-and-run
-                remove = hit_and_run(sim, "fragmenting_collisions", c, Mlr, b, l, v_imp, v_esc);
+                remove = hit_and_run(sim, collision_resolve, c, Mlr, b, l, v_imp, v_esc);
                 collision_type = 2;
                 printf("hit-and-run collision detected.\n");
             }
             else{//If no, erosion
-                remove = make_fragments(sim, "fragmenting_collisions", c, Mlr, 0);
+                remove = make_fragments(sim, collision_resolve, c, Mlr, 0);
                 collision_type = 3;
                 printf("erosive collision detected.\n");
             }
@@ -644,6 +663,7 @@ if(print_flag == 1){
     // Write header if this is the first time
     if (write_header) {
         fprintf(of, "time, collision_type, b, v_esc/v_imp, mlr, hash_t, m_t, r_t, hash_p, m_p, r_p, hash_frags, m_frags, r_frags\n");
+        // TODO: Update header
     }
 
     // Write main collision info
@@ -652,10 +672,8 @@ if(print_flag == 1){
     fprintf(of, "%e,", b);                       
     fprintf(of, "%e,", v_esc/v_imp);  
     fprintf(of, "%e,", Mlr);
-    fprintf(of, "%u,", target->hash);
     fprintf(of, "%e,", target->m);
     fprintf(of, "%e,", target->r);
-    fprintf(of, "%u,", projectile->hash);
     fprintf(of, "%e,", projectile->m);
     fprintf(of, "%e,", projectile->r);
     fprintf(of, "\n");   
