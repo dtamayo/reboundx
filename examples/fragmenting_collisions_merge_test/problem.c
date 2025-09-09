@@ -43,7 +43,10 @@ void test_merge(int type){
     
     // Assign all particles an initial id
     for(int i=0; i<sim->N; i++){
+        struct reb_particle* p = &(sim->particles[i]); // First object in collision
         rebx_fragmenting_collisions_set_new_id(sim, fragmenting, &sim->particles[i]);
+        int* new_id = rebx_get_param(rebx, p->ap, "fc_id");
+        printf("particle %d ID is %d\n", i,  *new_id);
     }
     
     struct reb_particle com_i = reb_simulation_com(sim); //initial center of mass
@@ -62,6 +65,7 @@ void test_merge(int type){
     assert(*fc_id_max != 0); // Make sure max ID is not 0.
     for(int i=0; i<sim->N; i++){
         int* fc_id = (int*) rebx_get_param(rebx, sim->particles[i].ap, "fc_id");
+        printf("New id is = %d\n", *fc_id);
         assert(fc_id); // Make sure ID has been assigned.
         assert(*fc_id != 0); // Make sure ID is not 0.
         for(int j=0; j<sim->N; j++){

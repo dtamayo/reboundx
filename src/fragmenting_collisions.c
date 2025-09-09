@@ -59,7 +59,7 @@ double separation_distance_scale = 4;
 double min_frag_mass = 0.05;
 double rho1 = 1.684e6; //Msun/AU^3 
 double cstar = 1.8;
-int print_flag = 1; //1 for printing collision data, 0 for not printing
+int print_flag = 0; //1 for printing collision data, 0 for not printing
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))    // Returns the minimum of a and b
 #define MAX(a, b) ((a) > (b) ? (a) : (b))    // Returns the maximum of a and b
@@ -107,6 +107,7 @@ int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct re
     int new_id = *fc_id_max;
     rebx_set_param_int(sim->extras,  (struct rebx_node**) &(p->ap), "fc_id", new_id);
     (*fc_id_max)++;
+    //printf("new id is = %d\n", new_id);
     return new_id;
 }
 
