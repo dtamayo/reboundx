@@ -40,14 +40,10 @@ void test_erosion(int type){
     struct rebx_extras* rebx = rebx_attach(sim);
     struct rebx_collision_resolve* fragmenting = rebx_load_collision_resolve(rebx, "fragmenting_collisions");
     rebx_add_collision_resolve(rebx, fragmenting);
-      // Assign all particles an initial id
-         
+
     // Assign all particles an initial id
     for(int i=0; i<sim->N; i++){
-        struct reb_particle* p = &(sim->particles[i]); // First object in collision
         rebx_fragmenting_collisions_set_new_id(sim, fragmenting, &sim->particles[i]);
-        int* new_id = rebx_get_param(rebx, p->ap, "fc_id");
-        printf("particle %d ID is %d\n", i,  *new_id);
     }
     
     struct reb_particle com_i = reb_simulation_com(sim); //initial center of mass
@@ -59,6 +55,7 @@ void test_erosion(int type){
     assert(fabs((com_i.vx-com_f.vx)/com_i.vx)<1e-13); // Check x momentum conservation 
     assert(fabs((com_i.vy-com_f.vy)/com_i.vy)<1e-13); // Check y momentum conservation 
     assert(fabs((com_i.vz-com_f.vz)/com_i.vz)<1e-13); // Check z momentum conservation 
+
     // ID checks
     int* fc_id_max = (int*) rebx_get_param(rebx, fragmenting->ap, "fc_id_max");
     assert(fc_id_max); // Make sure max ID has been assigned.
@@ -71,9 +68,8 @@ void test_erosion(int type){
         for(int j=0; j<sim->N; j++){
             if (i!=j){
                 int* fc_id2 = (int*) rebx_get_param(rebx, sim->particles[j].ap, "fc_id");
-                printf("fc_id2 = %d \n", *fc_id2);
-                //assert(fc_id2); // Make sure ID has been assigned.
-                //assert(*fc_id != *fc_id2); // Make sure ID is unique
+                assert(fc_id2); // Make sure ID has been assigned.
+                assert(*fc_id != *fc_id2); // Make sure ID is unique
             }
         }
     }

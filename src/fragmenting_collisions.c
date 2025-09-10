@@ -392,108 +392,6 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     return remove; // Remove 2 particle from simulation (projectile)
 }
 
-int hit_and_run(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c,
-    double Mlr, double b, double l, double Vi, double V_esc){
-    struct reb_particle* pi = &(sim->particles[c.p1]); //First object in collision
-    struct reb_particle* pj = &(sim->particles[c.p2]); //Second object in collison
-
-    //Object with the higher mass will be the target, and object with lower mass will be the projectile
-    struct reb_particle* target;     
-    struct reb_particle* projectile; 
-
-    //Object with the higher mass will be the target, and object with lower mass will be the projectile
-    int remove = 0;
-    if (pi->m >= pj->m){
-        target = pi;    
-        projectile = pj;
-        remove = 2;
-    }
-    else{
-        target = pj;   
-        projectile = pi;
-        remove = 1; 
-    }
-    //target's density
-    double targ_rho = target->m/(4./3*M_PI*pow(target->r,3));
-
-    //phi helps with finding part of the projectile that is NOT crossing the target
-    double phi = 2*acos((l-projectile->r)/projectile->r);
-
-    //Leinhardt Eq. 46; cross section of projectile interacting with the target
-    double A_interact = pow(projectile->r, 2)*((M_PI-(phi-sin(phi))/2.));  
-
-    //Leinhardt Eq. 47, interacting length
-    double L_interact = 2.*pow(pow(target->r,2)-(pow(target->r-l/2.,2)), .5);
-
-    //Leinhardt Eq. 48, used in Chambers Eq. 11
-    double beta = ((A_interact*L_interact) * targ_rho)/target->m;
-
-    //Based on Chambers Eq. 11
-    double Rc1 = pow(3./(4.*M_PI*rho1)*(beta*target->m + projectile->m), 1./3.);
-
-    //Chambers Eq. 11
-    double Q0 = .8*cstar*M_PI*rho1*sim->G*pow(Rc1, 2); 
-
-    //Based on Chambers Eq. 11
-    double gamma = (beta*target->m)/projectile->m;
-    
-    //Chambers Eq. 10
-    double Q_star = (pow(1+gamma, 2)/4*gamma)* Q0; 
-
-    //Chambers Eq. 13
-    double mu = (beta*target->m*projectile->m)/(beta*target->m+projectile->m);  
-
-    //Chambers Eq. 12
-    double Q = .5*(mu*pow(Vi,2))/(beta*target->m+projectile->m); 
-
-    /* If  velocity in the hit-and-run regime is very low, the collision
-     * might eventually lead to a merger. Here, we compute the threshhold velocity for this event,
-     * called critical velocity. If v < v_crit, then we have a "graze and merge" event.
-     */
-
-    //c1 to c4 are constants used in Chambers Eq. 17
-    double c1 = 2.43; 
-    double c2 = -0.0408;
-    double c3 = 1.86;
-    double c4 = 1.08;
-
-    //Chambers eq. 16
-    double zeta = pow((1 - gamma)/(1 + gamma),2);
-
-    //This helps with writing Chambers eq. 15
-    double fac = pow(1-b/(target->r + projectile->r),2.5);
-
-    //Velocity threshhold between graze-and-merge and hit-and-run, Chambers Eq. 15
-    double v_crit = V_esc*(c1*zeta*fac + c2*zeta +c3*fac + c4);
-
-    //If impact velocity is less than v_crit, we have graze-and-merge
-    if (Vi <= v_crit){        
-        merge(sim, collision_resolve, c);
-        return remove;
-    }else{
-        //Hit-and-run happening
-        //(Mlr_dag) Second largest remnant mass, Chambers Eq. 14
-        double Mlr_dag;
-        if (Q < 1.8*Q_star){
-            Mlr_dag = (beta*target->m + projectile->m)*(1 - Q/ (2*Q_star));
-        }else{
-            Mlr_dag = (beta*target->m + projectile->m)/10 * pow(Q/(1.8*Q_star), -1.5);
-        }
-
-        //Need to check for minimum fragment mass threshold
-        //If Mlr_dag or fragment masses fall bellow min_frag_mass, just make fragments
-        //with min_frag_mass
-        double M_rem = target->m + projectile->m - Mlr; //remaining mass
-        if((Mlr_dag < min_frag_mass) || (M_rem - Mlr_dag < min_frag_mass)){
-            Mlr_dag = 0;
-            remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
-        }else{
-            remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
-        }
-    }
-    return remove;
-}
-
 /*
 * Main function to decide the collision outcome, derive new masses, positions and velocities.
 * Equations are derived from Leinhardt and Stewart (2012) and Chambers (2013).
@@ -623,69 +521,155 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
         collision_type = 1;
         printf("Merging collision detected.\n");
     }
-    //If not, do eroding fragments fall above min_frag_mass?
     else{
-        if (initial_mass - Mlr < min_frag_mass){ //if not, merge
-            remove = merge(sim, collision_resolve, c);
-            collision_type = 1;
-            printf("Merging collision detected.\n");
-        }
-        //If min mass threshold is met,
-        //is the impact parameter b bigger than critical value b_crit = R_t?
-        else{
-            if(b > target->r){//If yes, hit-and-run
-                remove = hit_and_run(sim, collision_resolve, c, Mlr, b, l, v_imp, v_esc);
-                collision_type = 2;
-                printf("hit-and-run collision detected.\n");
+        if(b >= target->r){ //grazing regime
+            //target's density
+            double targ_rho = target->m/(4./3*M_PI*pow(target->r,3));
+
+            //phi helps with finding part of the projectile that is NOT crossing the target
+            double phi = 2*acos((l-projectile->r)/projectile->r);
+
+            //Leinhardt Eq. 46; cross section of projectile interacting with the target
+            double A_interact = pow(projectile->r, 2)*((M_PI-(phi-sin(phi))/2.));  
+
+            //Leinhardt Eq. 47, interacting length
+            double L_interact = 2.*pow(pow(target->r,2)-(pow(target->r-l/2.,2)), .5);
+
+            //Leinhardt Eq. 48, used in Chambers Eq. 11
+            double beta = ((A_interact*L_interact) * targ_rho)/target->m;
+
+            //Based on Chambers Eq. 11
+            double Rc1 = pow(3./(4.*M_PI*rho1)*(beta*target->m + projectile->m), 1./3.);
+
+            //Chambers Eq. 11
+            double Q0 = .8*cstar*M_PI*rho1*sim->G*pow(Rc1, 2); 
+
+            //Based on Chambers Eq. 11
+            double gamma = (beta*target->m)/projectile->m;
+            
+            //Chambers Eq. 10
+            double Q_star = (pow(1+gamma, 2)/4*gamma)* Q0; 
+
+            //Chambers Eq. 13
+            double mu = (beta*target->m*projectile->m)/(beta*target->m+projectile->m);  
+
+            //Chambers Eq. 12
+            double Q = .5*(mu*pow(v_imp,2))/(beta*target->m+projectile->m); 
+
+            /* If  velocity in the hit-and-run regime is very low, the collision
+            * might eventually lead to a merger. Here, we compute the threshhold velocity for this event,
+            * called critical velocity. If v < v_crit, then we have a "graze and merge" event.
+            */
+
+            //c1 to c4 are constants used in Chambers Eq. 17
+            double c1 = 2.43; 
+            double c2 = -0.0408;
+            double c3 = 1.86;
+            double c4 = 1.08;
+
+            //Chambers eq. 16
+            double zeta = pow((1 - gamma)/(1 + gamma),2);
+
+            //This helps with writing Chambers eq. 15
+            double fac = pow(1-b/(target->r + projectile->r),2.5);
+
+            //Velocity threshhold between graze-and-merge and hit-and-run, Chambers Eq. 15
+            double v_crit = v_esc*(c1*zeta*fac + c2*zeta +c3*fac + c4);
+
+            //If impact velocity is less than v_crit, we have graze-and-merge
+            if (v_imp <= v_crit){        
+                merge(sim, collision_resolve, c);
+                collision_type = 1;
+                printf("Merging collision detected.\n");
+                return remove;
+            }else{
+                //Hit-and-run happening
+                //(Mlr_dag) Second largest remnant mass, Chambers Eq. 14
+                double Mlr_dag;
+                if (Q < 1.8*Q_star){
+                    Mlr_dag = (beta*target->m + projectile->m)*(1 - Q/ (2*Q_star));
+                }else{
+                    Mlr_dag = (beta*target->m + projectile->m)/10 * pow(Q/(1.8*Q_star), -1.5);
+                }
+
+                //Need to check for minimum fragment mass threshold
+                //If Mlr_dag or fragment masses fall bellow min_frag_mass, just make fragments
+                //with min_frag_mass
+                double M_rem = target->m + projectile->m - Mlr; //remaining mass
+                if((Mlr_dag < min_frag_mass) || (M_rem - Mlr_dag < min_frag_mass)){
+                    remove = 0;
+                    collision_type = 0;
+                    printf("Mlrdag = %e\n", Mlr_dag);
+                    printf("Mlr = %e\n", Mlr);
+                    printf("M_rem = %e\n", M_rem);
+                    printf("Elastic bounce detected.\n");
+                    reb_collision_resolve_hardsphere(sim,c);
+                }else{
+                    remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
+                    collision_type = 4;
+                    printf("Hit-and-run collision detected.\n");
+                }
             }
-            else{//If no, erosion
+        }
+        else{ //non-grazing regime
+            if (initial_mass - Mlr < min_frag_mass){ //Not meeting minimum fragment mass threshold
+                remove = merge(sim, collision_resolve, c);
+                collision_type = 1;
+                printf("Merging collision detected.\n");
+                }
+            else{ //Can make fragments. Mlr can be larger or smaller than the target
                 remove = make_fragments(sim, collision_resolve, c, Mlr, 0);
-                collision_type = 3;
-                printf("erosive collision detected.\n");
-            }
+                if(Mlr > target->m){
+                    collision_type = 2;
+                    printf("Accretive collision detected.\n");
+                    }
+                else{
+                    collision_type = 3;
+                    printf("Erosive collision detected.\n");
+                    }
+                }
         }
     }
 
-if(print_flag == 1){
-    bool write_header = false;
+    if(print_flag == 1){
+        bool write_header = false;
 
-    // Try to open file in read mode to check existence
-    FILE* check = fopen("collision_report.csv", "r");
-    if (check == NULL) {
-        // File doesn't exist, so we will need to write a header
-        write_header = true;
-    } else {
-        fclose(check);
+        // Try to open file in read mode to check existence
+        FILE* check = fopen("collision_report.csv", "r");
+        if (check == NULL) {
+            // File doesn't exist, so we will need to write a header
+            write_header = true;
+        } else {
+            fclose(check);
+        }
+
+        // Now open for appending (creates file if missing)
+        FILE* of = fopen("collision_report.csv", "a");
+        if (of == NULL) {
+            perror("Error opening file");
+            return -1;
+        }
+
+        // Write header if this is the first time
+        if (write_header) {
+            fprintf(of, "time, collision_type, b, v_esc/v_imp, mlr, id_t, m_t_i, id_p, m_p_i,\n");
+            // TODO: Update header
+        }
+
+        // Write main collision info
+        fprintf(of, "%e,", sim->t);     
+        fprintf(of, "%u,", collision_type);
+        fprintf(of, "%e,", b);                       
+        fprintf(of, "%e,", v_esc/v_imp);  
+        fprintf(of, "%e,", Mlr);
+        fprintf(of, "%d,", target_id);
+        fprintf(of, "%e,", target_initial_mass);
+        fprintf(of, "%d,", projectile_id);
+        fprintf(of, "%e,", projectile_initial_mass);
+        fprintf(of, "\n");   
+        fclose(of);
+
     }
 
-    // Now open for appending (creates file if missing)
-    FILE* of = fopen("collision_report.csv", "a");
-    if (of == NULL) {
-        perror("Error opening file");
-        return -1;
-    }
-
-    // Write header if this is the first time
-    if (write_header) {
-        fprintf(of, "time, collision_type, b, v_esc/v_imp, mlr, id_t, m_t_i, id_p, m_p_i,\n");
-        // TODO: Update header
-    }
-
-    // Write main collision info
-    fprintf(of, "%e,", sim->t);     
-    fprintf(of, "%u,", collision_type);
-    fprintf(of, "%e,", b);                       
-    fprintf(of, "%e,", v_esc/v_imp);  
-    fprintf(of, "%e,", Mlr);
-    fprintf(of, "%d,", target_id);
-    fprintf(of, "%e,", target_initial_mass);
-    fprintf(of, "%d,", projectile_id);
-    fprintf(of, "%e,", projectile_initial_mass);
-    fprintf(of, "\n");   
-    fclose(of);
-
-}
-
-
-return remove;
+    return remove;
 }
