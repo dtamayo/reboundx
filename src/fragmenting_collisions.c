@@ -322,7 +322,7 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
 
         //Add particle to simulation.
         reb_simulation_add(sim, big_frag);
-        rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, &sim->particles[-1]);
+        rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, &sim->particles[sim->N - 1]);
     }
 
     //Add small fragments
@@ -358,7 +358,7 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
 
         //Finally add fragment to simulation.
         reb_simulation_add(sim, fragment); 
-        rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, &sim->particles[-1]);
+        rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, &sim->particles[sim->N - 1]);
     }
 
     //Now we correct for the COM and momentum offsets.
