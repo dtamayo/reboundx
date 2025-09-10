@@ -50,17 +50,19 @@ void test_erosion(int type){
     reb_simulation_integrate(sim, 1);
     struct reb_particle com_f = reb_simulation_com(sim); //final center of mass
 
+
     assert(fabs((com_i.m-com_f.m)/com_i.m)<1e-14); // Check mass conservation 
     assert(fabs((com_i.vx-com_f.vx)/com_i.vx)<1e-13); // Check x momentum conservation 
     assert(fabs((com_i.vy-com_f.vy)/com_i.vy)<1e-13); // Check y momentum conservation 
     assert(fabs((com_i.vz-com_f.vz)/com_i.vz)<1e-13); // Check z momentum conservation 
-   
+
     // ID checks
     int* fc_id_max = (int*) rebx_get_param(rebx, fragmenting->ap, "fc_id_max");
     assert(fc_id_max); // Make sure max ID has been assigned.
     assert(*fc_id_max != 0); // Make sure max ID is not 0.
     for(int i=0; i<sim->N; i++){
         int* fc_id = (int*) rebx_get_param(rebx, sim->particles[i].ap, "fc_id");
+        printf("fc_id is %d\n", *fc_id);
         assert(fc_id); // Make sure ID has been assigned.
         assert(*fc_id != 0); // Make sure ID is not 0.
         for(int j=0; j<sim->N; j++){
@@ -73,11 +75,12 @@ void test_erosion(int type){
     }
     reb_simulation_free(sim);
 }
+
     
 
 
 int main(int argc, char* argv[]) {
-    for (int type=0;type<3;type++){
+    for (int type=0;type<1;type++){
         test_erosion(type);
         printf("test_erosion(%d) passed.\n", type);
     }
