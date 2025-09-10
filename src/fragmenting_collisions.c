@@ -598,6 +598,9 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
                 if((Mlr_dag < min_frag_mass) || (M_rem - Mlr_dag < min_frag_mass)){
                     remove = 0;
                     collision_type = 0;
+                    printf("Mlrdag = %e\n", Mlr_dag);
+                    printf("Mlr = %e\n", Mlr);
+                    printf("M_rem = %e\n", M_rem);
                     printf("Elastic bounce detected.\n");
                     reb_collision_resolve_hardsphere(sim,c);
                 }else{

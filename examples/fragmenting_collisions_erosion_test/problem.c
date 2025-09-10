@@ -57,7 +57,6 @@ void test_erosion(int type){
    
     // ID checks
     int* fc_id_max = (int*) rebx_get_param(rebx, fragmenting->ap, "fc_id_max");
-    printf("fc_id_max = %d", *fc_id_max);
     assert(fc_id_max); // Make sure max ID has been assigned.
     assert(*fc_id_max != 0); // Make sure max ID is not 0.
     for(int i=0; i<sim->N; i++){
@@ -67,10 +66,8 @@ void test_erosion(int type){
         for(int j=0; j<sim->N; j++){
             if (i!=j){
                 int* fc_id2 = (int*) rebx_get_param(rebx, sim->particles[j].ap, "fc_id");
-                printf("%d \n", fc_id2);
-                printf("N_bodies = %d\n", sim->N);
-                //assert(fc_id2); // Make sure ID has been assigned.
-                //assert(*fc_id != *fc_id2); // Make sure ID is unique
+                assert(fc_id2); // Make sure ID has been assigned.
+                assert(*fc_id != *fc_id2); // Make sure ID is unique
             }
         }
     }
