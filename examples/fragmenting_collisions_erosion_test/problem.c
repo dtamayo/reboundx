@@ -62,7 +62,6 @@ void test_erosion(int type){
     assert(*fc_id_max != 0); // Make sure max ID is not 0.
     for(int i=0; i<sim->N; i++){
         int* fc_id = (int*) rebx_get_param(rebx, sim->particles[i].ap, "fc_id");
-        printf("fc_id is %d\n", *fc_id);
         assert(fc_id); // Make sure ID has been assigned.
         assert(*fc_id != 0); // Make sure ID is not 0.
         for(int j=0; j<sim->N; j++){
@@ -80,7 +79,7 @@ void test_erosion(int type){
 
 
 int main(int argc, char* argv[]) {
-    for (int type=0;type<1;type++){
+    for (int type=0;type<3;type++){
         test_erosion(type);
         printf("test_erosion(%d) passed.\n", type);
     }

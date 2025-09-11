@@ -519,7 +519,7 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     if (v_imp <= v_esc){
         remove = merge(sim, collision_resolve, c);
         collision_type = 1;
-        printf("Merging collision detected.\n");
+        printf("Merging collision detected. (Case 1)\n");
     }
     else{
         if(b >= target->r){ //grazing regime
@@ -580,10 +580,10 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
             if (v_imp <= v_crit){        
                 merge(sim, collision_resolve, c);
                 collision_type = 1;
-                printf("Merging collision detected.\n");
+                printf("Merging collision detected. (Case 2)\n");
                 return remove;
             }else{
-                //Hit-and-run happening
+                //Grazing regime
                 //(Mlr_dag) Second largest remnant mass, Chambers Eq. 14
                 double Mlr_dag;
                 if (Q < 1.8*Q_star){
@@ -591,23 +591,40 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
                 }else{
                     Mlr_dag = (beta*target->m + projectile->m)/10 * pow(Q/(1.8*Q_star), -1.5);
                 }
-
                 //Need to check for minimum fragment mass threshold
-                //If Mlr_dag or fragment masses fall bellow min_frag_mass, just make fragments
-                //with min_frag_mass
                 double M_rem = target->m + projectile->m - Mlr; //remaining mass
-                if((Mlr_dag < min_frag_mass) || (M_rem - Mlr_dag < min_frag_mass)){
-                    remove = 0;
-                    collision_type = 0;
-                    printf("Mlrdag = %e\n", Mlr_dag);
-                    printf("Mlr = %e\n", Mlr);
-                    printf("M_rem = %e\n", M_rem);
-                    printf("Elastic bounce detected.\n");
-                    reb_collision_resolve_hardsphere(sim,c);
-                }else{
-                    remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
-                    collision_type = 4;
-                    printf("Hit-and-run collision detected.\n");
+                if(Mlr_dag < min_frag_mass){
+                    if((Mlr_dag + M_rem) < min_frag_mass){
+                        remove = 0;
+                        collision_type = 0;
+                        printf("Mlrdag = %e\n", Mlr_dag);
+                        printf("Mlr = %e\n", Mlr);
+                        printf("M_rem = %e\n", M_rem);
+                        printf("(Mlr_dag + M_rem) < min_frag_mass. Elastic bounce detected. (Case 5)\n");
+                        reb_collision_resolve_hardsphere(sim,c);
+                    }
+                    else{
+                        Mlr_dag = 0;
+                        collision_type = 2; 
+                        remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
+                        printf("(Mlr_dag + M_rem) > min_frag_mass, but Mlr_dag too small. Grazing erosion (Case 6).\n");
+                    }
+                }
+                else if(Mlr_dag >= min_frag_mass){
+                    if(M_rem < min_frag_mass){
+                        remove = 0;
+                        collision_type = 0;
+                        printf("Mlrdag = %e\n", Mlr_dag);
+                        printf("Mlr = %e\n", Mlr);
+                        printf("M_rem = %e\n", M_rem);
+                        printf("Mlr_dag > min_frag_mass, but M_rem too small. Elastic bounce detected. (Case 7)\n");
+                        reb_collision_resolve_hardsphere(sim,c);
+                    }
+                    else{
+                        collision_type = 2; 
+                        remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
+                        printf("Mlr_dag and M_rem sufficiently big. Hit-and-run. (Case 8)\n");
+                    }
                 }
             }
         }
@@ -615,17 +632,17 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
             if (initial_mass - Mlr < min_frag_mass){ //Not meeting minimum fragment mass threshold
                 remove = merge(sim, collision_resolve, c);
                 collision_type = 1;
-                printf("Merging collision detected.\n");
+                printf("Non grazing, M_rem to small. Merging collision detected. (Case 3)\n");
                 }
             else{ //Can make fragments. Mlr can be larger or smaller than the target
                 remove = make_fragments(sim, collision_resolve, c, Mlr, 0);
                 if(Mlr > target->m){
                     collision_type = 2;
-                    printf("Accretive collision detected.\n");
+                    printf("Non grazing, Mlr > M_t. Accretion. (Case 4)\n");
                     }
                 else{
                     collision_type = 3;
-                    printf("Erosive collision detected.\n");
+                    printf("Non grazing, Mlr < M_t. Erosion. (Case 4)\n");
                     }
                 }
         }

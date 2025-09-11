@@ -56,19 +56,16 @@ void test_erosion(int type){
     assert(fabs((com_i.vy-com_f.vy)/com_i.vy)<1e-10); // Check y momentum conservation 
     assert(fabs((com_i.vz-com_f.vz)/com_i.vz)<1e-10); // Check z momentum conservation
     
-        // ID checks
+    // ID checks
     int* fc_id_max = (int*) rebx_get_param(rebx, fragmenting->ap, "fc_id_max");
     assert(fc_id_max); // Make sure max ID has been assigned.
     assert(*fc_id_max != 0); // Make sure max ID is not 0.
     for(int i=0; i<sim->N; i++){
         int* fc_id = (int*) rebx_get_param(rebx, sim->particles[i].ap, "fc_id");
-        assert(fc_id); // Make sure ID has been assigned.
-        printf("fc_id = %d\n", *fc_id);
         //assert(*fc_id != 0); // Make sure ID is not 0. not relevant for elastic bounce
         for(int j=0; j<sim->N; j++){
             if (i!=j){
                 int* fc_id2 = (int*) rebx_get_param(rebx, sim->particles[j].ap, "fc_id");
-                printf("fc_id2 = %d\n", *fc_id2);
                 assert(fc_id2); // Make sure ID has been assigned.
                 assert(*fc_id != *fc_id2); // Make sure ID is unique
             }
