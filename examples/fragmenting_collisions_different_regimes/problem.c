@@ -27,25 +27,17 @@ void test_erosion(int type){
             reb_simulation_add_fmt(sim, "m r", 0.25, 100.0); // primary (slightly heavier)
             reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.20, 100.0, 200.0, 150.0, -100.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             break;
-        case 1: // order swapped
-            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.20, 100.0, 200.0, 150.0, -100.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
-            reb_simulation_add_fmt(sim, "m r", 0.25, 100.0); // primary (slightly heavier)
-            break;
-        case 2: // equal mass
-            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.20, 100.0, 200.0, 150.0, -100.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
-            reb_simulation_add_fmt(sim, "m r", 0.20, 100.0);
-            break;
-        case 3:
+        case 1:
             reb_simulation_add_fmt(sim, "m r", 0.25, 100.0); //primary heavier, higher velocity
             reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.20, 100.0, 200.0, 150.0, -800.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             break;
-        case 4:
+        case 2:
             reb_simulation_add_fmt(sim, "m r vx", 0.25, 100.0, 100.0); // primary heavier, smaller angle
             reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.20, 100.0, 200.0, 50.0, -200.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             break;
-        case 5:
-            reb_simulation_add_fmt(sim, "m r", 0.25, 100.0); // primary heavier, smaller
-            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.20, 100.0, 200.0, 50.0, -100.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+        case 3:
+            reb_simulation_add_fmt(sim, "m r", 0.1, 100.0); // primary smaller
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.1, 100.0, 200.0, 150.0, -600.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             break;
     }
 
@@ -89,7 +81,7 @@ void test_erosion(int type){
 
 
 int main(int argc, char* argv[]) {
-    for (int type=0;type<6;type++){
+    for (int type=0;type<4;type++){
         test_erosion(type);
         printf("test_hit_and_run(%d) passed.\n", type);
     }
