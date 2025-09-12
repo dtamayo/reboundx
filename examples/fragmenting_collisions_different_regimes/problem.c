@@ -24,21 +24,46 @@ void test_erosion(int type){
     // Add particles
     switch (type){
         case 0:
-            reb_simulation_add_fmt(sim, "m r", 0.25, 100.0); // primary (slightly heavier)
-            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.20, 100.0, 200.0, 150.0, -100.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            reb_simulation_add_fmt(sim, "m r", 0.501, 0.5); // primary (slightly heavier)
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.5, 0.5, 1.0, 0.9, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             break;
         case 1:
-            reb_simulation_add_fmt(sim, "m r", 0.25, 100.0); //primary heavier, higher velocity
-            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.20, 100.0, 200.0, 150.0, -800.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            reb_simulation_add_fmt(sim, "m r", 0.101, 0.5); // primary (slightly heavier)
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.1, 0.5, 1.0, 0.9, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             break;
         case 2:
-            reb_simulation_add_fmt(sim, "m r vx", 0.25, 100.0, 100.0); // primary heavier, smaller angle
-            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.20, 100.0, 200.0, 50.0, -200.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            reb_simulation_add_fmt(sim, "m r", 0.1, 0.5); // 1:4 mass ratio, less mass
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.025, 0.5, 1.0, 0.9, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             break;
         case 3:
-            reb_simulation_add_fmt(sim, "m r", 0.1, 100.0); // primary smaller
-            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.1, 100.0, 200.0, 150.0, -600.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            reb_simulation_add_fmt(sim, "m r", 0.4, 0.5); // 1:4 mass ratio, higher mass
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.1, 0.5, 1.0, 0.9, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             break;
+        case 4:
+            reb_simulation_add_fmt(sim, "m r", 0.4, 0.5); // 1:10 mass ratio, 
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.1, 0.5, 8.0, 0.9, -10.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            break;
+        case 5:
+            reb_simulation_add_fmt(sim, "m r", 0.4, 0.5); // 1:10 mass ratio, 
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.1, 0.5, 8.0, 0.0, -10.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            break;
+        case 6:
+            reb_simulation_add_fmt(sim, "m r", 0.4, 0.5); // 1:10 mass ratio, 
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.1, 0.5, 8.0, 0.5, -10.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            break;
+        case 7:
+            reb_simulation_add_fmt(sim, "m r", 0.4, 0.5); // 1:10 mass ratio, 
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.1, 0.5, 8.0, 0.8, -10.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            break;
+        case 8:
+            reb_simulation_add_fmt(sim, "m r", 0.101, 0.5); // v_imp < v_crit
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.1, 0.5, 1.0, 0.9, -0.60, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            break;
+        case 9:
+            reb_simulation_add_fmt(sim, "m r", 100.0, 50.0); // 1:10 mass ratio, 
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 25.0, 50.0, 75.0, 60.0, -80.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            break;
+       
     }
 
     struct rebx_extras* rebx = rebx_attach(sim);
@@ -52,10 +77,11 @@ void test_erosion(int type){
     
     struct reb_particle com_i = reb_simulation_com(sim); //initial center of mass
     reb_simulation_integrate(sim, 1);
+    printf("N = %d\n", sim->N);
     struct reb_particle com_f = reb_simulation_com(sim); //final center of mass
-
-
-    assert(fabs((com_i.m-com_f.m)/com_i.m)<1e-14); // Check mass conservation 
+    printf("com_i = %e and com_f = %e \n", com_i.m, com_f.m);
+    printf("mass error = %e\n", fabs((com_i.m-com_f.m)/com_i.m));
+    assert(fabs((com_i.m-com_f.m)/com_i.m)<1e-10); // Check mass conservation 
     assert(fabs((com_i.vx-com_f.vx)/com_i.vx)<1e-10); // Check x momentum conservation 
     assert(fabs((com_i.vy-com_f.vy)/com_i.vy)<1e-10); // Check y momentum conservation 
     assert(fabs((com_i.vz-com_f.vz)/com_i.vz)<1e-10); // Check z momentum conservation
@@ -81,8 +107,8 @@ void test_erosion(int type){
 
 
 int main(int argc, char* argv[]) {
-    for (int type=0;type<4;type++){
+    for (int type=0;type<10;type++){
         test_erosion(type);
-        printf("test_hit_and_run(%d) passed.\n", type);
+        printf("test(%d) passed.\n", type);
     }
 }

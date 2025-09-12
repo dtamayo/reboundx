@@ -537,24 +537,25 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
 
             //Leinhardt Eq. 48, used in Chambers Eq. 11
             double beta = ((A_interact*L_interact) * targ_rho)/target->m;
+            double m_interact = (A_interact*L_interact) * targ_rho;
 
-            //Based on Chambers Eq. 11
-            double Rc1 = pow(3./(4.*M_PI*rho1)*(beta*target->m + projectile->m), 1./3.);
+            //Based on Chambers Eq. 11, subscript g refers to "grazing"
+            double Rc1_g = pow(3./(4.*M_PI*rho1)*(beta * target->m + projectile->m), 1./3.);
 
             //Chambers Eq. 11
-            double Q0 = .8*cstar*M_PI*rho1*sim->G*pow(Rc1, 2); 
+            double Q0_g = .8*cstar*M_PI*rho1*sim->G*pow(Rc1_g, 2); 
 
-            //Based on Chambers Eq. 11
-            double gamma = (beta*target->m)/projectile->m;
+            //Leinhardt Eq. 46-59
+            double gamma_g = beta * target->m/projectile->m;
             
             //Chambers Eq. 10
-            double Q_star = (pow(1+gamma, 2)/4*gamma)* Q0; 
+            double Q_star_g = (pow(1+gamma_g, 2)/4*gamma_g)* Q0_g; 
 
             //Chambers Eq. 13
-            double mu = (beta*target->m*projectile->m)/(beta*target->m+projectile->m);  
+            double mu_g = (beta * target->m*projectile->m)/(beta * target->m+projectile->m);  
 
             //Chambers Eq. 12
-            double Q = .5*(mu*pow(v_imp,2))/(beta*target->m+projectile->m); 
+            double Q_g = .5*(mu_g*pow(v_imp,2))/(beta*target->m+projectile->m); 
 
             /* If  velocity in the hit-and-run regime is very low, the collision
             * might eventually lead to a merger. Here, we compute the threshhold velocity for this event,
@@ -576,9 +577,13 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
             //Velocity threshhold between graze-and-merge and hit-and-run, Chambers Eq. 15
             double v_crit = v_esc*(c1*zeta*fac + c2*zeta +c3*fac + c4);
 
+            printf("v_crit = %e\n", v_crit);
+            printf("v_imp = %e\n", v_imp);
+            printf("v_esc = %e\n", v_esc);
+
             //If impact velocity is less than v_crit, we have graze-and-merge
             if (v_imp <= v_crit){        
-                merge(sim, collision_resolve, c);
+                remove = merge(sim, collision_resolve, c);
                 collision_type = 1;
                 printf("Merging collision detected. (Case 2)\n");
                 return remove;
@@ -586,10 +591,10 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
                 //Grazing regime
                 //(Mlr_dag) Second largest remnant mass, Chambers Eq. 14
                 double Mlr_dag;
-                if (Q < 1.8*Q_star){
-                    Mlr_dag = (beta*target->m + projectile->m)*(1 - Q/ (2*Q_star));
+                if (Q_g < 1.8*Q_star_g){
+                    Mlr_dag = (beta*target->m + projectile->m)*(1 - Q_g/ (2*Q_star_g));
                 }else{
-                    Mlr_dag = (beta*target->m + projectile->m)/10 * pow(Q/(1.8*Q_star), -1.5);
+                    Mlr_dag = (beta*target->m + projectile->m)/10 * pow(Q_g/(1.8*Q_star_g), -1.5);
                 }
                 //Need to check for minimum fragment mass threshold
                 double M_rem = target->m + projectile->m - Mlr; //remaining mass
@@ -597,9 +602,9 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
                     if((Mlr_dag + M_rem) < min_frag_mass){
                         remove = 0;
                         collision_type = 0;
-                        printf("Mlrdag = %e\n", Mlr_dag);
-                        printf("Mlr = %e\n", Mlr);
-                        printf("M_rem = %e\n", M_rem);
+                        //printf("Mlrdag = %e\n", Mlr_dag);
+                        //printf("Mlr = %e\n", Mlr);
+                        //printf("M_rem = %e\n", M_rem);
                         printf("(Mlr_dag + M_rem) < min_frag_mass. Elastic bounce detected. (Case 5)\n");
                         reb_collision_resolve_hardsphere(sim,c);
                     }
@@ -622,6 +627,10 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
                     }
                     else{
                         collision_type = 2; 
+                        printf("Mlrdag = %e\n", Mlr_dag);
+                        printf("Mlr = %e\n", Mlr);
+                        printf("M_rem = %e\n", M_rem);
+                        printf("Mlrdag + Mlr + Mrem = %e\n", M_rem + Mlr_dag + Mlr);
                         remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
                         printf("Mlr_dag and M_rem sufficiently big. Hit-and-run. (Case 8)\n");
                     }
