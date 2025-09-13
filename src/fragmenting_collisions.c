@@ -538,6 +538,8 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
             //Leinhardt Eq. 48, used in Chambers Eq. 11
             double beta = ((A_interact*L_interact) * targ_rho)/target->m;
             double m_interact = (A_interact*L_interact) * targ_rho;
+            //printf("m_interact = %e\n", m_interact);
+            //printf("m_interact + m_p = %e\n", m_interact + projectile->m);
 
             //Based on Chambers Eq. 11, subscript g refers to "grazing"
             double Rc1_g = pow(3./(4.*M_PI*rho1)*(beta * target->m + projectile->m), 1./3.);
@@ -576,10 +578,10 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
 
             //Velocity threshhold between graze-and-merge and hit-and-run, Chambers Eq. 15
             double v_crit = v_esc*(c1*zeta*fac + c2*zeta +c3*fac + c4);
-
-            printf("v_crit = %e\n", v_crit);
-            printf("v_imp = %e\n", v_imp);
-            printf("v_esc = %e\n", v_esc);
+            //printf("Q/Q* = %e\n", Q_g/Q_star_g);
+            //printf("v_crit = %e\n", v_crit);
+            //printf("v_imp = %e\n", v_imp);
+            //printf("v_esc = %e\n", v_esc);
 
             //If impact velocity is less than v_crit, we have graze-and-merge
             if (v_imp <= v_crit){        
@@ -588,55 +590,49 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
                 printf("Merging collision detected. (Case 2)\n");
                 return remove;
             }else{
-                //Grazing regime
-                //(Mlr_dag) Second largest remnant mass, Chambers Eq. 14
-                double Mlr_dag;
-                if (Q_g < 1.8*Q_star_g){
-                    Mlr_dag = (beta*target->m + projectile->m)*(1 - Q_g/ (2*Q_star_g));
-                }else{
-                    Mlr_dag = (beta*target->m + projectile->m)/10 * pow(Q_g/(1.8*Q_star_g), -1.5);
-                }
-                //Need to check for minimum fragment mass threshold
-                double M_rem = target->m + projectile->m - Mlr; //remaining mass
-                if(Mlr_dag < min_frag_mass){
-                    if((Mlr_dag + M_rem) < min_frag_mass){
+                if(Mlr < target->m){
+                    if((target->m + projectile->m - Mlr) < min_frag_mass){
                         remove = 0;
-                        collision_type = 0;
-                        //printf("Mlrdag = %e\n", Mlr_dag);
-                        //printf("Mlr = %e\n", Mlr);
-                        //printf("M_rem = %e\n", M_rem);
-                        printf("(Mlr_dag + M_rem) < min_frag_mass. Elastic bounce detected. (Case 5)\n");
+                        printf("Elastic bounce, case 5.\n");
                         reb_collision_resolve_hardsphere(sim,c);
                     }
                     else{
-                        Mlr_dag = 0;
-                        collision_type = 2; 
-                        remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
-                        printf("(Mlr_dag + M_rem) > min_frag_mass, but Mlr_dag too small. Grazing erosion (Case 6).\n");
+                        remove = make_fragments(sim, collision_resolve, c, Mlr, 0);
+                        printf("Grazing erosion, case 6.\n");
                     }
                 }
-                else if(Mlr_dag >= min_frag_mass){
-                    if(M_rem < min_frag_mass){
+                else{
+                    //(Mlr_dag) Second largest remnant mass, Chambers Eq. 14
+                    double Mlr_dag;
+                    if (Q_g < 1.8*Q_star_g){
+                        Mlr_dag = (beta*target->m + projectile->m)*(1 - Q_g/ (2*Q_star_g));
+                    }else{
+                        Mlr_dag = (beta*target->m + projectile->m)/10 * pow(Q_g/(1.8*Q_star_g), -1.5);
+                    }
+                    if(Mlr_dag < min_frag_mass){
                         remove = 0;
-                        collision_type = 0;
-                        printf("Mlrdag = %e\n", Mlr_dag);
-                        printf("Mlr = %e\n", Mlr);
-                        printf("M_rem = %e\n", M_rem);
-                        printf("Mlr_dag > min_frag_mass, but M_rem too small. Elastic bounce detected. (Case 7)\n");
+                        printf("M_T = %e AND Mlr = %e\n", target->m, Mlr);
+                        printf("Elastic bounce, case 7.\n");
                         reb_collision_resolve_hardsphere(sim,c);
                     }
                     else{
-                        collision_type = 2; 
-                        printf("Mlrdag = %e\n", Mlr_dag);
-                        printf("Mlr = %e\n", Mlr);
-                        printf("M_rem = %e\n", M_rem);
-                        printf("Mlrdag + Mlr + Mrem = %e\n", M_rem + Mlr_dag + Mlr);
-                        remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
-                        printf("Mlr_dag and M_rem sufficiently big. Hit-and-run. (Case 8)\n");
+                        if((target->m + projectile->m - Mlr - Mlr_dag) < min_frag_mass){
+                            remove = 0;
+                            printf("M_T = %e AND Mlr = %e\n", target->m, Mlr);
+                            printf("Mslr = %e\n", Mlr_dag);
+                            printf("M_rem = %e\n", (target->m + projectile->m - Mlr_dag));
+                            printf("Elsatic bounce, case 8.\n");
+                            reb_collision_resolve_hardsphere(sim,c);
+                        }
+                        else{
+                            printf("Hit-and-run, case 9.\n");
+                            remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
+                        }
                     }
                 }
             }
-        }
+            
+        } 
         else{ //non-grazing regime
             if (initial_mass - Mlr < min_frag_mass){ //Not meeting minimum fragment mass threshold
                 remove = merge(sim, collision_resolve, c);
@@ -654,9 +650,9 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
                     printf("Non grazing, Mlr < M_t. Erosion. (Case 4)\n");
                     }
                 }
-        }
+            }
+    
     }
-
     if(print_flag == 1){
         bool write_header = false;
 
@@ -698,4 +694,4 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     }
 
     return remove;
-}
+} 

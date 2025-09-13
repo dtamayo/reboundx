@@ -63,6 +63,26 @@ void test_erosion(int type){
             reb_simulation_add_fmt(sim, "m r", 100.0, 50.0); // 1:10 mass ratio, 
             reb_simulation_add_fmt(sim, "m r x y vx vy vz", 25.0, 50.0, 75.0, 60.0, -80.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             break;
+        case 10:
+            reb_simulation_add_fmt(sim, "m r", 4.0, 0.5); // 1:10 mass ratio, 
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 1.0, 0.5, 50.0, 0.0, -80.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            break;
+        case 11:
+            reb_simulation_add_fmt(sim, "m r", 0.1, 0.5); // 1:4 mass ratio, less mass
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.025, 0.5, 1.0, 0.7, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            break;
+        case 12:
+            reb_simulation_add_fmt(sim, "m r", 0.1, 0.5); // 1:4 mass ratio, less mass
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.01, 0.5, 50.0, 0.51, -60.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            break;
+        case 13:
+            reb_simulation_add_fmt(sim, "m r", 0.1, 0.5); // 1:4 mass ratio, less mass
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.01, 0.5, 200.0, 0.51, -250.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            break;
+        case 14:
+            reb_simulation_add_fmt(sim, "m r", 10.0, 0.5); // 1:4 mass ratio, less mass
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 1.0, 0.5, 8.0, 0.8, -10.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            break;
        
     }
 
@@ -79,8 +99,8 @@ void test_erosion(int type){
     reb_simulation_integrate(sim, 1);
     printf("N = %d\n", sim->N);
     struct reb_particle com_f = reb_simulation_com(sim); //final center of mass
-    printf("com_i = %e and com_f = %e \n", com_i.m, com_f.m);
-    printf("mass error = %e\n", fabs((com_i.m-com_f.m)/com_i.m));
+    //printf("com_i = %e and com_f = %e \n", com_i.m, com_f.m);
+    //printf("mass error = %e\n", fabs((com_i.m-com_f.m)/com_i.m));
     assert(fabs((com_i.m-com_f.m)/com_i.m)<1e-10); // Check mass conservation 
     assert(fabs((com_i.vx-com_f.vx)/com_i.vx)<1e-10); // Check x momentum conservation 
     assert(fabs((com_i.vy-com_f.vy)/com_i.vy)<1e-10); // Check y momentum conservation 
@@ -107,7 +127,7 @@ void test_erosion(int type){
 
 
 int main(int argc, char* argv[]) {
-    for (int type=0;type<10;type++){
+    for (int type=0;type<15;type++){
         test_erosion(type);
         printf("test(%d) passed.\n", type);
     }
