@@ -42,7 +42,7 @@ try:
     ghash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii")
     ghash_arg = "-DREBXGITHASH="+ghash.strip()
 except:
-    ghash_arg = "-DREBXGITHASH=d52096a49427f25aa6d5f6c1a3f83fe98389c559" #GITHASHAUTOUPDATE
+    ghash_arg = "-DREBXGITHASH=2f2446f47047fe0cc7e7d0655f9444d98253c839" #GITHASHAUTOUPDATE
 
 class build_ext(_build_ext):
     def finalize_options(self):
