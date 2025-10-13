@@ -59,7 +59,10 @@ double separation_distance_scale = 4;
 double min_frag_mass = 0.05;
 double rho1 = 1.684e6; //Msun/AU^3 
 double cstar = 1.8;
-int print_flag = 0; //1 for printing collision data, 0 for not printing
+int print_flag = 1; //1 for printing collision data, 0 for not printing
+int track_id_flag = 1;
+char particle_list_file[100] = "family_tree.csv";
+
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))    // Returns the minimum of a and b
 #define MAX(a, b) ((a) > (b) ? (a) : (b))    // Returns the maximum of a and b
@@ -107,7 +110,7 @@ int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct re
     int new_id = *fc_id_max;
     rebx_set_param_int(sim->extras,  (struct rebx_node**) &(p->ap), "fc_id", new_id);
     (*fc_id_max)++;
-    //printf("new id is = %d\n", new_id);
+    printf("new id is = %d\n", new_id);
     return new_id;
 }
 
@@ -129,7 +132,18 @@ int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const
     pi->r  = cbrt(pi->r*pi->r*pi->r + pj->r*pj->r*pj->r);
     pi->last_collision = sim->t;
 
+    int parent_t_id = *(int*) rebx_get_param(sim->extras, pi->ap, "fc_id");
+    //int parent_t_id = *parent_t_id_ptr;  // copy the value, safe from changes
+    int* parent_p_id = rebx_get_param(sim->extras, pj->ap, "fc_id");
     rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, pi);
+    FILE* of = fopen(particle_list_file, "a");
+    int* new_id = rebx_get_param(sim->extras, pi->ap, "fc_id");
+    fprintf(of, "%d, ", *new_id);
+    fprintf(of, "%d, ", parent_t_id);
+    fprintf(of, "%d, ", *parent_p_id);
+    fprintf(of, "\n");
+    fclose(of);
+
 
     return 2; // Remove 2 particle from simulation
 }
@@ -194,7 +208,17 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     target->vy = com.vy;
     target->vz = com.vz;
     
+    //Save parents ID before target turns into Mlr
+    int parent_t_id = *(int*) rebx_get_param(sim->extras, target->ap, "fc_id");
+    int parent_p_id = *(int*) rebx_get_param(sim->extras, projectile->ap, "fc_id");
     rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, target);
+    int new_id = *(int*) rebx_get_param(sim->extras, target->ap, "fc_id");
+    FILE* of = fopen(particle_list_file, "a");
+    fprintf(of, "%d, ", new_id);
+    fprintf(of, "%d, ", parent_t_id);
+    fprintf(of, "%d, ", parent_p_id);
+    fprintf(of, "\n");
+    fclose(of);
 
     //NOTE: Childs code swaps Mlr and fragment, if Mlr falls below min_frag_mass. Need to address this later.
 
@@ -320,9 +344,20 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
         mvsum[1] += big_frag.m * big_frag.vy;    
         mvsum[2] += big_frag.m * big_frag.vz;
 
-        //Add particle to simulation.
+        //Add particle to simulation
         reb_simulation_add(sim, big_frag);
+
+        //Save new ID with parents to particle ID list
         rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, &sim->particles[sim->N - 1]);
+        struct reb_particle* newly_added_particle = &(sim->particles[sim->N - 1]); //First object in collision
+        int new_id = *(int*) rebx_get_param(sim->extras, newly_added_particle->ap, "fc_id");
+        FILE* of = fopen(particle_list_file, "a");
+        fprintf(of, "%d, ", new_id);
+        fprintf(of, "%d, ", parent_t_id);
+        fprintf(of, "%d, ", parent_p_id);
+        fprintf(of, "\n");
+        fclose(of);
+
     }
 
     //Add small fragments
@@ -358,7 +393,17 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
 
         //Finally add fragment to simulation.
         reb_simulation_add(sim, fragment); 
+
         rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, &sim->particles[sim->N - 1]);
+        struct reb_particle* newly_added_particle = &(sim->particles[sim->N - 1]); //First object in collision
+        int new_id = *(int*) rebx_get_param(sim->extras, newly_added_particle->ap, "fc_id");
+        FILE* of = fopen(particle_list_file, "a");
+        fprintf(of, "%d, ", new_id);
+        fprintf(of, "%d, ", parent_t_id);
+        fprintf(of, "%d, ", parent_p_id);
+        fprintf(of, "\n");
+        fclose(of);
+        
     }
 
     //Now we correct for the COM and momentum offsets.
@@ -667,14 +712,10 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
 
         // Now open for appending (creates file if missing)
         FILE* of = fopen("collision_report.csv", "a");
-        if (of == NULL) {
-            perror("Error opening file");
-            return -1;
-        }
 
         // Write header if this is the first time
         if (write_header) {
-            fprintf(of, "time, collision_type, b, v_esc/v_imp, mlr, id_t, m_t_i, id_p, m_p_i,\n");
+            fprintf(of, "time, collision_type, b, v_esc/v_imp, mlr, m_t, m_p\n");
             // TODO: Update header
         }
 
@@ -686,12 +727,14 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
         fprintf(of, "%e,", Mlr);
         fprintf(of, "%d,", target_id);
         fprintf(of, "%e,", target_initial_mass);
-        fprintf(of, "%d,", projectile_id);
         fprintf(of, "%e,", projectile_initial_mass);
         fprintf(of, "\n");   
         fclose(of);
 
     }
+
+
+
 
     return remove;
 } 

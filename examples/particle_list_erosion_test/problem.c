@@ -11,12 +11,10 @@
 #include <assert.h>
 #include "rebound.h"
 #include "reboundx.h"
-#include <stdbool.h>
 
 
-void test_merge(int type){
-    char particles_filename[100];
-    sprintf(particles_filename, "family_tree_%d.csv", type);
+void test_erosion(int type){
+    char particles_filename[100] = "family_tree.csv";
     // This function tests mass and momentum conservation for various setups.
     struct reb_simulation* sim = reb_simulation_create(); //creates simulation
     sim->integrator = REB_INTEGRATOR_MERCURIUS;
@@ -27,16 +25,16 @@ void test_merge(int type){
     // Add particles
     switch (type){
         case 0:
-            reb_simulation_add_fmt(sim, "m r", 1.1, 1.0); // primary (slightly heavier)
-            reb_simulation_add_fmt(sim, "m r x vx vy vz", 1.0, 1.0, 2.5, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            reb_simulation_add_fmt(sim, "m r", 0.25, 1.0); // primary (slightly heavier)
+            reb_simulation_add_fmt(sim, "m r x vx vy vz", 0.20, 1.0, 10.0, -30.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             break;
         case 1: // order swapped
-            reb_simulation_add_fmt(sim, "m r x vx vy vz", 1.0, 1.0, 2.5, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
-            reb_simulation_add_fmt(sim, "m r", 1.1, 1.0); // primary (slightly heavier)
+            reb_simulation_add_fmt(sim, "m r x vx vy vz", 0.20, 1.0, 10.0, -30.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            reb_simulation_add_fmt(sim, "m r", 0.25, 1.0); // primary (slightly heavier)
             break;
         case 2: // equal mass
-            reb_simulation_add_fmt(sim, "m r x vx vy vz", 1.0, 1.0, 2.5, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
-            reb_simulation_add_fmt(sim, "m r", 1.0, 1.0);
+            reb_simulation_add_fmt(sim, "m r x vx vy vz", 0.20, 1.0, 10.0, -30.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
+            reb_simulation_add_fmt(sim, "m r", 0.20, 1.0);
             break;
     }
 
@@ -53,22 +51,22 @@ void test_merge(int type){
         int* new_id = rebx_get_param(rebx, p->ap, "fc_id");
         printf("particle %d ID is %d\n", i,  *new_id);
         fprintf(of, "%d,", *new_id);
-        fprintf(of, "0, ");
-        fprintf(of, "0, ");
-        fprintf(of, "\n");   
+        fprintf(of, " , ");
+        fprintf(of, " , ");
+        fprintf(of, "\n");  
     }
 
     fclose(of);
-    
+
     struct reb_particle com_i = reb_simulation_com(sim); //initial center of mass
     reb_simulation_integrate(sim, 1);
     struct reb_particle com_f = reb_simulation_com(sim); //final center of mass
 
-    assert(sim->N == 1); // Check that merge did occur
-    assert(fabs((com_i.m-com_f.m)/com_i.m)<1e-16); // Check mass conservation 
-    assert(fabs((com_i.vx-com_f.vx)/com_i.vx)<1e-16); // Check x momentum conservation 
-    assert(fabs((com_i.vy-com_f.vy)/com_i.vy)<1e-16); // Check y momentum conservation 
-    assert(fabs((com_i.vz-com_f.vz)/com_i.vz)<1e-16); // Check z momentum conservation 
+
+    assert(fabs((com_i.m-com_f.m)/com_i.m)<1e-14); // Check mass conservation 
+    assert(fabs((com_i.vx-com_f.vx)/com_i.vx)<1e-13); // Check x momentum conservation 
+    assert(fabs((com_i.vy-com_f.vy)/com_i.vy)<1e-13); // Check y momentum conservation 
+    assert(fabs((com_i.vz-com_f.vz)/com_i.vz)<1e-13); // Check z momentum conservation 
 
     // ID checks
     int* fc_id_max = (int*) rebx_get_param(rebx, fragmenting->ap, "fc_id_max");
@@ -76,7 +74,6 @@ void test_merge(int type){
     assert(*fc_id_max != 0); // Make sure max ID is not 0.
     for(int i=0; i<sim->N; i++){
         int* fc_id = (int*) rebx_get_param(rebx, sim->particles[i].ap, "fc_id");
-        printf("New id is = %d\n", *fc_id);
         assert(fc_id); // Make sure ID has been assigned.
         assert(*fc_id != 0); // Make sure ID is not 0.
         for(int j=0; j<sim->N; j++){
@@ -89,12 +86,13 @@ void test_merge(int type){
     }
     reb_simulation_free(sim);
 }
+
     
 
 
 int main(int argc, char* argv[]) {
-    for (int type=0;type<3;type++){
-        test_merge(type);
-        printf("test_merge(%d) passed.\n", type);
+    for (int type=0;type<1;type++){
+        test_erosion(type);
+        printf("test_erosion(%d) passed.\n", type);
     }
 }

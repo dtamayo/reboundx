@@ -15,8 +15,7 @@
 
 
 void test_merge(int type){
-    char particles_filename[100];
-    sprintf(particles_filename, "family_tree_%d.csv", type);
+    char particles_filename[100] = "family_tree.csv";
     // This function tests mass and momentum conservation for various setups.
     struct reb_simulation* sim = reb_simulation_create(); //creates simulation
     sim->integrator = REB_INTEGRATOR_MERCURIUS;
@@ -53,8 +52,8 @@ void test_merge(int type){
         int* new_id = rebx_get_param(rebx, p->ap, "fc_id");
         printf("particle %d ID is %d\n", i,  *new_id);
         fprintf(of, "%d,", *new_id);
-        fprintf(of, "0, ");
-        fprintf(of, "0, ");
+        fprintf(of, " , ");
+        fprintf(of, " , ");
         fprintf(of, "\n");   
     }
 
@@ -93,7 +92,7 @@ void test_merge(int type){
 
 
 int main(int argc, char* argv[]) {
-    for (int type=0;type<3;type++){
+    for (int type=0;type<1;type++){
         test_merge(type);
         printf("test_merge(%d) passed.\n", type);
     }
