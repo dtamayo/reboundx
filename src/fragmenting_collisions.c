@@ -110,7 +110,6 @@ int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct re
     int new_id = *fc_id_max;
     rebx_set_param_int(sim->extras,  (struct rebx_node**) &(p->ap), "fc_id", new_id);
     (*fc_id_max)++;
-    printf("new id is = %d\n", new_id);
     return new_id;
 }
 
@@ -459,6 +458,15 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
         projectile = pi; 
     }
 
+    if (target->m == 0.0){
+        reb_simulation_error(sim, "Target mass is zero.\n");
+        return 0;
+    }
+    if (projectile->m == 0.0){
+        reb_simulation_error(sim, "Projectile mass is zero.\n");
+        return 0;
+    }
+
     //Some useful parameters
     double target_initial_mass = target->m; //to later save for user
     double projectile_initial_mass = projectile->m; //same as above
@@ -583,8 +591,6 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
             //Leinhardt Eq. 48, used in Chambers Eq. 11
             double beta = ((A_interact*L_interact) * targ_rho)/target->m;
             double m_interact = (A_interact*L_interact) * targ_rho;
-            //printf("m_interact = %e\n", m_interact);
-            //printf("m_interact + m_p = %e\n", m_interact + projectile->m);
 
             //Based on Chambers Eq. 11, subscript g refers to "grazing"
             double Rc1_g = pow(3./(4.*M_PI*rho1)*(beta * target->m + projectile->m), 1./3.);
@@ -623,10 +629,6 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
 
             //Velocity threshhold between graze-and-merge and hit-and-run, Chambers Eq. 15
             double v_crit = v_esc*(c1*zeta*fac + c2*zeta +c3*fac + c4);
-            //printf("Q/Q* = %e\n", Q_g/Q_star_g);
-            //printf("v_crit = %e\n", v_crit);
-            //printf("v_imp = %e\n", v_imp);
-            //printf("v_esc = %e\n", v_esc);
 
             //If impact velocity is less than v_crit, we have graze-and-merge
             if (v_imp <= v_crit){        
@@ -656,16 +658,16 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
                     }
                     if(Mlr_dag < min_frag_mass){
                         remove = 0;
-                        printf("M_T = %e AND Mlr = %e\n", target->m, Mlr);
+                        //printf("M_T = %e AND Mlr = %e\n", target->m, Mlr);
                         printf("Elastic bounce, case 7.\n");
                         reb_collision_resolve_hardsphere(sim,c);
                     }
                     else{
                         if((target->m + projectile->m - Mlr - Mlr_dag) < min_frag_mass){
                             remove = 0;
-                            printf("M_T = %e AND Mlr = %e\n", target->m, Mlr);
-                            printf("Mslr = %e\n", Mlr_dag);
-                            printf("M_rem = %e\n", (target->m + projectile->m - Mlr_dag));
+                            //printf("M_T = %e AND Mlr = %e\n", target->m, Mlr);
+                            //printf("Mslr = %e\n", Mlr_dag);
+                            //printf("M_rem = %e\n", (target->m + projectile->m - Mlr_dag));
                             printf("Elsatic bounce, case 8.\n");
                             reb_collision_resolve_hardsphere(sim,c);
                         }

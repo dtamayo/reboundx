@@ -15,6 +15,7 @@
 
 void test_erosion(int type){
     // This function tests mass and momentum conservation for various setups.
+    // **IMPORTANT** Tests for catching different collision regimes work with min_frag_mass = 0.05;
     struct reb_simulation* sim = reb_simulation_create(); //creates simulation
     sim->integrator = REB_INTEGRATOR_MERCURIUS;
     sim->collision = REB_COLLISION_DIRECT;

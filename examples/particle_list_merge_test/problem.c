@@ -92,7 +92,7 @@ void test_merge(int type){
 
 
 int main(int argc, char* argv[]) {
-    for (int type=0;type<1;type++){
+    for (int type=0;type<3;type++){
         test_merge(type);
         printf("test_merge(%d) passed.\n", type);
     }

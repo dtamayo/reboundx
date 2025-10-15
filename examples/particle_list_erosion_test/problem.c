@@ -91,7 +91,7 @@ void test_erosion(int type){
 
 
 int main(int argc, char* argv[]) {
-    for (int type=0;type<1;type++){
+    for (int type=0;type<3;type++){
         test_erosion(type);
         printf("test_erosion(%d) passed.\n", type);
     }
