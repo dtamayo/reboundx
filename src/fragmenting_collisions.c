@@ -56,11 +56,10 @@
 
 //Global parameters, need to be used defined
 double separation_distance_scale = 4;
-double min_frag_mass = 0.05;
+double min_frag_mass_default = 0.05;
 double rho1 = 1.684e6; //Msun/AU^3 
 double cstar = 1.8;
 int print_flag = 1; //1 for printing collision data, 0 for not printing
-int track_id_flag = 1;
 char particle_list_file[100] = "family_tree.csv";
 
 
@@ -148,6 +147,16 @@ int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const
 }
 
 int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve,struct reb_collision c, double Mlr, double Mslr){
+    //Setting minimum fragment mass
+    const double* min_frag_mass_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_min_frag_mass");
+    double min_frag_mass = min_frag_mass_default;
+    if (min_frag_mass_ptr != NULL) {
+    // 3. If it's valid, check if the value is not 0
+        if (*min_frag_mass_ptr != 0.0) {
+            min_frag_mass = *min_frag_mass_ptr;
+        }
+    }   
+
     struct reb_particle* pi = &(sim->particles[c.p1]); //First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); //Second object in collison
 
@@ -441,6 +450,16 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
 * Equations are derived from Leinhardt and Stewart (2012) and Chambers (2013).
 */
 int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
+    //Setting minimum fragment mass
+    const double* min_frag_mass_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_min_frag_mass");
+    double min_frag_mass = 0.05;
+    if (min_frag_mass_ptr != NULL) {
+    // 3. If it's valid, check if the value is not 0
+        if (*min_frag_mass_ptr != 0.0) {
+            min_frag_mass = *min_frag_mass_ptr;
+        }
+    }   
+
     struct reb_particle* pi = &(sim->particles[c.p1]); //First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); //Second object in collison
 
@@ -570,6 +589,7 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     int remove = 0;
     //If v_imp <= v_esc, merge.
     if (v_imp <= v_esc){
+        //Case 1
         remove = merge(sim, collision_resolve, c);
         collision_type = 1;
         printf("Merging collision detected. (Case 1)\n");
@@ -631,7 +651,8 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
             double v_crit = v_esc*(c1*zeta*fac + c2*zeta +c3*fac + c4);
 
             //If impact velocity is less than v_crit, we have graze-and-merge
-            if (v_imp <= v_crit){        
+            if (v_imp <= v_crit){   
+                //Case 2     
                 remove = merge(sim, collision_resolve, c);
                 collision_type = 1;
                 printf("Merging collision detected. (Case 2)\n");
@@ -639,11 +660,13 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
             }else{
                 if(Mlr < target->m){
                     if((target->m + projectile->m - Mlr) < min_frag_mass){
+                        //Case 5
                         remove = 0;
                         printf("Elastic bounce, case 5.\n");
                         reb_collision_resolve_hardsphere(sim,c);
                     }
                     else{
+                        //Case 6
                         remove = make_fragments(sim, collision_resolve, c, Mlr, 0);
                         printf("Grazing erosion, case 6.\n");
                     }
@@ -657,6 +680,7 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
                         Mlr_dag = (beta*target->m + projectile->m)/10 * pow(Q_g/(1.8*Q_star_g), -1.5);
                     }
                     if(Mlr_dag < min_frag_mass){
+                        //Case 7
                         remove = 0;
                         //printf("M_T = %e AND Mlr = %e\n", target->m, Mlr);
                         printf("Elastic bounce, case 7.\n");
@@ -664,6 +688,7 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
                     }
                     else{
                         if((target->m + projectile->m - Mlr - Mlr_dag) < min_frag_mass){
+                            //Case 8
                             remove = 0;
                             //printf("M_T = %e AND Mlr = %e\n", target->m, Mlr);
                             //printf("Mslr = %e\n", Mlr_dag);
@@ -672,6 +697,7 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
                             reb_collision_resolve_hardsphere(sim,c);
                         }
                         else{
+                            //Case 9
                             printf("Hit-and-run, case 9.\n");
                             remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
                         }

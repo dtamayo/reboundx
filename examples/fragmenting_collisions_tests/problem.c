@@ -13,7 +13,7 @@
 #include "reboundx.h"
 
 
-void test_fragmenting_collisions(int type){
+void test_fragmenting_collisions(int type, int min_frag_test){
     // This function tests mass and momentum conservation for various setups.
     // **IMPORTANT** Tests for catching different collision regimes work with min_frag_mass = 0.05;
     struct reb_simulation* sim = reb_simulation_create(); //creates simulation
@@ -174,6 +174,19 @@ void test_fragmenting_collisions(int type){
     struct rebx_extras* rebx = rebx_attach(sim);
     struct rebx_collision_resolve* fragmenting = rebx_load_collision_resolve(rebx, "fragmenting_collisions");
     rebx_add_collision_resolve(rebx, fragmenting);
+    //Test what happens if user doesn't define a min_frag_mass
+    //Should be assigning default value
+    if (min_frag_test == 0){
+    }
+    //Test what happens if user chooses a min frag mass
+    else if(min_frag_test == 1){
+        rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", 0.01);
+    }
+    //Test when user sets a 0 min frag mass
+    //Should be using default value and ignoring zero
+    else if(min_frag_test == 2){
+        rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", 0.0);
+    }
 
     // Assign all particles an initial id
     for(int i=0; i<sim->N; i++){
@@ -218,8 +231,10 @@ void test_fragmenting_collisions(int type){
 
 
 int main(int argc, char* argv[]) {
-    for (int type=0;type<30;type++){
-        test_fragmenting_collisions(type);
-        printf("test_fragmenting_collisions(%d) passed.\n", type);
+    for (int type=0;type<25;type++){
+        for(int min_frag_test_flag=0;min_frag_test_flag<3;min_frag_test_flag++){
+            test_fragmenting_collisions(type, min_frag_test_flag);
+            printf("test_fragmenting_collisions(%d), round (%d) passed.\n", type, min_frag_test_flag);
+        }
     }
 }
