@@ -333,6 +333,7 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->force_type = REBX_FORCE_VEL;
     }
     else if (strcmp(name, "tides_spin") == 0){
+        reb_simulation_warning(rebx->sim, "tides_spin was updated in version 4.5.0 to halve the acceleration from the conservative piece of the tidal potential, reflecting a typo discovered in Eggleton et. al (1998). This warning will be removed in a future version.\n");
         force->update_accelerations = rebx_tides_spin;
         force->force_type = REBX_FORCE_VEL;
     }

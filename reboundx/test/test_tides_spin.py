@@ -33,7 +33,7 @@ class TestTides(unittest.TestCase):
     def test_conservation_planet_highmratio(self):
         self.sim = rebound.Simulation()
         self.sim.add(m=1., r=0.005)
-        self.sim.add(m=1., a=0.2, e=0.1, r=0.005)
+        self.sim.add(m=1., a=0.02, e=0.1, r=0.005)
         self.sim.move_to_com()
         self.rebx = reboundx.Extras(self.sim)
         self.force = self.rebx.load_force("tides_spin")

@@ -167,7 +167,6 @@ static void rebx_spin_orbit_accelerations(struct reb_particle* source, struct re
 }
 
 static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot, const double* const y, const double t){
-    // reb_simulation_warning(sim, "tides_spin was recently updated to reflect a typo discovered in Eggleton et. al (1998)\n");
     struct reb_simulation* sim = ode->ref;
     struct rebx_extras* const rebx = sim->extras;
     unsigned int Nspins = 0;
@@ -371,7 +370,7 @@ static double rebx_calculate_spin_potential(struct reb_particle* source, struct 
 
     const double t1 = -mt * big_a * omega_dot_d * omega_dot_d / (2 * d2 * d2 * dr);
     const double t2 = mt * big_a * omega_squared / (6 * d2 * dr);
-    const double t3 = G * mt * mt * big_a / (2. * d2 * d2 * d2); // Is mt**2 a typo???
+    const double t3 = G * mt * mt * big_a / (2 * d2 * d2 * d2);
 
     return -(t1 + t2 + t3);
 }
