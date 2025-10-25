@@ -455,7 +455,7 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     double min_frag_mass = 0.05;
     if (min_frag_mass_ptr != NULL) {
     // 3. If it's valid, check if the value is not 0
-        if (*min_frag_mass_ptr != 0.0) {
+        if (*min_frag_mass_ptr > 0.0) {
             min_frag_mass = *min_frag_mass_ptr;
         }
     }   
