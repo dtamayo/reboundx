@@ -2,6 +2,9 @@
 
 This changelog only includes the most important changes in recent updates. For a full log of all changes, please refer to git.
 
+### Version 4.5.0
+* Fixed typo in Eggleton et al. 1998 to use half their acceleration from the spin-independent, conservative piece of the tidal potential (last term in their Eq 33)
+
 ### Version 4.4.2
 * Fixed bug when resetting ODEs in tides_spin
 
