@@ -56,7 +56,7 @@
 
 //Global parameters, need to be used defined
 double separation_distance_scale = 4;
-double min_frag_mass_default = 0.05;
+double min_frag_mass_default = 0.01;
 double rho1 = 1.684e6; //Msun/AU^3 
 double cstar = 1.8;
 int print_flag = 1; //1 for printing collision data, 0 for not printing
@@ -190,12 +190,36 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
         n_big_frag = 1;
     }
 
-    //Divide the remaning mass into equal mass fragments
-    int n_small_frag = remaining_mass/min_frag_mass; //number of fragments
-    double m_frag = remaining_mass/n_small_frag; //mass of each fragment
-    
+    //Saving fragment masses into an array
+    double max_frag_mass = 8 * min_frag_mass; //Is this reasonable?
+    double powerlaw_slope = 3; //Arbitrary, from Leinhardt et al. 2012 table 1
+    double m_frags_array[100] = {0.0}; //How do I set the size of the array?
+    double sum_m_frags = 0;
+    int index = 0;
+    double new_sum_frag_mass = 0; //just for printing to check while coding, will erase later
+    while(sum_m_frags < remaining_mass){
+        m_frags_array[index] = reb_random_powerlaw(sim, min_frag_mass, max_frag_mass, powerlaw_slope);
+        sum_m_frags += m_frags_array[index];
+        index += 1;
+    }
+    //Erase last fragment, and distribute the remaining mass between other fragments
+    int len_m_frags_array = index - 2; //These will be indexes of the frags we want to keep
+    sum_m_frags = sum_m_frags - m_frags_array[len_m_frags_array + 1]; //get rid of last fragment
+    m_frags_array[len_m_frags_array + 1] = 0; //make last fragment zero
+    double ratio = remaining_mass/sum_m_frags; //ratio to multiply each frag mass with
+    for(int i=0; i<=len_m_frags_array; i++){
+        m_frags_array[i] *= ratio;
+        printf("Mass of frag %d is %e\n", i, m_frags_array[i]);
+        new_sum_frag_mass += m_frags_array[i]; //just for printing
+    }
+    printf("New sum frag mass = %e\n", new_sum_frag_mass);
+    printf("Remaining mass is %e\n", remaining_mass);
+
+
+    //double m_frag = remaining_mass/n_small_frag; //mass of each fragment
     //n_frag is total number of fragments
-    double n_frag = n_small_frag + n_big_frag;
+    //double n_frag = n_small_frag + n_big_frag;
+    double n_frag = (len_m_frags_array + 1) + n_big_frag;
 
     //Define mxsum variable to keep track of center of mass (mass times position)
     double mxsum[3] = {0, 0, 0}; // For x, y, z
@@ -372,7 +396,8 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     //j = 0 is reserved for big_frag, if exists
     for (int j=1; j <= n_frag - n_big_frag; j++){          
         struct reb_particle fragment = {0};
-        fragment.m = m_frag; 
+        fragment.m = m_frags_array[j-1]; 
+        printf("fragment.m = %e \n", fragment.m);
               
         fragment.x = com.x + separation_distance*(cos(theta_sep*j)*unit_dvx + sin(theta_sep*j)*normal_to_vrel[0]);
         fragment.y = com.y + separation_distance*(cos(theta_sep*j)*unit_dvy + sin(theta_sep*j)*normal_to_vrel[1]);
@@ -383,7 +408,7 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
 
         //Fragment radius is derived based on target's density
         double targ_rho = target->m/(4./3*M_PI*pow(target->r,3));
-        fragment.r = get_radii(m_frag, targ_rho);
+        fragment.r = get_radii(m_frags_array[j-1], targ_rho);
 
         //Record collision
         fragment.last_collision = sim->t;
@@ -590,8 +615,8 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
     //If v_imp <= v_esc, merge.
     if (v_imp <= v_esc){
         //Case 1
-        remove = merge(sim, collision_resolve, c);
         collision_type = 1;
+        remove = merge(sim, collision_resolve, c);
         printf("Merging collision detected. (Case 1)\n");
     }
     else{
@@ -653,22 +678,24 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
             //If impact velocity is less than v_crit, we have graze-and-merge
             if (v_imp <= v_crit){   
                 //Case 2     
+                collision_type = 2;
                 remove = merge(sim, collision_resolve, c);
-                collision_type = 1;
                 printf("Merging collision detected. (Case 2)\n");
-                return remove;
+                //return remove;
             }else{
                 if(Mlr < target->m){
                     if((target->m + projectile->m - Mlr) < min_frag_mass){
                         //Case 5
+                        collision_type = 5;
                         remove = 0;
-                        printf("Elastic bounce, case 5.\n");
+                        printf("Elastic bounce, (Case 5).\n");
                         reb_collision_resolve_hardsphere(sim,c);
                     }
                     else{
                         //Case 6
+                        collision_type = 6;
                         remove = make_fragments(sim, collision_resolve, c, Mlr, 0);
-                        printf("Grazing erosion, case 6.\n");
+                        printf("Grazing erosion, (Case 6).\n");
                     }
                 }
                 else{
@@ -681,9 +708,10 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
                     }
                     if(Mlr_dag < min_frag_mass){
                         //Case 7
+                        collision_type = 7;
                         remove = 0;
                         //printf("M_T = %e AND Mlr = %e\n", target->m, Mlr);
-                        printf("Elastic bounce, case 7.\n");
+                        printf("Elastic bounce, (Case 7).\n");
                         reb_collision_resolve_hardsphere(sim,c);
                     }
                     else{
@@ -693,12 +721,14 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
                             //printf("M_T = %e AND Mlr = %e\n", target->m, Mlr);
                             //printf("Mslr = %e\n", Mlr_dag);
                             //printf("M_rem = %e\n", (target->m + projectile->m - Mlr_dag));
-                            printf("Elsatic bounce, case 8.\n");
+                            collision_type = 8;
+                            printf("Elsatic bounce, (Case 8).\n");
                             reb_collision_resolve_hardsphere(sim,c);
                         }
                         else{
                             //Case 9
-                            printf("Hit-and-run, case 9.\n");
+                            collision_type = 9;
+                            printf("Hit-and-run, (Case 9).\n");
                             remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
                         }
                     }
@@ -708,18 +738,18 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
         } 
         else{ //non-grazing regime
             if (initial_mass - Mlr < min_frag_mass){ //Not meeting minimum fragment mass threshold
+                collision_type = 3;
                 remove = merge(sim, collision_resolve, c);
-                collision_type = 1;
                 printf("Non grazing, M_rem to small. Merging collision detected. (Case 3)\n");
                 }
             else{ //Can make fragments. Mlr can be larger or smaller than the target
                 remove = make_fragments(sim, collision_resolve, c, Mlr, 0);
                 if(Mlr > target->m){
-                    collision_type = 2;
+                    collision_type = 4;
                     printf("Non grazing, Mlr > M_t. Accretion. (Case 4)\n");
                     }
                 else{
-                    collision_type = 3;
+                    collision_type = 4;
                     printf("Non grazing, Mlr < M_t. Erosion. (Case 4)\n");
                     }
                 }
@@ -753,7 +783,6 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
         fprintf(of, "%e,", b);                       
         fprintf(of, "%e,", v_esc/v_imp);  
         fprintf(of, "%e,", Mlr);
-        fprintf(of, "%d,", target_id);
         fprintf(of, "%e,", target_initial_mass);
         fprintf(of, "%e,", projectile_initial_mass);
         fprintf(of, "\n");   

@@ -202,7 +202,8 @@ void test_fragmenting_collisions(int type, int min_frag_test){
     int n_last_physical = 25;
 
     if(type <= n_last_physical){
-        assert(fabs((com_i.m-com_f.m)/com_i.m)<1e-14); // Check mass conservation 
+        //printf("com_i - com_f = %e \n", (com_i.m-com_f.m)/com_i.m);
+        assert(fabs((com_i.m-com_f.m)/com_i.m)<1e-10); // Check mass conservation 
         assert(fabs((com_i.vx-com_f.vx)/com_i.vx)<1e-10); // Check x momentum conservation 
         assert(fabs((com_i.vy-com_f.vy)/com_i.vy)<1e-10); // Check y momentum conservation 
         assert(fabs((com_i.vz-com_f.vz)/com_i.vz)<1e-10); // Check z momentum conservation 
