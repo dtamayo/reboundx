@@ -191,29 +191,42 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     }
 
     //Saving fragment masses into an array
-    double max_frag_mass = 8 * min_frag_mass; //Is this reasonable?
+    double max_frag_mass = 0.5 * Mlr;
+    if(Mslr > 0){
+        max_frag_mass = 0.5 * Mslr;
+    }
     double powerlaw_slope = 3; //Arbitrary, from Leinhardt et al. 2012 table 1
     double m_frags_array[100] = {0.0}; //How do I set the size of the array?
     double sum_m_frags = 0;
     int index = 0;
     double new_sum_frag_mass = 0; //just for printing to check while coding, will erase later
-    while(sum_m_frags < remaining_mass){
+    int len_m_frags_array = 0;
+    double ratio = 0;
+
+    while(sum_m_frags < remaining_mass && index < 100){
         m_frags_array[index] = reb_random_powerlaw(sim, min_frag_mass, max_frag_mass, powerlaw_slope);
         sum_m_frags += m_frags_array[index];
         index += 1;
     }
-    //Erase last fragment, and distribute the remaining mass between other fragments
-    int len_m_frags_array = index - 2; //These will be indexes of the frags we want to keep
-    sum_m_frags = sum_m_frags - m_frags_array[len_m_frags_array + 1]; //get rid of last fragment
-    m_frags_array[len_m_frags_array + 1] = 0; //make last fragment zero
-    double ratio = remaining_mass/sum_m_frags; //ratio to multiply each frag mass with
-    for(int i=0; i<=len_m_frags_array; i++){
-        m_frags_array[i] *= ratio;
-        printf("Mass of frag %d is %e\n", i, m_frags_array[i]);
-        new_sum_frag_mass += m_frags_array[i]; //just for printing
+    if(index >= 100){
+        reb_simulation_error(sim, "Number of fragments produced is above permitted value. Increase minimum fragment mass.\n");
+        return 0;
     }
-    printf("New sum frag mass = %e\n", new_sum_frag_mass);
-    printf("Remaining mass is %e\n", remaining_mass);
+    else if (index == 1){
+        m_frags_array[0] = remaining_mass;
+        new_sum_frag_mass += m_frags_array[0]; //just for printing
+    }
+    else if(index > 1){
+        //Erase last fragment, and distribute the remaining mass between other fragments
+        len_m_frags_array = index - 2; //These will be indexes of the frags we want to keep
+        sum_m_frags = sum_m_frags - m_frags_array[len_m_frags_array + 1]; //get rid of last fragment
+        m_frags_array[len_m_frags_array + 1] = 0; //make last fragment zero
+        ratio = remaining_mass/sum_m_frags; //ratio to multiply each frag mass with
+        for(int i=0; i<=len_m_frags_array; i++){
+            m_frags_array[i] *= ratio;
+            new_sum_frag_mass += m_frags_array[i]; //just for printing
+        }
+    }
 
 
     //double m_frag = remaining_mass/n_small_frag; //mass of each fragment
@@ -397,7 +410,6 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     for (int j=1; j <= n_frag - n_big_frag; j++){          
         struct reb_particle fragment = {0};
         fragment.m = m_frags_array[j-1]; 
-        printf("fragment.m = %e \n", fragment.m);
               
         fragment.x = com.x + separation_distance*(cos(theta_sep*j)*unit_dvx + sin(theta_sep*j)*normal_to_vrel[0]);
         fragment.y = com.y + separation_distance*(cos(theta_sep*j)*unit_dvy + sin(theta_sep*j)*normal_to_vrel[1]);
