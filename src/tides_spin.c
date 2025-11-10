@@ -105,7 +105,7 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
     const double t1 = 5. * omega_dot_d * omega_dot_d / (2. * (dr * dr * dr * dr * dr * dr * dr));
     const double t2 = omega_squared / (2. * (dr * dr * dr * dr * dr));
     const double t3 = omega_dot_d / (dr * dr * dr * dr * dr);
-    const double t4 = 6. * G * mt / (dr * dr * dr * dr * dr * dr * dr * dr);
+    const double t4 = 3. * G * mt / (dr * dr * dr * dr * dr * dr * dr * dr);
 
     tot_force.x = (quad_prefactor * ((t1 - t2 - t4) * dx - (t3 * Omega.x)));
     tot_force.y = (quad_prefactor * ((t1 - t2 - t4) * dy - (t3 * Omega.y)));
@@ -167,6 +167,7 @@ static void rebx_spin_orbit_accelerations(struct reb_particle* source, struct re
 }
 
 static void rebx_spin_derivatives(struct reb_ode* const ode, double* const yDot, const double* const y, const double t){
+    // reb_simulation_warning(sim, "tides_spin was recently updated to reflect a typo discovered in Eggleton et. al (1998)\n");
     struct reb_simulation* sim = ode->ref;
     struct rebx_extras* const rebx = sim->extras;
     unsigned int Nspins = 0;
@@ -292,6 +293,14 @@ void rebx_spin_initialize_ode(struct rebx_extras* const rebx, struct rebx_force*
         }
     }
 
+    // Search for previous spin ode
+    for (int i=0; i<sim->N_odes; i++){
+        if (sim->odes[i]->derivatives == rebx_spin_derivatives){
+            reb_ode_free(sim->odes[i]);
+            i--;
+        }
+    }
+
     if (Nspins > 0){
         struct reb_ode* spin_ode = reb_ode_create(sim, Nspins*3);
         spin_ode->ref = sim;
@@ -362,7 +371,7 @@ static double rebx_calculate_spin_potential(struct reb_particle* source, struct 
 
     const double t1 = -mt * big_a * omega_dot_d * omega_dot_d / (2 * d2 * d2 * dr);
     const double t2 = mt * big_a * omega_squared / (6 * d2 * dr);
-    const double t3 = G * mt * mt * big_a / (d2 * d2 * d2);
+    const double t3 = G * mt * mt * big_a / (2. * d2 * d2 * d2); // Is mt**2 a typo???
 
     return -(t1 + t2 + t3);
 }
