@@ -252,6 +252,8 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     target->vx = com.vx;
     target->vy = com.vy;
     target->vz = com.vz;
+    //Magnitude of Mlr velocity, later to be used in computing fragment velocities
+    double v_lr = sqrt((com.vx * com.vx) + (com.vy * com.vy) + (com.vz * com.vz));
     
     //Save parents ID before target turns into Mlr
     int parent_t_id = *(int*) rebx_get_param(sim->extras, target->ap, "fc_id");
@@ -352,7 +354,9 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     //In summary, we need to subtract the potential energy, which is different at the moment of contact (where the 
     //distance between two particles is r_tot) and when the fragments are placed and leaving the largest remnant
     //(where the distance between lr and frag is = separation distance).
-    double frag_velocity =sqrt(1.1*pow(v_esc,2) - 2 * G* initial_mass * (1./(r_tot) - 1./(separation_distance)));
+
+    //double frag_velocity =sqrt(1.1*pow(v_esc,2) - 2 * G* initial_mass * (1./(r_tot) - 1./(separation_distance)));
+
     //Seperation angle between fragments
     double theta_sep = (2.*M_PI)/n_frag;
 
@@ -370,9 +374,11 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
         big_frag.y = com.y + separation_distance * unit_dvy;
         big_frag.z = com.z + separation_distance * unit_dvz;
 
-        big_frag.vx = com.vx + frag_velocity * unit_dvx;
-        big_frag.vy = com.vy + frag_velocity * unit_dvy;
-        big_frag.vz = com.vz + frag_velocity * unit_dvz;
+        double v_slr = v_lr * sqrt(Mlr/Mslr);
+
+        big_frag.vx = com.vx + v_slr * unit_dvx;
+        big_frag.vy = com.vy + v_slr * unit_dvy;
+        big_frag.vz = com.vz + v_slr * unit_dvz;
 
         big_frag.r = get_radii(Mslr, rho);
 
@@ -414,6 +420,9 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
         fragment.x = com.x + separation_distance*(cos(theta_sep*j)*unit_dvx + sin(theta_sep*j)*normal_to_vrel[0]);
         fragment.y = com.y + separation_distance*(cos(theta_sep*j)*unit_dvy + sin(theta_sep*j)*normal_to_vrel[1]);
         fragment.z = com.z + separation_distance*(cos(theta_sep*j)*unit_dvz + sin(theta_sep*j)*normal_to_vrel[2]);
+
+        double frag_velocity = v_lr * sqrt(Mlr/fragment.m);
+
         fragment.vx = com.vx + frag_velocity*(cos(theta_sep*j)*unit_dvx + sin(theta_sep*j)*normal_to_vrel[0]);
         fragment.vy = com.vy + frag_velocity*(cos(theta_sep*j)*unit_dvy + sin(theta_sep*j)*normal_to_vrel[1]);
         fragment.vz = com.vz + frag_velocity*(cos(theta_sep*j)*unit_dvz + sin(theta_sep*j)*normal_to_vrel[2]);
@@ -478,6 +487,7 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
         sim->particles[i].vy += voff[1]*mass_fraction;
         sim->particles[i].vz += voff[2]*mass_fraction;
     }
+
 
     return remove; // Remove 2 particle from simulation (projectile)
 }
