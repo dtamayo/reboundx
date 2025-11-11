@@ -13,7 +13,7 @@
 #include "reboundx.h"
 
 
-void test_fragmenting_collisions(int type, int min_frag_test){
+void test_fragmenting_collisions(int type){
     // This function tests mass and momentum conservation for various setups.
     // **IMPORTANT** Tests for catching different collision regimes work with min_frag_mass = 0.05;
     struct reb_simulation* sim = reb_simulation_create(); //creates simulation
@@ -23,9 +23,16 @@ void test_fragmenting_collisions(int type, int min_frag_test){
     sim->rand_seed = 1;
     struct reb_particle star = {0};
     int eb_flag = 0; //eb_flag is to meant to flag where we expect an elastic bounce. This is useful to check IDs.
+    //set minimum fragment mass
+    //type = 31 is to test the case where we don't set minimum fragment mass
+    struct rebx_extras* rebx = rebx_attach(sim);
+    struct rebx_collision_resolve* fragmenting = rebx_load_collision_resolve(rebx, "fragmenting_collisions");
+    rebx_add_collision_resolve(rebx, fragmenting);
 
-    // Add particles 
-    // In Cases 
+    if(type!=31){
+    rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", 0.05); 
+    }
+
     switch (type){
         // In Cases 0 to 2, setup is to cause a merging event.
         case 0:
@@ -146,46 +153,48 @@ void test_fragmenting_collisions(int type, int min_frag_test){
             reb_simulation_add_fmt(sim, "m r", 0.1, 0.5); // 1:10 mass ratio, higher velocity
             reb_simulation_add_fmt(sim, "m r x y vx vy vz", 0.01, 0.5, 200.0, 0.51, -250.0, 0.001, 0.001);
             break;
-        //Cases 26 to 29 are edge cases
-        case 26:
+        case 26: //Hit-and-run (Case 9 (I))
+            //Case (9), hit-and-run
+            sim->G = 39.476926421373;
+            rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", 1e-13); //set minimum fragment mass
+            reb_simulation_add_fmt(sim, "m r", 3.6e-6, 4.53e-5); // primary (slightly heavier)
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 5e-8, 1.09e-5, 10.0, 4.86e-5, -30.0, 0.000, 0.000);
+            break;
+        
+        //Cases 27 to 30 are edge cases
+        case 27:
             //collision with the sun
             star.m = 1.00;
             star.r = 0.1; 
             reb_simulation_add(sim, star);
             reb_simulation_add_fmt(sim, "m r x vx vy vz", 1e-7, 1e-5, 1.0, -2.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             break;
-        case 27:
+        case 28:
             //One object with zero mass
             reb_simulation_add_fmt(sim, "m r x vx vy vz", 0.0, 1.0, 1.0, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             reb_simulation_add_fmt(sim, "m r", 1.0, 1.0); // primary (slightly heavier)
             break;
-        case 28:
+        case 29:
             //The other object with zero mass
             reb_simulation_add_fmt(sim, "m r x vx vy vz", 1.0, 1.0, 1.0, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             reb_simulation_add_fmt(sim, "m r", 0.0, 1.0); // primary (slightly heavier)
             break;
-        case 29:
+        case 30:
             //Both objects with zero mass
             reb_simulation_add_fmt(sim, "m r x vx vy vz", 0.0, 1.0, 1.0, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             reb_simulation_add_fmt(sim, "m r", 0.0, 1.0);
             break;
-    }
-
-    struct rebx_extras* rebx = rebx_attach(sim);
-    struct rebx_collision_resolve* fragmenting = rebx_load_collision_resolve(rebx, "fragmenting_collisions");
-    rebx_add_collision_resolve(rebx, fragmenting);
-    //Test what happens if user doesn't define a min_frag_mass
-    //Should be assigning default value
-    if (min_frag_test == 0){
-    }
-    //Test what happens if user chooses a min frag mass
-    else if(min_frag_test == 1){
-        rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", 0.01);
-    }
-    //Test when user sets a 0 min frag mass
-    //Should be using default value and ignoring zero
-    else if(min_frag_test == 2){
-        rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", 0.0);
+        case 31:
+            //minimum fragment mass = 0
+            reb_simulation_add_fmt(sim, "m r", 0.25, 1.0); // primary (slightly heavier)
+            reb_simulation_add_fmt(sim, "m r x vx vy vz", 0.20, 1.0, 10.0, -30.0, 0.001, 0.001); 
+            rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", 0); //set minimum fragment mass
+            break;
+        case 32: 
+            //Not setting up a min frag mass
+            reb_simulation_add_fmt(sim, "m r", 0.25, 1.0); // primary (slightly heavier)
+            reb_simulation_add_fmt(sim, "m r x vx vy vz", 0.20, 1.0, 10.0, -30.0, 0.001, 0.001); 
+            break;
     }
 
     // Assign all particles an initial id
@@ -196,6 +205,7 @@ void test_fragmenting_collisions(int type, int min_frag_test){
     struct reb_particle com_i = reb_simulation_com(sim); //initial center of mass
     reb_simulation_integrate(sim, 1);
     struct reb_particle com_f = reb_simulation_com(sim); //final center of mass
+    printf("N after = %d\n", sim->N);
 
     //So far, we have 25 tests to check for conservation of mass and momentum
     //Since we don't want to check this for edge cases, I have excluded them here.
@@ -232,10 +242,9 @@ void test_fragmenting_collisions(int type, int min_frag_test){
 
 
 int main(int argc, char* argv[]) {
-    for (int type=0;type<25;type++){
-        for(int min_frag_test_flag=0;min_frag_test_flag<3;min_frag_test_flag++){
-            test_fragmenting_collisions(type, min_frag_test_flag);
-            printf("test_fragmenting_collisions(%d), round (%d) passed.\n", type, min_frag_test_flag);
-        }
+    for(int type=0;type<30;type++){
+        test_fragmenting_collisions(type);
+        printf("test_fragmenting_collisions(%d) passed.\n", type);
     }
 }
+
