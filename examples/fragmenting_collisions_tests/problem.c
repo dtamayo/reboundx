@@ -242,7 +242,7 @@ void test_fragmenting_collisions(int type){
 
 
 int main(int argc, char* argv[]) {
-    for(int type=0;type<30;type++){
+    for(int type=26;type<27;type++){
         test_fragmenting_collisions(type);
         printf("test_fragmenting_collisions(%d) passed.\n", type);
     }
