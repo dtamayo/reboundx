@@ -19,6 +19,7 @@ void test_fragmenting_collisions(int type){
     struct reb_simulation* sim = reb_simulation_create(); //creates simulation
     sim->integrator = REB_INTEGRATOR_MERCURIUS;
     sim->collision = REB_COLLISION_DIRECT;
+    //sim->dt = 0.6;
     sim->dt = 1;
     sim->rand_seed = 1;
     struct reb_particle star = {0};
@@ -29,7 +30,7 @@ void test_fragmenting_collisions(int type){
     struct rebx_collision_resolve* fragmenting = rebx_load_collision_resolve(rebx, "fragmenting_collisions");
     rebx_add_collision_resolve(rebx, fragmenting);
 
-    if(type!=31){
+    if(type!=33){
     rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", 0.05); 
     }
 
@@ -158,42 +159,48 @@ void test_fragmenting_collisions(int type){
             sim->G = 39.476926421373;
             rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", 1e-13); //set minimum fragment mass
             reb_simulation_add_fmt(sim, "m r", 3.6e-6, 4.53e-5); // primary (slightly heavier)
-            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 5e-8, 1.09e-5, 10.0, 4.86e-5, -30.0, 0.000, 0.000);
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 5e-8, 1.09e-5, 10.0, 4.86e-5, -30.0, 1e-7, 1e-7);
+            break;
+        case 27: //Mlr is less than minimum fragment mass
+            sim->G = 39.476926421373;
+            rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", 1e-8); //set minimum fragment mass
+            reb_simulation_add_fmt(sim, "m r", 1e-7, 1.37e-5); // primary (slightly heavier)
+            reb_simulation_add_fmt(sim, "m r x y vx vy vz", 1e-7, 1.35e-5, 10.0, 0, -30.0, 1e-6, 1e-6);
             break;
         
-        //Cases 27 to 30 are edge cases
-        case 27:
+        //Cases 28 to 33 are edge cases
+        case 28:
             //collision with the sun
             star.m = 1.00;
             star.r = 0.1; 
             reb_simulation_add(sim, star);
             reb_simulation_add_fmt(sim, "m r x vx vy vz", 1e-7, 1e-5, 1.0, -2.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             break;
-        case 28:
+        case 29:
             //One object with zero mass
             reb_simulation_add_fmt(sim, "m r x vx vy vz", 0.0, 1.0, 1.0, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             reb_simulation_add_fmt(sim, "m r", 1.0, 1.0); // primary (slightly heavier)
             break;
-        case 29:
+        case 30:
             //The other object with zero mass
             reb_simulation_add_fmt(sim, "m r x vx vy vz", 1.0, 1.0, 1.0, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             reb_simulation_add_fmt(sim, "m r", 0.0, 1.0); // primary (slightly heavier)
             break;
-        case 30:
+        case 31:
             //Both objects with zero mass
             reb_simulation_add_fmt(sim, "m r x vx vy vz", 0.0, 1.0, 1.0, -1.0, 0.001, 0.001); // small vy, vz velocity yo check for momentum conservation in 3D
             reb_simulation_add_fmt(sim, "m r", 0.0, 1.0);
             break;
-        case 31:
+        case 32:
             //minimum fragment mass = 0
             reb_simulation_add_fmt(sim, "m r", 0.25, 1.0); // primary (slightly heavier)
-            reb_simulation_add_fmt(sim, "m r x vx vy vz", 0.20, 1.0, 10.0, -30.0, 0.001, 0.001); 
+            reb_simulation_add_fmt(sim, "m r x vx vy vz", 0.20, 1.0, 10.0, -30.0, 0.0001, 0.0001); 
             rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", 0); //set minimum fragment mass
             break;
-        case 32: 
+        case 33: 
             //Not setting up a min frag mass
             reb_simulation_add_fmt(sim, "m r", 0.25, 1.0); // primary (slightly heavier)
-            reb_simulation_add_fmt(sim, "m r x vx vy vz", 0.20, 1.0, 10.0, -30.0, 0.001, 0.001); 
+            reb_simulation_add_fmt(sim, "m r x vx vy vz", 0.20, 1.0, 10.0, -30.0, 0.0001, 0.0001); 
             break;
     }
 
@@ -242,7 +249,7 @@ void test_fragmenting_collisions(int type){
 
 
 int main(int argc, char* argv[]) {
-    for(int type=26;type<27;type++){
+    for(int type=0;type<34;type++){
         test_fragmenting_collisions(type);
         printf("test_fragmenting_collisions(%d) passed.\n", type);
     }
