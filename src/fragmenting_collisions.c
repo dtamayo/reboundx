@@ -53,12 +53,6 @@
 #include "reboundx.h"
 #include <stdbool.h>
 
-
-// Global parameters from LS2012, user can change to their preference
-double separation_distance_scale = 4;
-double rho1 = 1.684e6; // Msun/AU^3 
-double cstar = 1.8;
-
 // Printing parameters
 int print_flag = 1; //1 for printing collision data, 0 for not printing
 char particle_list_file[100] = "family_tree.csv";
@@ -68,7 +62,7 @@ char particle_list_file[100] = "family_tree.csv";
 #define MAX(a, b) ((a) > (b) ? (a) : (b))    // Returns the maximum of a and b
 
 // Helper function to get radius from mass and density
-double get_radii(double m, double rho){
+static double get_radii(double m, double rho){
     return pow((3.*m)/(4.*M_PI*rho),1./3.);
 }   
 
@@ -86,7 +80,7 @@ int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct re
 }
 
 // Function to merge two particles
-int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
+static int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
     struct reb_particle* pi = &(sim->particles[c.p1]); // First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); // Second object in collison
 
@@ -119,7 +113,7 @@ int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const
 }
 
 // Function to make fragments
-int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve,struct reb_collision c, double Mlr, double Mslr){
+static int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve,struct reb_collision c, double Mlr, double Mslr){
     // Get minimum fragment mass value
     // This is defined by the user in their setup
     double min_frag_mass;
@@ -137,6 +131,11 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     else{
         reb_simulation_error(sim, "User needs to specify minimum fragment mass.\n");
         return 0;
+    } 
+    double separation_distance_scale = 4; // Default value
+    const double* separation_distance_scale_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_separation_distance_scale");
+    if (separation_distance_scale_ptr != NULL) {
+        separation_distance_scale = *separation_distance_scale_ptr; 
     } 
 
     struct reb_particle* pi = &(sim->particles[c.p1]); // First object in collision
@@ -311,9 +310,6 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     struct reb_vec3d normal_to_vrel = reb_vec3d_cross(dv, normal_coll_plane);
     normal_to_vrel = reb_vec3d_normalize(normal_to_vrel);
 
-    // Compute escape velocity
-    double v_esc = pow(2.*(sim->G)*(initial_mass)/(r_tot), .5);
-
     // Separation distance is the distance between largest remnant and each fragment
     double separation_distance = separation_distance_scale * r_tot;
 
@@ -461,7 +457,7 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
 * Main function to decide the collision outcome, derive new masses, positions and velocities.
 * Equations are derived from LS2012 and Chambers (2013).
 */
-int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
+enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
     // Setting minimum fragment mass
     const double* min_frag_mass_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_min_frag_mass");
     double min_frag_mass;
@@ -479,6 +475,16 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
         reb_simulation_error(sim, "User needs to specify minimum fragment mass.\n");
         return 0;
     }   
+    double rho1 = 1.684e6; // Default value. Units of Msun/AU^3 
+    const double* rho1_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_rho1");
+    if (rho1_ptr != NULL) {
+        rho1 = *rho1_ptr; 
+    } 
+    double cstar = 1.8; // Default value 
+    const double* cstar_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_cstar");
+    if (cstar_ptr != NULL) {
+        cstar = *cstar_ptr; 
+    } 
 
     struct reb_particle* pi = &(sim->particles[c.p1]); // First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); // Second object in collison

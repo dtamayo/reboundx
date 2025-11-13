@@ -227,7 +227,7 @@ struct rebx_collision_resolve{
     struct rebx_node* ap;       ///< Additional parameters linked list
     struct reb_simulation* sim; ///< Pointer to attached sim. Needed for error checks
     // See comments in params.py in __init__
-    int (*collision_resolve) (struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision); ///< Function pointer to collision resolve function
+    enum REB_COLLISION_RESOLVE_OUTCOME (*collision_resolve) (struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision); ///< Function pointer to collision resolve function
 };
 
 /**

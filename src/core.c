@@ -147,6 +147,9 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "fc_id_max", REBX_TYPE_INT);
     rebx_register_param(rebx, "fc_id", REBX_TYPE_INT);
     rebx_register_param(rebx, "fc_min_frag_mass", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "fc_separation_distance_scale", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "fc_rho1", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "fc_cstar", REBX_TYPE_DOUBLE);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -1078,7 +1081,7 @@ void rebx_additional_forces(struct reb_simulation* sim){
     }
 }
 
-int rebx_collision_resolver(struct reb_simulation* const sim, struct reb_collision collision){
+enum REB_COLLISION_RESOLVE_OUTCOME rebx_collision_resolver(struct reb_simulation* const sim, struct reb_collision collision){
     struct rebx_extras* rebx = sim->extras;
     struct rebx_collision_resolve* collision_resolve = rebx->collision_resolve;
     if (collision_resolve){
