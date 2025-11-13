@@ -92,6 +92,7 @@ static int merge(struct reb_simulation* const sim, struct rebx_collision_resolve
     pi->r  = cbrt(pi->r*pi->r*pi->r + pj->r*pj->r*pj->r);
     pi->last_collision = sim->t;
 
+<<<<<<< HEAD
     const char** particle_list_file_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
     if (particle_list_file_ptr != NULL) { // REBX parameter set?
         if (*particle_list_file_ptr != NULL) { 
@@ -108,6 +109,19 @@ static int merge(struct reb_simulation* const sim, struct rebx_collision_resolve
             fclose(of);
         }
     }
+=======
+    // Print particle IDs
+    int parent_t_id = *(int*) rebx_get_param(sim->extras, pi->ap, "fc_id");
+    int* parent_p_id = rebx_get_param(sim->extras, pj->ap, "fc_id");
+    rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, pi);
+    FILE* of = fopen(particle_list_file, "a");
+    int* new_id = rebx_get_param(sim->extras, pi->ap, "fc_id");
+    fprintf(of, "%d, ", *new_id);
+    fprintf(of, "%d, ", parent_t_id);
+    fprintf(of, "%d ", *parent_p_id);
+    fprintf(of, "\n");
+    fclose(of);
+>>>>>>> haniyehtajer/collision-resolve
 
     return 2; // Remove 2 particle from simulation
 }
