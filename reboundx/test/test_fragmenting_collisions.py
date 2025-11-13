@@ -22,6 +22,8 @@ class TestCollisionResolve(unittest.TestCase):
         self.assertEqual(sim.N, 1)
         self.assertLess(abs((com_i.m - com_f.m)/com_i.m), 1e-10)
         self.assertLess(abs((com_i.vx - com_f.vx)/com_i.vx), 1e-10)
+        self.assertEqual(com_f.vy,0.0)
+        self.assertEqual(com_f.vz,0.0)
 
 
 
