@@ -113,7 +113,7 @@ static int merge(struct reb_simulation* const sim, struct rebx_collision_resolve
 }
 
 // Function to make fragments
-static int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve,struct reb_collision c, double Mlr, double Mslr){
+enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve,struct reb_collision c, double Mlr, double Mslr){
     // Get minimum fragment mass value
     // This is defined by the user in their setup
     double min_frag_mass;
@@ -125,12 +125,12 @@ static int make_fragments(struct reb_simulation* const sim, struct rebx_collisio
         }
         else{
             reb_simulation_error(sim, "Minimum fragment mass invalid (<= 0).\n");
-            return 0;
+            return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
         }
     }
     else{
         reb_simulation_error(sim, "User needs to specify minimum fragment mass.\n");
-        return 0;
+        return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     } 
     double separation_distance_scale = 4; // Default value
     const double* separation_distance_scale_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_separation_distance_scale");
@@ -149,16 +149,16 @@ static int make_fragments(struct reb_simulation* const sim, struct rebx_collisio
     // if remove = 0, no particle is removed
     // if remove = 1, first particle is removed
     // if remove = 2, second particle is removed
-    int remove = 0;
+    enum REB_COLLISION_RESOLVE_OUTCOME remove = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     if (pi->m >= pj->m){
         target = pi;    
         projectile = pj;
-        remove = 2;
+        remove = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P2;
     }
     else{
         target = pj;   
         projectile = pi;
-        remove = 1; 
+        remove = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P1; 
     }
 
     struct reb_particle com = reb_particle_com_of_pair(*target, *projectile); // Center of mass (COM) of target and projectile
@@ -198,7 +198,7 @@ static int make_fragments(struct reb_simulation* const sim, struct rebx_collisio
     }
     if(index >= 10000){
         reb_simulation_error(sim, "Number of fragments produced is above permitted value. Increase minimum fragment mass.\n");
-        return 0;
+        return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     }
     else if (index == 1){
         m_frags_array[0] = remaining_mass;
@@ -468,12 +468,12 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
         }
         else{
             reb_simulation_error(sim, "Minimum fragment mass invalid (<= 0).\n");
-            return 0;
+            return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
         }
     }
     else{
         reb_simulation_error(sim, "User needs to specify minimum fragment mass.\n");
-        return 0;
+        return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     }   
     double rho1 = 1.684e6; // Default value. Units of Msun/AU^3 
     const double* rho1_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_rho1");
@@ -505,11 +505,11 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
 
     if (target->m == 0.0){
         reb_simulation_error(sim, "Target mass is zero.\n");
-        return 0;
+        return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     }
     if (projectile->m == 0.0){
         reb_simulation_error(sim, "Projectile mass is zero.\n");
-        return 0;
+        return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     }
 
     // Some useful parameters
@@ -544,7 +544,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     double b = h_mag/v_imp; 
     if (isnan(b)){
         reb_simulation_error(sim, "b is not a number.");
-        return 0;
+        return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     }
 
     // The following are steps to find collision energy, and derive largest remnant mass accordingly
@@ -583,7 +583,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     double Q_star = pow(mu/alphamu, 1.5)*(pow(1+gamma, 2)/ (4*gamma))*Q0; 
     if (alpha == 0.0){
         reb_simulation_error(sim, "alpha (interacting mass fraction) = 0");
-        return 0;
+        return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     }
 
     // For equal mass and head-on collisions Q* = Q0.
@@ -600,7 +600,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     }
 
     int collision_type;
-    int remove = 0;
+    enum REB_COLLISION_RESOLVE_OUTCOME remove = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
 
     /*
     * DECIDE WHAT TO DO AFTER THE COLLISION
