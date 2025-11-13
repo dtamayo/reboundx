@@ -111,7 +111,7 @@ int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const
     int* new_id = rebx_get_param(sim->extras, pi->ap, "fc_id");
     fprintf(of, "%d, ", *new_id);
     fprintf(of, "%d, ", parent_t_id);
-    fprintf(of, "%d, ", *parent_p_id);
+    fprintf(of, "%d ", *parent_p_id);
     fprintf(of, "\n");
     fclose(of);
 
@@ -769,7 +769,7 @@ int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_co
         fprintf(of, "%e,", v_esc/v_imp);  
         fprintf(of, "%e,", Mlr);
         fprintf(of, "%e,", target_initial_mass);
-        fprintf(of, "%e,", projectile_initial_mass);
+        fprintf(of, "%e", projectile_initial_mass);
         fprintf(of, "\n");   
         fclose(of);
 
