@@ -72,7 +72,7 @@ static double get_radii(double m, double rho){
 }   
 
 // Function to set a new ID for a new particle
-static int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct rebx_collision_resolve* const collision_resolve, struct reb_particle* p){
+int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct rebx_collision_resolve* const collision_resolve, struct reb_particle* p){
     int* fc_id_max = rebx_get_param(sim->extras, collision_resolve->ap, "fc_id_max");
     if (!fc_id_max){ // First call? 
         rebx_set_param_int(sim->extras, &collision_resolve->ap, "fc_id_max", 0);
@@ -465,7 +465,7 @@ static int make_fragments(struct reb_simulation* const sim, struct rebx_collisio
 * Main function to decide the collision outcome, derive new masses, positions and velocities.
 * Equations are derived from LS2012 and Chambers (2013).
 */
-int rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
+enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
     // Setting minimum fragment mass
     const double* min_frag_mass_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_min_frag_mass");
     double min_frag_mass;
