@@ -145,20 +145,16 @@ enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* const s
     struct reb_particle* target;     
     struct reb_particle* projectile; 
 
-    // remove is the variable determining which particle will be removed.
-    // if remove = 0, no particle is removed
-    // if remove = 1, first particle is removed
-    // if remove = 2, second particle is removed
-    enum REB_COLLISION_RESOLVE_OUTCOME remove = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
+    enum REB_COLLISION_RESOLVE_OUTCOME outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     if (pi->m >= pj->m){
         target = pi;    
         projectile = pj;
-        remove = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P2;
+        outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P2;
     }
     else{
         target = pj;   
         projectile = pi;
-        remove = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P1; 
+        outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P1; 
     }
 
     struct reb_particle com = reb_particle_com_of_pair(*target, *projectile); // Center of mass (COM) of target and projectile
@@ -449,8 +445,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* const s
         sim->particles[i].vz += voff.z*mass_fraction;
     }
 
-
-    return remove; // Remove 2 particle from simulation (projectile)
+    return outcome;
 }
 
 /*
@@ -600,7 +595,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     }
 
     int collision_type;
-    enum REB_COLLISION_RESOLVE_OUTCOME remove = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
+    enum REB_COLLISION_RESOLVE_OUTCOME outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
 
     /*
     * DECIDE WHAT TO DO AFTER THE COLLISION
@@ -610,7 +605,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     // If v_imp <= v_esc, merge.
     if (v_imp <= v_esc){
         collision_type = 1;
-        remove = merge(sim, collision_resolve, c);
+        outcome = merge(sim, collision_resolve, c);
         printf("Merging collision detected. (Case A)\n");
     }
     else{
@@ -672,19 +667,19 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
             if (v_imp <= v_crit){       
                 collision_type = 2;
                 printf("Merging collision detected. (Case B)\n");
-                remove = merge(sim, collision_resolve, c);
+                outcome = merge(sim, collision_resolve, c);
             }else{
                 if(Mlr < target->m){
                     if((target->m + projectile->m - Mlr) < min_frag_mass){
                         collision_type = 6;
                         printf("Elastic bounce, (Case F).\n");
-                        remove = 0;
+                        outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
                         reb_collision_resolve_hardsphere(sim,c);
                     }
                     else{
                         collision_type = 7;
                         printf("Grazing erosion, (Case G).\n");
-                        remove = make_fragments(sim, collision_resolve, c, Mlr, 0);
+                        outcome = make_fragments(sim, collision_resolve, c, Mlr, 0);
                     }
                 }
                 else{
@@ -698,20 +693,20 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
                     if(Mlr_dag < min_frag_mass){
                         collision_type = 8;
                         printf("Elastic bounce, (Case H).\n");
-                        remove = 0;
+                        outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
                         reb_collision_resolve_hardsphere(sim,c);
                     }
                     else{
                         if((target->m + projectile->m - Mlr - Mlr_dag) < min_frag_mass){
                             collision_type = 9;
                             printf("Elastic bounce, (Case I).\n");
-                            remove = 0;
+                            outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
                             reb_collision_resolve_hardsphere(sim,c);
                         }
                         else{
                             collision_type = 10;
                             printf("Hit-and-run, (Case J).\n");
-                            remove = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
+                            outcome = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag);
                         }
                     }
                 }
@@ -722,25 +717,25 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
             if (initial_mass - Mlr < min_frag_mass){ //Not meeting minimum fragment mass threshold
                 collision_type = 3;
                 printf("Non grazing, M_rem to small. Merging collision detected. (Case C)\n");
-                remove = merge(sim, collision_resolve, c);
+                outcome = merge(sim, collision_resolve, c);
                 }
             else{ //Can make fragments. Mlr can be larger or smaller than the target
                 if(Mlr > target->m){
                     collision_type = 4;
                     printf("Non grazing, Mlr > M_t. Accretion. (Case 4, D)\n");
-                    remove = make_fragments(sim, collision_resolve, c, Mlr, 0);
+                    outcome = make_fragments(sim, collision_resolve, c, Mlr, 0);
                     }
                 else{
                     if(Mlr < min_frag_mass){
                         collision_type = 5;
                         Mlr = min_frag_mass;
                         printf("Super Catastrophic, Mlr < min_frag_mass (Case E)\n");
-                        remove = make_fragments(sim, collision_resolve, c, Mlr, 0);
+                        outcome = make_fragments(sim, collision_resolve, c, Mlr, 0);
                     }
                     else{
                         collision_type = 4;
                         printf("Non grazing, Mlr < M_t. Erosion. (Case 4, D)\n");
-                        remove = make_fragments(sim, collision_resolve, c, Mlr, 0);
+                        outcome = make_fragments(sim, collision_resolve, c, Mlr, 0);
                     }
                     }
                 }
@@ -781,5 +776,5 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
 
     }
 
-    return remove;
+    return outcome;
 } 
