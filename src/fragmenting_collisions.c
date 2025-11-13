@@ -75,7 +75,7 @@ int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct re
 }
 
 // Function to merge two particles
-static int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
+static enum REB_COLLISION_RESOLVE_OUTCOME merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
     struct reb_particle* pi = &(sim->particles[c.p1]); // First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); // Second object in collison
 
@@ -92,7 +92,6 @@ static int merge(struct reb_simulation* const sim, struct rebx_collision_resolve
     pi->r  = cbrt(pi->r*pi->r*pi->r + pj->r*pj->r*pj->r);
     pi->last_collision = sim->t;
 
-<<<<<<< HEAD
     const char** particle_list_file_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
     if (particle_list_file_ptr != NULL) { // REBX parameter set?
         if (*particle_list_file_ptr != NULL) { 
@@ -109,25 +108,12 @@ static int merge(struct reb_simulation* const sim, struct rebx_collision_resolve
             fclose(of);
         }
     }
-=======
-    // Print particle IDs
-    int parent_t_id = *(int*) rebx_get_param(sim->extras, pi->ap, "fc_id");
-    int* parent_p_id = rebx_get_param(sim->extras, pj->ap, "fc_id");
-    rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, pi);
-    FILE* of = fopen(particle_list_file, "a");
-    int* new_id = rebx_get_param(sim->extras, pi->ap, "fc_id");
-    fprintf(of, "%d, ", *new_id);
-    fprintf(of, "%d, ", parent_t_id);
-    fprintf(of, "%d ", *parent_p_id);
-    fprintf(of, "\n");
-    fclose(of);
->>>>>>> haniyehtajer/collision-resolve
 
-    return 2; // Remove 2 particle from simulation
+    return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P2; // Remove 2 particle from simulation
 }
 
 // Function to make fragments
-enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve,struct reb_collision c, double Mlr, double Mslr){
+static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve,struct reb_collision c, double Mlr, double Mslr){
     // Get minimum fragment mass value
     // This is defined by the user in their setup
     double min_frag_mass;
