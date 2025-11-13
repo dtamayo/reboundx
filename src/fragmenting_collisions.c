@@ -53,10 +53,6 @@
 #include "reboundx.h"
 #include <stdbool.h>
 
-
-// Global parameters from LS2012, user can change to their preference
-double cstar = 1.8;
-
 // Printing parameters
 int print_flag = 1; //1 for printing collision data, 0 for not printing
 char particle_list_file[100] = "family_tree.csv";
@@ -486,6 +482,11 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     const double* rho1_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_rho1");
     if (rho1_ptr != NULL) {
         rho1 = *rho1_ptr; 
+    } 
+    double cstar = 1.8; // Default value 
+    const double* cstar_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_cstar");
+    if (cstar_ptr != NULL) {
+        cstar = *cstar_ptr; 
     } 
 
     struct reb_particle* pi = &(sim->particles[c.p1]); // First object in collision
