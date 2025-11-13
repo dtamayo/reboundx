@@ -67,12 +67,12 @@ char particle_list_file[100] = "family_tree.csv";
 #define MAX(a, b) ((a) > (b) ? (a) : (b))    // Returns the maximum of a and b
 
 // Helper function to get radius from mass and density
-double get_radii(double m, double rho){
+static double get_radii(double m, double rho){
     return pow((3.*m)/(4.*M_PI*rho),1./3.);
 }   
 
 // Function to set a new ID for a new particle
-int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct rebx_collision_resolve* const collision_resolve, struct reb_particle* p){
+static int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct rebx_collision_resolve* const collision_resolve, struct reb_particle* p){
     int* fc_id_max = rebx_get_param(sim->extras, collision_resolve->ap, "fc_id_max");
     if (!fc_id_max){ // First call? 
         rebx_set_param_int(sim->extras, &collision_resolve->ap, "fc_id_max", 0);
@@ -85,7 +85,7 @@ int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct re
 }
 
 // Function to merge two particles
-int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
+static int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
     struct reb_particle* pi = &(sim->particles[c.p1]); // First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); // Second object in collison
 
@@ -118,7 +118,7 @@ int merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const
 }
 
 // Function to make fragments
-int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve,struct reb_collision c, double Mlr, double Mslr){
+static int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve,struct reb_collision c, double Mlr, double Mslr){
     // Get minimum fragment mass value
     // This is defined by the user in their setup
     double min_frag_mass;
