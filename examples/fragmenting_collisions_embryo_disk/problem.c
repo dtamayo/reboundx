@@ -25,6 +25,7 @@ int main(int argc, char* argv[]){
     r->collision = REB_COLLISION_DIRECT;
     r->G = 39.476926421373;
     r->dt = 6./365.;
+    r->rand_seed = 1;
 
     // The random seed is passed as a command line argument
     if (argc == 2){
@@ -39,6 +40,13 @@ int main(int argc, char* argv[]){
 
     //Choose minimum fragment mass
     rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", 0.01);
+    //printf("Set min frag\n");
+    rebx_set_param_pointer(rebx, &fragmenting->ap, "fc_particle_list_file", "family_tree.csv");
+    char** particle_list_file_ptr = rebx_get_param(rebx, fragmenting->ap, "fc_particle_list_file");
+    printf("%s\n", particle_list_file_ptr);
+    //printf("particle list file name\n");
+    rebx_set_param_pointer(rebx, &fragmenting->ap, "fc_collision_report_file", "coll_report.csv");
+    //printf("coll_report file name\n");
 
     //Assigning mass and number of planetary embryos and planetesimals
     struct reb_particle star = {0};
@@ -65,27 +73,15 @@ int main(int argc, char* argv[]){
         double m = reb_random_uniform(r, mass_min, mass_max);  // in solar masses
 
         struct reb_particle emb = reb_particle_from_orbit(r->G, star, m, a, e, inc, Omega, omega, f);
-        emb.r = get_radii(m, rho);
+        emb.r = get_radii(m, rho) * 10;
 
         reb_simulation_add(r, emb);
     }
 
     //Optional: initiate the family tree file, to save initial particle IDs as well
-    FILE* of = fopen("family_tree.csv", "a");
-    fprintf(of, "particle_id, parent_t, parent_p,\n"); 
-    for(int i=0; i<r->N; i++){
-        struct reb_particle* p = &(r->particles[i]); // First object in collision
-        rebx_fragmenting_collisions_set_new_id(r, fragmenting, &r->particles[i]);
-        int* new_id = rebx_get_param(rebx, p->ap, "fc_id");
-        fprintf(of, "%d,", *new_id);
-        fprintf(of, " , ");
-        fprintf(of, " , ");
-        fprintf(of, "\n"); 
-    }
-    fclose(of);
 
     reb_simulation_move_to_com(r);  // This makes sure the planetary systems stays within the computational domain and doesn't drift.
-    double run_time = 1e5;
+    double run_time = 1e4;
     reb_simulation_save_to_file_interval(r,TITLE,1.e2);
     reb_simulation_integrate(r, run_time);
 
