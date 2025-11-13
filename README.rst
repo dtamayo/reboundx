@@ -15,7 +15,7 @@
 .. image:: https://img.shields.io/badge/launch-binder-ff69b4.svg?style=flat
     :target: https://mybinder.org/repo/dtamayo/reboundx
 
-Welcome to REBOUNDx (eXtras) (Haniyeh's fork!)
+Welcome to REBOUNDx (eXtras)
 ============================
 
 REBOUNDx allows you to easily incorporate additional physics into your REBOUND simulations.
