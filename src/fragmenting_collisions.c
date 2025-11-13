@@ -109,7 +109,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME merge(struct reb_simulation* const sim
         }
     }
 
-    return 2; // Remove 2 particle from simulation
+    return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P2; // Remove 2 particle from simulation
 }
 
 // Function to make fragments
