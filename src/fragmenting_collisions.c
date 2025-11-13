@@ -4,7 +4,7 @@
  * @author  Haniyeh Tajer <tajer.1@osu.edu>
  * 
  * @section     LICENSE
- * Copyright (c) 2015 Dan Tamayo, Hanno Rein
+ * Copyright (c) 2025 Haniyeh Tajer, Tiger Lu, Dan Tamayo, Hanno Rein
  *
  * This file is part of reboundx.
  *
