@@ -1079,7 +1079,7 @@ void rebx_additional_forces(struct reb_simulation* sim){
     }
 }
 
-int rebx_collision_resolver(struct reb_simulation* const sim, struct reb_collision collision){
+enum REB_COLLISION_RESOLVE_OUTCOME rebx_collision_resolver(struct reb_simulation* const sim, struct reb_collision collision){
     struct rebx_extras* rebx = sim->extras;
     struct rebx_collision_resolve* collision_resolve = rebx->collision_resolve;
     if (collision_resolve){
