@@ -150,6 +150,8 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "fc_separation_distance_scale", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "fc_rho1", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "fc_cstar", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "fc_particle_list_file", REBX_TYPE_POINTER);
+    rebx_register_param(rebx, "fc_collision_report_file", REBX_TYPE_POINTER);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
