@@ -310,9 +310,6 @@ static int make_fragments(struct reb_simulation* const sim, struct rebx_collisio
     struct reb_vec3d normal_to_vrel = reb_vec3d_cross(dv, normal_coll_plane);
     normal_to_vrel = reb_vec3d_normalize(normal_to_vrel);
 
-    // Compute escape velocity
-    double v_esc = pow(2.*(sim->G)*(initial_mass)/(r_tot), .5);
-
     // Separation distance is the distance between largest remnant and each fragment
     double separation_distance = separation_distance_scale * r_tot;
 
