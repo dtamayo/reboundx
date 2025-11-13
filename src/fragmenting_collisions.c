@@ -55,7 +55,6 @@
 
 
 // Global parameters from LS2012, user can change to their preference
-double separation_distance_scale = 4;
 double rho1 = 1.684e6; // Msun/AU^3 
 double cstar = 1.8;
 
@@ -137,6 +136,11 @@ int make_fragments(struct reb_simulation* const sim, struct rebx_collision_resol
     else{
         reb_simulation_error(sim, "User needs to specify minimum fragment mass.\n");
         return 0;
+    } 
+    double separation_distance_scale = 4; // Default value
+    const double* separation_distance_scale_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_separation_distance_scale_ptr");
+    if (separation_distance_scale_ptr != NULL) {
+        separation_distance_scale = *separation_distance_scale_ptr; 
     } 
 
     struct reb_particle* pi = &(sim->particles[c.p1]); // First object in collision
