@@ -1090,7 +1090,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_collision_resolver(struct reb_simulation
         return collision_resolve->collision_resolve(sim, collision_resolve, collision);
     }{
         reb_simulation_warning(sim, "REBOUNDx: Collision resolve function pointer not set.");
-        return 0;
+        return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     }
 }
 
