@@ -97,13 +97,13 @@ static enum REB_COLLISION_RESOLVE_OUTCOME merge(struct reb_simulation* const sim
         if (*particle_list_file_ptr != NULL) { 
             // Print particle IDs
             int parent_t_id = *(int*) rebx_get_param(sim->extras, pi->ap, "fc_id");
-            int* parent_p_id = rebx_get_param(sim->extras, pj->ap, "fc_id");
+            int parent_p_id = *(int*) rebx_get_param(sim->extras, pj->ap, "fc_id");
             rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, pi);
-            FILE* of = fopen(*particle_list_file_ptr, "a");
+            FILE* of = fopen(particle_list_file_ptr, "a");
             int* new_id = rebx_get_param(sim->extras, pi->ap, "fc_id");
             fprintf(of, "%d, ", *new_id);
             fprintf(of, "%d, ", parent_t_id);
-            fprintf(of, "%d, ", *parent_p_id);
+            fprintf(of, "%d ", parent_p_id);
             fprintf(of, "\n");
             fclose(of);
         }
@@ -241,7 +241,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     const char** particle_list_file_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
     if (particle_list_file_ptr != NULL) { // REBX parameter set?
         if (*particle_list_file_ptr != NULL) { 
-            FILE* of = fopen(*particle_list_file_ptr, "a");
+            FILE* of = fopen(particle_list_file_ptr, "a");
             fprintf(of, "%d, ", new_id);
             fprintf(of, "%d, ", parent_t_id);
             fprintf(of, "%d, ", parent_p_id);
@@ -365,7 +365,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
             if (*particle_list_file_ptr != NULL) { 
                 struct reb_particle* newly_added_particle = &(sim->particles[sim->N - 1]); 
                 int new_id = *(int*) rebx_get_param(sim->extras, newly_added_particle->ap, "fc_id");
-                FILE* of = fopen(*particle_list_file_ptr, "a");
+                FILE* of = fopen(particle_list_file_ptr, "a");
                 fprintf(of, "%d, ", new_id);
                 fprintf(of, "%d, ", parent_t_id);
                 fprintf(of, "%d, ", parent_p_id);
@@ -421,7 +421,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
         const char** particle_list_file_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
         if (particle_list_file_ptr != NULL) { // REBX parameter set?
             if (*particle_list_file_ptr != NULL) { 
-                FILE* of = fopen(*particle_list_file_ptr, "a");
+                FILE* of = fopen(particle_list_file_ptr, "a");
                 fprintf(of, "%d, ", new_id);
                 fprintf(of, "%d, ", parent_t_id);
                 fprintf(of, "%d, ", parent_p_id);
@@ -763,7 +763,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
             bool write_header = false;
 
             // Try to open file in read mode to check existence
-            FILE* check = fopen(*collision_report_file_ptr, "r");
+            FILE* check = fopen(collision_report_file_ptr, "r");
             if (check == NULL) {
                 // File doesn't exist, so we will need to write a header
                 write_header = true;
@@ -772,7 +772,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
             }
 
             // Now open for appending (creates file if missing)
-            FILE* of = fopen(*collision_report_file_ptr, "a");
+            FILE* of = fopen(collision_report_file_ptr, "a");
 
             // Write header if this is the first time
             if (write_header) {
@@ -786,7 +786,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
             fprintf(of, "%e,", v_esc/v_imp);  
             fprintf(of, "%e,", Mlr);
             fprintf(of, "%e,", target_initial_mass);
-            fprintf(of, "%e,", projectile_initial_mass);
+            fprintf(of, "%e", projectile_initial_mass);
             fprintf(of, "\n");   
             fclose(of);
         }

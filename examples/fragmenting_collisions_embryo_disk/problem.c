@@ -40,13 +40,8 @@ int main(int argc, char* argv[]){
 
     //Choose minimum fragment mass
     rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", 0.01);
-    //printf("Set min frag\n");
     rebx_set_param_pointer(rebx, &fragmenting->ap, "fc_particle_list_file", "family_tree.csv");
-    char** particle_list_file_ptr = rebx_get_param(rebx, fragmenting->ap, "fc_particle_list_file");
-    printf("%s\n", particle_list_file_ptr);
-    //printf("particle list file name\n");
     rebx_set_param_pointer(rebx, &fragmenting->ap, "fc_collision_report_file", "coll_report.csv");
-    //printf("coll_report file name\n");
 
     //Assigning mass and number of planetary embryos and planetesimals
     struct reb_particle star = {0};
@@ -74,14 +69,14 @@ int main(int argc, char* argv[]){
 
         struct reb_particle emb = reb_particle_from_orbit(r->G, star, m, a, e, inc, Omega, omega, f);
         emb.r = get_radii(m, rho) * 10;
-
         reb_simulation_add(r, emb);
+        rebx_fragmenting_collisions_set_new_id(r, fragmenting, &r->particles[i]);
     }
 
     //Optional: initiate the family tree file, to save initial particle IDs as well
 
     reb_simulation_move_to_com(r);  // This makes sure the planetary systems stays within the computational domain and doesn't drift.
-    double run_time = 1e4;
+    double run_time = 1e3;
     reb_simulation_save_to_file_interval(r,TITLE,1.e2);
     reb_simulation_integrate(r, run_time);
 
