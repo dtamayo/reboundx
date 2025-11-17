@@ -791,16 +791,6 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
             fclose(of);
         }
 
-        // Write main collision info
-        fprintf(of, "%e,", sim->t);     
-        fprintf(of, "%u,", collision_type);
-        fprintf(of, "%e,", b);                       
-        fprintf(of, "%e,", v_esc/v_imp);  
-        fprintf(of, "%e,", Mlr);
-        fprintf(of, "%e,", target_initial_mass);
-        fprintf(of, "%e,", projectile_initial_mass);
-        fprintf(of, "\n");   
-        fclose(of);
     }
 
     return outcome;
