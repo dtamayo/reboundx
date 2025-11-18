@@ -208,6 +208,7 @@ void test_fragmenting_collisions(int type){
     for(int i=0; i<sim->N; i++){
         rebx_fragmenting_collisions_set_new_id(sim, fragmenting, &sim->particles[i]);
     }
+    rebx_set_param_pointer(rebx, &fragmenting->ap, "fc_particle_list_file", "family_tree.csv");
     
     struct reb_particle com_i = reb_simulation_com(sim); //initial center of mass
     reb_simulation_integrate(sim, 1);
