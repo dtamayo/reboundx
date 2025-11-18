@@ -79,6 +79,9 @@ static enum REB_COLLISION_RESOLVE_OUTCOME merge(struct reb_simulation* const sim
     struct reb_particle* pi = &(sim->particles[c.p1]); // First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); // Second object in collison
 
+    double parent_1_init_mass = pi->m;
+    double parent_2_init_mass = pj->m;
+
     double invmass = 1.0/(pi->m + pj->m);
 
     // Merge by conserving mass, volume and momentum
@@ -88,6 +91,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME merge(struct reb_simulation* const sim
     pi->x  = (pi->x*pi->m + pj->x*pj->m)*invmass;
     pi->y  = (pi->y*pi->m + pj->y*pj->m)*invmass;
     pi->z  = (pi->z*pi->m + pj->z*pj->m)*invmass;
+    double new_mass = pi->m + pj->m; // For printing
     pi->m  = pi->m + pj->m;
     pi->r  = cbrt(pi->r*pi->r*pi->r + pj->r*pj->r*pj->r);
     pi->last_collision = sim->t;
@@ -103,7 +107,10 @@ static enum REB_COLLISION_RESOLVE_OUTCOME merge(struct reb_simulation* const sim
             int* new_id = rebx_get_param(sim->extras, pi->ap, "fc_id");
             fprintf(of, "%d, ", *new_id);
             fprintf(of, "%d, ", parent_t_id);
-            fprintf(of, "%d ", parent_p_id);
+            fprintf(of, "%d, ", parent_p_id);
+            fprintf(of, "%e, ", new_mass);
+            fprintf(of, "%e, ", parent_1_init_mass);
+            fprintf(of, "%e ", parent_2_init_mass);
             fprintf(of, "\n");
             fclose(of);
         }
@@ -158,6 +165,8 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     }
 
     struct reb_particle com = reb_particle_com_of_pair(*target, *projectile); // Center of mass (COM) of target and projectile
+    double target_init_mass = target->m; // Will use later for printing
+    double projectile_init_mass = projectile->m; // Will use later for printing
     double initial_mass = target->m + projectile->m; // initial mass of two colliders
     double r_tot = target->r + projectile->r; // Sum of radii or two colliders
     double remaining_mass = initial_mass - Mlr - Mslr; // Remaning mass, will turn into fragments
@@ -236,6 +245,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     // Save parents IDs, to be printed later
     int parent_t_id = *(int*) rebx_get_param(sim->extras, target->ap, "fc_id");
     int parent_p_id = *(int*) rebx_get_param(sim->extras, projectile->ap, "fc_id");
+    // Save new ID for lr
     rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, target);
     int new_id = *(int*) rebx_get_param(sim->extras, target->ap, "fc_id");
     const char* particle_list_file_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
@@ -245,6 +255,9 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
             fprintf(of, "%d, ", new_id);
             fprintf(of, "%d, ", parent_t_id);
             fprintf(of, "%d, ", parent_p_id);
+            fprintf(of, "%e,", Mlr);
+            fprintf(of, "%e,", target_init_mass);
+            fprintf(of, "%e", projectile_init_mass);
             fprintf(of, "\n");
             fclose(of);
         }
@@ -369,6 +382,9 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
                 fprintf(of, "%d, ", new_id);
                 fprintf(of, "%d, ", parent_t_id);
                 fprintf(of, "%d, ", parent_p_id);
+                fprintf(of, "%e,", Mslr);
+                fprintf(of, "%e,", target_init_mass);
+                fprintf(of, "%e", projectile_init_mass);
                 fprintf(of, "\n");
                 fclose(of);
             }
@@ -425,6 +441,9 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
                 fprintf(of, "%d, ", new_id);
                 fprintf(of, "%d, ", parent_t_id);
                 fprintf(of, "%d, ", parent_p_id);
+                fprintf(of, "%e,", fragment.m);
+                fprintf(of, "%e,", target_init_mass);
+                fprintf(of, "%e", projectile_init_mass);
                 fprintf(of, "\n");
                 fclose(of);
             }
@@ -497,6 +516,10 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
 
     struct reb_particle* pi = &(sim->particles[c.p1]); // First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); // Second object in collison
+
+    if (pi->last_collision==sim->t || pj->last_collision==sim->t){
+        return 0;
+    }
 
     // Object with the higher mass will be the target, and object with lower mass will be the projectile
     struct reb_particle* target;     
