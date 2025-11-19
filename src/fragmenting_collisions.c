@@ -74,6 +74,25 @@ int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct re
     return new_id;
 }
 
+static void output_collision_to_file(const char* filename, double t, int coll_type, int new_id, int parent1_id, int parent2_id, double new_mass, double parent1_init_mass, double parent2_init_mass, double new_radius, double parent1_init_radius, double parent2_init_radius, double v_impact, double theta_impact){
+            FILE* of = fopen(filename, "a");
+            fprintf(of, "%e,", t);
+            fprintf(of, "%d,", coll_type);
+            fprintf(of, "%d,", new_id);
+            fprintf(of, "%d,", parent1_id);
+            fprintf(of, "%d,", parent2_id);
+            fprintf(of, "%e,", new_mass);
+            fprintf(of, "%e,", parent1_init_mass);
+            fprintf(of, "%e ", parent2_init_mass);
+            fprintf(of, "%e,", new_radius);
+            fprintf(of, "%e,", parent1_init_radius);
+            fprintf(of, "%e,", parent2_init_radius);
+            fprintf(of, "%e,", v_impact);
+            fprintf(of, "%e", theta_impact);
+            fprintf(of, "\n");
+            fclose(of);
+}
+
 // Function to merge two particles
 static enum REB_COLLISION_RESOLVE_OUTCOME merge(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c, double v_impact, double theta_impact, int coll_type){
     struct reb_particle* pi = &(sim->particles[c.p1]); // First object in collision
@@ -99,31 +118,13 @@ static enum REB_COLLISION_RESOLVE_OUTCOME merge(struct reb_simulation* const sim
     pi->r = new_radius;
     pi->last_collision = sim->t;
 
-    const char* particle_list_file_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
-    if (particle_list_file_ptr != NULL) { // REBX parameter set?
-        if (*particle_list_file_ptr != NULL) { 
-            // Print particle IDs
-            int parent_t_id = *(int*) rebx_get_param(sim->extras, pi->ap, "fc_id");
-            int parent_p_id = *(int*) rebx_get_param(sim->extras, pj->ap, "fc_id");
-            rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, pi);
-            FILE* of = fopen(particle_list_file_ptr, "a");
-            int* new_id = rebx_get_param(sim->extras, pi->ap, "fc_id");
-            fprintf(of, "%e,", sim->t);
-            fprintf(of, "%d,", coll_type);
-            fprintf(of, "%d,", *new_id);
-            fprintf(of, "%d,", parent_t_id);
-            fprintf(of, "%d,", parent_p_id);
-            fprintf(of, "%e,", new_mass);
-            fprintf(of, "%e,", parent_1_init_mass);
-            fprintf(of, "%e ", parent_2_init_mass);
-            fprintf(of, "%e,", new_radius);
-            fprintf(of, "%e,", parent_1_init_radius);
-            fprintf(of, "%e,", parent_2_init_radius);
-            fprintf(of, "%e,", v_impact);
-            fprintf(of, "%e", theta_impact);
-            fprintf(of, "\n");
-            fclose(of);
-        }
+    const char* particle_list_file = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
+    if (particle_list_file != NULL) { // REBX parameter set?
+        int parent_t_id = *(int*) rebx_get_param(sim->extras, pi->ap, "fc_id");
+        int parent_p_id = *(int*) rebx_get_param(sim->extras, pj->ap, "fc_id");
+        rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, pi);
+        int* new_id = rebx_get_param(sim->extras, pi->ap, "fc_id");
+        output_collision_to_file(particle_list_file, sim->t, coll_type, *new_id, parent_t_id, parent_p_id, new_mass, parent_1_init_mass, parent_2_init_mass, new_radius, parent_1_init_radius, parent_2_init_radius, v_impact, theta_impact); 
     }
 
     return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P2; // Remove 2 particle from simulation
@@ -263,26 +264,9 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     // Save new ID for lr
     rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, target);
     int new_id = *(int*) rebx_get_param(sim->extras, target->ap, "fc_id");
-    const char* particle_list_file_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
-    if (particle_list_file_ptr != NULL) { // REBX parameter set?
-        if (*particle_list_file_ptr != NULL) { 
-            FILE* of = fopen(particle_list_file_ptr, "a");
-            fprintf(of, "%e,", sim->t);
-            fprintf(of, "%d,", coll_type);
-            fprintf(of, "%d,", new_id);
-            fprintf(of, "%d,", parent_t_id);
-            fprintf(of, "%d,", parent_p_id);
-            fprintf(of, "%e,", Mlr);
-            fprintf(of, "%e,", target_init_mass);
-            fprintf(of, "%e,", projectile_init_mass);
-            fprintf(of, "%e,", lr_radius);
-            fprintf(of, "%e,", target_init_radius);
-            fprintf(of, "%e,", projectile_init_radius);
-            fprintf(of, "%e,", v_impact);
-            fprintf(of, "%e", theta_impact);
-            fprintf(of, "\n");
-            fclose(of);
-        }
+    const char* particle_list_file = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
+    if (particle_list_file != NULL) { // REBX parameter set?
+        output_collision_to_file(particle_list_file, sim->t, coll_type, new_id, parent_t_id, parent_p_id, Mlr, target_init_mass, projectile_init_mass, lr_radius, target_init_radius, projectile_init_radius, v_impact, theta_impact); 
     }
 
     //Define mxsum variable to keep track of center of mass (mass times position)
@@ -396,28 +380,11 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
 
         // Save new ID with parents to particle ID list
         rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, &sim->particles[sim->N - 1]);
-        const char* particle_list_file_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
-        if (particle_list_file_ptr != NULL) { // REBX parameter set?
-            if (*particle_list_file_ptr != NULL) { 
-                struct reb_particle* newly_added_particle = &(sim->particles[sim->N - 1]); 
-                int new_id = *(int*) rebx_get_param(sim->extras, newly_added_particle->ap, "fc_id");
-                FILE* of = fopen(particle_list_file_ptr, "a");
-                fprintf(of, "%e,", sim->t);
-                fprintf(of, "%d,", coll_type);
-                fprintf(of, "%d,", new_id);
-                fprintf(of, "%d,", parent_t_id);
-                fprintf(of, "%d,", parent_p_id);
-                fprintf(of, "%e,", Mslr);
-                fprintf(of, "%e,", target_init_mass);
-                fprintf(of, "%e", projectile_init_mass);
-                fprintf(of, "%e,", slr_radius);
-                fprintf(of, "%e,", target_init_radius);
-                fprintf(of, "%e,", projectile_init_radius);
-                fprintf(of, "%e,", v_impact);
-                fprintf(of, "%e", theta_impact);
-                fprintf(of, "\n");
-                fclose(of);
-            }
+        const char* particle_list_file = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
+        if (particle_list_file != NULL) { // REBX parameter set?
+            struct reb_particle* newly_added_particle = &(sim->particles[sim->N - 1]); 
+            int new_id = *(int*) rebx_get_param(sim->extras, newly_added_particle->ap, "fc_id");
+            output_collision_to_file(particle_list_file, sim->t, coll_type, new_id, parent_t_id, parent_p_id, Mslr, target_init_mass, projectile_init_mass, slr_radius, target_init_radius, projectile_init_radius, v_impact, theta_impact); 
         }
     }
 
@@ -464,26 +431,9 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
         int new_id = *(int*) rebx_get_param(sim->extras, newly_added_particle->ap, "fc_id");
 
         // Save fragment ID into particle ID list
-        const char* particle_list_file_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
-        if (particle_list_file_ptr != NULL) { // REBX parameter set?
-            if (*particle_list_file_ptr != NULL) { 
-                FILE* of = fopen(particle_list_file_ptr, "a");
-                fprintf(of, "%e,", sim->t);
-                fprintf(of, "%d,", coll_type);
-                fprintf(of, "%d,", new_id);
-                fprintf(of, "%d,", parent_t_id);
-                fprintf(of, "%d,", parent_p_id);
-                fprintf(of, "%e,", fragment.m);
-                fprintf(of, "%e,", target_init_mass);
-                fprintf(of, "%e", projectile_init_mass);
-                fprintf(of, "%e,", fragment.r);
-                fprintf(of, "%e,", target_init_radius);
-                fprintf(of, "%e,", projectile_init_radius);
-                fprintf(of, "%e,", v_impact);
-                fprintf(of, "%e", theta_impact);
-                fprintf(of, "\n");
-                fclose(of);
-            }
+        const char* particle_list_file = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
+        if (particle_list_file != NULL) { // REBX parameter set?
+            output_collision_to_file(particle_list_file, sim->t, coll_type, new_id, parent_t_id, parent_p_id, fragment.m, target_init_mass, projectile_init_mass, fragment.r, target_init_radius, projectile_init_radius, v_impact, theta_impact); 
         }
         
     }
@@ -822,54 +772,22 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     }
     // Print collision data for elastic bounces
     if (collision_type == 6 || collision_type == 8 || collision_type == 9){
-        const char* particle_list_file_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
-        if (particle_list_file_ptr != NULL) { // REBX parameter set?
-            if (*particle_list_file_ptr != NULL) { 
-                // Print particle IDs
-                int parent_t_id = *(int*) rebx_get_param(sim->extras, target->ap, "fc_id");
-                int parent_p_id = *(int*) rebx_get_param(sim->extras, projectile->ap, "fc_id");
-                // Target and projectile both get new IDs
-                rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, target);
-                rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, projectile);
-                int* new_id_t = rebx_get_param(sim->extras, target->ap, "fc_id");
-                int* new_id_p = rebx_get_param(sim->extras, projectile->ap, "fc_id");
+        const char* particle_list_file = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
+        if (particle_list_file != NULL) { // REBX parameter set?
+            int parent_t_id = *(int*) rebx_get_param(sim->extras, target->ap, "fc_id");
+            int parent_p_id = *(int*) rebx_get_param(sim->extras, projectile->ap, "fc_id");
+            // Target and projectile both get new IDs
+            rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, target);
+            rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, projectile);
+            int* new_id_t = rebx_get_param(sim->extras, target->ap, "fc_id");
+            int* new_id_p = rebx_get_param(sim->extras, projectile->ap, "fc_id");
 
-                // Print data for object 1 (target)
-                FILE* of = fopen(particle_list_file_ptr, "a");
-                fprintf(of, "%e,", sim->t);
-                fprintf(of, "%d,", collision_type);
-                fprintf(of, "%d,", *new_id_t);
-                fprintf(of, "%d,", parent_t_id);
-                fprintf(of, "%d,", parent_p_id);
-                fprintf(of, "%e,", target_initial_mass);
-                fprintf(of, "%e,", target_initial_mass);
-                fprintf(of, "%e ", projectile_initial_mass);
-                fprintf(of, "%e,", target_initial_radius);
-                fprintf(of, "%e,", target_initial_radius);
-                fprintf(of, "%e,", projectile_initial_radius);
-                fprintf(of, "%e,", v_imp);
-                fprintf(of, "%e", theta_i);
-                fprintf(of, "\n");
+            // Print data for object 1 (target)
+            output_collision_to_file(particle_list_file, sim->t, collision_type, *new_id_t, parent_t_id, parent_p_id, target_initial_mass, target_initial_mass, projectile_initial_mass, target_initial_radius, target_initial_radius, projectile_initial_radius, v_imp, theta_i); 
 
-                // Print data for object 2 (projectile)
-                fprintf(of, "%e,", sim->t);
-                fprintf(of, "%d,", collision_type);
-                fprintf(of, "%d,", *new_id_p);
-                fprintf(of, "%d,", parent_t_id);
-                fprintf(of, "%d,", parent_p_id);
-                fprintf(of, "%e,", projectile_initial_mass);
-                fprintf(of, "%e,", target_initial_mass);
-                fprintf(of, "%e ", projectile_initial_mass);
-                fprintf(of, "%e,", projectile_initial_radius);
-                fprintf(of, "%e,", target_initial_radius);
-                fprintf(of, "%e,", projectile_initial_radius);
-                fprintf(of, "%e,", v_imp);
-                fprintf(of, "%e", theta_i);
-                fprintf(of, "\n");
-                fclose(of);
-                }
+            // Print data for object 2 (projectile)
+            output_collision_to_file(particle_list_file, sim->t, collision_type, *new_id_p, parent_t_id, parent_p_id, projectile_initial_mass, target_initial_mass, projectile_initial_mass, projectile_initial_radius, target_initial_radius, projectile_initial_radius, v_imp, theta_i); 
         }
-        
     }
 
     return outcome;
