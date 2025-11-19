@@ -157,7 +157,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
             return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
         }
     }else{
-        reb_simulation_error(sim, "User needs to specify minimum fragment mass.\n");
+        reb_simulation_error(sim, "User needs to specify minimum fragment mass `fc_min_frag_mass`.\n");
         return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     } 
     double separation_distance_scale = 4; // Default value
@@ -491,7 +491,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
             return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
         }
     }else{
-        reb_simulation_error(sim, "User needs to specify minimum fragment mass.\n");
+        reb_simulation_error(sim, "User needs to specify minimum fragment mass `fc_min_frag_mass`.\n");
         return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     }   
     double rho1 = 1.684e6; // Default value. Units of Msun/AU^3 
