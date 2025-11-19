@@ -75,22 +75,22 @@ int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct re
 }
 
 static void output_collision_to_file(const char* filename, double t, int coll_type, int new_id, int parent1_id, int parent2_id, double new_mass, double parent1_init_mass, double parent2_init_mass, double new_radius, double parent1_init_radius, double parent2_init_radius, double v_impact, double theta_impact){
-            FILE* of = fopen(filename, "a");
-            fprintf(of, "%e,", t);
-            fprintf(of, "%d,", coll_type);
-            fprintf(of, "%d,", new_id);
-            fprintf(of, "%d,", parent1_id);
-            fprintf(of, "%d,", parent2_id);
-            fprintf(of, "%e,", new_mass);
-            fprintf(of, "%e,", parent1_init_mass);
-            fprintf(of, "%e ", parent2_init_mass);
-            fprintf(of, "%e,", new_radius);
-            fprintf(of, "%e,", parent1_init_radius);
-            fprintf(of, "%e,", parent2_init_radius);
-            fprintf(of, "%e,", v_impact);
-            fprintf(of, "%e", theta_impact);
-            fprintf(of, "\n");
-            fclose(of);
+    FILE* of = fopen(filename, "a");
+    fprintf(of, "%e,", t);
+    fprintf(of, "%d,", coll_type);
+    fprintf(of, "%d,", new_id);
+    fprintf(of, "%d,", parent1_id);
+    fprintf(of, "%d,", parent2_id);
+    fprintf(of, "%e,", new_mass);
+    fprintf(of, "%e,", parent1_init_mass);
+    fprintf(of, "%e ", parent2_init_mass);
+    fprintf(of, "%e,", new_radius);
+    fprintf(of, "%e,", parent1_init_radius);
+    fprintf(of, "%e,", parent2_init_radius);
+    fprintf(of, "%e,", v_impact);
+    fprintf(of, "%e", theta_impact);
+    fprintf(of, "\n");
+    fclose(of);
 }
 
 // Function to merge two particles
