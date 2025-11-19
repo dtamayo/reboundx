@@ -96,7 +96,7 @@ static void output_collision_to_file(const char* filename, double t, enum COLLIS
     fprintf(of, "%d,", parent2_id);
     fprintf(of, "%e,", new_mass);
     fprintf(of, "%e,", parent1_initial_mass);
-    fprintf(of, "%e ", parent2_initial_mass);
+    fprintf(of, "%e,", parent2_initial_mass);
     fprintf(of, "%e,", new_radius);
     fprintf(of, "%e,", parent1_initial_radius);
     fprintf(of, "%e,", parent2_initial_radius);
