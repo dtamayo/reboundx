@@ -153,13 +153,11 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
         // If it's valid, check if the value is not 0
         if (*min_frag_mass_ptr > 0.0) {
             min_frag_mass = *min_frag_mass_ptr;
-        }
-        else{
+        }else{
             reb_simulation_error(sim, "Minimum fragment mass invalid (<= 0).\n");
             return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
         }
-    }
-    else{
+    }else{
         reb_simulation_error(sim, "User needs to specify minimum fragment mass.\n");
         return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     } 
@@ -181,8 +179,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
         target = pi;    
         projectile = pj;
         outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P2;
-    }
-    else{
+    }else{
         target = pj;   
         projectile = pi;
         outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P1; 
@@ -232,11 +229,9 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     if(index >= 10000){
         reb_simulation_error(sim, "Number of fragments produced is above permitted value. Increase minimum fragment mass.\n");
         return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
-    }
-    else if (index == 1){
+    }else if (index == 1){
         m_frags_array[0] = remaining_mass;
-    }
-    else if(index > 1){
+    }else if(index > 1){
         // Discard last fragment, and distribute the remaining mass between other fragments
         len_m_frags_array = index - 2; // These will be indexes of the frags we want to keep
         sum_m_frags = sum_m_frags - m_frags_array[len_m_frags_array + 1]; // Discard last fragment
@@ -493,13 +488,11 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
         // If it's valid, check if the value is not 0
         if (*min_frag_mass_ptr > 0.0) {
             min_frag_mass = *min_frag_mass_ptr;
-        }
-        else{
+        }else{
             reb_simulation_error(sim, "Minimum fragment mass invalid (<= 0).\n");
             return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
         }
-    }
-    else{
+    }else{
         reb_simulation_error(sim, "User needs to specify minimum fragment mass.\n");
         return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     }   
@@ -529,8 +522,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     if (pi->m >= pj->m){
         target = pi;    
         projectile = pj;
-    }
-    else{
+    }else{
         target = pj;   
         projectile = pi; 
     }
@@ -648,8 +640,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
         collision_type = COLLISION_TYPE_MERGE;
         outcome = merge(sim, collision_resolve, c, v_imp, theta_i, collision_type);
         printf("Merging collision detected. (Case A)\n");
-    }
-    else{
+    }else{
         if(b >= target->r){ // Grazing regime
                             // Target's density
             double targ_rho = target->m/(4./3*M_PI*pow(target->r,3));
@@ -716,14 +707,12 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
                         printf("Elastic bounce, (Case F).\n");
                         outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
                         reb_collision_resolve_hardsphere(sim,c);
-                    }
-                    else{
+                    }else{
                         collision_type = COLLISION_TYPE_GRAZING_G;
                         printf("Grazing erosion, (Case G).\n");
                         outcome = make_fragments(sim, collision_resolve, c, lr_mass, 0, v_imp, theta_i, collision_type);
                     }
-                }
-                else{
+                }else{
                     // lr_dag_mass : Second largest remnant mass, Chambers Eq. 14
                     double lr_dag_mass;
                     if (Q_g < 1.8*Q_star_g){
@@ -736,15 +725,13 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
                         printf("Elastic bounce, (Case H).\n");
                         outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
                         reb_collision_resolve_hardsphere(sim,c);
-                    }
-                    else{
+                    }else{
                         if((target->m + projectile->m - lr_mass - lr_dag_mass) < min_frag_mass){
                             collision_type = COLLISION_TYPE_BOUNCE_I;
                             printf("Elastic bounce, (Case I).\n");
                             outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
                             reb_collision_resolve_hardsphere(sim,c);
-                        }
-                        else{
+                        }else{
                             collision_type = COLLISION_TYPE_HITANDRUN;
                             printf("Hit-and-run, (Case J).\n");
                             outcome = make_fragments(sim, collision_resolve, c, lr_mass, lr_dag_mass, v_imp, theta_i, collision_type);
@@ -758,21 +745,18 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
                 collision_type = COLLISION_TYPE_MERGE_C;
                 printf("Non grazing, M_rem to small. Merging collision detected. (Case C)\n");
                 outcome = merge(sim, collision_resolve, c, v_imp, theta_i, collision_type);
-            }
-            else{ //Can make fragments. lr_mass can be larger or smaller than the target
+            }else{ //Can make fragments. lr_mass can be larger or smaller than the target
                 if(lr_mass > target->m){
                     collision_type = COLLISION_TYPE_ACCRETION;
                     printf("Non grazing, lr_mass > M_t. Accretion. (Case 4, D)\n");
                     outcome = make_fragments(sim, collision_resolve, c, lr_mass, 0, v_imp, theta_i, collision_type);
-                }
-                else{
+                }else{
                     if(lr_mass < min_frag_mass){
                         collision_type = COLLISION_TYPE_SUPERCATASTROPHIC;
                         lr_mass = min_frag_mass;
                         printf("Super Catastrophic, lr_mass < min_frag_mass (Case E)\n");
                         outcome = make_fragments(sim, collision_resolve, c, lr_mass, 0, v_imp, theta_i, collision_type);
-                    }
-                    else{
+                    }else{
                         collision_type = COLLISION_TYPE_ACCRETION;
                         printf("Non grazing, lr_mass < M_t. Erosion. (Case 4, D)\n");
                         outcome = make_fragments(sim, collision_resolve, c, lr_mass, 0, v_imp, theta_i, collision_type);
