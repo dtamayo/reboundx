@@ -150,10 +150,9 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     double min_frag_mass;
     const double* min_frag_mass_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_min_frag_mass");
     if (min_frag_mass_ptr != NULL) {
+        min_frag_mass = *min_frag_mass_ptr;
         // If it's valid, check if the value is not 0
-        if (*min_frag_mass_ptr > 0.0) {
-            min_frag_mass = *min_frag_mass_ptr;
-        }else{
+        if (*min_frag_mass_ptr <= 0.0) {
             reb_simulation_error(sim, "Minimum fragment mass invalid (<= 0).\n");
             return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
         }
@@ -486,9 +485,8 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     double min_frag_mass;
     if (min_frag_mass_ptr != NULL) {
         // If it's valid, check if the value is not 0
-        if (*min_frag_mass_ptr > 0.0) {
-            min_frag_mass = *min_frag_mass_ptr;
-        }else{
+        min_frag_mass = *min_frag_mass_ptr;
+        if (*min_frag_mass_ptr <= 0.0) {
             reb_simulation_error(sim, "Minimum fragment mass invalid (<= 0).\n");
             return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
         }
