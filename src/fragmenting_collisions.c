@@ -120,18 +120,18 @@ static enum REB_COLLISION_RESOLVE_OUTCOME merge(struct reb_simulation* const sim
 
     const char* particle_list_file = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
     if (particle_list_file != NULL) { // REBX parameter set?
-        int parent_t_id = *(int*) rebx_get_param(sim->extras, pi->ap, "fc_id");
-        int parent_p_id = *(int*) rebx_get_param(sim->extras, pj->ap, "fc_id");
+        int parent_1_id = *(int*) rebx_get_param(sim->extras, pi->ap, "fc_id");
+        int parent_2_id = *(int*) rebx_get_param(sim->extras, pj->ap, "fc_id");
         rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, pi);
         int* new_id = rebx_get_param(sim->extras, pi->ap, "fc_id");
-        output_collision_to_file(particle_list_file, sim->t, coll_type, *new_id, parent_t_id, parent_p_id, new_mass, parent_1_initial_mass, parent_2_initial_mass, new_radius, parent_1_initial_radius, parent_2_initial_radius, v_impact, theta_impact); 
+        output_collision_to_file(particle_list_file, sim->t, coll_type, *new_id, parent_1_id, parent_2_id, new_mass, parent_1_initial_mass, parent_2_initial_mass, new_radius, parent_1_initial_radius, parent_2_initial_radius, v_impact, theta_impact); 
     }
 
     return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P2; // Remove 2 particle from simulation
 }
 
 // Function to make fragments
-static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve,struct reb_collision c, double Mlr, double Mslr, double v_impact, double theta_impact, int coll_type){
+static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve,struct reb_collision c, double lr_mass, double slr_mass, double v_impact, double theta_impact, int coll_type){
     // Get minimum fragment mass value
     // This is defined by the user in their setup
     double min_frag_mass;
@@ -184,14 +184,14 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     double target_initial_radius = target->r;
     double projectile_initial_radius = projectile->r;
     double r_tot = target->r + projectile->r; // Sum of radii or two colliders
-    double remaining_mass = initial_mass - Mlr - Mslr; // Remaning mass, will turn into fragments
+    double remaining_mass = initial_mass - lr_mass - slr_mass; // Remaning mass, will turn into fragments
     double rho = target->m/(4./3*M_PI*pow(target ->r, 3)); // Target's density
     
-    // Mslr is the mass of the second largest remnant (refer to documentation for more info)
-    // If Mslr is non-zero, then we have a big fragment with mass Mslr,
+    // slr_mass is the mass of the second largest remnant (refer to documentation for more info)
+    // If slr_mass is non-zero, then we have a big fragment with mass slr_mass,
     // And a few small fragments.
     double n_big_frag = 0;
-    if(Mslr > 0){
+    if(slr_mass > 0){
         n_big_frag = 1;
     }
 
@@ -199,9 +199,9 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     * COMPUTING MASS OF FRAGMENTS
     */
     // We draw fragment masses from a power law based on LS2012
-    double max_frag_mass = 0.5 * Mlr;
-    if(Mslr > 0){
-        max_frag_mass = 0.5 * Mslr;
+    double max_frag_mass = 0.5 * lr_mass;
+    if(slr_mass > 0){
+        max_frag_mass = 0.5 * slr_mass;
     }
     double powerlaw_slope = 3; // Arbitrary, from LS2012 table 1
     double m_frags_array[10000] = {0.0};
@@ -244,8 +244,8 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     */
     // We replace target with the largest remnant, and assign it the position and velocity of COM
     target -> last_collision = sim->t; // Update time of last collision
-    target -> m = Mlr; // Update target mass with Mlr
-    double lr_radius = get_radii(Mlr, rho);
+    target -> m = lr_mass; // Update target mass with lr_mass
+    double lr_radius = get_radii(lr_mass, rho);
     target -> r = lr_radius; // Update target radius, keeping density constant
     // Update target position with COM
     target->x = com.x; 
@@ -255,7 +255,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     target->vx = com.vx;
     target->vy = com.vy;
     target->vz = com.vz;
-    // Magnitude of Mlr velocity, later to be used in computing fragment velocities
+    // Magnitude of lr_mass velocity, later to be used in computing fragment velocities
     double v_lr = sqrt((com.vx * com.vx) + (com.vy * com.vy) + (com.vz * com.vz));
     
     // Save parents IDs, to be printed later
@@ -266,7 +266,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     int new_id = *(int*) rebx_get_param(sim->extras, target->ap, "fc_id");
     const char* particle_list_file = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
     if (particle_list_file != NULL) { // REBX parameter set?
-        output_collision_to_file(particle_list_file, sim->t, coll_type, new_id, parent_t_id, parent_p_id, Mlr, target_initial_mass, projectile_initial_mass, lr_radius, target_initial_radius, projectile_initial_radius, v_impact, theta_impact); 
+        output_collision_to_file(particle_list_file, sim->t, coll_type, new_id, parent_t_id, parent_p_id, lr_mass, target_initial_mass, projectile_initial_mass, lr_radius, target_initial_radius, projectile_initial_radius, v_impact, theta_impact); 
     }
 
     //Define mxsum variable to keep track of center of mass (mass times position)
@@ -347,19 +347,19 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     // Add big fragment, if exists
     if (n_big_frag == 1){
         struct reb_particle big_frag = {0};
-        big_frag.m = Mslr;
+        big_frag.m = slr_mass;
 
         big_frag.x = com.x + separation_distance * unit_dv.x;
         big_frag.y = com.y + separation_distance * unit_dv.y;
         big_frag.z = com.z + separation_distance * unit_dv.z;
 
-        double v_slr = v_lr * sqrt(Mlr/Mslr);
+        double slr_v = v_lr * sqrt(lr_mass/slr_mass);
 
-        big_frag.vx = com.vx + v_slr * unit_dv.x;
-        big_frag.vy = com.vy + v_slr * unit_dv.y;
-        big_frag.vz = com.vz + v_slr * unit_dv.z;
+        big_frag.vx = com.vx + slr_v * unit_dv.x;
+        big_frag.vy = com.vy + slr_v * unit_dv.y;
+        big_frag.vz = com.vz + slr_v * unit_dv.z;
 
-        double slr_radius = get_radii(Mslr, rho);
+        double slr_radius = get_radii(slr_mass, rho);
         big_frag.r = slr_radius;
 
         // Record collision
@@ -384,7 +384,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
         if (particle_list_file != NULL) { // REBX parameter set?
             struct reb_particle* newly_added_particle = &(sim->particles[sim->N - 1]); 
             int new_id = *(int*) rebx_get_param(sim->extras, newly_added_particle->ap, "fc_id");
-            output_collision_to_file(particle_list_file, sim->t, coll_type, new_id, parent_t_id, parent_p_id, Mslr, target_initial_mass, projectile_initial_mass, slr_radius, target_initial_radius, projectile_initial_radius, v_impact, theta_impact); 
+            output_collision_to_file(particle_list_file, sim->t, coll_type, new_id, parent_t_id, parent_p_id, slr_mass, target_initial_mass, projectile_initial_mass, slr_radius, target_initial_radius, projectile_initial_radius, v_impact, theta_impact); 
         }
     }
 
@@ -398,7 +398,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
         fragment.y = com.y + separation_distance*(cos(theta_sep*j)*unit_dv.y + sin(theta_sep*j)*normal_to_vrel.y);
         fragment.z = com.z + separation_distance*(cos(theta_sep*j)*unit_dv.z + sin(theta_sep*j)*normal_to_vrel.z);
 
-        double frag_velocity = v_lr * sqrt(Mlr/fragment.m);
+        double frag_velocity = v_lr * sqrt(lr_mass/fragment.m);
 
         fragment.vx = com.vx + frag_velocity*(cos(theta_sep*j)*unit_dv.x + sin(theta_sep*j)*normal_to_vrel.x);
         fragment.vy = com.vy + frag_velocity*(cos(theta_sep*j)*unit_dv.y + sin(theta_sep*j)*normal_to_vrel.y);
@@ -614,12 +614,12 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
         Q_star = Q0;
     }
     // Mass of largest remnant is derived based on Q and Q* ratio. (Chambers (2013) eq. 8)
-    double Mlr;
+    double lr_mass;
     double qratio = Q/Q_star;
     if (qratio < 1.8){
-        Mlr = initial_mass*(1.0-.5*qratio);
+        lr_mass = initial_mass*(1.0-.5*qratio);
     }else{
-        Mlr = 0.1 * initial_mass * pow(qratio/1.8, -1.5);  
+        lr_mass = 0.1 * initial_mass * pow(qratio/1.8, -1.5);  
     }
 
     int collision_type;
@@ -697,8 +697,8 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
                 printf("Merging collision detected. (Case B)\n");
                 outcome = merge(sim, collision_resolve, c, v_imp, theta_i, collision_type);
             }else{
-                if(Mlr < target->m){
-                    if((target->m + projectile->m - Mlr) < min_frag_mass){
+                if(lr_mass < target->m){
+                    if((target->m + projectile->m - lr_mass) < min_frag_mass){
                         collision_type = 6;
                         printf("Elastic bounce, (Case F).\n");
                         outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
@@ -707,25 +707,25 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
                     else{
                         collision_type = 7;
                         printf("Grazing erosion, (Case G).\n");
-                        outcome = make_fragments(sim, collision_resolve, c, Mlr, 0, v_imp, theta_i, collision_type);
+                        outcome = make_fragments(sim, collision_resolve, c, lr_mass, 0, v_imp, theta_i, collision_type);
                     }
                 }
                 else{
-                    // Mlr_dag : Second largest remnant mass, Chambers Eq. 14
-                    double Mlr_dag;
+                    // lr_dag_mass : Second largest remnant mass, Chambers Eq. 14
+                    double lr_dag_mass;
                     if (Q_g < 1.8*Q_star_g){
-                        Mlr_dag = (beta*target->m + projectile->m)*(1 - Q_g/ (2*Q_star_g));
+                        lr_dag_mass = (beta*target->m + projectile->m)*(1 - Q_g/ (2*Q_star_g));
                     }else{
-                        Mlr_dag = (beta*target->m + projectile->m)/10 * pow(Q_g/(1.8*Q_star_g), -1.5);
+                        lr_dag_mass = (beta*target->m + projectile->m)/10 * pow(Q_g/(1.8*Q_star_g), -1.5);
                     }
-                    if(Mlr_dag < min_frag_mass){
+                    if(lr_dag_mass < min_frag_mass){
                         collision_type = 8;
                         printf("Elastic bounce, (Case H).\n");
                         outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
                         reb_collision_resolve_hardsphere(sim,c);
                     }
                     else{
-                        if((target->m + projectile->m - Mlr - Mlr_dag) < min_frag_mass){
+                        if((target->m + projectile->m - lr_mass - lr_dag_mass) < min_frag_mass){
                             collision_type = 9;
                             printf("Elastic bounce, (Case I).\n");
                             outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
@@ -734,7 +734,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
                         else{
                             collision_type = 10;
                             printf("Hit-and-run, (Case J).\n");
-                            outcome = make_fragments(sim, collision_resolve, c, Mlr, Mlr_dag, v_imp, theta_i, collision_type);
+                            outcome = make_fragments(sim, collision_resolve, c, lr_mass, lr_dag_mass, v_imp, theta_i, collision_type);
                         }
                     }
                 }
@@ -742,28 +742,28 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
             
         } 
         else{ //non-grazing regime
-            if (initial_mass - Mlr < min_frag_mass){ //Not meeting minimum fragment mass threshold
+            if (initial_mass - lr_mass < min_frag_mass){ //Not meeting minimum fragment mass threshold
                 collision_type = 3;
                 printf("Non grazing, M_rem to small. Merging collision detected. (Case C)\n");
                 outcome = merge(sim, collision_resolve, c, v_imp, theta_i, collision_type);
                 }
-            else{ //Can make fragments. Mlr can be larger or smaller than the target
-                if(Mlr > target->m){
+            else{ //Can make fragments. lr_mass can be larger or smaller than the target
+                if(lr_mass > target->m){
                     collision_type = 4;
-                    printf("Non grazing, Mlr > M_t. Accretion. (Case 4, D)\n");
-                    outcome = make_fragments(sim, collision_resolve, c, Mlr, 0, v_imp, theta_i, collision_type);
+                    printf("Non grazing, lr_mass > M_t. Accretion. (Case 4, D)\n");
+                    outcome = make_fragments(sim, collision_resolve, c, lr_mass, 0, v_imp, theta_i, collision_type);
                     }
                 else{
-                    if(Mlr < min_frag_mass){
+                    if(lr_mass < min_frag_mass){
                         collision_type = 5;
-                        Mlr = min_frag_mass;
-                        printf("Super Catastrophic, Mlr < min_frag_mass (Case E)\n");
-                        outcome = make_fragments(sim, collision_resolve, c, Mlr, 0, v_imp, theta_i, collision_type);
+                        lr_mass = min_frag_mass;
+                        printf("Super Catastrophic, lr_mass < min_frag_mass (Case E)\n");
+                        outcome = make_fragments(sim, collision_resolve, c, lr_mass, 0, v_imp, theta_i, collision_type);
                     }
                     else{
                         collision_type = 4;
-                        printf("Non grazing, Mlr < M_t. Erosion. (Case 4, D)\n");
-                        outcome = make_fragments(sim, collision_resolve, c, Mlr, 0, v_imp, theta_i, collision_type);
+                        printf("Non grazing, lr_mass < M_t. Erosion. (Case 4, D)\n");
+                        outcome = make_fragments(sim, collision_resolve, c, lr_mass, 0, v_imp, theta_i, collision_type);
                     }
                     }
                 }
