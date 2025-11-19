@@ -150,7 +150,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     double min_frag_mass;
     const double* min_frag_mass_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_min_frag_mass");
     if (min_frag_mass_ptr != NULL) {
-    // If it's valid, check if the value is not 0
+        // If it's valid, check if the value is not 0
         if (*min_frag_mass_ptr > 0.0) {
             min_frag_mass = *min_frag_mass_ptr;
         }
@@ -193,13 +193,13 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     double target_initial_mass = target->m; // Will use later for printing
     double projectile_initial_mass = projectile->m; // Will use later for printing
     double initial_mass = target->m + projectile->m; // initial mass of two colliders
-    
+
     double target_initial_radius = target->r;
     double projectile_initial_radius = projectile->r;
     double r_tot = target->r + projectile->r; // Sum of radii or two colliders
     double remaining_mass = initial_mass - lr_mass - slr_mass; // Remaning mass, will turn into fragments
     double rho = target->m/(4./3*M_PI*pow(target ->r, 3)); // Target's density
-    
+
     // slr_mass is the mass of the second largest remnant (refer to documentation for more info)
     // If slr_mass is non-zero, then we have a big fragment with mass slr_mass,
     // And a few small fragments.
@@ -209,8 +209,8 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     }
 
     /*
-    * COMPUTING MASS OF FRAGMENTS
-    */
+     * COMPUTING MASS OF FRAGMENTS
+     */
     // We draw fragment masses from a power law based on LS2012
     double max_frag_mass = 0.5 * lr_mass;
     if(slr_mass > 0){
@@ -253,14 +253,14 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     double n_frag = (len_m_frags_array + 1) + n_big_frag;
 
     /*
-    * UPDATE TARGET TO BE THE LARGEST REMNANT
-    */
+     * UPDATE TARGET TO BE THE LARGEST REMNANT
+     */
     // We replace target with the largest remnant, and assign it the position and velocity of COM
     target -> last_collision = sim->t; // Update time of last collision
     target -> m = lr_mass; // Update target mass with lr_mass
     double lr_radius = get_radii(lr_mass, rho);
     target -> r = lr_radius; // Update target radius, keeping density constant
-    // Update target position with COM
+                             // Update target position with COM
     target->x = com.x; 
     target->y = com.y;
     target->z = com.z;
@@ -270,7 +270,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     target->vz = com.vz;
     // Magnitude of lr_mass velocity, later to be used in computing fragment velocities
     double v_lr = sqrt((com.vx * com.vx) + (com.vy * com.vy) + (com.vz * com.vz));
-    
+
     // Save parents IDs, to be printed later
     int parent_t_id = *(int*) rebx_get_param(sim->extras, target->ap, "fc_id");
     int parent_p_id = *(int*) rebx_get_param(sim->extras, projectile->ap, "fc_id");
@@ -287,7 +287,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     mxsum.x += target->m * target->x;
     mxsum.y += target->m * target->y;
     mxsum.z += target->m * target->z;
-    
+
     //Define mvsum variable to keep track of momentum (mass times velocity)
     struct reb_vec3d mvsum = {.x = 0, .y = 0, .z = 0};
     mvsum.x += target->m * target->vx;
@@ -295,16 +295,16 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     mvsum.z += target->m * target->vz;
 
     /**
-    * LOCATING FRAGMENTS 
-    * Now we need to position fragments. Following Chambers (2013),
-    * we first find a "collision plane" which is the plane crossing the two vectors of relative velocity
-    * and relative position of target and projectile. 
-    * Then, we draw a circle around the center of mass of target and projectile in this plane.
-    * We position fragments in this circle, with equal angular seperation.
-    * We assign them velocities relative to their masses, based on equipartition of kintetic energy. 
-    * The velocity vector directions are derived following radii of the fragment circle, getting away from the COM.
-    * For more information, refer to Chambers (2013) and Childs and Steffen (2022).
-    */
+     * LOCATING FRAGMENTS 
+     * Now we need to position fragments. Following Chambers (2013),
+     * we first find a "collision plane" which is the plane crossing the two vectors of relative velocity
+     * and relative position of target and projectile. 
+     * Then, we draw a circle around the center of mass of target and projectile in this plane.
+     * We position fragments in this circle, with equal angular seperation.
+     * We assign them velocities relative to their masses, based on equipartition of kintetic energy. 
+     * The velocity vector directions are derived following radii of the fragment circle, getting away from the COM.
+     * For more information, refer to Chambers (2013) and Childs and Steffen (2022).
+     */
 
     //Relative velocity between target and projectile in x, y, z
     struct reb_vec3d dv = {.x = target->vx - projectile->vx, .y = target->vy - projectile->vy, .z = target->vz - projectile->vz};
@@ -350,8 +350,8 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     double theta_sep = (2.*M_PI)/n_frag;
 
     /*
-    * ADD FRAGMENTS TO THE SIMULATION
-    */
+     * ADD FRAGMENTS TO THE SIMULATION
+     */
     // fragments are placed in the collision plane, in a circle with radius of separation distance.
     // Relative velocity unit vector and the vector orthogonal to that (normal_to_vrel) are used as
     // the reference frame to place fragments.
@@ -406,7 +406,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     for (int j=1; j <= n_frag - n_big_frag; j++){          
         struct reb_particle fragment = {0};
         fragment.m = m_frags_array[j-1]; 
-              
+
         fragment.x = com.x + separation_distance*(cos(theta_sep*j)*unit_dv.x + sin(theta_sep*j)*normal_to_vrel.x);
         fragment.y = com.y + separation_distance*(cos(theta_sep*j)*unit_dv.y + sin(theta_sep*j)*normal_to_vrel.y);
         fragment.z = com.z + separation_distance*(cos(theta_sep*j)*unit_dv.z + sin(theta_sep*j)*normal_to_vrel.z);
@@ -448,7 +448,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
         if (particle_list_file != NULL) { // REBX parameter set?
             output_collision_to_file(particle_list_file, sim->t, collision_type, new_id, parent_t_id, parent_p_id, fragment.m, target_initial_mass, projectile_initial_mass, fragment.r, target_initial_radius, projectile_initial_radius, v_impact, theta_impact); 
         }
-        
+
     }
 
     // Now we correct for the COM and momentum offsets.
@@ -482,15 +482,15 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
 }
 
 /*
-* Main function to decide the collision outcome, derive new masses, positions and velocities.
-* Equations are derived from LS2012 and Chambers (2013).
-*/
+ * Main function to decide the collision outcome, derive new masses, positions and velocities.
+ * Equations are derived from LS2012 and Chambers (2013).
+ */
 enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
     // Setting minimum fragment mass
     const double* min_frag_mass_ptr = rebx_get_param(sim->extras, collision_resolve->ap, "fc_min_frag_mass");
     double min_frag_mass;
     if (min_frag_mass_ptr != NULL) {
-    // If it's valid, check if the value is not 0
+        // If it's valid, check if the value is not 0
         if (*min_frag_mass_ptr > 0.0) {
             min_frag_mass = *min_frag_mass_ptr;
         }
@@ -639,8 +639,8 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     enum REB_COLLISION_RESOLVE_OUTCOME outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
 
     /*
-    * DECIDE WHAT TO DO AFTER THE COLLISION
-    */
+     * DECIDE WHAT TO DO AFTER THE COLLISION
+     */
     // Refer to documentation for the decision tree flowchart and description. 
 
     // If v_imp <= v_esc, merge.
@@ -651,7 +651,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     }
     else{
         if(b >= target->r){ // Grazing regime
-            // Target's density
+                            // Target's density
             double targ_rho = target->m/(4./3*M_PI*pow(target->r,3));
 
             // phi helps with finding part of the projectile that is NOT crossing the target
@@ -674,7 +674,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
 
             // LS2012 Eq. 46-59
             double gamma_g = beta * target->m/projectile->m;
-            
+
             // Chambers Eq. 10
             double Q_star_g = (pow(1+gamma_g, 2)/4*gamma_g)* Q0_g; 
 
@@ -685,9 +685,9 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
             double Q_g = .5*(mu_g*pow(v_imp,2))/(beta*target->m+projectile->m); 
 
             /* If  velocity in the hit-and-run regime is very low, the collision
-            * might eventually lead to a merger. Here, we compute the threshhold velocity for this event,
-            * called critical velocity. If v < v_crit, then we have a "graze and merge" event.
-            */
+             * might eventually lead to a merger. Here, we compute the threshhold velocity for this event,
+             * called critical velocity. If v < v_crit, then we have a "graze and merge" event.
+             */
 
             // c1 to c4 are constants used in Chambers Eq. 17
             double c1 = 2.43; 
@@ -752,20 +752,19 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
                     }
                 }
             }
-            
         } 
         else{ //non-grazing regime
             if (initial_mass - lr_mass < min_frag_mass){ //Not meeting minimum fragment mass threshold
                 collision_type = COLLISION_TYPE_MERGE_C;
                 printf("Non grazing, M_rem to small. Merging collision detected. (Case C)\n");
                 outcome = merge(sim, collision_resolve, c, v_imp, theta_i, collision_type);
-                }
+            }
             else{ //Can make fragments. lr_mass can be larger or smaller than the target
                 if(lr_mass > target->m){
                     collision_type = COLLISION_TYPE_ACCRETION;
                     printf("Non grazing, lr_mass > M_t. Accretion. (Case 4, D)\n");
                     outcome = make_fragments(sim, collision_resolve, c, lr_mass, 0, v_imp, theta_i, collision_type);
-                    }
+                }
                 else{
                     if(lr_mass < min_frag_mass){
                         collision_type = COLLISION_TYPE_SUPERCATASTROPHIC;
@@ -778,10 +777,9 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
                         printf("Non grazing, lr_mass < M_t. Erosion. (Case 4, D)\n");
                         outcome = make_fragments(sim, collision_resolve, c, lr_mass, 0, v_imp, theta_i, collision_type);
                     }
-                    }
                 }
             }
-    
+        }
     }
     // Print collision data for elastic bounces
     if (collision_type == COLLISION_TYPE_BOUNCE_F || collision_type == COLLISION_TYPE_BOUNCE_H || collision_type == COLLISION_TYPE_BOUNCE_I){
