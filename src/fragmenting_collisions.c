@@ -87,6 +87,31 @@ int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct re
     return new_id;
 }
 
+
+void set_fc_ids(struct reb_simulation* sim, struct rebx_collision_resolve* const collision_resolve){
+    int id_count = 0;
+    int* fc_id_max = rebx_get_param(sim->extras, collision_resolve->ap, "fc_id_max");
+    if (!fc_id_max){ // First call? 
+        rebx_set_param_int(sim->extras, &collision_resolve->ap, "fc_id_max", id_count);
+        fc_id_max = rebx_get_param(sim->extras, collision_resolve->ap, "fc_id_max");
+    }
+    else{
+        id_count = *(fc_id_max) + 1;
+    }
+    for(int i=0; i<sim->N; i++){    
+        struct reb_particle* p = &(sim->particles[i]);
+        int* p_ptr = (int*) rebx_get_param(sim->extras, p->ap, "fc_id");
+        if (p_ptr == NULL) {
+            rebx_set_param_int(sim->extras,  (struct rebx_node**) &(p->ap), "fc_id", id_count);
+            id_count++;
+        }
+        else{
+            continue;
+        }
+    }
+    rebx_set_param_int(sim->extras, &collision_resolve->ap, "fc_id_max", id_count);
+}
+
 static void output_collision_to_file(const char* filename, double t, enum COLLISION_TYPE collision_type, int new_id, int parent1_id, int parent2_id, double new_mass, double parent1_initial_mass, double parent2_initial_mass, double new_radius, double parent1_initial_radius, double parent2_initial_radius, double v_impact, double theta_impact){
     FILE* of = fopen(filename, "a");
     fprintf(of, "%e,", t);
@@ -133,8 +158,10 @@ static enum REB_COLLISION_RESOLVE_OUTCOME merge(struct reb_simulation* const sim
 
     const char* particle_list_file = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
     if (particle_list_file != NULL) { // REBX parameter set?
+        set_fc_ids(sim, collision_resolve);
         int parent_1_id = *(int*) rebx_get_param(sim->extras, pi->ap, "fc_id");
         int parent_2_id = *(int*) rebx_get_param(sim->extras, pj->ap, "fc_id");
+
         rebx_fragmenting_collisions_set_new_id(sim, collision_resolve, pi);
         int new_id = *(int*)rebx_get_param(sim->extras, pi->ap, "fc_id");
         output_collision_to_file(particle_list_file, sim->t, collision_type, new_id, parent_1_id, parent_2_id, new_mass, parent_1_initial_mass, parent_2_initial_mass, new_radius, parent_1_initial_radius, parent_2_initial_radius, v_impact, theta_impact); 
@@ -266,6 +293,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     double v_lr = sqrt((com.vx * com.vx) + (com.vy * com.vy) + (com.vz * com.vz));
 
     // Save parents IDs, to be printed later
+    set_fc_ids(sim, collision_resolve);
     int parent_t_id = *(int*) rebx_get_param(sim->extras, target->ap, "fc_id");
     int parent_p_id = *(int*) rebx_get_param(sim->extras, projectile->ap, "fc_id");
     // Save new ID for lr
@@ -767,6 +795,8 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     if (collision_type == COLLISION_TYPE_BOUNCE_F || collision_type == COLLISION_TYPE_BOUNCE_H || collision_type == COLLISION_TYPE_BOUNCE_I){
         const char* particle_list_file = rebx_get_param(sim->extras, collision_resolve->ap, "fc_particle_list_file");
         if (particle_list_file != NULL) { // REBX parameter set?
+            set_fc_ids(sim, collision_resolve);
+
             int parent_t_id = *(int*)rebx_get_param(sim->extras, target->ap, "fc_id");
             int parent_p_id = *(int*)rebx_get_param(sim->extras, projectile->ap, "fc_id");
             // Target and projectile both get new IDs

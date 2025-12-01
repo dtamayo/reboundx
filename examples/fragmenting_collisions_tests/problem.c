@@ -205,9 +205,9 @@ void test_fragmenting_collisions(int type){
     }
 
     // Assign all particles an initial id
-    for(int i=0; i<sim->N; i++){
-        rebx_fragmenting_collisions_set_new_id(sim, fragmenting, &sim->particles[i]);
-    }
+    //for(int i=0; i<sim->N; i++){
+    //    rebx_fragmenting_collisions_set_new_id(sim, fragmenting, &sim->particles[i]);
+    //}
     rebx_set_param_pointer(rebx, &fragmenting->ap, "fc_particle_list_file", "family_tree.csv");
     
     struct reb_particle com_i = reb_simulation_com(sim); //initial center of mass
@@ -251,7 +251,7 @@ void test_fragmenting_collisions(int type){
 
 
 int main(int argc, char* argv[]) {
-    for(int type=0;type<5;type++){
+    for(int type=0;type<25;type++){
         test_fragmenting_collisions(type);
         printf("test_fragmenting_collisions(%d) passed.\n", type);
     }
