@@ -88,7 +88,7 @@ int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct re
 }
 
 
-void set_fc_ids(struct reb_simulation* sim, struct rebx_collision_resolve* const collision_resolve){
+static void set_fc_ids(struct reb_simulation* sim, struct rebx_collision_resolve* const collision_resolve){
     int id_count = 0;
     int* fc_id_max = rebx_get_param(sim->extras, collision_resolve->ap, "fc_id_max");
     if (!fc_id_max){ // First call? 
