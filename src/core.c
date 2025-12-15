@@ -156,6 +156,7 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "td_dE_last", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_last_apoapsis", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_drag_coef", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_disruption_flag", REBX_TYPE_INT);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){

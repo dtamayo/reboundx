@@ -39,23 +39,28 @@
  * Particles are modeled by a gamma=2 polytrope, and the f-mode is evolved at each pericentre passage.
  * The dissipation of orbital energy due to dynamical tides is modeled as an angular momentum-conserving kick at periapse.
  * When mode energy grows to exceed `td_E_max`, it is non-linearly dissipated in one orbital period to `td_E_resid`.
- * To isolate the effects of chaotic model evolution, one can set `dP_hat_crit` to disable dynamical tides whenever chaos is unlikely (see Vick et al. (2019))
+ * To isolate the effects of chaotic model evolution, one can set `dP_hat_crit` to disable dynamical tides whenever chaos is unlikely (see Vick et al. (2019)).
+ * Implementation is only applied to particles[1] in the simulation.
  * 
  * *Effect Parameters**
  * 
- * None
+ * ============================ =========== ==================================================================
+ * Field (C type)               Required    Description
+ * ============================ =========== ==================================================================
+ * td_disruption_flag (int)     No          Raise error if a planet becomes tidally disrupted (default:0)
  * 
  * **Particle Parameters**
  *
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
+ * particles[1].m (float)       Yes         Mass
  * particles[1].r (float)       Yes         Physical radius
- * td_E_max (float)             No          Maximum mode energy before non-linear dissipation (default: 0.1 * E_bind)
+ * td_E_max (float)             No          Threshold mode energy for non-linear dissipation (default: 0.1 * E_bind)
  * td_E_resid (float)           No          Residual mode energy after non-linear dissipation (default: 0.001 * E_bind)
  * td_c_real (float)            No          Real component of mode (default: 0)
  * td_c_imag (float)            No          Imaginary component of mode (default: 0)
- * td_dP_crit                   No          Critical change in mode phase to enable dynamical tides (default: 0)
+ * td_dP_crit (float)           No          Critical change in mode phase to enable dynamical tides (default: 0)
  * ============================ =========== ==================================================================
  * 
  */
@@ -67,7 +72,7 @@
 #include "reboundx.h"
 #include "rebxtools.h"
 
-struct rebx_tides_dynamical_params rebx_calculate_tides_dynamical_params(struct reb_simulation* const sim, struct reb_particle* p, struct reb_particle* primary)
+static struct rebx_tides_dynamical_params rebx_calculate_tides_dynamical_params(struct reb_simulation* const sim, struct reb_particle* p, struct reb_particle* primary, int raise)
 {
 
     struct rebx_extras* const rebx = sim->extras;
@@ -86,8 +91,12 @@ struct rebx_tides_dynamical_params rebx_calculate_tides_dynamical_params(struct 
     double R_p = a * (1 - e); // pericenter distance
     double eta = R_p / R_tide; // pericenter distance in units of tidal radius
 
-    if (eta <= 2.5) // Tidal disruption occured
+    if (eta <= 2.5) // Tidal disruption occurred
     {
+        if (raise){
+            reb_simulation_error(sim, "REBOUNDx Error: Planet was disrupted in tides_dynamical.\n");
+        }
+        reb_simulation_warning(sim, "Planet was tidally disrupted. No further evolution modeled.\n");
         struct rebx_tides_dynamical_params toReturn;
         toReturn.dP = 0;
         toReturn.dE_alpha = 0;
@@ -149,7 +158,7 @@ struct rebx_tides_dynamical_mode rebx_calculate_tides_dynamical_mode_evolution(d
 }
 
 // drag integral, eq. 6 of Samsing et al. (2018)
-double rebx_calculate_tides_dynamical_drag_integral(double e, double n)
+static double rebx_calculate_tides_dynamical_drag_integral(double e, double n)
 {
     if (n == 10)
     {
@@ -169,7 +178,18 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
     struct reb_particle* const p = &sim->particles[1];
     struct reb_orbit o = reb_orbit_from_particle(sim->G, *p, *source);
 
+    if (p->m == 0 || p->r == 0){
+        reb_simulation_error(sim, "REBOUNDx Error: mass and radius must be set for particles[1] in tides_dynamical.\n");
+    }
+
     // Set default parameter values
+    
+    int raise = 0;
+    int* raiseptr = rebx_get_param(rebx, force->ap, "td_disruption_flag");
+    if (raiseptr != NULL){
+        raise = *raiseptr;
+    }
+
     if (rebx_get_param(rebx, p->ap, "td_EB0") == NULL)
     {
         double EB0 = -sim->G * p->m * source->m / (2 * o.a);
@@ -228,7 +248,7 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
             rebx_set_param_int(rebx, (struct rebx_node**)&p->ap, "td_num_apoapsis", *num_apoapsis + 1);
 
             double* dP_crit = rebx_get_param(rebx, p->ap, "td_dP_crit");
-            struct rebx_tides_dynamical_params dynamical_params = rebx_calculate_tides_dynamical_params(sim, p, source);
+            struct rebx_tides_dynamical_params dynamical_params = rebx_calculate_tides_dynamical_params(sim, p, source, raise);
             double dP = dynamical_params.dP;
             double dE_alpha = dynamical_params.dE_alpha;
             
