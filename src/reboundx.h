@@ -26,7 +26,7 @@
 #define _REBX_REBOUNDX_H
 
 #ifndef M_PI
-#define M_PI 3.1415926535879323846
+#define M_PI 3.14159265358979323846
 #endif
 
 #include <stdint.h>
@@ -447,6 +447,13 @@ void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum 
  * @param rebx Pointer to the rebx_extras instance
  */
 struct reb_vec3d rebx_tools_spin_angular_momentum(struct rebx_extras* const rebx);
+
+/**
+ * @brief Calculate spin energy in the simulation of any bodies with spin parameters set (moment of inertia I and angular rotation frequency vector Omega).
+ *
+ * @param rebx Pointer to the rebx_extras instance
+ */
+double rebx_tools_spin_energy(struct rebx_extras* const rebx);
 
 void rebx_simulation_irotate(struct rebx_extras* const rebx, const struct reb_rotation q);
 

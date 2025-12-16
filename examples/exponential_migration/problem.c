@@ -2,7 +2,7 @@
  * Exponential Migration
  *
  * This example shows how to add exponential migration to a REBOUND simulation.
- * Both the Reboundx force (exponential_migration.c) and this example are based on ``modify_orbits_forces''
+ * Both the Reboundx force (exponential_migration.c) and this example are based on modify_orbits_forces
  *
  */
 #include <stdio.h>

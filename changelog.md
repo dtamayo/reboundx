@@ -2,6 +2,9 @@
 
 This changelog only includes the most important changes in recent updates. For a full log of all changes, please refer to git.
 
+### Version 4.4.2
+* Fixed bug when resetting ODEs in tides_spin
+
 ### Version 4.4.1
 * Added support for uv installation
 
