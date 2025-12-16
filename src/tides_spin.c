@@ -370,7 +370,7 @@ static double rebx_calculate_spin_potential(struct reb_particle* source, struct 
 
     const double t1 = -mt * big_a * omega_dot_d * omega_dot_d / (2 * d2 * d2 * dr);
     const double t2 = mt * big_a * omega_squared / (6 * d2 * dr);
-    const double t3 = G * mt * mt * big_a / (2 * d2 * d2 * d2);
+    const double t3 = G * mt * mt * big_a / (2. * d2 * d2 * d2);
 
     return -(t1 + t2 + t3);
 }
