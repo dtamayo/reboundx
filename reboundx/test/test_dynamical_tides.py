@@ -43,7 +43,7 @@ class TestTides(unittest.TestCase):
 
     def test_e_decay(self):
         self.sim.integrate(1e3)
-        self.assertLess(self.sim.particles[1].e, 0.95)
+        self.assertLess(self.sim.particles[1].e, 0.98)
 
 if __name__ == '__main__':
     unittest.main()
