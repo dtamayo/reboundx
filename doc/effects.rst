@@ -474,6 +474,49 @@ tau_mass (double)            Yes         e-folding mass loss (<0) or growth (>0)
 Tides
 ^^^^^
 
+.. _tides_dynamical:
+
+tides_dynamical
+***************
+
+======================= ===============================================
+Authors                 D. Liveoak, S. Millholland, M. Vick, D. Tamayo
+Implementation Paper    `Liveoak et al., 2025 <https://ui.adsabs.harvard.edu/abs/2025ApJ...989...35L/abstract>`_.
+Based on                `Vick et al. 2019 <https://ui.adsabs.harvard.edu/abs/2019MNRAS.484.5645V/abstract>`_.
+C Example               :ref:`c_example_tides_dynamical`
+Python Example          `TidesDynamical.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesDynamical.ipynb>`_.
+======================= ===============================================
+
+This updates body's orbital and modal evolution due to the presence of dynamical tides.
+Particles are modeled by a gamma=2 polytrope, and the f-mode is evolved at each pericentre passage.
+The dissipation of orbital energy due to dynamical tides is modeled as an angular momentum-conserving kick at periapse.
+When mode energy grows to exceed `td_E_max`, it is non-linearly dissipated in one orbital period to `td_E_resid`.
+To isolate the effects of chaotic model evolution, one can set `dP_hat_crit` to disable dynamical tides whenever chaos is unlikely (see Vick et al. (2019)).
+Implementation is only applied to particles[1] in the simulation.
+
+**Effect Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+td_disruption_flag (int)     No          Raise error if a planet becomes tidally disrupted (default:0)
+============================ =========== ==================================================================
+
+**Particle Parameters**
+
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+particles[1].m (float)       Yes         Mass
+particles[1].r (float)       Yes         Physical radius
+td_E_max (float)             No          Threshold mode energy for non-linear dissipation (default: 0.1 * E_bind)
+td_E_resid (float)           No          Residual mode energy after non-linear dissipation (default: 0.001 * E_bind)
+td_c_real (float)            No          Real component of mode (default: 0)
+td_c_imag (float)            No          Imaginary component of mode (default: 0)
+td_dP_crit (float)           No          Critical change in mode phase to enable dynamical tides (default: 0)
+============================ =========== ==================================================================
+
+
 .. _tides_spin:
 
 tides_spin

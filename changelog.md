@@ -2,6 +2,12 @@
 
 This changelog only includes the most important changes in recent updates. For a full log of all changes, please refer to git.
 
+### Version 4.6.0
+* Added tides\_dynamical to model dynamical tides following Vick \& Lai 2019 (see Liveoak et al. 2025)
+
+### Version 4.5.0
+* Fixed factor of two error in conservative piece of the tidal potential in Eggleton+98 in tides_spin
+
 ### Version 4.4.2
 * Fixed bug when resetting ODEs in tides_spin
 

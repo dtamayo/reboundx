@@ -29,10 +29,10 @@
  *
  * ======================= ===============================================
  * Authors                 D. Liveoak, S. Millholland, M. Vick, D. Tamayo
- * Implementation Paper    `Liveoak et al. 2025 <https://iopscience.iop.org/article/10.3847/1538-4357/adefe7/meta/>`
- * Based on                `Vick et al. 2019 <https://academic.oup.com/mnras/article/484/4/5645/5306464/>`_. 
- * C Example               
- * Python Example          
+ * Implementation Paper    `Liveoak et al., 2025 <https://ui.adsabs.harvard.edu/abs/2025ApJ...989...35L/abstract>`_.
+ * Based on                `Vick et al. 2019 <https://ui.adsabs.harvard.edu/abs/2019MNRAS.484.5645V/abstract>`_.
+ * C Example               :ref:`c_example_tides_dynamical`
+ * Python Example          `TidesDynamical.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TidesDynamical.ipynb>`_.
  * ======================= ===============================================
  * 
  * This updates body's orbital and modal evolution due to the presence of dynamical tides.
@@ -42,12 +42,13 @@
  * To isolate the effects of chaotic model evolution, one can set `dP_hat_crit` to disable dynamical tides whenever chaos is unlikely (see Vick et al. (2019)).
  * Implementation is only applied to particles[1] in the simulation.
  * 
- * *Effect Parameters**
+ * **Effect Parameters**
  * 
  * ============================ =========== ==================================================================
  * Field (C type)               Required    Description
  * ============================ =========== ==================================================================
  * td_disruption_flag (int)     No          Raise error if a planet becomes tidally disrupted (default:0)
+ * ============================ =========== ==================================================================
  * 
  * **Particle Parameters**
  *

@@ -1,5 +1,5 @@
 /**
- * Chaotic dynamical tides model (Vick and Lai 2019)
+ * Chaotic dynamical tides model
  *
  * Close pericenter passages excite fundamental (f) modes in the planet.
  * This effect models the chaotic growth in energy in these modes, and their non-linear dissipation at large enough amplitudes.
