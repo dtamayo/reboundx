@@ -38,11 +38,6 @@ int main(int argc, char* argv[]){
     struct rebx_collision_resolve* fragmenting = rebx_load_collision_resolve(rebx, "fragmenting_collisions");
     rebx_add_collision_resolve(rebx, fragmenting);
 
-    //Choose minimum fragment mass
-    rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", 0.01);
-    rebx_set_param_pointer(rebx, &fragmenting->ap, "fc_particle_list_file", "family_tree.csv");
-    rebx_set_param_pointer(rebx, &fragmenting->ap, "fc_collision_report_file", "coll_report.csv");
-
     //Assigning mass and number of planetary embryos and planetesimals
     struct reb_particle star = {0};
     star.m = 1.0;
@@ -52,8 +47,13 @@ int main(int argc, char* argv[]){
     // Constants for mass range
     double lunar_mass = 3.8e-8;
     double earth_mass = 3e-6;
-    double mass_min = 0.6 * lunar_mass;
-    double mass_max = 0.2 * earth_mass;
+    double mass_min = 0.5 * lunar_mass;
+    double mass_max = 0.1 * earth_mass;
+
+    //Choose minimum fragment mass
+    rebx_set_param_double(rebx, &fragmenting->ap, "fc_min_frag_mass", mass_min);
+    rebx_set_param_pointer(rebx, &fragmenting->ap, "fc_particle_list_file", "family_tree.csv");
+    rebx_set_param_pointer(rebx, &fragmenting->ap, "fc_collision_report_file", "coll_report.csv");
 
     double rho = 5.05e6; //3 g/cm^3
 
