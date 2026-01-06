@@ -59,7 +59,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_collision_resolver(struct reb_simulation
  * Miscellaneous Functions
 ***********************************************************************************/
 //struct rebx_param* rebx_add_node(struct reb_simulation* const sim, struct rebx_param** head, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape);
-size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type); // Returns size in bytes of the corresponding rebx_param_type type
+size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type, void* value); // Returns size in bytes of the corresponding rebx_param_type type
 void rebx_reset_accelerations(struct reb_particle* const ps, const int N);
 
 /****************************************

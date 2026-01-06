@@ -57,7 +57,8 @@ enum rebx_param_type{
     REBX_TYPE_UINT32,
     REBX_TYPE_ORBIT,
     REBX_TYPE_ODE,
-    REBX_TYPE_VEC3D
+    REBX_TYPE_VEC3D,
+    REBX_TYPE_STRING,
 };
 
 /**
@@ -438,6 +439,7 @@ void rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** ap
 void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val);
 void rebx_set_param_uint32(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, uint32_t val);
 void rebx_set_param_vec3d(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, struct reb_vec3d val);
+void rebx_set_param_string(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, const char* val);
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type);
 
 /** @} */

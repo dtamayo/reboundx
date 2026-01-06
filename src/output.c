@@ -143,7 +143,7 @@ static void rebx_write_param(struct rebx_extras* rebx, struct rebx_param* param,
     REBX_START_OBJECT_FIELD(param, PARAM);
     REBX_WRITE_DATA_FIELD(PARAM_TYPE, &param->type,     sizeof(param->type));
     REBX_WRITE_DATA_FIELD(NAME,       param->name,      strlen(param->name) + 1);
-    REBX_WRITE_DATA_FIELD(PARAM_VALUE,      param->value,     rebx_sizeof(rebx, param->type));
+    REBX_WRITE_DATA_FIELD(PARAM_VALUE,      param->value,     rebx_sizeof(rebx, param->type, param->value));
     REBX_END_OBJECT_FIELD(param);
 }
 

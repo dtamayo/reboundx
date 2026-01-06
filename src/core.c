@@ -150,8 +150,8 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "fc_separation_distance_scale", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "fc_rho1", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "fc_cstar", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "fc_particle_list_file", REBX_TYPE_POINTER);
-    rebx_register_param(rebx, "fc_collision_report_file", REBX_TYPE_POINTER);
+    rebx_register_param(rebx, "fc_particle_list_file", REBX_TYPE_STRING);
+    rebx_register_param(rebx, "fc_collision_report_file", REBX_TYPE_STRING);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -773,6 +773,19 @@ void rebx_set_param_vec3d(struct rebx_extras* const rebx, struct rebx_node** app
     return;
 }
 
+void rebx_set_param_string(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, const char* val){
+    struct rebx_param* param = rebx_get_or_add_param(rebx, apptr, param_name);
+    if (param == NULL){
+        return;
+    }
+    if (param->value != NULL){ // free space, new string probably different size
+        free(param->value);
+    }
+    param->value = rebx_malloc(rebx, sizeof(char)*(strlen(val)+1));
+    strcpy(param->value,val); 
+    return;
+}
+
 /*******************************************************************
  User interface for getting REBOUNDx objects and parameters
  *******************************************************************/
@@ -1185,7 +1198,7 @@ enum rebx_param_type rebx_get_type(struct rebx_extras* rebx, const char* name){
     return param->type;
 }
 
-size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type){
+size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type, void* value){
     switch(type){
         case REBX_TYPE_DOUBLE:
         {
@@ -1202,6 +1215,14 @@ size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type){
         case REBX_TYPE_VEC3D:
         {
             return sizeof(struct reb_vec3d);
+        }
+        case REBX_TYPE_STRING:
+        {
+            if (value==NULL){
+                return 0;
+            }else{
+                return sizeof(char)*(strlen(value)+1);
+            }
         }
         case REBX_TYPE_POINTER:
         {
