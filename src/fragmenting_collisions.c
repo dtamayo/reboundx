@@ -30,7 +30,7 @@
  * ======================= ===============================================
  * Authors                 H. Tajer, H. Rein, T. Lu
  * Based on                None
- * C Example               :ref:`c_example_fragmenting_collisions`
+ * C Example               :ref:`c_example_fragmenting_collisions_embryo_disk`
  * ======================= ===============================================
  * 
  * This is an example implementation of a REBOUNDx collision module.

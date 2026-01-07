@@ -1,9 +1,3 @@
-/**
- * Fragmenting Collisions
- *
- * A simple example showing how to use a REBOUNDx collision module.
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
