@@ -32,11 +32,24 @@ For more details, refer to the implementation paper (in prep).
 
 **Effect Parameters**
 
-*None*
+======================================== =========== ==============================================================================
+Field (C type)                           Required    Description
+======================================== =========== ==============================================================================
+fc_min_frag_mass (double)                 Yes         Minimum fragment mass allowed in the simulation. 
+fc_separation_distance_scale (double)     No          Ratio of distance between the COM of newly added fragment and COM of target and projectile over sum of radii of target and projectile
+fc_rho1 (double)                          No          Density rho_1 used in computing the spherical radius of combined mass of target and projectile if they had density rho_1. Used in computing the disruption criteria for objects with different bulk densities and mass ratios. For more information, refer to Leinhardt and Stewart 2012.
+fc_cstar (double)                         No          C* is a dimentionless parameter used as a measure of the dissipation of energy within the target. For more information refer to Leinhardt and Stewart 2012.
+fc_particle_list_file (string)            No          Name of the output file. Example is: "family_tree.csv". If you wish to produce the output file, you need to set this parameter. 
+fc_id_max (int)                           No          Maximum particle ID assigned so far. This parameter gets updated everytime a new particle ID is assigned.
+======================================== =========== ==============================================================================
 
 **Particle Parameters**
 
-*None*
+======================================== =========== ==============================================================================
+Field (C type)                           Required    Description
+======================================== =========== ==============================================================================
+fc_id (int)                              No          Unique particle ID. Everytime a collision happens, new particle IDs are assigned to all the bodies after the collision, and previous IDs are discarded.
+======================================== =========== ==============================================================================
 
 
 .. _merging_collisions:
