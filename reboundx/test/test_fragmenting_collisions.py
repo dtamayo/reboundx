@@ -166,31 +166,40 @@ class TestCollisionResolve(unittest.TestCase):
         self.assertLess(abs((com_i.vz - com_f.vz)/com_i.vx), 1e-10)
 
 
-    """
-        def test_zero_mass(self):
-            # One object with zero mass
-            sim = rebound.Simulation()
-            rebx = reboundx.Extras(sim)
-            collision_resolve = rebx.load_collision_resolve("fragmenting_collisions")
-            rebx.add_collision_resolve(collision_resolve)
-            collision_resolve.params["fc_min_frag_mass"] = 0.001
-            sim.add(m=1.0, r=0.1)
-            sim.add(m=0.0, r=0.1, x=1.0, vx=-2.0, vy=0.001, vz=0.001)
-            sim.dt = 1
-            sim.integrator = "mercurius"
-            sim.collision = "direct"
-            com_i = sim.com()
-            self.assertEqual(sim.N, 2)
+    
+    def test_zero_projectile_mass(self):
+        # One object with zero mass (projectile)
+        sim = rebound.Simulation()
+        rebx = reboundx.Extras(sim)
+        collision_resolve = rebx.load_collision_resolve("fragmenting_collisions")
+        rebx.add_collision_resolve(collision_resolve)
+        collision_resolve.params["fc_min_frag_mass"] = 0.001
+        sim.add(m=1.0, r=0.1)
+        sim.add(m=0.0, r=0.1, x=1.0, vx=-2.0, vy=0.001, vz=0.001)
+        sim.dt = 1
+        sim.integrator = "mercurius"
+        sim.collision = "direct"
+        with self.assertRaises(RuntimeError):
             sim.step()
-            print("N after zero = ", sim.N)
-            com_f = sim.com()
-            self.assertLess(abs((com_i.m - com_f.m)/com_i.m), 1e-10)
-            self.assertLess(abs((com_i.vx - com_f.vx)/com_i.vx), 1e-10)
-            self.assertLess(abs((com_i.vy - com_f.vy)/com_i.vx), 1e-10)
-            self.assertLess(abs((com_i.vz - com_f.vz)/com_i.vx), 1e-10)
 
-        def test_no_min_frag_mass(self):
-            # No min frag mass seg
+    def test_zero_target_mass(self):
+        # One object with zero mass (target)
+        sim = rebound.Simulation()
+        rebx = reboundx.Extras(sim)
+        collision_resolve = rebx.load_collision_resolve("fragmenting_collisions")
+        rebx.add_collision_resolve(collision_resolve)
+        collision_resolve.params["fc_min_frag_mass"] = 0.001
+        sim.add(m=0.0, r=0.1, x=1.0, vx=-2.0, vy=0.001, vz=0.001)
+        sim.add(m=1.0, r=0.1)
+        sim.dt = 1
+        sim.integrator = "mercurius"
+        sim.collision = "direct"
+        with self.assertRaises(RuntimeError):
+            sim.step()
+
+
+    def test_no_min_frag_mass(self):
+            # No min frag mass set
             sim = rebound.Simulation()
             rebx = reboundx.Extras(sim)
             collision_resolve = rebx.load_collision_resolve("fragmenting_collisions")
@@ -200,17 +209,11 @@ class TestCollisionResolve(unittest.TestCase):
             sim.dt = 1
             sim.integrator = "mercurius"
             sim.collision = "direct"
-            com_i = sim.com()
-            self.assertEqual(sim.N, 2)
-            sim.step()
-            print("N after no min frag mass = ", sim.N)
-            com_f = sim.com()
-            self.assertLess(abs((com_i.m - com_f.m)/com_i.m), 1e-10)
-            self.assertLess(abs((com_i.vx - com_f.vx)/com_i.vx), 1e-10)
-            self.assertLess(abs((com_i.vy - com_f.vy)/com_i.vx), 1e-10)
-            self.assertLess(abs((com_i.vz - com_f.vz)/com_i.vx), 1e-10)
+            with self.assertRaises(RuntimeError):
+                sim.step()
 
-        def test_zero_min_frag_mass(self):
+
+    def test_zero_min_frag_mass(self):
             # Min frag mass = 0
             sim = rebound.Simulation()
             rebx = reboundx.Extras(sim)
@@ -222,16 +225,9 @@ class TestCollisionResolve(unittest.TestCase):
             sim.dt = 1
             sim.integrator = "mercurius"
             sim.collision = "direct"
-            com_i = sim.com()
-            self.assertEqual(sim.N, 2)
-            sim.step()
-            print("N after no min frag mass = ", sim.N)
-            com_f = sim.com()
-            self.assertLess(abs((com_i.m - com_f.m)/com_i.m), 1e-10)
-            self.assertLess(abs((com_i.vx - com_f.vx)/com_i.vx), 1e-10)
-            self.assertLess(abs((com_i.vy - com_f.vy)/com_i.vx), 1e-10)
-            self.assertLess(abs((com_i.vz - com_f.vz)/com_i.vx), 1e-10)
-    """
+            with self.assertRaises(RuntimeError):
+                sim.step()
+
 
 
 
