@@ -40,7 +40,7 @@ librebound.so:
 	@-rm -f librebound.so
 	@ln -s $(REB_DIR)/src/librebound.so .
 
-libreboundx.so: $(OBJECTS)
+libreboundx.so: librebound.so $(OBJECTS)
 	@echo ""        
 	@echo "Linking shared library $@ ..."
 	$(CC) $(OPT) -shared $(OBJECTS) $(LIB) -lrebound -L$(REB_DIR)/src -o $@ 
