@@ -257,6 +257,14 @@ class Extras(Structure):
         """
         clibreboundx.rebx_tools_spin_angular_momentum.restype = rebound.Vec3dBasic
         return rebound.Vec3d(clibreboundx.rebx_tools_spin_angular_momentum(byref(self)))
+    
+    def spin_energy(self):
+        """
+        Returns the spin energy of all particles in the simulation with moment of inertia (I) and spin angular frequency 
+        vector (Omega) parameters set.
+        """
+        clibreboundx.rebx_tools_spin_energy.restype = c_double
+        return clibreboundx.rebx_tools_spin_energy(byref(self))
 
     def process_messages(self):
         try:
@@ -418,7 +426,7 @@ Interpolator._fields_ = [  ("interpolation", c_int),
 INTERPOLATION_TYPE = {"none":0, "spline":1}
 
 # This list keeps pairing from C rebx_param_type enum to ctypes type 1-to-1. Derive the required mappings from it
-REBX_C_TO_CTYPES = [["REBX_TYPE_NONE", None], ["REBX_TYPE_DOUBLE", c_double], ["REBX_TYPE_INT",c_int], ["REBX_TYPE_POINTER", c_void_p], ["REBX_TYPE_FORCE", Force], ["REBX_TYPE_UNIT32", c_uint32], ["REBX_TYPE_ORBIT", rebound.Orbit], ["REBX_TYPE_ODE", rebound.ODE], ["REBX_TYPE_VEC3D", rebound.Vec3d]]
+REBX_C_TO_CTYPES = [["REBX_TYPE_NONE", None], ["REBX_TYPE_DOUBLE", c_double], ["REBX_TYPE_INT",c_int], ["REBX_TYPE_POINTER", c_void_p], ["REBX_TYPE_FORCE", Force], ["REBX_TYPE_UNIT32", c_uint32], ["REBX_TYPE_ORBIT", rebound.Orbit], ["REBX_TYPE_ODE", rebound.ODE], ["REBX_TYPE_VEC3D", rebound.Vec3d], ["REBX_TYPE_STRING", c_char_p]]
 REBX_CTYPES = {} # maps int value of rebx_param_type enum to ctypes type
 REBX_C_PARAM_TYPES = {} # maps string of rebx_param_type enum to int
 for i, pair in enumerate(REBX_C_TO_CTYPES):

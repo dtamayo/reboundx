@@ -26,7 +26,7 @@
 #define _REBX_REBOUNDX_H
 
 #ifndef M_PI
-#define M_PI 3.1415926535879323846
+#define M_PI 3.14159265358979323846
 #endif
 
 #include <stdint.h>
@@ -57,7 +57,8 @@ enum rebx_param_type{
     REBX_TYPE_UINT32,
     REBX_TYPE_ORBIT,
     REBX_TYPE_ODE,
-    REBX_TYPE_VEC3D
+    REBX_TYPE_VEC3D,
+    REBX_TYPE_STRING,
 };
 
 /**
@@ -227,7 +228,7 @@ struct rebx_collision_resolve{
     struct rebx_node* ap;       ///< Additional parameters linked list
     struct reb_simulation* sim; ///< Pointer to attached sim. Needed for error checks
     // See comments in params.py in __init__
-    int (*collision_resolve) (struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision); ///< Function pointer to collision resolve function
+    enum REB_COLLISION_RESOLVE_OUTCOME (*collision_resolve) (struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision); ///< Function pointer to collision resolve function
 };
 
 /**
@@ -438,6 +439,7 @@ void rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** ap
 void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val);
 void rebx_set_param_uint32(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, uint32_t val);
 void rebx_set_param_vec3d(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, struct reb_vec3d val);
+void rebx_set_param_string(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, const char* val);
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type);
 
 /** @} */
@@ -463,6 +465,13 @@ void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum 
  * @param rebx Pointer to the rebx_extras instance
  */
 struct reb_vec3d rebx_tools_spin_angular_momentum(struct rebx_extras* const rebx);
+
+/**
+ * @brief Calculate spin energy in the simulation of any bodies with spin parameters set (moment of inertia I and angular rotation frequency vector Omega).
+ *
+ * @param rebx Pointer to the rebx_extras instance
+ */
+double rebx_tools_spin_energy(struct rebx_extras* const rebx);
 
 void rebx_simulation_irotate(struct rebx_extras* const rebx, const struct reb_rotation q);
 
@@ -579,6 +588,27 @@ double rebx_central_force_potential(struct rebx_extras* const rebx);
  * @return Potential corresponding to the effect from all particles of their additional gravity field harmonics
  */
 double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
+
+struct rebx_tides_dynamical_params
+{
+    double dP;
+    double dE_alpha;
+    double sigma;
+};
+struct rebx_tides_dynamical_mode
+{
+    double real;
+    double imag;
+    char mode;
+};
+struct rebx_tides_dynamical_mode rebx_calculate_tides_dynamical_mode_evolution(double old_real, double old_imag, double dc_tilde, double P, double sigma);
+
+
+/**
+ * @brief Sets a new id to a particule when using the fragmenting_collisions module.
+ * @return The new id.
+ */
+int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct rebx_collision_resolve* const collision_resolve, struct reb_particle* p);
 
 /** @} */
 /** @} */

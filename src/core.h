@@ -53,13 +53,13 @@ void rebx_init_interpolator(struct rebx_extras* const rebx, struct rebx_interpol
 void rebx_additional_forces(struct reb_simulation* sim);                       // Calls all the forces that have been added to the simulation.
 void rebx_pre_timestep_modifications(struct reb_simulation* sim);   // Calls all the pre-timestep modifications that have been added to the simulation.
 void rebx_post_timestep_modifications(struct reb_simulation* sim);  // Calls all the post-timestep modifications that have been added to the simulation.
-int rebx_collision_resolver(struct reb_simulation* const sim, struct reb_collision); // Calls the one collision_resolve module added.
+enum REB_COLLISION_RESOLVE_OUTCOME rebx_collision_resolver(struct reb_simulation* const sim, struct reb_collision); // Calls the one collision_resolve module added.
 
 /***********************************************************************************
  * Miscellaneous Functions
 ***********************************************************************************/
 //struct rebx_param* rebx_add_node(struct reb_simulation* const sim, struct rebx_param** head, const char* const param_name, enum rebx_param_type param_type, const int ndim, const int* const shape);
-size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type); // Returns size in bytes of the corresponding rebx_param_type type
+size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type, void* value); // Returns size in bytes of the corresponding rebx_param_type type
 void rebx_reset_accelerations(struct reb_particle* const ps, const int N);
 
 /****************************************
@@ -81,6 +81,8 @@ void rebx_tides_spin(struct reb_simulation* const sim, struct rebx_force* const 
 void rebx_yarkovsky_effect(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_gas_dynamical_friction(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_lense_thirring(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
+
 /****************************************
  Operator prototypes
  *****************************************/
@@ -92,7 +94,8 @@ void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_opera
 /****************************************
  Collision resolve prototypes
  *****************************************/
-int rebx_merging_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision collision);
+enum REB_COLLISION_RESOLVE_OUTCOME rebx_merging_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision collision);
+enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision collision);
 
 /****************************************
  Integrator prototypes

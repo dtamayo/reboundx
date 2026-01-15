@@ -22,7 +22,7 @@ ifndef REBXGITHASH
 	PREDEF+= -DREBXGITHASH=$(REBXGITHASH)
 endif
 
-SOURCES=central_force.c core.c exponential_migration.c gas_damping_timescale.c gas_dynamical_friction.c gr.c gr_full.c gr_potential.c gravitational_harmonics.c inner_disk_edge.c input.c integrate_force.c integrator_euler.c integrator_implicit_midpoint.c integrator_rk2.c integrator_rk4.c interpolation.c lense_thirring.c linkedlist.c modify_mass.c modify_orbits_direct.c modify_orbits_forces.c output.c radiation_forces.c rebxtools.c steppers.c stochastic_forces.c tides_constant_time_lag.c tides_spin.c track_min_distance.c type_I_migration.c yarkovsky_effect.c merging_collisions.c 
+SOURCES=central_force.c core.c exponential_migration.c gas_damping_timescale.c gas_dynamical_friction.c gr.c gravitational_harmonics.c gr_full.c gr_potential.c inner_disk_edge.c input.c integrate_force.c integrator_euler.c integrator_implicit_midpoint.c integrator_rk2.c integrator_rk4.c interpolation.c lense_thirring.c linkedlist.c modify_mass.c modify_orbits_direct.c modify_orbits_forces.c output.c radiation_forces.c rebxtools.c steppers.c stochastic_forces.c tides_constant_time_lag.c tides_dynamical.c tides_spin.c track_min_distance.c type_I_migration.c yarkovsky_effect.c fragmenting_collisions.c merging_collisions.c
 
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=rebxtools.h reboundx.h linkedlist.h
@@ -40,7 +40,7 @@ librebound.so:
 	@-rm -f librebound.so
 	@ln -s $(REB_DIR)/src/librebound.so .
 
-libreboundx.so: $(OBJECTS)
+libreboundx.so: librebound.so $(OBJECTS)
 	@echo ""        
 	@echo "Linking shared library $@ ..."
 	$(CC) $(OPT) -shared $(OBJECTS) $(LIB) -lrebound -L$(REB_DIR)/src -o $@ 

@@ -39,7 +39,7 @@
 #define str(s) #s
 
 const char* rebx_build_str = __DATE__ " " __TIME__; // Date and time build string.
-const char* rebx_version_str = "4.4.1";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
+const char* rebx_version_str = "4.4.2";         // **VERSIONLINE** This line gets updated automatically. Do not edit manually.
 const char* rebx_githash_str = STRINGIFY(REBXGITHASH);             // This line gets updated automatically. Do not edit manually.
 
 
@@ -124,7 +124,7 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "ye_spin_axis_x", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "ye_spin_axis_y", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "ye_spin_axis_z", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "OmegaMag", REBX_TYPE_VEC3D);
+    rebx_register_param(rebx, "OmegaMag", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "Omega", REBX_TYPE_VEC3D);
     rebx_register_param(rebx, "k2", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "I", REBX_TYPE_DOUBLE);
@@ -144,6 +144,26 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "lt_p_haty", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "lt_p_hatz", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "lt_c", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "fc_id_max", REBX_TYPE_INT);
+    rebx_register_param(rebx, "fc_id", REBX_TYPE_INT);
+    rebx_register_param(rebx, "fc_min_frag_mass", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "fc_separation_distance_scale", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "fc_rho1", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "fc_cstar", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "fc_particle_list_file", REBX_TYPE_STRING);
+    rebx_register_param(rebx, "td_M_last", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_num_apoapsis", REBX_TYPE_INT);
+    rebx_register_param(rebx, "td_c_imag", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_c_real", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_dP_hat", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_dP_crit", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_EB0", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_E_max", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_E_resid", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_dE_last", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_last_apoapsis", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_drag_coef", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_disruption_flag", REBX_TYPE_INT);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -333,6 +353,7 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->force_type = REBX_FORCE_VEL;
     }
     else if (strcmp(name, "tides_spin") == 0){
+        reb_simulation_warning(rebx->sim, "tides_spin was updated in version 4.5.0 to halve the acceleration from the conservative piece of the tidal potential, reflecting a typo discovered in Eggleton et. al (1998). This warning will be removed in a future version.\n");
         force->update_accelerations = rebx_tides_spin;
         force->force_type = REBX_FORCE_VEL;
     }
@@ -346,6 +367,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     }
     else if (strcmp(name, "lense_thirring") == 0){
         force->update_accelerations = rebx_lense_thirring;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "tides_dynamical") == 0){
+        force->update_accelerations = rebx_tides_dynamical;
         force->force_type = REBX_FORCE_VEL;
     }
     else{
@@ -484,6 +509,9 @@ struct rebx_collision_resolve* rebx_load_collision_resolve(struct rebx_extras* c
     }
     if (strcmp(name, "merging_collisions") == 0){
         collision_resolve->collision_resolve = rebx_merging_collisions;
+    }
+    else if (strcmp(name, "fragmenting_collisions") == 0){
+        collision_resolve->collision_resolve = rebx_fragmenting_collisions;
     }
     else{
         char str[300];
@@ -759,6 +787,19 @@ void rebx_set_param_vec3d(struct rebx_extras* const rebx, struct rebx_node** app
     valptr->y = val.y;
     valptr->z = val.z;
 
+    return;
+}
+
+void rebx_set_param_string(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, const char* val){
+    struct rebx_param* param = rebx_get_or_add_param(rebx, apptr, param_name);
+    if (param == NULL){
+        return;
+    }
+    if (param->value != NULL){ // free space, new string probably different size
+        free(param->value);
+    }
+    param->value = rebx_malloc(rebx, sizeof(char)*(strlen(val)+1));
+    strcpy(param->value,val); 
     return;
 }
 
@@ -1044,7 +1085,7 @@ void rebx_free_pointers(struct rebx_extras* rebx){
 }
 
 /**********************************************
- Internal Functions executing forces & ptm each timestep
+ Internal Functions executing forces & pre/post timestep modifications  each timestep
  *********************************************/
 
 void rebx_reset_accelerations(struct reb_particle* const ps, const int N){
@@ -1056,12 +1097,15 @@ void rebx_reset_accelerations(struct reb_particle* const ps, const int N){
 }
 
 void rebx_additional_forces(struct reb_simulation* sim){
+    if(sim->N_var != 0){
+        reb_simulation_warning(sim, "REBOUNDx: Variational particles have been added to the simulation but are not implemented in REBOUNDx and will not be evolved self-consistently.");
+    }
     struct rebx_extras* rebx = sim->extras;
     struct rebx_node* current = rebx->additional_forces;
     while(current != NULL){
-        /*if(sim->force_is_velocity_dependent && sim->integrator==REB_INTEGRATOR_WHFAST){
-         reb_simulation_warning(sim, "REBOUNDx: Passing a velocity-dependent force to WHFAST. Need to apply as an operator.");
-         }*/
+        if(sim->force_is_velocity_dependent && sim->integrator==REB_INTEGRATOR_WHFAST){
+            reb_simulation_warning(sim, "REBOUNDx: Passing a velocity-dependent force to WHFAST. Need to apply as an operator. See REBOUNDx paper sec 5.1.");
+        }
         struct rebx_force* force = current->object;
         const double N = sim->N - sim->N_var;
         force->update_accelerations(sim, force, sim->particles, N);
@@ -1069,18 +1113,21 @@ void rebx_additional_forces(struct reb_simulation* sim){
     }
 }
 
-int rebx_collision_resolver(struct reb_simulation* const sim, struct reb_collision collision){
+enum REB_COLLISION_RESOLVE_OUTCOME rebx_collision_resolver(struct reb_simulation* const sim, struct reb_collision collision){
     struct rebx_extras* rebx = sim->extras;
     struct rebx_collision_resolve* collision_resolve = rebx->collision_resolve;
     if (collision_resolve){
         return collision_resolve->collision_resolve(sim, collision_resolve, collision);
     }{
         reb_simulation_warning(sim, "REBOUNDx: Collision resolve function pointer not set.");
-        return 0;
+        return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     }
 }
 
 void rebx_pre_timestep_modifications(struct reb_simulation* sim){
+    if(sim->N_var != 0){
+        reb_simulation_warning(sim, "REBOUNDx: Variational particles have been added to the simulation but are not implemented in REBOUNDx and will not be evolved self-consistently.");
+    }
     struct rebx_extras* rebx = sim->extras;
     struct rebx_node* current = rebx->pre_timestep_modifications;
     const double dt = sim->dt;
@@ -1097,6 +1144,9 @@ void rebx_pre_timestep_modifications(struct reb_simulation* sim){
 }
 
 void rebx_post_timestep_modifications(struct reb_simulation* sim){
+    if(sim->N_var != 0){
+        reb_simulation_warning(sim, "REBOUNDx: Variational particles have been added to the simulation but are not implemented in REBOUNDx and will not be evolved self-consistently.");
+    }
     struct rebx_extras* rebx = sim->extras;
     struct rebx_node* current = rebx->post_timestep_modifications;
     const double dt = sim->dt;
@@ -1165,7 +1215,7 @@ enum rebx_param_type rebx_get_type(struct rebx_extras* rebx, const char* name){
     return param->type;
 }
 
-size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type){
+size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type, void* value){
     switch(type){
         case REBX_TYPE_DOUBLE:
         {
@@ -1182,6 +1232,14 @@ size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type){
         case REBX_TYPE_VEC3D:
         {
             return sizeof(struct reb_vec3d);
+        }
+        case REBX_TYPE_STRING:
+        {
+            if (value==NULL){
+                return 0;
+            }else{
+                return sizeof(char)*(strlen(value)+1);
+            }
         }
         case REBX_TYPE_POINTER:
         {
