@@ -26,7 +26,7 @@
 #define _REBX_REBOUNDX_H
 
 #ifndef M_PI
-#define M_PI 3.1415926535879323846
+#define M_PI 3.14159265358979323846
 #endif
 
 #include <stdint.h>
@@ -589,8 +589,25 @@ double rebx_central_force_potential(struct rebx_extras* const rebx);
  */
 double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx);
 
+struct rebx_tides_dynamical_params
+{
+    double dP;
+    double dE_alpha;
+    double sigma;
+};
+struct rebx_tides_dynamical_mode
+{
+    double real;
+    double imag;
+    char mode;
+};
+struct rebx_tides_dynamical_mode rebx_calculate_tides_dynamical_mode_evolution(double old_real, double old_imag, double dc_tilde, double P, double sigma);
 
 
+/**
+ * @brief Sets a new id to a particule when using the fragmenting_collisions module.
+ * @return The new id.
+ */
 int rebx_fragmenting_collisions_set_new_id(struct reb_simulation* sim, struct rebx_collision_resolve* const collision_resolve, struct reb_particle* p);
 
 /** @} */

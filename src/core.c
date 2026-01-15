@@ -151,6 +151,19 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "fc_rho1", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "fc_cstar", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "fc_particle_list_file", REBX_TYPE_STRING);
+    rebx_register_param(rebx, "td_M_last", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_num_apoapsis", REBX_TYPE_INT);
+    rebx_register_param(rebx, "td_c_imag", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_c_real", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_dP_hat", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_dP_crit", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_EB0", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_E_max", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_E_resid", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_dE_last", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_last_apoapsis", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_drag_coef", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "td_disruption_flag", REBX_TYPE_INT);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -340,6 +353,7 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->force_type = REBX_FORCE_VEL;
     }
     else if (strcmp(name, "tides_spin") == 0){
+        reb_simulation_warning(rebx->sim, "tides_spin was updated in version 4.5.0 to halve the acceleration from the conservative piece of the tidal potential, reflecting a typo discovered in Eggleton et. al (1998). This warning will be removed in a future version.\n");
         force->update_accelerations = rebx_tides_spin;
         force->force_type = REBX_FORCE_VEL;
     }
@@ -353,6 +367,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     }
     else if (strcmp(name, "lense_thirring") == 0){
         force->update_accelerations = rebx_lense_thirring;
+        force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "tides_dynamical") == 0){
+        force->update_accelerations = rebx_tides_dynamical;
         force->force_type = REBX_FORCE_VEL;
     }
     else{
