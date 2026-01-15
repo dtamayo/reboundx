@@ -31,7 +31,7 @@ librebound.so:
 	@-rm -f librebound.so
 	@ln -s $(REB_DIR)/src/librebound.so .
 
-libreboundx.so: 
+libreboundx.so: librebound.so 
 	@echo "Compiling shared library libreboundx.so ..."
 	$(MAKE) -C $(REBX_DIR)/src/
 	@-rm -f libreboundx.so
