@@ -63,8 +63,7 @@ void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_operator* con
     sim->dt = 0.0001*dt; // start with a small timestep.
     
     while(sim->t < t_needed && fabs(sim->dt/old_dt)>1e-14 ){
-        reb_simulation_update_acceleration(sim);
-        reb_integrator_ias15_part2(sim);
+        reb_integrator_ias15_step(sim);
         if (sim->t+sim->dt > t_needed){
             sim->dt = t_needed-sim->t;
         }
