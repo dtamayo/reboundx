@@ -116,7 +116,7 @@ static struct rebx_tides_dynamical_params rebx_calculate_tides_dynamical_params(
     double Omega_s = n * f2 / (pow(1 - e * e, 1.5) * f5);
 
     // Calculate f-mode parameters, gamma=2 polytrope (see Vick et al. (2019))
-    double omega = (1.22 - Omega_s / time_unit) * time_unit;
+    // double omega = (1.22 - Omega_s / time_unit) * time_unit;
     double sigma = (1.22 + Omega_s / time_unit) * time_unit;
     double epsilon = 1.22 * time_unit;
     double Q = 0.56; // overlap integral
@@ -159,7 +159,7 @@ struct rebx_tides_dynamical_mode rebx_calculate_tides_dynamical_mode_evolution(d
 }
 
 // drag integral, eq. 6 of Samsing et al. (2018)
-static double rebx_calculate_tides_dynamical_drag_integral(double e, double n)
+static double rebx_calculate_tides_dynamical_drag_integral(struct reb_simulation* sim, double e, double n)
 {
     if (n == 10)
     {
@@ -169,6 +169,8 @@ static double rebx_calculate_tides_dynamical_drag_integral(double e, double n)
     {
         return M_PI * (1 + 2*e*e);
     }
+    reb_simulation_error(sim, "REBOUNDx Error: unsupported value for n encountered in rebx_calculate_tides_dynamical_drag_integral().\n");
+    return 0;
 }
 
 void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N)
@@ -261,9 +263,9 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
             {
                 // Calculate map parameters
                 double* EB0 = rebx_get_param(rebx, p->ap, "td_EB0");
-                double EBk = -sim->G * p->m * source->m / (2 * o.a);
+                // double EBk = -sim->G * p->m * source->m / (2 * o.a);
                 double dc_tilde = pow(dE_alpha / -*EB0, 0.5);
-                double dE_alpha_tilde = dE_alpha / -*EB0;
+                // double dE_alpha_tilde = dE_alpha / -*EB0;
                 double* c_real = rebx_get_param(rebx, p->ap, "td_c_real"); 
                 double* c_imag = rebx_get_param(rebx, p->ap, "td_c_imag");
 
@@ -271,7 +273,7 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
                 double sigma = dynamical_params.sigma;
                 struct rebx_tides_dynamical_mode new_modes = rebx_calculate_tides_dynamical_mode_evolution(*c_real, *c_imag, dc_tilde, o.P, sigma);
                 double dEb = (-*EB0) * (new_modes.real*new_modes.real + new_modes.imag*new_modes.imag - *c_real* *c_real - *c_imag * *c_imag);
-                double* EB_last = rebx_get_param(rebx, p->ap, "td_debug_Eb_last");
+                // double* EB_last = rebx_get_param(rebx, p->ap, "td_debug_Eb_last");
 
                 // If mode energy is too high, non-linear dissipation
                 double* E_max = rebx_get_param(rebx, p->ap, "td_E_max"); 
@@ -289,7 +291,7 @@ void rebx_tides_dynamical(struct reb_simulation* const sim, struct rebx_force* c
                 rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_last_apoapsis", sim->t);
 
                 // Compute drag parameter
-                double I = rebx_calculate_tides_dynamical_drag_integral(o.e, n);
+                double I = rebx_calculate_tides_dynamical_drag_integral(sim, o.e, n);
                 drag = dEb * pow((o.a) * (1 - o.e * o.e), n - 0.5) / (2 * pow(sim->G * (p->m + source->m), 0.5) * I);
             }
             rebx_set_param_double(rebx, (struct rebx_node**)&p->ap, "td_drag_coef", drag);
