@@ -274,7 +274,7 @@ master_doc = 'index'
 # The short X.Y version.
 version = '4.6'
 # The full version, including alpha/beta/rc tags.
-release = '4.6.0'
+release = '4.6.1'
 
 # General information about the project.
 project = u"REBOUNDx ({0})".format(release)

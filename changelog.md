@@ -2,6 +2,9 @@
 
 This changelog only includes the most important changes in recent updates. For a full log of all changes, please refer to git.
 
+### Version 4.6.1
+* Updated to match REBOUND 4.6.0 (merging of internal part1 and part2 functions in integrators)
+
 ### Version 4.6.0
 * Added tides\_dynamical to model dynamical tides following Vick \& Lai 2019 (see Liveoak et al. 2025)
 
