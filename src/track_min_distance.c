@@ -70,14 +70,14 @@ void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_opera
         struct reb_particle* const p = &sim->particles[i];
         double* min_distance = rebx_get_param(rebx, p->ap, "min_distance");
         if (min_distance != NULL){
-            const uint32_t* const target = rebx_get_param(rebx, p->ap, "min_distance_from");
+            const char** const target = rebx_get_param(rebx, p->ap, "min_distance_from");
             struct reb_particle* source;
             if (target == NULL){
                 source = &sim->particles[0];
             }
             else{
                 // TODO REBOUND5
-                //source = reb_simulation_particle_by_hash(sim, *target);
+                source = reb_simulation_get_particle_by_name(sim, *target);
             }
             const double dx = p->x-source->x;
             const double dy = p->y-source->y;

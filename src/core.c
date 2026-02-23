@@ -672,13 +672,13 @@ void rebx_set_param_string(struct rebx_extras* const rebx, struct rebx_node** ap
     if (param == NULL){
         return;
     }
-    // TODO REBOUND5
     if (param->value == NULL){ // new parameter, allocate
-        param->value = rebx_malloc(rebx, sizeof(double));
+        param->value = rebx_malloc(rebx, sizeof(char**));
     }
     // Update new or existing param value
-    double* valptr = param->value;
-    *valptr = val;
+    char** valptr = param->value;
+    // Let REBOUND do the memory management of strings.
+    *valptr = reb_simulation_register_name(rebx->sim, val);
 
     return;
 }
