@@ -49,6 +49,8 @@
 
 #include <math.h>
 #include "rebound.h"
+#include "integrator_whfast.h"
+#include "integrator_ias15.h"
 #include "reboundx.h"
 
 // will do IAS with gravity + any additional_forces
@@ -75,15 +77,15 @@ void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_operator* con
 void rebx_kepler_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
     reb_integrator_whfast_init(sim);
     reb_integrator_whfast_from_inertial(sim);
-    reb_whfast_kepler_step(sim, dt);
-    reb_whfast_com_step(sim, dt);
+    reb_integrator_whfast_kepler_step(sim, dt);
+    reb_integrator_whfast_com_step(sim, dt);
     reb_integrator_whfast_to_inertial(sim);
 }
 
 void rebx_jump_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
     reb_integrator_whfast_init(sim);
     reb_integrator_whfast_from_inertial(sim);
-    reb_whfast_jump_step(sim, dt);
+    reb_integrator_whfast_jump_step(sim, dt);
     reb_integrator_whfast_to_inertial(sim);
 }
 
@@ -91,7 +93,7 @@ void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_operato
     reb_integrator_whfast_init(sim);
     reb_integrator_whfast_from_inertial(sim);
     reb_simulation_update_acceleration(sim);
-    reb_whfast_interaction_step(sim, dt);
+    reb_integrator_whfast_interaction_step(sim, dt);
     reb_integrator_whfast_to_inertial(sim);
 }
 

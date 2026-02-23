@@ -58,6 +58,7 @@
 #include <float.h>
 #include <limits.h>
 #include "rebound.h"
+#include "transformations.h"
 #include "reboundx.h"
 #include "rebxtools.h"
 

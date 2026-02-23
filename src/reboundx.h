@@ -31,6 +31,7 @@
 
 #include <stdint.h>
 #include <limits.h>
+#include <stdio.h>
 #include "rebound.h"
 #include "rebxtools.h"
 #ifndef REBXGITHASH
