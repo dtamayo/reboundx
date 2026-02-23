@@ -15,7 +15,7 @@ int main(int argc, char* argv[]){
 
     struct reb_particle star = {0};
     star.m     = 1.;   
-    star.hash  = reb_hash("star");
+    star.name  = "star";
     reb_simulation_add(sim, star);
 
     double m = 0.;
@@ -37,9 +37,9 @@ int main(int argc, char* argv[]){
     // to a particular value. In any timestep that the distance drops below this value, the value is updated. 
     rebx_set_param_double(rebx, &sim->particles[1].ap, "min_distance", 5.);
 
-    // By default distance is measured from sim->particles[0].  We can specify a different particle by a hash (unnecessary here):
+    // By default distance is measured from sim->particles[0].  We can specify a different particle with its name (unnecessary here):
     
-    rebx_set_param_uint32(rebx, &sim->particles[1].ap, "min_distance_from", sim->particles[0].hash);
+    rebx_set_param_string(rebx, &sim->particles[1].ap, "min_distance_from", "star");
 
 
     struct reb_orbit orbit = {0};

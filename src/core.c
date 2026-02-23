@@ -667,6 +667,22 @@ void rebx_set_param_double(struct rebx_extras* const rebx, struct rebx_node** ap
     return;
 }
 
+void rebx_set_param_string(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, char* val){
+    struct rebx_param* param = rebx_get_or_add_param(rebx, apptr, param_name);
+    if (param == NULL){
+        return;
+    }
+    // TODO REBOUND5
+    if (param->value == NULL){ // new parameter, allocate
+        param->value = rebx_malloc(rebx, sizeof(double));
+    }
+    // Update new or existing param value
+    double* valptr = param->value;
+    *valptr = val;
+
+    return;
+}
+
 void rebx_set_param_int(struct rebx_extras* const rebx, struct rebx_node** apptr, const char* const param_name, int val){
     struct rebx_param* param = rebx_get_or_add_param(rebx, apptr, param_name);
     if (param == NULL){
