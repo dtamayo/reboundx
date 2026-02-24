@@ -76,7 +76,6 @@ void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_opera
                 source = &sim->particles[0];
             }
             else{
-                // TODO REBOUND5
                 source = reb_simulation_get_particle_by_name(sim, *target);
             }
             const double dx = p->x-source->x;
