@@ -193,28 +193,28 @@ class TestAddOperator(unittest.TestCase):
         self.sim.integrator='ias15'
         self.cust.operator_type = 'updater'
         self.rebx.add_operator(self.cust)
-        self.sim.step()
+        self.sim.steps(1)
         self.assertEqual(self.cust.params['ctr'], 1)
     
     def test_ias15recorder(self):
         self.sim.integrator='ias15'
         self.cust.operator_type = 'recorder'
         self.rebx.add_operator(self.cust)
-        self.sim.step()
+        self.sim.steps(1)
         self.assertEqual(self.cust.params['ctr'], 1)
     
     def test_whfastupdater(self):
         self.sim.integrator='whfast'
         self.cust.operator_type = 'updater'
         self.rebx.add_operator(self.cust)
-        self.sim.step()
+        self.sim.steps(1)
         self.assertEqual(self.cust.params['ctr'], 2) # whfast = sec order scheme
     
     def test_whfastrecorder(self):
         self.sim.integrator='whfast'
         self.cust.operator_type = 'recorder'
         self.rebx.add_operator(self.cust)
-        self.sim.step()
+        self.sim.steps(1)
         self.assertEqual(self.cust.params['ctr'], 1)
 
     def test_mercuriusupdater(self):
@@ -227,7 +227,7 @@ class TestAddOperator(unittest.TestCase):
         self.sim.integrator='mercurius'
         self.cust.operator_type = 'recorder'
         self.rebx.add_operator(self.cust)
-        self.sim.step()
+        self.sim.steps(1)
         self.assertEqual(self.cust.params['ctr'], 1)
 
 if __name__ == '__main__':

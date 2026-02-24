@@ -34,7 +34,7 @@ class TestSegFaults(unittest.TestCase):
         addmass = rebx.load_operator('modify_mass')
         rebx.add_operator(addmass, dtfraction=1.,  timing="pre")
         rebx.detach(sim)
-        sim.step()
+        sim.steps(1)
         self.assertEqual(sim.particles[0].params['c'], 1)
     
     def test_detach_preserves_pretm(self):
@@ -43,7 +43,7 @@ class TestSegFaults(unittest.TestCase):
         addmass = rebx.load_operator('modify_mass')
         rebx.add_operator(addmass, dtfraction=1.,  timing="post")
         rebx.detach(sim)
-        sim.step()
+        sim.steps(1)
         self.assertEqual(sim.particles[0].params['c'], 1)
     
     def test_detach_preserves_pretm(self):
@@ -52,7 +52,7 @@ class TestSegFaults(unittest.TestCase):
         gr = rebx.load_force('gr')
         rebx.add_force(gr)
         rebx.detach(sim)
-        sim.step()
+        sim.steps(1)
         self.assertEqual(sim.particles[0].params['c'], 1)
 
     def test_detach(self):

@@ -15,14 +15,14 @@ class TestRebx(unittest.TestCase):
         self.gr.params['c'] = 1e2
         self.sim.init_megno()
         with self.assertWarns(Warning):
-            self.sim.step()
+            self.sim.steps(1)
 
     def test_warn_operator(self):
         self.mod = self.rebx.load_operator('modify_orbits_direct')
         self.rebx.add_operator(self.mod)
         self.sim.init_megno()
         with self.assertWarns(Warning):
-            self.sim.step()
+            self.sim.steps(1)
 
     def test_simple(self):
         self.gr = self.rebx.load_force('gr')

@@ -18,19 +18,19 @@ class TestGR(unittest.TestCase):
         self.force = self.rebx.load_force("gr_potential")
         self.rebx.add_force(self.force)
         with self.assertRaises(RuntimeError):
-            self.sim.step() # didn't set c
+            self.sim.steps(1) # didn't set c
 
     def test_gr_error(self):
         self.force = self.rebx.load_force("gr")
         self.rebx.add_force(self.force)
         with self.assertRaises(RuntimeError):
-            self.sim.step() # didn't set c
+            self.sim.steps(1) # didn't set c
 
     def test_gr_full_error(self):
         self.force = self.rebx.load_force("gr_full")
         self.rebx.add_force(self.force)
         with self.assertRaises(RuntimeError):
-            self.sim.step() # didn't set c
+            self.sim.steps(1) # didn't set c
 
     def test_gr_potential_energy(self):
         self.force = self.rebx.load_force("gr_potential")
