@@ -55,6 +55,10 @@ class build_ext(_build_ext):
         rebdir, editable_rebdir = get_reb_paths(sitepackagesdir)
 
         print("***", rebdir, "***", sitepackagesdir, "***", editable_rebdir, "***")
+        print("*** REBOUND DIR CONTENTS ***")
+        files = os.listdir(rebdir)
+        for f in files:
+            print(f)
         print("*** INCLUDE DIR CONTENTS ***")
         files = os.listdir(rebdir+"/include")
         for f in files:
