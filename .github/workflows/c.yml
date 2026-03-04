@@ -32,9 +32,8 @@ jobs:
           make
           nm -g --defined-only libreboundx.so | cut -d ' ' -f3
           ! nm -g --defined-only libreboundx.so | cut -d ' ' -f3 | grep -v "^rebx_"
-      - name: Compile all examples (ubuntu)
+      - name: Compile all examples
         working-directory: ./examples
-        if: ${{ contains(matrix.os, 'ubuntu') }}
         run: |
           export REB_DIR=$GITHUB_WORKSPACE/rebound
           make
