@@ -42,7 +42,7 @@ try:
     ghash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii")
     ghash_arg = "-DREBXGITHASH="+ghash.strip()
 except:
-    ghash_arg = "-DREBXGITHASH=f0c326f3b9d4976e0d7fade854f0db5cfd336142" #GITHASHAUTOUPDATE
+    ghash_arg = "-DREBXGITHASH=bffc3ea944ea22082dcceb658505c72333f42d06" #GITHASHAUTOUPDATE
 
 class build_ext(_build_ext):
     def finalize_options(self):
@@ -53,18 +53,10 @@ class build_ext(_build_ext):
         # get site-packages dir to add to paths in case reb & rebx installed simul in tmp dir
         sitepackagesdir = sysconfig.get_path('platlib')+'/'
         rebdir, editable_rebdir = get_reb_paths(sitepackagesdir)
-
-        print("***", rebdir, "***", sitepackagesdir, "***", editable_rebdir, "***")
-        print("*** REBOUND DIR CONTENTS ***")
         rebdir_parent = os.path.dirname(rebdir)
-        files = os.listdir(rebdir_parent)
-        for f in files:
-            print(f)
-        print("*** INCLUDE DIR CONTENTS ***")
-        files = os.listdir(rebdir_parent+"/src")
-        for f in files:
-            print(f)
+        print("***", rebdir, "***", sitepackagesdir, "***", editable_rebdir, "***")
         self.include_dirs.append(rebdir_parent+"/src")
+        self.include_dirs.append(rebdir+"/include")
         #self.include_dirs.append(editable_rebdir)
         sources = [ 'src/central_force.c', 'src/core.c', 'src/exponential_migration.c', 'src/gas_damping_timescale.c', 'src/gas_dynamical_friction.c', 'src/gr.c', 'src/gravitational_harmonics.c', 'src/gr_full.c', 'src/gr_potential.c', 'src/inner_disk_edge.c', 'src/input.c', 'src/integrate_force.c', 'src/integrator_euler.c', 'src/integrator_implicit_midpoint.c', 'src/integrator_rk2.c', 'src/integrator_rk4.c', 'src/interpolation.c', 'src/lense_thirring.c', 'src/linkedlist.c', 'src/modify_mass.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/output.c', 'src/radiation_forces.c', 'src/rebxtools.c', 'src/steppers.c', 'src/stochastic_forces.c', 'src/tides_constant_time_lag.c', 'src/tides_dynamical.c', 'src/tides_spin.c', 'src/track_min_distance.c', 'src/type_I_migration.c', 'src/yarkovsky_effect.c'],
         
@@ -114,7 +106,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='reboundx',
-    version='4.6.1',
+    version='5.0.0',
     description='A library for including additional forces in REBOUND',
     long_description=long_description,
     url='https://github.com/dtamayo/reboundx',
