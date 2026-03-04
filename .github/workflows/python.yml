@@ -42,4 +42,5 @@ jobs:
       - name: Output package contents
         run: pip show reboundx -vf
       - name: Run unit tests
+        working-directory: reboundx
         run: python -m unittest discover -s reboundx/test/ -v
