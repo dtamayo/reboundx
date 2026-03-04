@@ -2,6 +2,10 @@ name: REBOUNDx (C)
 
 on: [push, pull_request]
 
+# avoids cleaning librebound and libreboundx for every example
+env:
+  SKIP_CLEAN: 1
+
 jobs:
   build:
 

@@ -19,7 +19,6 @@ int main(int argc, char* argv[]){
 
     struct reb_particle star = {0};
     star.m     = 1.;   
-    star.hash  = reb_hash("star");
     reb_simulation_add(sim, star);
 
     double m = 0.;
@@ -31,7 +30,6 @@ int main(int argc, char* argv[]){
     double f = 0.;
     
     struct reb_particle planet = reb_particle_from_orbit(sim->G, star, m, a, e, inc, Omega, omega, f);
-    planet.hash = reb_hash("planet");
     reb_simulation_add(sim, planet);
     reb_simulation_move_to_com(sim);
     
