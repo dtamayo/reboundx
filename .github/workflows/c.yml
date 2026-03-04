@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: hannorein/rebound
-          ref: ${{ github.event.client_payload.sha }}
+          ref: rebound5
           path: ./rebound
       - name: Check if symbols in shared library have correct prefix
         if: ${{ contains(matrix.os, 'ubuntu') }}

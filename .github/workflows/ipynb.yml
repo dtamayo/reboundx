@@ -22,7 +22,8 @@ jobs:
           pip install pytest matplotlib scipy 
           pip install wheel setuptools
       - name: Default PyPI REBOUND install
-        run: pip install rebound
+        #run: pip install rebound
+        run: pip install -e . -v 
       - name: Install REBOUNDx
         run: |
           pip install -e . -v 
