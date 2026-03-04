@@ -12,24 +12,32 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: reboundx
+      - uses: actions/checkout@v4
+        with:
+          repository: hannorein/rebound
+          path: rebound
+          ref: rebound5
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pytest matplotlib scipy 
-          pip install wheel setuptools
-      - name: Default PyPI REBOUND install
-        #run: pip install rebound
-        run: pip install -e . -v 
-      - name: Install REBOUNDx
-        run: |
-          pip install -e . -v 
+      - name: Install pip 
+        run: python -m pip install --upgrade pip
+      - name: Install external python packages 
+        run: pip install pytest wheel setuptools numpy matplotlib scipy 
+      - name: Install REBOUND requirements
+        run: pip install -r rebound/requirements.txt
+      - name: Install REBOUNDx requirements
+        run: pip install -r reboundx/requirements.txt
+      - name: Build REBOUND package
+        run: pip install ./rebound
+      - name: Build REBOUNDx package
+        run: pip install --no-build-isolation -e ./reboundx -v
       - name: Running jupyter notebooks
+        working-directory: reboundx/ipython_examples
         run: |
-          cd ipython_examples
           python ipynb2py.py TidesDynamical.ipynb
           python ipynb2py.py CentralForce.ipynb
           python ipynb2py.py CustomSplittingIntegrationSchemes.ipynb
