@@ -55,6 +55,7 @@ class build_ext(_build_ext):
         rebdir, editable_rebdir = get_reb_paths(sitepackagesdir)
         rebdir_parent = os.path.dirname(rebdir)
         print("***", rebdir, "***", sitepackagesdir, "***", editable_rebdir, "***")
+        ## include both as one seems required for editable installs, the other for wheels.
         self.include_dirs.append(rebdir_parent+"/src")
         self.include_dirs.append(rebdir+"/include")
         #self.include_dirs.append(editable_rebdir)
