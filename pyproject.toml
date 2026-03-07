@@ -23,13 +23,15 @@ keywords = [
     'nbody',
     'integrator',
 ]
-
 [project.urls]
 Homepage = "https://github.com/dtamayo/reboundx"
 
 [build-system]
 requires = ["setuptools >= 68.0.0", "rebound >= 5.0.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["reboundx"]
 
 [tool.cibuildwheel]
 skip = "cp36*"

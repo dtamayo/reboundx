@@ -96,6 +96,5 @@ libreboundxmodule = Extension(
     )
 
 setup(ext_modules=[libreboundxmodule],
-    package_dir={"": "."},
     cmdclass={'build_ext':build_ext},
     )
