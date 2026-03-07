@@ -3,7 +3,7 @@ name = "reboundx"
 version = '5.0.0'
 description = "A library for including additional forces in REBOUND"
 readme = { file = "README.rst", content-type = "text/markdown" }
-license = "GPL-3.0-only"
+license = { text = "GPL-3.0-only" }
 dependencies = [
     'rebound>=5.0.0',
 ]
