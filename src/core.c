@@ -102,7 +102,7 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "rk4_k2", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "rk4_k3", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "min_distance", REBX_TYPE_DOUBLE);
-    rebx_register_param(rebx, "min_distance_from", REBX_TYPE_UINT32);
+    rebx_register_param(rebx, "min_distance_from", REBX_TYPE_STRING);
     rebx_register_param(rebx, "min_distance_orbit", REBX_TYPE_ORBIT);
     rebx_register_param(rebx, "luminosity", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "ide_position", REBX_TYPE_DOUBLE);
@@ -1128,6 +1128,10 @@ size_t rebx_sizeof(struct rebx_extras* rebx, enum rebx_param_type type){
             return sizeof(struct reb_vec3d);
         }
         case REBX_TYPE_POINTER:
+        {
+            return 0;
+        }
+        case REBX_TYPE_STRING:
         {
             return 0;
         }

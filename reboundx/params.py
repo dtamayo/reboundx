@@ -41,6 +41,10 @@ class Params(MutableMapping):
         elif ctype == rebound.Vec3d:
             # Special case 
             valptr = cast(valptr, POINTER(rebound.Vec3dBasic))
+        elif ctype == POINTER(c_char_p):
+            # Special case 
+            valptr = cast(valptr, POINTER(c_char_p))
+            return valptr.contents.value.decode()
         else:
             valptr = cast(valptr, POINTER(ctype))
 
@@ -68,6 +72,8 @@ class Params(MutableMapping):
             clibreboundx.rebx_set_param_uint32(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), value)
         if ctype == rebound.Vec3d:
             clibreboundx.rebx_set_param_vec3d(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), rebound.Vec3d(value)._vec3d)
+        if ctype == POINTER(c_char_p):
+            clibreboundx.rebx_set_param_string(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), value.encode("utf-8"))
         if ctype == Force:
             if not isinstance(value, Force):
                 raise AttributeError("REBOUNDx Error: Parameter '{0}' must be assigned a Force object.".format(key))
