@@ -38,3 +38,4 @@ manylinux-x86_64-image = "manylinux2014"
 
 [tool.uv]
 no-build-isolation = true
+

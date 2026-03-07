@@ -95,16 +95,12 @@ libreboundxmodule = Extension(
     'libreboundx',
     sources = sorted(glob("src/*.c")),
     include_dirs = ['src'],
-    library_dirs = [],
-    runtime_library_dirs = ["."],
     libraries=['rebound'+suffix[:suffix.rfind('.')]],
     extra_compile_args=extra_compile_args,
     extra_link_args=extra_link_args,
     )
 
-setup(name='reboundx',
-      packages=['reboundx'],
-      package_dir={"": "."},
-      cmdclass={'build_ext':build_ext},
-      ext_modules = [libreboundxmodule],
-      zip_safe=False)
+setup(ext_modules=[libreboundxmodule],
+    package_dir={"": "."},
+    cmdclass={'build_ext':build_ext},
+    )
