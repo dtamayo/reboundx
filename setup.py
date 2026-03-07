@@ -102,18 +102,7 @@ libreboundxmodule = Extension('libreboundx',
                     extra_link_args=extra_link_args,
                     )
 
-here = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
-    long_description = f.read()
-
 setup(name='reboundx',
-    version='5.0.0',
-    description='A library for including additional forces in REBOUND',
-    long_description=long_description,
-    url='https://github.com/dtamayo/reboundx',
-    author='Daniel Tamayo',
-    author_email='dtamayo@hmc.edu',
-    license='GPL',
     classifiers=[
         # How mature is this project? Common values are
         #   3 - Alpha

@@ -1,5 +1,25 @@
+[project]
+name = "reboundx"
+version = "5.0.0"
+description = "A library for including additional forces in REBOUND"
+readme = { file = "README.md", content-type = "text/markdown" }
+license = { text = "GPL-3.0-only" }
+authors = [
+    { name = "Daniel Tamayo", email = "dtamayo@hmc.edu" },
+]
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'Intended Audience :: Science/Research',
+    'Intended Audience :: Developers',
+    'Topic :: Software Development :: Build Tools',
+    'Topic :: Scientific/Engineering :: Astronomy',
+]
+
+[project.urls]
+Homepage = "https://github.com/dtamayo/reboundx"
+
 [build-system]
-requires = ["setuptools >= 68.0.0", "rebound >= 4.6.0"]
+requires = ["setuptools >= 68.0.0", "rebound >= 5.0.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
