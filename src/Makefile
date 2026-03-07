@@ -15,7 +15,7 @@ ifndef REB_DIR # REBOUND is not in default location and REB_DIR is not set
 endif
 
 include $(REB_DIR)/src/Makefile.defs
-OPT+= -fPIC -DLIBREBOUNDX
+OPT+= -fPIC
 
 ifndef REBXGITHASH
 	REBXGITHASH = $(shell git rev-parse HEAD || echo '0000000000gitnotfound0000000000000000000')

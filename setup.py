@@ -2,6 +2,7 @@ from codecs import open
 import os
 import inspect
 import sys 
+from glob import glob
 import sysconfig
 
 def get_reb_paths(sitepackagesdir):
@@ -59,7 +60,6 @@ class build_ext(_build_ext):
         self.include_dirs.append(rebdir_parent+"/src")
         self.include_dirs.append(rebdir+"/include")
         #self.include_dirs.append(editable_rebdir)
-        sources = [ 'src/central_force.c', 'src/core.c', 'src/exponential_migration.c', 'src/gas_damping_timescale.c', 'src/gas_dynamical_friction.c', 'src/gr.c', 'src/gravitational_harmonics.c', 'src/gr_full.c', 'src/gr_potential.c', 'src/inner_disk_edge.c', 'src/input.c', 'src/integrate_force.c', 'src/integrator_euler.c', 'src/integrator_implicit_midpoint.c', 'src/integrator_rk2.c', 'src/integrator_rk4.c', 'src/interpolation.c', 'src/lense_thirring.c', 'src/linkedlist.c', 'src/modify_mass.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/output.c', 'src/radiation_forces.c', 'src/rebxtools.c', 'src/steppers.c', 'src/stochastic_forces.c', 'src/tides_constant_time_lag.c', 'src/tides_dynamical.c', 'src/tides_spin.c', 'src/track_min_distance.c', 'src/type_I_migration.c', 'src/yarkovsky_effect.c'],
         
         self.library_dirs.append(rebdir+'/../')
         self.library_dirs.append(sitepackagesdir)
@@ -81,26 +81,26 @@ if sys.platform == 'darwin':
     config_vars['LDSHARED'] = config_vars['LDSHARED'].replace('-bundle', '-shared')
     extra_link_args.append('-Wl,-install_name,@rpath/libreboundx'+suffix)
 if sys.platform == 'win32':
-    extra_compile_args=[ghash_arg, '-DLIBREBOUNDX', '-D_GNU_SOURCE']
+    extra_compile_args=[ghash_arg, '-D_GNU_SOURCE']
 else:
     # Default compile args
-    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-Wno-unknown-pragmas', ghash_arg, '-DLIBREBOUNDX', '-D_GNU_SOURCE', '-fPIC']
+    extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-Wno-unknown-pragmas', ghash_arg, '-D_GNU_SOURCE', '-fPIC']
 
 # Option to disable FMA in CLANG. 
 FFP_CONTRACT_OFF = os.environ.get("FFP_CONTRACT_OFF", None)
 if FFP_CONTRACT_OFF:
     extra_compile_args.append('-ffp-contract=off')
 
-libreboundxmodule = Extension('libreboundx',
-        sources = [ 'src/central_force.c', 'src/core.c', 'src/exponential_migration.c', 'src/gas_damping_timescale.c', 'src/gas_dynamical_friction.c', 'src/gr.c', 'src/gravitational_harmonics.c', 'src/gr_full.c', 'src/gr_potential.c', 'src/inner_disk_edge.c', 'src/input.c', 'src/integrate_force.c', 'src/integrator_euler.c', 'src/integrator_implicit_midpoint.c', 'src/integrator_rk2.c', 'src/integrator_rk4.c', 'src/interpolation.c', 'src/lense_thirring.c', 'src/linkedlist.c', 'src/modify_mass.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/output.c', 'src/radiation_forces.c', 'src/rebxtools.c', 'src/steppers.c', 'src/stochastic_forces.c', 'src/tides_constant_time_lag.c', 'src/tides_dynamical.c', 'src/tides_spin.c', 'src/track_min_distance.c', 'src/type_I_migration.c', 'src/yarkovsky_effect.c'],
-                    include_dirs = ['src'],
-                    library_dirs = [],
-                    runtime_library_dirs = ["."],
-                    libraries=['rebound'+suffix[:suffix.rfind('.')]],
-                    define_macros=[ ('LIBREBOUNDX', None) ],
-                    extra_compile_args=extra_compile_args,
-                    extra_link_args=extra_link_args,
-                    )
+libreboundxmodule = Extension(
+    'libreboundx',
+    sources = sorted(glob("src/*.c")),
+    include_dirs = ['src'],
+    library_dirs = [],
+    runtime_library_dirs = ["."],
+    libraries=['rebound'+suffix[:suffix.rfind('.')]],
+    extra_compile_args=extra_compile_args,
+    extra_link_args=extra_link_args,
+    )
 
 setup(name='reboundx',
       packages=['reboundx'],
