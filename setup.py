@@ -4,6 +4,8 @@ import inspect
 import sys 
 from glob import glob
 import sysconfig
+from setuptools import setup, Extension
+from setuptools.command.build_ext import build_ext as _build_ext
 
 def get_reb_paths(sitepackagesdir):
     try:
@@ -25,13 +27,6 @@ def get_reb_paths(sitepackagesdir):
         return rebdir, path+'/'
     except:
         return rebdir, ""
-
-try:
-    from setuptools import setup, Extension
-    from setuptools.command.build_ext import build_ext as _build_ext
-except ImportError:
-    print("Installing REBOUNDx requires setuptools.  Do 'pip install setuptools'.")
-    sys.exit(1)
 
 suffix = sysconfig.get_config_var('EXT_SUFFIX')
 if suffix is None:
