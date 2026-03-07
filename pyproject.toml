@@ -4,6 +4,9 @@ version = "5.0.0"
 description = "A library for including additional forces in REBOUND"
 readme = { file = "README.md", content-type = "text/markdown" }
 license = { text = "GPL-3.0-only" }
+dependencies = [
+    'rebound>=5.0.0',
+]
 authors = [
     { name = "Daniel Tamayo", email = "dtamayo@hmc.edu" },
 ]

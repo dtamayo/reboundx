@@ -103,9 +103,8 @@ libreboundxmodule = Extension('libreboundx',
                     )
 
 setup(name='reboundx',
-    packages=['reboundx'],
-    cmdclass={'build_ext':build_ext},
-    setup_requires=['rebound>=5.0.0'],
-    install_requires=['rebound>=5.0.0'],
-    ext_modules = [libreboundxmodule],
-    zip_safe=False)
+      packages=['reboundx'],
+      package_dir={"": "."},
+      cmdclass={'build_ext':build_ext},
+      ext_modules = [libreboundxmodule],
+      zip_safe=False)
