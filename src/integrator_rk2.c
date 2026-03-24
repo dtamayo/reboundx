@@ -37,7 +37,7 @@ void rebx_rk2_free_arrays(struct rebx_extras* rebx, struct rebx_force* force){
 
 void rebx_integrator_rk2_integrate(struct reb_simulation* const sim, const double dt, struct rebx_force* const force){
     struct rebx_extras* rebx = sim->extras;
-    const int N = sim->N - sim->N_var;
+    const int N = sim->N;
     struct reb_particle* k2 = rebx_get_param(rebx, force->ap, "rk2_k2");
     if (k2 == NULL){
         k2 = malloc(N*sizeof(*k2));

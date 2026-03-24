@@ -96,10 +96,10 @@ void rebx_central_force(struct reb_simulation* const sim, struct rebx_force* con
 
 static double rebx_calculate_central_force_potential(struct reb_simulation* const sim, const double A, const double gamma, const int source_index){
     const struct reb_particle* const particles = sim->particles;
-	const int _N_real = sim->N - sim->N_var;
+	const int N = sim->N;
     const struct reb_particle source = particles[source_index];
     double H = 0.;
-	for (int i=0;i<_N_real;i++){
+	for (int i=0;i<N;i++){
 		if(i == source_index){
             continue;
         }
@@ -125,10 +125,10 @@ double rebx_central_force_potential(struct rebx_extras* const rebx){
         return 0;
     }
     struct reb_simulation* sim = rebx->sim;
-    const int N_real = sim->N - sim->N_var;
+    const int N = sim->N;
     struct reb_particle* const particles = sim->particles;
     double Htot = 0.;
-    for (int i=0; i<N_real; i++){
+    for (int i=0; i<N; i++){
         const double* const Acentral = rebx_get_param(rebx, particles[i].ap, "Acentral");
         if (Acentral != NULL){
             const double* const gammacentral = rebx_get_param(rebx, particles[i].ap, "gammacentral");

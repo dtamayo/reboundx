@@ -90,14 +90,14 @@ void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_force* cons
 
 static double rebx_calculate_gr_potential_potential(struct reb_simulation* const sim, const double C2){
     const struct reb_particle* const particles = sim->particles;
-	const int _N_real = sim->N - sim->N_var;
+	const int N = sim->N;
 	const double G = sim->G;
     const struct reb_particle source = particles[0];
 	const double mu = G*source.m;
     const double prefac = 3.*mu*mu/C2;
     double H = 0.;
 
-	for (int i=1;i<_N_real;i++){
+	for (int i=1;i<N;i++){
 		struct reb_particle pi = particles[i];
         double dx = pi.x - source.x;
         double dy = pi.y - source.y;

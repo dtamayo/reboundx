@@ -31,7 +31,7 @@
 #include "rebxtools.h"
 
 void rebx_integrator_euler_integrate(struct reb_simulation* const sim, const double dt, struct rebx_force* const force){
-    const int N = sim->N - sim->N_var;
+    const int N = sim->N;
     force->update_accelerations(sim, force, sim->particles, N);
     for(int i=0; i<N; i++){
         sim->particles[i].vx += dt*sim->particles[i].ax;

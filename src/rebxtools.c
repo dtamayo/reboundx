@@ -162,7 +162,7 @@ static inline void rebx_subtract_posvel(struct reb_particle* p, struct reb_parti
 
 void rebx_tools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* const operator, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_particle (*calculate_step) (struct reb_simulation* const sim, struct rebx_operator* const operator, struct reb_particle* p, struct reb_particle* source, const double dt), const double dt){
     struct rebx_extras* const rebx = sim->extras;
-    const int N_real = sim->N - sim->N_var;
+    const int N = sim->N;
     struct reb_particle com = reb_simulation_com(sim); // Start with full com for jacobi and barycentric coordinates.
 
     int refindex = -1;
@@ -170,7 +170,7 @@ void rebx_tools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* 
         refindex = 0;                           // There is no jacobi coordinate for the 0th particle, so should skip index 0
     }
     else if(coordinates == REBX_COORDINATES_PARTICLE){
-        for (int i=0; i < N_real; i++){
+        for (int i=0; i < N; i++){
             struct reb_particle* p = &sim->particles[i];
             const int* const reference = rebx_get_param(rebx, p->ap, reference_name);
             if (reference){
@@ -178,7 +178,7 @@ void rebx_tools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* 
                 refindex = i;
                 break;
             }
-            if (i == N_real-1){
+            if (i == N-1){
                 char str[200];
                 sprintf(str, "Coordinates set to REBX_COORDINATES_PARTICLE, but %s param was not found in any particle.  Need to set parameter.\n", reference_name);
                 reb_simulation_error(sim, str);
@@ -187,7 +187,7 @@ void rebx_tools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* 
     }
 
 
-    for(int i=N_real-1; i>=0; i--){ // Run through backwards so each iteration does not depend on previous ones in Jacobi coordinates.
+    for(int i=N-1; i>=0; i--){ // Run through backwards so each iteration does not depend on previous ones in Jacobi coordinates.
         if (i==refindex){
             continue;
         }
@@ -209,7 +209,7 @@ void rebx_tools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* 
         switch(coordinates){
             case REBX_COORDINATES_BARYCENTRIC:
                 massratio = p->m/com.m;
-                for(int j=0; j < N_real; j++){
+                for(int j=0; j < N; j++){
                     rebx_subtract_posvel(&sim->particles[j], &diff, massratio);
                 }
                 break;
@@ -243,9 +243,9 @@ void rebx_tools_com_ptm(struct reb_simulation* const sim, struct rebx_operator* 
 struct reb_vec3d rebx_tools_spin_angular_momentum(struct rebx_extras* const rebx){
     struct reb_simulation* const sim = rebx->sim;
     // Add spin angular momentum of any particles with spin parameters set
-    const int N_real = sim->N - sim->N_var;
+    const int N = sim->N;
     struct reb_vec3d L = {0.};
-    for (int i=0;i<N_real;i++){
+    for (int i=0;i<N;i++){
 		struct reb_particle* pi = &sim->particles[i];
         const struct reb_vec3d* Omega = rebx_get_param(rebx, pi->ap, "Omega");
         const double* I = rebx_get_param(rebx, pi->ap, "I");
@@ -262,9 +262,9 @@ struct reb_vec3d rebx_tools_spin_angular_momentum(struct rebx_extras* const rebx
 double rebx_tools_spin_energy(struct rebx_extras* const rebx){
     struct reb_simulation* const sim = rebx->sim;
     // Add spin energy of any particles with spin parameters set
-    const int N_real = sim->N - sim->N_var;
+    const int N = sim->N;
     double E = 0;
-    for (int i=0;i<N_real;i++){
+    for (int i=0;i<N;i++){
 		struct reb_particle* pi = &sim->particles[i];
         const struct reb_vec3d* Omega = rebx_get_param(rebx, pi->ap, "Omega");
         const double* I = rebx_get_param(rebx, pi->ap, "I");

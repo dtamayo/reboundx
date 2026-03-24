@@ -65,7 +65,7 @@
 
 void rebx_track_min_distance(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
     struct rebx_extras* const rebx = sim->extras;
-    const int N = sim->N - sim->N_var;
+    const int N = sim->N;
     for(int i=0; i<N; i++){
         struct reb_particle* const p = &sim->particles[i];
         double* min_distance = rebx_get_param(rebx, p->ap, "min_distance");

@@ -1012,7 +1012,7 @@ void rebx_additional_forces(struct reb_simulation* sim){
             reb_simulation_warning(sim, "REBOUNDx: Passing a velocity-dependent force to WHFAST. Need to apply as an operator. See REBOUNDx paper sec 5.1.");
         }
         struct rebx_force* force = current->object;
-        const double N = sim->N - sim->N_var;
+        const double N = sim->N;
         force->update_accelerations(sim, force, sim->particles, N);
         current = current->next;
     }

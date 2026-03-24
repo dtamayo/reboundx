@@ -68,7 +68,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
     struct reb_particle* const ps_j = malloc(N*sizeof(*ps_j));
     memcpy(ps, particles, N*sizeof(*ps));
    
-    const int N_active = sim->N_active == SIZE_MAX ? N : sim->N_active; // additional_forces passes N=N-N_var. Think about this if adding variational particles
+    const int N_active = sim->N_active == SIZE_MAX ? N : sim->N_active;
     // Calculate Newtonian accelerations 
     for(int i=0; i<N; i++){
         ps[i].ax = 0.;
@@ -181,7 +181,7 @@ void rebx_gr(struct reb_simulation* const sim, struct rebx_force* const force, s
 }
 
 static double rebx_calculate_gr_hamiltonian(struct rebx_extras* const rebx, struct reb_simulation* const sim, const double C2){
-    const int N = sim->N - sim->N_var;
+    const int N = sim->N;
     const double G = sim->G;
 
     struct reb_particle* const ps_j = malloc(N*sizeof(*ps_j));
