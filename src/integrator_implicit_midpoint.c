@@ -86,7 +86,7 @@ static struct reb_particle* setup(struct rebx_extras* rebx, struct rebx_force* f
 
 void rebx_integrator_implicit_midpoint_integrate(struct reb_simulation* const sim, const double dt, struct rebx_force* const force){
     struct rebx_extras* rebx = sim->extras;
-    const int N = sim->N - sim->N_var;
+    const int N = sim->N;
     struct reb_particle* ps_final = rebx_get_param(rebx, force->ap, "im_ps_final");
     if (ps_final == NULL){
         ps_final = setup(rebx, force, N);

@@ -103,10 +103,10 @@ static void get_vrel_disk(const struct reb_particle p, const double GMBH, double
 static void rebx_calculate_gas_dynamical_friction(struct reb_simulation* const sim, struct reb_particle* const particles,\
     const int N, const double rhog, const double alpha_rhog, const double cs, const double alpha_cs, const double xmin, const double hr, const double Qd){
 
-    const int _N_real = sim->N - sim->N_var;
+    const int N_real = sim->N;
     const struct reb_particle bh = particles[0];
 #pragma omp parallel for
-    for (int i=1;i<_N_real;i++){
+    for (int i=1;i<N_real;i++){
         const struct reb_particle p = particles[i];
         struct reb_particle diff = p;
         struct reb_particle bh2  = bh;

@@ -192,7 +192,7 @@ double rebx_tides_constant_time_lag_potential(struct rebx_extras* const rebx){
         return 0;
     }
     struct reb_simulation* const sim = rebx->sim;
-    const int N_real = sim->N - sim->N_var;
+    const int N = sim->N;
     struct reb_particle* const particles = sim->particles;
     const double G = sim->G;
     double H=0.;
@@ -204,7 +204,7 @@ double rebx_tides_constant_time_lag_potential(struct rebx_extras* const rebx){
     }
     double* k2 = rebx_get_param(rebx, target->ap, "tctl_k2");
     if (k2 != NULL && target->r != 0){  // tides on star only nonzero if k2 and finite size are set
-        for (int i=1; i<N_real; i++){
+        for (int i=1; i<N; i++){
             struct reb_particle* source = &particles[i]; // planet raising the tides on the star
             if (source->m == 0){
                 continue;
@@ -215,7 +215,7 @@ double rebx_tides_constant_time_lag_potential(struct rebx_extras* const rebx){
 
     // Calculate tides raised on the planets
     struct reb_particle* source = &particles[0]; // Source is always the star (no planet-planet tides)
-    for (int i=1; i<N_real; i++){
+    for (int i=1; i<N; i++){
         struct reb_particle* target = &particles[i]; 
         double* k2 = rebx_get_param(rebx, target->ap, "tctl_k2");
         if (k2 == NULL || target->r == 0 || target->m == 0){
