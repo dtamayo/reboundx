@@ -127,6 +127,81 @@ def _write_def_from_objs(obj_files, def_path, module_name, compiler=None):
             f.write(f"    {sym}\n")
 
 
+def _ensure_rebound_import_lib(rebdir, compiler=None):
+    """Ensure an MSVC-compatible import library exists for rebound's DLL.
+
+    rebound's Windows wheel ships librebound.<suffix>.pyd (the DLL) but no
+    corresponding .lib (import library), which MSVC's linker needs. We
+    generate one on the fly using dumpbin + lib.exe, placing it next to
+    the DLL so setup.py's default library search path finds it.
+
+    No-op if the .lib already exists (user or earlier build produced it).
+    Unix is untouched — .so linking doesn't need an import library.
+    """
+    import glob
+    import subprocess
+
+    # Find librebound.<suffix>.pyd — the DLL.
+    pattern = os.path.join(rebdir, '..', 'librebound*.pyd')
+    dll_candidates = glob.glob(pattern)
+    if not dll_candidates:
+        # Maybe installed as a namespace package with the .pyd inside the folder.
+        pattern = os.path.join(rebdir, 'librebound*.pyd')
+        dll_candidates = glob.glob(pattern)
+    if not dll_candidates:
+        raise RuntimeError(
+            f"Could not locate librebound*.pyd near {rebdir}. "
+            "Is rebound installed?"
+        )
+    dll_path = dll_candidates[0]
+    dll_dir = os.path.dirname(dll_path)
+    dll_name = os.path.basename(dll_path)
+    # librebound.cp312-win_amd64.pyd -> librebound.cp312-win_amd64.lib
+    lib_name = dll_name.rsplit('.', 1)[0] + '.lib'
+    lib_path = os.path.join(dll_dir, lib_name)
+    if os.path.exists(lib_path):
+        return lib_path  # already there
+
+    dumpbin = _find_dumpbin(compiler)
+    # Find lib.exe — it's next to dumpbin.exe.
+    lib_exe = os.path.join(os.path.dirname(dumpbin), 'lib.exe')
+    if not os.path.exists(lib_exe):
+        raise RuntimeError(f"lib.exe not found next to dumpbin at {dumpbin}")
+
+    # Step 1: extract the DLL's exports into a .def file.
+    out = subprocess.run(
+        [dumpbin, '-exports', dll_path],
+        capture_output=True, text=True, check=True,
+    ).stdout
+    def_path = lib_path.rsplit('.', 1)[0] + '.def'
+    with open(def_path, 'w') as f:
+        f.write(f"LIBRARY {dll_name}\n")
+        f.write("EXPORTS\n")
+        for line in out.splitlines():
+            # dumpbin -exports lines look like:
+            #   1    0 000465D0 PyInit_librebound
+            # Grab the 4th whitespace-separated field when the first three
+            # are ordinal / hint / RVA (all hex digits).
+            parts = line.split()
+            if len(parts) < 4:
+                continue
+            ord_, hint, rva, *name_parts = parts
+            if not (ord_.isdigit() and all(c in '0123456789ABCDEFabcdef' for c in hint)
+                    and all(c in '0123456789ABCDEFabcdef' for c in rva)):
+                continue
+            name = name_parts[0]
+            if not (name and (name[0].isalpha() or name[0] == '_')):
+                continue
+            f.write(f"    {name}\n")
+
+    # Step 2: produce the import .lib from the .def.
+    subprocess.run(
+        [lib_exe, f'/def:{def_path}', f'/out:{lib_path}', '/machine:x64'],
+        capture_output=True, text=True, check=True,
+    )
+    return lib_path
+
+
 class build_ext(_build_ext):
     def finalize_options(self):
         _build_ext.finalize_options(self)
@@ -168,6 +243,13 @@ class build_ext(_build_ext):
         # DLL exports nothing and reboundx/__init__.py fails on the very
         # first ctypes lookup of rebx_version_str.
         if sys.platform == 'win32':
+            # Make sure rebound's import library exists (rebound's wheel
+            # ships the .pyd but no .lib; MSVC's linker needs both). The
+            # helper is a no-op when the .lib is already present.
+            import sysconfig as _sc
+            sitepackagesdir = _sc.get_path('platlib') + '/'
+            rebdir, _ = get_reb_paths(sitepackagesdir)
+            _ensure_rebound_import_lib(rebdir, self.compiler)
             sources = list(ext.sources or [])
             extra_postargs = list(ext.extra_compile_args or [])
             macros = list(ext.define_macros or [])
