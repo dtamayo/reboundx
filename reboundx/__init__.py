@@ -9,9 +9,22 @@ if suffix is None:
 
 #Import shared C library
 import os
+import sys
 pymodulespath = os.path.dirname(os.path.abspath(__file__))
 pymodulespath = os.path.abspath(os.path.join(pymodulespath, os.pardir))
 __libpath__ = os.path.join(pymodulespath, "libreboundx"+suffix)
+
+# On Windows, libreboundx.pyd depends on librebound.pyd. Unlike Unix's
+# RPATH/RUNPATH, Windows resolves dependent DLLs via the caller's working
+# directory, PATH, or explicitly-registered "DLL directories". rebound is
+# installed in site-packages, which by default isn't on the DLL search
+# path, so we register it via os.add_dll_directory() before the load.
+if sys.platform == 'win32' and hasattr(os, 'add_dll_directory'):
+    import sysconfig as _sc
+    _sitepkg = _sc.get_path('platlib')
+    if _sitepkg and os.path.isdir(_sitepkg):
+        os.add_dll_directory(_sitepkg)
+
 from ctypes import *
 clibreboundx = cdll.LoadLibrary(__libpath__)
 

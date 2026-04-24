@@ -44,6 +44,89 @@ try:
 except:
     ghash_arg = "-DREBXGITHASH=f0c326f3b9d4976e0d7fade854f0db5cfd336142" #GITHASHAUTOUPDATE
 
+def _find_dumpbin(compiler=None):
+    """Locate dumpbin.exe. It ships alongside cl.exe in every MSVC install.
+
+    Order of attempts:
+      1. Alongside the cl.exe used by `compiler` (if given and initialized).
+      2. Anywhere on PATH (after Developer Command Prompt activation).
+      3. Glob the standard Visual Studio install trees.
+    """
+    import glob
+    import shutil
+
+    if compiler is not None and getattr(compiler, 'cc', None):
+        sibling = os.path.join(os.path.dirname(compiler.cc), 'dumpbin.exe')
+        if os.path.exists(sibling):
+            return sibling
+
+    on_path = shutil.which('dumpbin.exe')
+    if on_path:
+        return on_path
+
+    program_files_roots = [
+        os.environ.get('ProgramFiles', r'C:\Program Files'),
+        os.environ.get('ProgramFiles(x86)', r'C:\Program Files (x86)'),
+    ]
+    candidates = []
+    for root in program_files_roots:
+        pattern = os.path.join(
+            root, 'Microsoft Visual Studio', '*', '*',
+            'VC', 'Tools', 'MSVC', '*', 'bin', 'Host*', 'x64', 'dumpbin.exe',
+        )
+        candidates.extend(glob.glob(pattern))
+    if candidates:
+        return candidates[-1]  # prefer the highest-version install
+    raise RuntimeError(
+        "dumpbin.exe not found. Install Visual Studio Build Tools or run "
+        "this inside a Developer Command Prompt."
+    )
+
+
+def _write_def_from_objs(obj_files, def_path, module_name, compiler=None):
+    """Generate a .def file listing every public, defined symbol found in
+    the compiled .obj files. Same approach CMake uses for its
+    WINDOWS_EXPORT_ALL_SYMBOLS target property.
+
+    MSVC doesn't auto-export DLL symbols (unlike gcc); without a .def
+    or __declspec(dllexport) annotations everywhere, reboundx's ctypes
+    layer can't find rebx_version_str or any of the rebx_* functions.
+    """
+    import subprocess
+    dumpbin = _find_dumpbin(compiler)
+    symbols = set()
+    for obj in obj_files:
+        out = subprocess.run(
+            [dumpbin, "-SYMBOLS", obj],
+            capture_output=True, text=True, check=True,
+        ).stdout
+        for line in out.splitlines():
+            # dumpbin "External | name" lines; skip UNDEF (imports) and keep
+            # only symbols that look like C identifiers. Internal MSVC-mangled
+            # names start with $ or ?, which we filter out.
+            if "External" not in line or "UNDEF" in line:
+                continue
+            parts = line.split("|")
+            if len(parts) < 2:
+                continue
+            name = parts[-1].strip().split()[0]
+            if not name or not (name[0].isalpha() or name[0] == "_"):
+                continue
+            if name.startswith("$") or name.startswith("?") or name.startswith("__"):
+                continue
+            # Don't export the PyInit stub; Python already sees it via the
+            # module's export table, and listing it in a .def confuses things.
+            if name.startswith("PyInit_"):
+                continue
+            symbols.add(name)
+
+    with open(def_path, "w") as f:
+        f.write(f"LIBRARY {module_name}\n")
+        f.write("EXPORTS\n")
+        for sym in sorted(symbols):
+            f.write(f"    {sym}\n")
+
+
 class build_ext(_build_ext):
     def finalize_options(self):
         _build_ext.finalize_options(self)
@@ -77,6 +160,28 @@ class build_ext(_build_ext):
                     ext.runtime_library_dirs.append(editable_rebdir)
                     ext.extra_link_args.append('-Wl,-rpath,'+editable_rebdir)
 
+    def build_extension(self, ext):
+        # On Windows, pre-compile the objects so we can scan them for
+        # exported symbols, write a .def file, and pass /DEF:file.def to
+        # the linker. Then let super link normally (it re-checks .obj
+        # timestamps and does the link step). Without this, the resulting
+        # DLL exports nothing and reboundx/__init__.py fails on the very
+        # first ctypes lookup of rebx_version_str.
+        if sys.platform == 'win32':
+            sources = list(ext.sources or [])
+            extra_postargs = list(ext.extra_compile_args or [])
+            macros = list(ext.define_macros or [])
+            objects = self.compiler.compile(
+                sources, output_dir=self.build_temp,
+                macros=macros, include_dirs=ext.include_dirs or [],
+                debug=self.debug, extra_postargs=extra_postargs,
+                depends=ext.depends or [],
+            )
+            def_path = os.path.join(self.build_temp, ext.name + '.def')
+            _write_def_from_objs(objects, def_path, ext.name + suffix, self.compiler)
+            ext.extra_link_args = list(ext.extra_link_args or []) + ['/DEF:' + def_path]
+        _build_ext.build_extension(self, ext)
+
 
 extra_link_args=[]
 if sys.platform == 'darwin':
@@ -84,7 +189,10 @@ if sys.platform == 'darwin':
     config_vars['LDSHARED'] = config_vars['LDSHARED'].replace('-bundle', '-shared')
     extra_link_args.append('-Wl,-install_name,@rpath/libreboundx'+suffix)
 if sys.platform == 'win32':
-    extra_compile_args=[ghash_arg, '-DLIBREBOUNDX', '-D_GNU_SOURCE']
+    # /GL- disables whole-program optimization, which produces "anonymous"
+    # LTCG object files whose symbols dumpbin can't read. We need real
+    # symbol tables so setup.py can auto-generate the .def export list.
+    extra_compile_args=['/GL-', ghash_arg, '-DLIBREBOUNDX', '-D_GNU_SOURCE']
 else:
     # Default compile args
     extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-Wno-unknown-pragmas', ghash_arg, '-DLIBREBOUNDX', '-D_GNU_SOURCE', '-fPIC']
