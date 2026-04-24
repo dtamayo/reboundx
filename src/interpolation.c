@@ -64,7 +64,10 @@
  * Adapted from "Numerical Recipes for C," 2nd Ed., §3.3, p. 115.
  */
 static void rebx_spline(const double* x, const double* y, const int n, double* y2) {
-    double p, qn, sig, un, u[n];
+    double p, qn, sig, un;
+    // Heap-allocate the scratch buffer. The original `double u[n]` is a C99
+    // variable-length array, which MSVC does not support. malloc is portable.
+    double *u = malloc(n * sizeof(double));
 
     y2[0] = 0.;
     u[0] = 0.0; // lower boundary condition is set to "natural"
@@ -82,6 +85,8 @@ static void rebx_spline(const double* x, const double* y, const int n, double* y
     y2[n-1] = (un - qn*u[n-2]) / (qn * y2[n-2] + 1.);
     for (int k=n-2; k>=0; k--) // backsubstitution loop of tridiagonal alg.
         y2[k] = y2[k] * y2[k+1] + u[k];
+
+    free(u);
 }
 
 /**

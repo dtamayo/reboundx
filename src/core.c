@@ -35,6 +35,20 @@
 #include "rebound.h"
 #include "linkedlist.h"
 
+#ifdef _WIN32
+// On Windows, setuptools/MSVC requires every Python-extension target to
+// export PyInit_<modname>. REBOUNDx is loaded via ctypes, not imported as a
+// Python module, so the stub is functional-but-empty — its only job is to
+// satisfy the linker. Unix builds skip this (gcc doesn't enforce it).
+#include <Python.h>
+PyMODINIT_FUNC PyInit_libreboundx(void) {
+    static PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT, "libreboundx", NULL, -1, NULL,
+    };
+    return PyModule_Create(&moduledef);
+}
+#endif
+
 #define STRINGIFY(s) str(s)
 #define str(s) #s
 

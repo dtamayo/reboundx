@@ -45,3 +45,6 @@ Untitled*
 .eggs/*
 _changelog.tmp
 *.whl
+libreboundx.cp312-win_amd64.pyd
+libreboundx.*.exp
+libreboundx.*.lib

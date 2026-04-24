@@ -62,15 +62,20 @@ class build_ext(_build_ext):
         self.library_dirs.append(rebdir+'/../')
         self.library_dirs.append(sitepackagesdir)
         for ext in self.extensions:
-            ext.runtime_library_dirs.append(rebdir+'/../')
-            ext.extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
-            ext.runtime_library_dirs.append(sitepackagesdir)
-            ext.extra_link_args.append('-Wl,-rpath,'+sitepackagesdir)
+            # MSVC's linker doesn't understand rpath or runtime_library_dirs
+            # (Windows DLLs use PATH / same-dir resolution instead). Skip them
+            # on Windows; on Unix, keep the original behavior.
+            if sys.platform != 'win32':
+                ext.runtime_library_dirs.append(rebdir+'/../')
+                ext.extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
+                ext.runtime_library_dirs.append(sitepackagesdir)
+                ext.extra_link_args.append('-Wl,-rpath,'+sitepackagesdir)
         if editable_rebdir:
             self.library_dirs.append(editable_rebdir)
             for ext in self.extensions:
-                ext.runtime_library_dirs.append(editable_rebdir)
-                ext.extra_link_args.append('-Wl,-rpath,'+editable_rebdir)
+                if sys.platform != 'win32':
+                    ext.runtime_library_dirs.append(editable_rebdir)
+                    ext.extra_link_args.append('-Wl,-rpath,'+editable_rebdir)
 
 
 extra_link_args=[]
@@ -93,8 +98,14 @@ libreboundxmodule = Extension('libreboundx',
         sources = [ 'src/central_force.c', 'src/core.c', 'src/exponential_migration.c', 'src/gas_damping_timescale.c', 'src/gas_dynamical_friction.c', 'src/gr.c', 'src/gravitational_harmonics.c', 'src/gr_full.c', 'src/gr_potential.c', 'src/inner_disk_edge.c', 'src/input.c', 'src/integrate_force.c', 'src/integrator_euler.c', 'src/integrator_implicit_midpoint.c', 'src/integrator_rk2.c', 'src/integrator_rk4.c', 'src/interpolation.c', 'src/lense_thirring.c', 'src/linkedlist.c', 'src/modify_mass.c', 'src/modify_orbits_direct.c', 'src/modify_orbits_forces.c', 'src/output.c', 'src/radiation_forces.c', 'src/rebxtools.c', 'src/steppers.c', 'src/stochastic_forces.c', 'src/tides_constant_time_lag.c', 'src/tides_dynamical.c', 'src/tides_spin.c', 'src/track_min_distance.c', 'src/type_I_migration.c', 'src/yarkovsky_effect.c'],
                     include_dirs = ['src'],
                     library_dirs = [],
-                    runtime_library_dirs = ["."],
-                    libraries=['rebound'+suffix[:suffix.rfind('.')]],
+                    runtime_library_dirs = [] if sys.platform == 'win32' else ["."],
+                    # On Windows, MSVC's linker doesn't auto-drop the "lib"
+                    # prefix the way GCC/ld does, so we must name the full
+                    # file on disk. REBOUND ships as librebound<ext-suffix>.pyd;
+                    # we also depend on an import library with the same basename.
+                    libraries=['librebound'+suffix[:suffix.rfind('.')]]
+                              if sys.platform == 'win32'
+                              else ['rebound'+suffix[:suffix.rfind('.')]],
                     define_macros=[ ('LIBREBOUNDX', None) ],
                     extra_compile_args=extra_compile_args,
                     extra_link_args=extra_link_args,

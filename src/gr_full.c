@@ -59,8 +59,14 @@
 #include "reboundx.h"
 
 static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double C2, const double G, const int max_iterations, const int gravity_ignore_10){
-    
-    double a_const[N][3]; // array that stores the value of the constant term
+
+    // Heap-allocate the two N-row scratch buffers. C99 VLAs (double x[N][3])
+    // are unsupported by MSVC, so this function couldn't be compiled on
+    // Windows; malloc is portable and preserves the same 2-D indexing via
+    // "pointer to array of 3 doubles".
+    double (*a_const)[3] = malloc(N * sizeof(*a_const)); // constant term
+    double (*a_old)[3] = malloc(N * sizeof(*a_old));     // previous iterate
+
     struct reb_particle* const ps_b = malloc(N*sizeof(*ps_b));
     memcpy(ps_b, particles, N*sizeof(*ps_b));
 
@@ -182,7 +188,8 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
 
     // Now running the substitution again and again through the loop below
     for (int k=0; k<10; k++){ // you can set k as how many substitution you want to make
-        double a_old[N][3]; // initialize an arry that stores the information of previousu calculated accleration
+        // a_old buffer is allocated once above (was a VLA inside this loop);
+        // contents are overwritten each iteration.
         for (int i =0; i <N; i++){
             a_old[i][0] = ps_b[i].ax;
             a_old[i][1] = ps_b[i].ay;
@@ -239,9 +246,10 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
         particles[i].ay += ps_b[i].ay;
         particles[i].az += ps_b[i].az;
     }
-    
-    free(ps_b);
 
+    free(ps_b);
+    free(a_const);
+    free(a_old);
 }
 
 void rebx_gr_full(struct reb_simulation* const sim, struct rebx_force* const gr_full, struct reb_particle* const particles, const int N){

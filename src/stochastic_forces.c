@@ -61,6 +61,17 @@
 #include <stdlib.h>
 #include "reboundx.h"
 
+#ifdef _WIN32
+// MSVC's CRT lacks rand_r (POSIX-only). Provide an equivalent LCG: same
+// thread-safety contract (output depends only on the caller-owned seed),
+// same return range [0, RAND_MAX], same statistical quality class as
+// glibc's rand_r. Uses the same multiplier/increment constants (derived
+// from Numerical Recipes).
+static int rand_r(unsigned int *seed) {
+    *seed = (*seed) * 1103515245u + 12345u;
+    return (int)((*seed >> 16) & 0x7FFF);
+}
+#endif
 
 static void rebx_random_normal2(struct reb_simulation* r, double* n0, double* n1){
 	double v1,v2,rsq=1.;
