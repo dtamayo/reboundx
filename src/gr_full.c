@@ -64,16 +64,9 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
     // are unsupported by MSVC, so this function couldn't be compiled on
     // Windows; malloc is portable and preserves the same 2-D indexing via
     // "pointer to array of 3 doubles".
-    double (*a_const)[3] = malloc(N * sizeof(*a_const)); // constant term
-    double (*a_old)[3] = malloc(N * sizeof(*a_old));     // previous iterate
+    double (*a_const)[3] = malloc(N * sizeof(*a_const));
+    double (*a_old)[3] = malloc(N * sizeof(*a_old));
     struct reb_particle* const ps_b = malloc(N * sizeof(*ps_b));
-    if (a_const == NULL || a_old == NULL || ps_b == NULL){
-        free(a_const);
-        free(a_old);
-        free(ps_b);
-        reb_simulation_error(sim, "REBOUNDx Error: failed to allocate gr_full scratch buffers.\n");
-        return;
-    }
     memcpy(ps_b, particles, N*sizeof(*ps_b));
 
     // Calculate Newtonian accelerations 
@@ -245,11 +238,7 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
             break;
         }
         if (k == max_iterations - 1){
-            char warnmsg[128];
-            snprintf(warnmsg, sizeof warnmsg,
-                     "%d loops in rebx_gr_full did not converge.\n",
-                     max_iterations);
-            reb_simulation_warning(sim, warnmsg);
+            reb_simulation_warning(sim, "rebx_gr_full did not converge.\n");
             fprintf(stderr, "Fractional Error: %e\n", maxdev);
         }
     }

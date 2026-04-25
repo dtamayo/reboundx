@@ -65,22 +65,9 @@
  */
 static void rebx_spline(const double* x, const double* y, const int n, double* y2) {
     double p, qn, sig, un;
-    // Tridiagonal recurrence below indexes u[0..n-2] and reads y2[0..n-2],
-    // so n must be at least 2. Bail out cleanly otherwise.
-    if (n < 2) {
-        if (n == 1) y2[0] = 0.;
-        return;
-    }
     // Heap-allocate the scratch buffer. The original `double u[n]` is a C99
     // variable-length array, which MSVC does not support. malloc is portable.
     double *u = malloc(n * sizeof(double));
-    if (u == NULL) {
-        fprintf(stderr,
-                "REBOUNDx Error: failed to allocate spline scratch buffer "
-                "(n=%d). Spline second-derivatives left zeroed.\n", n);
-        for (int i = 0; i < n; i++) y2[i] = 0.;
-        return;
-    }
 
     y2[0] = 0.;
     u[0] = 0.0; // lower boundary condition is set to "natural"
