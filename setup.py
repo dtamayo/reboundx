@@ -76,7 +76,13 @@ def _find_dumpbin(compiler=None):
         )
         candidates.extend(glob.glob(pattern))
     if candidates:
-        return candidates[-1]  # prefer the highest-version install
+        # glob.glob() does not promise a stable order across filesystems;
+        # sort lexicographically so the picked dumpbin is reproducible
+        # across machines and over time. The last entry is, in practice,
+        # the highest-version MSVC install since path components are
+        # version-numbered (e.g., 14.39.33519).
+        candidates.sort()
+        return candidates[-1]
     raise RuntimeError(
         "dumpbin.exe not found. Install Visual Studio Build Tools or run "
         "this inside a Developer Command Prompt."
@@ -141,7 +147,11 @@ def _ensure_rebound_import_lib(rebdir, compiler=None):
     import glob
     import subprocess
 
-    # Find librebound.<suffix>.pyd — the DLL.
+    # Find librebound.<suffix>.pyd — the DLL. Prefer the .pyd whose ABI
+    # tag matches the active interpreter's EXT_SUFFIX so we don't import
+    # the wrong CPython build's binary in mixed environments.
+    import sysconfig as _sc
+    ext_suffix = _sc.get_config_var('EXT_SUFFIX') or '.pyd'
     pattern = os.path.join(rebdir, '..', 'librebound*.pyd')
     dll_candidates = glob.glob(pattern)
     if not dll_candidates:
@@ -153,6 +163,9 @@ def _ensure_rebound_import_lib(rebdir, compiler=None):
             f"Could not locate librebound*.pyd near {rebdir}. "
             "Is rebound installed?"
         )
+    # Prefer ABI-matching candidates; fall back to a deterministic sort.
+    matching = [p for p in dll_candidates if p.endswith(ext_suffix)]
+    dll_candidates = sorted(matching) if matching else sorted(dll_candidates)
     dll_path = dll_candidates[0]
     dll_dir = os.path.dirname(dll_path)
     dll_name = os.path.basename(dll_path)
@@ -194,9 +207,21 @@ def _ensure_rebound_import_lib(rebdir, compiler=None):
                 continue
             f.write(f"    {name}\n")
 
-    # Step 2: produce the import .lib from the .def.
+    # Step 2: produce the import .lib from the .def. Pick the /machine
+    # value from the running interpreter so cross-arch builds (32-bit
+    # CPython, ARM64 native) work without a hand-edit. x64 covers the
+    # 99% case; the others are wired in for when someone needs them.
+    import platform
+    machine = platform.machine().upper()
+    machine_flag = {
+        'AMD64': '/machine:x64',
+        'X86_64': '/machine:x64',
+        'X86': '/machine:x86',
+        'I386': '/machine:x86',
+        'ARM64': '/machine:arm64',
+    }.get(machine, '/machine:x64')
     subprocess.run(
-        [lib_exe, f'/def:{def_path}', f'/out:{lib_path}', '/machine:x64'],
+        [lib_exe, f'/def:{def_path}', f'/out:{lib_path}', machine_flag],
         capture_output=True, text=True, check=True,
     )
     return lib_path

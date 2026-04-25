@@ -66,8 +66,14 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
     // "pointer to array of 3 doubles".
     double (*a_const)[3] = malloc(N * sizeof(*a_const)); // constant term
     double (*a_old)[3] = malloc(N * sizeof(*a_old));     // previous iterate
-
-    struct reb_particle* const ps_b = malloc(N*sizeof(*ps_b));
+    struct reb_particle* const ps_b = malloc(N * sizeof(*ps_b));
+    if (a_const == NULL || a_old == NULL || ps_b == NULL){
+        free(a_const);
+        free(a_old);
+        free(ps_b);
+        reb_simulation_error(sim, "REBOUNDx Error: failed to allocate gr_full scratch buffers.\n");
+        return;
+    }
     memcpy(ps_b, particles, N*sizeof(*ps_b));
 
     // Calculate Newtonian accelerations 
@@ -186,8 +192,11 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
         ps_b[i].az = a_const[i][2];
     }
 
-    // Now running the substitution again and again through the loop below
-    for (int k=0; k<10; k++){ // you can set k as how many substitution you want to make
+    // Now running the substitution again and again through the loop below.
+    // Loop bound is the caller-provided max_iterations (default 10 — see the
+    // public rebx_gr_full wrapper). The hard-coded `< 10` here was upstream's
+    // bug: the function accepted max_iterations but ignored it.
+    for (int k=0; k<max_iterations; k++){
         // a_old buffer is allocated once above (was a VLA inside this loop);
         // contents are overwritten each iteration.
         for (int i =0; i <N; i++){
@@ -235,8 +244,12 @@ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_
         if (maxdev < DBL_EPSILON){
             break;
         }
-        if (k==9){
-            reb_simulation_warning(sim, "10 loops in rebx_gr_full did not converge.\n");
+        if (k == max_iterations - 1){
+            char warnmsg[128];
+            snprintf(warnmsg, sizeof warnmsg,
+                     "%d loops in rebx_gr_full did not converge.\n",
+                     max_iterations);
+            reb_simulation_warning(sim, warnmsg);
             fprintf(stderr, "Fractional Error: %e\n", maxdev);
         }
     }
