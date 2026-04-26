@@ -12,7 +12,7 @@
 
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_simulation_create();
-    sim->integrator = REB_INTEGRATOR_BS;
+    reb_simulation_set_integrator(sim, "bs");
 
     struct reb_particle bh = {0};
     bh.m     = 4e6;   

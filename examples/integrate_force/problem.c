@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
     
     sim->dt = 1.e-4;
     sim->heartbeat = heartbeat;
-    sim->integrator = REB_INTEGRATOR_WHFAST;
+    reb_simulation_set_integrator(sim, "whfast");
 
     // Now we add GR. This is a velocity dependent force. With WHFast this would cause errors on long timescales, so we integrate the force in a separate step
     // See the REBOUNDx paper and the corresponding example in ipython_examples for more details

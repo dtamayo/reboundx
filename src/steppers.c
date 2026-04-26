@@ -60,41 +60,50 @@ void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_operator* con
     const double t_needed = old_t + dt;
     const double old_dt = sim->dt;
     sim->gravity_ignore_terms = 0;
-    reb_integrator_ias15_reset(sim);
+
+    struct reb_integrator_ias15_state* ias15 = reb_integrator_ias15.create();
     
     sim->dt = 0.0001*dt; // start with a small timestep.
     
     while(sim->t < t_needed && fabs(sim->dt/old_dt)>1e-14 ){
-        reb_integrator_ias15_step(sim);
+        reb_integrator_ias15.step(sim, ias15);
         if (sim->t+sim->dt > t_needed){
             sim->dt = t_needed-sim->t;
         }
     }
+    reb_integrator_ias15.free(ias15);
     sim->t = old_t;
     sim->dt = old_dt; // reset in case this is part of a chain of steps
 }
 
 void rebx_kepler_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
-    reb_integrator_whfast_init(sim);
-    reb_integrator_whfast_from_inertial(sim);
-    reb_integrator_whfast_kepler_step(sim, dt);
-    reb_integrator_whfast_com_step(sim, dt);
-    reb_integrator_whfast_to_inertial(sim);
+    struct reb_integrator_whfast_state* whfast = reb_integrator_whfast.create();
+    reb_integrator_whfast_init(sim, whfast);
+    reb_integrator_whfast_from_inertial(sim, whfast->p_jh, whfast->coordinates);
+    reb_integrator_whfast_kepler_step(sim, whfast->p_jh, whfast->coordinates, dt);
+    reb_integrator_whfast_com_step(sim, whfast->p_jh, dt);
+    reb_integrator_whfast_to_inertial(sim, whfast->p_jh, whfast->coordinates);
+    reb_integrator_whfast.free(whfast);
 }
 
 void rebx_jump_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
-    reb_integrator_whfast_init(sim);
-    reb_integrator_whfast_from_inertial(sim);
-    reb_integrator_whfast_jump_step(sim, dt);
-    reb_integrator_whfast_to_inertial(sim);
+    // TODO: This will never do anything because by default whfast coordinates are Jacobi which do not have a jump step.
+    struct reb_integrator_whfast_state* whfast = reb_integrator_whfast.create();
+    reb_integrator_whfast_init(sim, whfast);
+    reb_integrator_whfast_from_inertial(sim, whfast->p_jh, whfast->coordinates);
+    reb_integrator_whfast_jump_step(sim, whfast, dt);
+    reb_integrator_whfast_to_inertial(sim, whfast->p_jh, whfast->coordinates);
+    reb_integrator_whfast.free(whfast);
 }
 
 void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
-    reb_integrator_whfast_init(sim);
-    reb_integrator_whfast_from_inertial(sim);
+    struct reb_integrator_whfast_state* whfast = reb_integrator_whfast.create();
+    reb_integrator_whfast_init(sim, whfast);
+    reb_integrator_whfast_from_inertial(sim, whfast->p_jh, whfast->coordinates);
     reb_simulation_update_acceleration(sim);
-    reb_integrator_whfast_interaction_step(sim, dt);
-    reb_integrator_whfast_to_inertial(sim);
+    reb_integrator_whfast_interaction_step(sim, whfast->p_jh, whfast->coordinates, dt);
+    reb_integrator_whfast_to_inertial(sim, whfast->p_jh, whfast->coordinates);
+    reb_integrator_whfast.free(whfast);
 }
 
 void rebx_drift_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){

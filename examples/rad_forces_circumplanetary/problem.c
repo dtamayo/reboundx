@@ -21,7 +21,7 @@ double tmax = 1e10;
 int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_simulation_create();
     // Setup constants 
-    sim->integrator     = REB_INTEGRATOR_IAS15;
+    reb_simulation_set_integrator(sim, "ias15");
     sim->G              = 6.674e-11;    // Use SI units
     sim->dt             = 1e4;          // Initial timestep in sec
     sim->N_active       = 2;            // Only the sun and the planet affect other particles gravitationally

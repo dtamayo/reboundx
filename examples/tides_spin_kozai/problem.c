@@ -28,7 +28,7 @@ int main(int argc, char* argv[]){
     // Initial conditions
     // Setup constants
     sim->dt                 = M_PI*1e-1;     // initial timestep
-    sim->integrator         = REB_INTEGRATOR_IAS15; // IAS15 is used for its adaptive timestep:
+    reb_simulation_set_integrator(sim, "ias15");   // IAS15 is used for its adaptive timestep:
                                                    // in a Kozai cycle the planet experiences close encounters during the high-eccentricity epochs.
                                                    // A fixed-time integrator (for example, WHFast) would need to apply the worst-case timestep to the whole simulation
     sim->heartbeat          = heartbeat;

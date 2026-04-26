@@ -36,7 +36,7 @@ int main(int argc, char* argv[]){
     reb_simulation_move_to_com(sim);
 
     sim->dt = 0.002;  //The period at inner disk edge divided by 20, for a disk edge location at 0.1 AU
-    sim->integrator = REB_INTEGRATOR_WHFAST;
+    reb_simulation_set_integrator(sim, "whfast");
 
     struct rebx_extras* rebx = rebx_attach(sim);
 

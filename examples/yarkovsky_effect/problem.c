@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
 
     sim->G = 4*M_PI*M_PI;  // use units of AU, yr and solar masses
     sim->dt = .05;         //timestep for simulation in yrs
-    sim->integrator = REB_INTEGRATOR_WHFAST; //integrator for sim
+    reb_simulation_set_integrator(sim, "whfast");
 
     //following adds star with mass of Sun to sim
     struct reb_particle star = {0};

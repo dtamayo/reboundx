@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 	struct reb_simulation* sim = reb_simulation_create();
     sim->G = 4*M_PI*M_PI; // use units of AU, yr and solar masses
 	sim->heartbeat = heartbeat;
-	sim->integrator = REB_INTEGRATOR_WHFAST;
+	reb_simulation_set_integrator(sim, "whfast");
 	
 	struct reb_particle sun = {0};
 	sun.m  	= 1.;

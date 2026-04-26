@@ -25,7 +25,7 @@ int main(int argc, char* argv[]){
     struct reb_particle p1 = reb_particle_from_orbit(sim->G, p, m, a, e, inc, Omega, omega, f);
     reb_simulation_add(sim, p1);
     sim->dt = 1.e-8;
-    sim->integrator = REB_INTEGRATOR_WHFAST;
+    reb_simulation_set_integrator(sim, "whfast");
     
     struct rebx_extras* rebx = rebx_attach(sim);
    

@@ -579,31 +579,30 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
         return success;
     }
 
-    switch(sim->integrator){
-        case REB_INTEGRATOR_IAS15:
-        // don't add pre-timestep b/c don't know what IAS will choose as dt
-        {
-            dt_fraction = 1.;
-            int success = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST);
-            return success;
-        }
-        case REB_INTEGRATOR_WHFAST: // half step pre and post
-        {
-            dt_fraction = 1./2.;
-            int success1 = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_PRE);
-            int success2 = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST);
-            return (success1 && success2);
-        }
-        case REB_INTEGRATOR_MERCURIUS: // half step pre and post
-        {
-            if (operator->operator_type == REBX_OPERATOR_UPDATER){
-                reb_simulation_error(sim, "REBOUNDx Error: Operators that affect particle trajectories are not supported with Mercurius. Must add as forces.\n");
-                return 0;
-            }
-            break;
-        }
-        default:
-            break;
+   if (!sim->integrator.name || !strlen(sim->integrator.name)){
+       reb_simulation_error(sim, "REBOUNDx Error: Must set integrator before adding operators.");
+       return 0;
+   }
+   if (strcmp(sim->integrator.name, "ias15")==0){
+       // don't add pre-timestep b/c don't know what IAS will choose as dt
+       dt_fraction = 1.;
+       int success = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST);
+       return success;
+   }
+   if (strcmp(sim->integrator.name, "whfast")==0){
+       // half step pre and post
+       dt_fraction = 1./2.;
+       int success1 = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_PRE);
+       int success2 = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST);
+       return (success1 && success2);
+   }
+   if (strcmp(sim->integrator.name, "mercurius")==0){
+       // half step pre and post
+       // TODO: Not yet implemented.
+       if (operator->operator_type == REBX_OPERATOR_UPDATER){
+           reb_simulation_error(sim, "REBOUNDx Error: Operators that affect particle trajectories are not supported with Mercurius. Must add as forces.\n");
+           return 0;
+       }
     }
     return 0; // didn't reach a successful outcome
 }
@@ -1008,7 +1007,7 @@ void rebx_additional_forces(struct reb_simulation* sim){
     struct rebx_extras* rebx = sim->extras;
     struct rebx_node* current = rebx->additional_forces;
     while(current != NULL){
-        if(sim->force_is_velocity_dependent && sim->integrator==REB_INTEGRATOR_WHFAST){
+        if(sim->force_is_velocity_dependent && strcmp(sim->integrator.name, "whfast")==0){
             reb_simulation_warning(sim, "REBOUNDx: Passing a velocity-dependent force to WHFAST. Need to apply as an operator. See REBOUNDx paper sec 5.1.");
         }
         struct rebx_force* force = current->object;
@@ -1029,8 +1028,11 @@ void rebx_pre_timestep_modifications(struct reb_simulation* sim){
     while(current != NULL){
         struct rebx_step* step = current->object;
         struct rebx_operator* operator = step->operator;
-        if(sim->integrator==REB_INTEGRATOR_IAS15 && sim->ri_ias15.epsilon != 0 && operator->operator_type == REBX_OPERATOR_UPDATER){
-            reb_simulation_warning(sim, "REBOUNDx: Operators that affect particle trajectories with adaptive timesteps can give spurious results. Use sim.ri_ias15.epsilon=0 for fixed timestep with IAS, or use a different integrator.");
+        if(strcmp(sim->integrator.name, "ias15")==0 && operator->operator_type == REBX_OPERATOR_UPDATER){
+            struct reb_integrator_ias15_state* ias15 = sim->integrator.state;
+            if (ias15->epsilon != 0){
+                reb_simulation_warning(sim, "REBOUNDx: Operators that affect particle trajectories with adaptive timesteps can give spurious results. Use sim.ri_ias15.epsilon=0 for fixed timestep with IAS, or use a different integrator.");
+            }
         }
         operator->step_function(sim, operator, dt*step->dt_fraction);
         current = current->next;
@@ -1048,8 +1050,11 @@ void rebx_post_timestep_modifications(struct reb_simulation* sim){
     while(current != NULL){
         struct rebx_step* step = current->object;
         struct rebx_operator* operator = step->operator;
-        if(sim->integrator==REB_INTEGRATOR_IAS15 && sim->ri_ias15.epsilon != 0 && operator->operator_type == REBX_OPERATOR_UPDATER){
-            reb_simulation_warning(sim, "REBOUNDx: Operators that affect particle trajectories with adaptive timesteps can give spurious results. Use sim.ri_ias15.epsilon=0 for fixed timestep with IAS, or use a different integrator.");
+        if(strcmp(sim->integrator.name, "ias15")==0 && operator->operator_type == REBX_OPERATOR_UPDATER){
+            struct reb_integrator_ias15_state* ias15 = sim->integrator.state;
+            if (ias15->epsilon != 0){
+                reb_simulation_warning(sim, "REBOUNDx: Operators that affect particle trajectories with adaptive timesteps can give spurious results. Use sim.ri_ias15.epsilon=0 for fixed timestep with IAS, or use a different integrator.");
+            }
         }
         operator->step_function(sim, operator, dt*step->dt_fraction);
         current = current->next;

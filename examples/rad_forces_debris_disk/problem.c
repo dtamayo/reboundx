@@ -19,7 +19,7 @@ int main(int argc, char* argv[]){
     struct reb_simulation* sim = reb_simulation_create();
     // Setup constants
     double AU = 1.5e11;                 // in meters
-    sim->integrator     = REB_INTEGRATOR_WHFAST;
+    reb_simulation_set_integrator(sim, "whfast");
     sim->G              = 6.674e-11;    // Use SI units
     sim->dt             = 1e8;          // At ~100 AU, orbital periods are ~1000 yrs, so here we use ~1% of that, in sec
     sim->N_active       = 1;            // The dust particles do not interact with one another gravitationally

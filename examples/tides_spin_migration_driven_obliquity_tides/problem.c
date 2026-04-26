@@ -35,7 +35,7 @@ int main(int argc, char* argv[]){
     const double p2_rad = 2.5 * 4.26e-5;
     reb_simulation_add_fmt(sim, "m a e r inc Omega pomega M", p2_mass, 0.23290608, 0.01, p2_rad, -0.431 * (M_PI / 180.), 0.0 * (M_PI / 180.), 0.0 * (M_PI / 180.), 0.0 * (M_PI / 180.)); // Planet 2
     sim->N_active = 3;
-    sim->integrator = REB_INTEGRATOR_WHFAST;
+    reb_simulation_set_integrator(sim, "whfast");
     sim->dt = 1e-3;
     sim->heartbeat = heartbeat;
 

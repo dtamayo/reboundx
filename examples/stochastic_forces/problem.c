@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
     // Because the stochastic forces are random, it might never converge.
 
     struct reb_simulation* sim = reb_simulation_create();
-    sim->integrator     = REB_INTEGRATOR_WHFAST;
+    reb_simulation_set_integrator(sim, "whfast");
     sim->dt             = 1e-2;          // At ~100 AU, orbital periods are ~1000 yrs, so here we use ~1% of that, in sec
     sim->heartbeat      = heartbeat;
     
