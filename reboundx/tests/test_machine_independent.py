@@ -17,11 +17,11 @@ class TestMachineIndependent(unittest.TestCase):
         sim.integrator="whfast"
         sim.dt = sim.particles[1].P/100
         sim.move_to_com()
-        sim.save_to_file('twoplanets.bin', delete_file=True)
+        sim.save_to_file('twoplanets.bin'+self._testMethodName, delete_file=True)
 
     def test_modify_orbits_forces(self):
-        sim = rebound.Simulation("twoplanets.bin")
-        sim.save_to_file('modify_orbits_forces.sa', interval=1e3, delete_file=True)
+        sim = rebound.Simulation("twoplanets.bin"+self._testMethodName)
+        sim.save_to_file('modify_orbits_forces.sa'+self._testMethodName, interval=1e3, delete_file=True)
         rebx = reboundx.Extras(sim)
         mod = rebx.load_force('modify_orbits_forces')
         rebx.add_force(mod)
@@ -33,7 +33,7 @@ class TestMachineIndependent(unittest.TestCase):
         rebx.save('modify_orbits_forces.rebx')
         sim.integrate(1.e4)
         
-        sa = reboundx.Simulationarchive('modify_orbits_forces.sa', 'modify_orbits_forces.rebx')
+        sa = reboundx.Simulationarchive('modify_orbits_forces.sa'+self._testMethodName, 'modify_orbits_forces.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]
@@ -41,8 +41,8 @@ class TestMachineIndependent(unittest.TestCase):
         self.assertEqual(sim.particles[0].x, simf.particles[0].x)
 
     def test_gr_full(self):
-        sim = rebound.Simulation('twoplanets.bin')
-        sim.save_to_file('gr_full.sa', interval=1e3, delete_file=True)
+        sim = rebound.Simulation('twoplanets.bin'+self._testMethodName)
+        sim.save_to_file('gr_full.sa'+self._testMethodName, interval=1e3, delete_file=True)
         rebx = reboundx.Extras(sim)
         force = rebx.load_force('gr_full')
         rebx.add_force(force)
@@ -50,7 +50,7 @@ class TestMachineIndependent(unittest.TestCase):
         ps = sim.particles
         rebx.save('gr_full.rebx')
         sim.integrate(1.e4)
-        sa = reboundx.Simulationarchive('gr_full.sa', 'gr_full.rebx')
+        sa = reboundx.Simulationarchive('gr_full.sa'+self._testMethodName, 'gr_full.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]
@@ -58,8 +58,8 @@ class TestMachineIndependent(unittest.TestCase):
         self.assertEqual(sim.particles[0].x, simf.particles[0].x)
     
     def test_gr(self):
-        sim = rebound.Simulation('twoplanets.bin')
-        sim.save_to_file('gr.sa', interval=1e3, delete_file=True)
+        sim = rebound.Simulation('twoplanets.bin'+self._testMethodName)
+        sim.save_to_file('gr.sa'+self._testMethodName, interval=1e3, delete_file=True)
         rebx = reboundx.Extras(sim)
         force = rebx.load_force('gr')
         rebx.add_force(force)
@@ -67,7 +67,7 @@ class TestMachineIndependent(unittest.TestCase):
         ps = sim.particles
         rebx.save('gr.rebx')
         sim.integrate(1.e4)
-        sa = reboundx.Simulationarchive('gr.sa', 'gr.rebx')
+        sa = reboundx.Simulationarchive('gr.sa'+self._testMethodName, 'gr.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]
@@ -75,8 +75,8 @@ class TestMachineIndependent(unittest.TestCase):
         self.assertEqual(sim.particles[0].x, simf.particles[0].x)
     
     def test_gr_potential(self):
-        sim = rebound.Simulation('twoplanets.bin')
-        sim.save_to_file('gr_potential.sa', interval=1e3, delete_file=True)
+        sim = rebound.Simulation('twoplanets.bin'+self._testMethodName)
+        sim.save_to_file('gr_potential.sa'+self._testMethodName, interval=1e3, delete_file=True)
         rebx = reboundx.Extras(sim)
         force = rebx.load_force('gr_potential')
         rebx.add_force(force)
@@ -84,7 +84,7 @@ class TestMachineIndependent(unittest.TestCase):
         ps = sim.particles
         rebx.save('gr_potential.rebx')
         sim.integrate(1.e4)
-        sa = reboundx.Simulationarchive('gr_potential.sa', 'gr_potential.rebx')
+        sa = reboundx.Simulationarchive('gr_potential.sa'+self._testMethodName, 'gr_potential.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]
@@ -92,8 +92,8 @@ class TestMachineIndependent(unittest.TestCase):
         self.assertEqual(sim.particles[0].x, simf.particles[0].x)
 
     def test_radiation_forces(self):
-        sim = rebound.Simulation('twoplanets.bin')
-        sim.save_to_file('radiation_forces.sa', interval=1e3, delete_file=True)
+        sim = rebound.Simulation('twoplanets.bin'+self._testMethodName)
+        sim.save_to_file('radiation_forces.sa'+self._testMethodName, interval=1e3, delete_file=True)
         rebx = reboundx.Extras(sim)
         force = rebx.load_force('radiation_forces')
         rebx.add_force(force)
@@ -103,7 +103,7 @@ class TestMachineIndependent(unittest.TestCase):
         ps[2].params['beta'] = 0.3
         rebx.save('radiation_forces.rebx')
         sim.integrate(1.e4)
-        sa = reboundx.Simulationarchive('radiation_forces.sa', 'radiation_forces.rebx')
+        sa = reboundx.Simulationarchive('radiation_forces.sa'+self._testMethodName, 'radiation_forces.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]
@@ -111,8 +111,8 @@ class TestMachineIndependent(unittest.TestCase):
         self.assertEqual(sim.particles[0].x, simf.particles[0].x)
 
     def test_central_force(self):
-        sim = rebound.Simulation('twoplanets.bin')
-        sim.save_to_file('central_force.sa', interval=1e3, delete_file=True)
+        sim = rebound.Simulation('twoplanets.bin'+self._testMethodName)
+        sim.save_to_file('central_force.sa'+self._testMethodName, interval=1e3, delete_file=True)
         rebx = reboundx.Extras(sim)
         force = rebx.load_force('central_force')
         rebx.add_force(force)
@@ -121,7 +121,7 @@ class TestMachineIndependent(unittest.TestCase):
         ps[0].params['gammacentral'] = -1
         rebx.save('central_force.rebx')
         sim.integrate(1.e4)
-        sa = reboundx.Simulationarchive('central_force.sa', 'central_force.rebx')
+        sa = reboundx.Simulationarchive('central_force.sa'+self._testMethodName, 'central_force.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]
@@ -129,8 +129,8 @@ class TestMachineIndependent(unittest.TestCase):
         self.assertEqual(sim.particles[0].x, simf.particles[0].x)
     
     def test_gravitational_harmonics(self):
-        sim = rebound.Simulation('twoplanets.bin')
-        sim.save_to_file('gravitational_harmonics.sa', interval=1e3, delete_file=True)
+        sim = rebound.Simulation('twoplanets.bin'+self._testMethodName)
+        sim.save_to_file('gravitational_harmonics.sa'+self._testMethodName, interval=1e3, delete_file=True)
         rebx = reboundx.Extras(sim)
         force = rebx.load_force('gravitational_harmonics')
         rebx.add_force(force)
@@ -140,7 +140,7 @@ class TestMachineIndependent(unittest.TestCase):
         ps[0].params['R_eq'] = 1.e-3
         rebx.save('gravitational_harmonics.rebx')
         sim.integrate(1.e4)
-        sa = reboundx.Simulationarchive('gravitational_harmonics.sa', 'gravitational_harmonics.rebx')
+        sa = reboundx.Simulationarchive('gravitational_harmonics.sa'+self._testMethodName, 'gravitational_harmonics.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]
@@ -148,8 +148,8 @@ class TestMachineIndependent(unittest.TestCase):
         self.assertEqual(sim.particles[0].x, simf.particles[0].x)
 
     def test_modify_mass(self):
-        sim = rebound.Simulation('twoplanets.bin')
-        sim.save_to_file('modify_mass.sa', interval=1e3, delete_file=True)
+        sim = rebound.Simulation('twoplanets.bin'+self._testMethodName)
+        sim.save_to_file('modify_mass.sa'+self._testMethodName, interval=1e3, delete_file=True)
         rebx = reboundx.Extras(sim)
         mod = rebx.load_operator('modify_mass')
         rebx.add_operator(mod)
@@ -157,7 +157,7 @@ class TestMachineIndependent(unittest.TestCase):
         ps[0].params['tau_mass'] = -1e4
         rebx.save('modify_mass.rebx')
         sim.integrate(1.e4)
-        sa = reboundx.Simulationarchive('modify_mass.sa', 'modify_mass.rebx')
+        sa = reboundx.Simulationarchive('modify_mass.sa'+self._testMethodName, 'modify_mass.rebx')
 
         simf, rebx = sa[-1]
         sim,  rebx = sa[0]

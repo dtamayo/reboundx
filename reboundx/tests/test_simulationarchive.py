@@ -41,12 +41,12 @@ class TestSimulationarchive(unittest.TestCase):
                 self.assertLess(np.abs((E-self.E0)/self.E0), 1.e-4, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
                
                 # test bitwise reproducibility starting from an intermediate snapshot
-                self.sim.save_to_file('test.sa', delete_file=True)
-                self.rebx.save('test.rebx')
+                self.sim.save_to_file('test.sa'+self._testMethodName, delete_file=True)
+                self.rebx.save('test.rebx'+self._testMethodName)
                 self.sim.integrate(2000)
-                self.sim.save_to_file('test.sa')
+                self.sim.save_to_file('test.sa'+self._testMethodName)
 
-                sa = reboundx.Simulationarchive('test.sa', 'test.rebx')
+                sa = reboundx.Simulationarchive('test.sa'+self._testMethodName, 'test.rebx'+self._testMethodName)
                 simf, rebxf = sa[-1]
                 tmax = simf.t
                 sim, rebx = sa[0]
@@ -74,12 +74,12 @@ class TestSimulationarchive(unittest.TestCase):
                 self.assertLess(np.abs((E-self.E0)/self.E0), 1.e-4, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
                
                 # test bitwise reproducibility starting from an intermediate snapshot
-                self.sim.save_to_file('test.sa', delete_file=True)
-                self.rebx.save('test.rebx')
+                self.sim.save_to_file('test.sa'+self._testMethodName, delete_file=True)
+                self.rebx.save('test.rebx'+self._testMethodName)
                 self.sim.integrate(2000)
-                self.sim.save_to_file('test.sa')
+                self.sim.save_to_file('test.sa'+self._testMethodName)
 
-                sa = reboundx.Simulationarchive('test.sa', 'test.rebx')
+                sa = reboundx.Simulationarchive('test.sa'+self._testMethodName, 'test.rebx'+self._testMethodName)
                 simf, rebxf = sa[-1]
                 tmax = simf.t
                 sim, rebx = sa[0]
@@ -107,12 +107,12 @@ class TestSimulationarchive(unittest.TestCase):
                 self.assertLess(np.abs((E-self.E0)/self.E0), 1.e-4, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
                
                 # test bitwise reproducibility starting from an intermediate snapshot
-                self.sim.save_to_file('test.sa', delete_file=True)
-                self.rebx.save('test.rebx')
+                self.sim.save_to_file('test.sa'+self._testMethodName, delete_file=True)
+                self.rebx.save('test.rebx'+self._testMethodName)
                 self.sim.integrate(2000)
-                self.sim.save_to_file('test.sa')
+                self.sim.save_to_file('test.sa'+self._testMethodName)
 
-                sa = reboundx.Simulationarchive('test.sa', 'test.rebx')
+                sa = reboundx.Simulationarchive('test.sa'+self._testMethodName, 'test.rebx'+self._testMethodName)
                 simf, rebxf = sa[-1]
                 tmax = simf.t
                 sim, rebx = sa[0]
@@ -140,12 +140,12 @@ class TestSimulationarchive(unittest.TestCase):
                 self.assertLess(np.abs((E-self.E0)/self.E0), 1.e-4, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
                
                 # test bitwise reproducibility starting from an intermediate snapshot
-                self.sim.save_to_file('test.sa', delete_file=True)
-                self.rebx.save('test.rebx')
+                self.sim.save_to_file('test.sa'+self._testMethodName, delete_file=True)
+                self.rebx.save('test.rebx'+self._testMethodName)
                 self.sim.integrate(2000)
-                self.sim.save_to_file('test.sa')
+                self.sim.save_to_file('test.sa'+self._testMethodName)
 
-                sa = reboundx.Simulationarchive('test.sa', 'test.rebx')
+                sa = reboundx.Simulationarchive('test.sa'+self._testMethodName, 'test.rebx'+self._testMethodName)
                 simf, rebxf = sa[-1]
                 tmax = simf.t
                 sim, rebx = sa[0]
