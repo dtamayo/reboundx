@@ -58,7 +58,10 @@ class TestSimulationarchive(unittest.TestCase):
             for rebxintegrator in rebxintegrators:
                 self.setUp()
                 self.sim.integrator = integrator
-                self.sim.ri_ias15.epsilon = 0 # use fixed timesteps for ias15 if used, no problem otherwise
+                try:
+                    self.sim.integrator.epsilon = 0 # use fixed timesteps for ias15 if used, no problem otherwise
+                except:
+                    pass # only ias15 has epsilon property
                 self.integforce = self.rebx.load_operator("integrate_force")
                 self.integforce.params['force'] = self.gr
                 self.rebx.add_operator(self.integforce, dtfraction=1., timing="pre")
@@ -88,7 +91,10 @@ class TestSimulationarchive(unittest.TestCase):
             for rebxintegrator in rebxintegrators:
                 self.setUp()
                 self.sim.integrator = integrator
-                self.sim.ri_ias15.epsilon = 0 # use fixed timesteps for ias15 if used, no problem otherwise
+                try:
+                    self.sim.integrator.epsilon = 0 # use fixed timesteps for ias15 if used, no problem otherwise
+                except:
+                    pass # only ias15 has epsilon property
                 self.integforce = self.rebx.load_operator("integrate_force")
                 self.integforce.params['force'] = self.gr
                 self.rebx.add_operator(self.integforce, dtfraction=1., timing="post")
@@ -118,7 +124,10 @@ class TestSimulationarchive(unittest.TestCase):
             for rebxintegrator in rebxintegrators:
                 self.setUp()
                 self.sim.integrator = integrator
-                self.sim.ri_ias15.epsilon = 0 # use fixed timesteps for ias15 if used, no problem otherwise
+                try:
+                    self.sim.integrator.epsilon = 0 # use fixed timesteps for ias15 if used, no problem otherwise
+                except:
+                    pass # only ias15 has epsilon property
                 self.integforce = self.rebx.load_operator("integrate_force")
                 self.integforce.params['force'] = self.gr
                 self.rebx.add_operator(self.integforce)
