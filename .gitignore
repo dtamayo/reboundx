@@ -45,3 +45,7 @@ Untitled*
 .eggs/*
 _changelog.tmp
 *.whl
+libreboundx.*.pyd
+libreboundx.*.exp
+libreboundx.*.lib
+libreboundx.*.def
