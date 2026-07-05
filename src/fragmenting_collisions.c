@@ -622,7 +622,9 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     double theta_i = asin(b/distance_mag); // Impact angle (radians), to be printed later
 
     if (isnan(b)){
-        reb_simulation_error(sim, "b is not a number.");
+        printf("t = %e , h_mag = %e, v_imp = %e, \n", sim->t, h_mag, v_imp);
+        reb_simulation_error(sim, "b is not a hi number.");
+        exit(0);
         return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
     }
 
