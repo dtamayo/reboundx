@@ -1,4 +1,4 @@
-export OPENGL=1
+export OPENGL=0
 
 ifndef REB_DIR
 ifneq ($(wildcard ../../../rebound/.*),) # Check for REBOUND in default location
