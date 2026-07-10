@@ -528,28 +528,31 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     // Re-assign target, because new particles have been added and this way we make sure we are poionting to the right particle.
 
     target = &(sim->particles[target_idx]);
+    //Old way, mass adjustment
+    /*
     target -> x +=  xoff.x*target->m/initial_mass;
     target -> y += xoff.y*target->m/initial_mass; 
     target -> z += xoff.z*target->m/initial_mass; 
     target -> vx += voff.x*target->m/initial_mass; 
     target -> vy += voff.y*target->m/initial_mass; 
-    target -> vz += voff.z*target->m/initial_mass; 
+    target -> vz += voff.z*target->m/initial_mass; */
     
-
-    /*
+    // New way, everything gets adjusted the same amount
     target->x += xoff.x; 
     target->y += xoff.y; 
     target->z += xoff.z; 
     target->vx += voff.x; 
     target->vy += voff.y; 
     target->vz += voff.z;
-    */
+    
 
     // Reassign position and velocity to fragments to correct for offsets.
     for (int i = sim->N - n_frag; i < sim->N; i++){ 
         // mass fraction of fragment versus total initial mass
         double mass_fraction = sim->particles[i].m/initial_mass;
         
+        // Old way, adjustments based on mass 
+        /*
         sim->particles[i].x += xoff.x*mass_fraction;
         sim->particles[i].y += xoff.y*mass_fraction;
         sim->particles[i].z += xoff.z*mass_fraction;
@@ -557,8 +560,9 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
         sim->particles[i].vx += voff.x*mass_fraction;
         sim->particles[i].vy += voff.y*mass_fraction;
         sim->particles[i].vz += voff.z*mass_fraction;
+        */
         
-        /*
+        // New way, every adjustment is equal
         sim->particles[i].x += xoff.x;
         sim->particles[i].y += xoff.y;
         sim->particles[i].z += xoff.z;
@@ -566,7 +570,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
         sim->particles[i].vx += voff.x;
         sim->particles[i].vy += voff.y;
         sim->particles[i].vz += voff.z;
-        */
+        
     }
 
     return outcome;
@@ -633,6 +637,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
 
     // Some useful parameters
     const double target_initial_mass = target->m; // To be printed 
+    const double targ_rho = target->m/(4./3*M_PI*pow(target->r,3));
     const double projectile_initial_mass = projectile->m; // To be printed 
     const double initial_mass = target_initial_mass + projectile_initial_mass; // Initial mass of two colliders
     const double target_initial_radius = target->r;
@@ -740,7 +745,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     }else{
         if(b >= target->r){ // Grazing regime
                             // Target's density
-            double targ_rho = target->m/(4./3*M_PI*pow(target->r,3));
+            //double targ_rho = target->m/(4./3*M_PI*pow(target->r,3));
 
             // phi helps with finding part of the projectile that is NOT crossing the target
             double phi = 2*acos((l-projectile->r)/projectile->r);
