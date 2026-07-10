@@ -220,25 +220,35 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
 
     struct reb_particle* pi = &(sim->particles[c.p1]); // First object in collision
     struct reb_particle* pj = &(sim->particles[c.p2]); // Second object in collison
+    printf("pi_mass = %e, pj_mass = %e\n", pi->m, pj->m);
 
     // Object with the higher mass will be the target, and object with lower mass will be the projectile
     struct reb_particle* target;     
     struct reb_particle* projectile; 
 
     enum REB_COLLISION_RESOLVE_OUTCOME outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
+    int target_idx; // Declare the index variable 
+
     if (pi->m >= pj->m){
         target = pi;    
         projectile = pj;
+        target_idx = c.p1; // Save the index for pi
         outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P2;
     }else{
         target = pj;   
         projectile = pi;
+        target_idx = c.p2; // Save the index for pj
         outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P1; 
     }
 
+    printf("target_mass = %e, proj_mass = %e\n", target->m, projectile->m);
+
     struct reb_particle com = reb_particle_com_of_pair(*target, *projectile); // Center of mass (COM) of target and projectile
+    printf("com.x = %e, com.y = %e, com.z = %e\n", com.x, com.y, com.z);
+    printf("com.vx = %e, com.vy = %e, com.vz = %e\n", com.vx, com.vy, com.vz);
 
     double target_initial_mass = target->m; // Will use later for printing
+    double targ_rho = target->m / (4.0/3.0 * M_PI * pow(target->r, 3)); // We need target's density to find radii for objects.
     double projectile_initial_mass = projectile->m; // Will use later for printing
     double initial_mass = target->m + projectile->m; // initial mass of two colliders
 
@@ -246,6 +256,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     double projectile_initial_radius = projectile->r;
     double r_tot = target->r + projectile->r; // Sum of radii or two colliders
     double remaining_mass = initial_mass - lr_mass - slr_mass; // Remaning mass, will turn into fragments
+    printf("remaining_mass = %e, initial_mass = %e, lr_mass = %e, slr_mass = %e\n", remaining_mass, initial_mass, lr_mass, slr_mass);
     double rho = target->m/(4./3*M_PI*pow(target ->r, 3)); // Target's density
 
     // slr_mass is the mass of the second largest remnant (refer to documentation for more info)
@@ -255,6 +266,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     if(slr_mass > 0){
         n_big_frag = 1;
     }
+    printf("slr_mass = %e\n", slr_mass);
 
     /*
      * COMPUTING MASS OF FRAGMENTS
@@ -264,6 +276,9 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     if(slr_mass > 0){
         max_frag_mass = 0.5 * slr_mass;
     }
+    if (max_frag_mass <= min_frag_mass) {
+    max_frag_mass = min_frag_mass * 1.01; 
+    }
     double powerlaw_slope = 3; // Arbitrary, from LS2012 table 1
     double m_frags_array[10000] = {0.0};
     double sum_m_frags = 0;
@@ -271,10 +286,13 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     int len_m_frags_array = 0;
     double ratio = 0;
 
+    printf("remaining_mass = %e", remaining_mass);
     // Draw until we reach above the remaining mass. Then discard the last one and distribute its mass among others.
     while(sum_m_frags < remaining_mass && index < 10000){
         m_frags_array[index] = reb_random_powerlaw(sim, min_frag_mass, max_frag_mass, powerlaw_slope);
+        printf("m_frags_array[index] = %e, index = %d\n", m_frags_array[index], index);
         sum_m_frags += m_frags_array[index];
+        printf("sum_m_frags_array = %e\n", sum_m_frags);
         index += 1;
     }
     if(index >= 10000){
@@ -450,6 +468,7 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
 
     // Add small fragments
     // j = 0 is reserved for big_frag, if exists
+
     for (int j=1; j <= n_frag - n_big_frag; j++){          
         struct reb_particle fragment = {0};
         fragment.m = m_frags_array[j-1]; 
@@ -465,8 +484,10 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
         fragment.vz = com.vz + frag_velocity*(cos(theta_sep*j)*unit_dv.z + sin(theta_sep*j)*normal_to_vrel.z);
 
         // Fragment radius is derived based on target's density
-        double targ_rho = target->m/(4./3*M_PI*pow(target->r,3));
+        //double targ_rho = target->m/(4./3*M_PI*pow(target->r,3));
+        printf("targ_rho = %e, n_frag = %d, n_big_frag = %d\n", targ_rho, (int)n_frag, (int)n_big_frag);
         fragment.r = get_radii(m_frags_array[j-1], targ_rho);
+        printf("j = %d, r = %e\n", j, fragment.r);
 
         // Record collision
         fragment.last_collision = sim->t;
@@ -501,21 +522,34 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     // Now we correct for the COM and momentum offsets.
     // First, we need to see how much we are off from the COM in the begining. 
     struct reb_vec3d xoff = {.x = com.x - mxsum.x/initial_mass, .y = com.y - mxsum.y/initial_mass, .z = com.z - mxsum.z/initial_mass};
-    struct reb_vec3d voff = {.x = com.vx - mvsum.z/initial_mass, .y = com.vy - mvsum.y/initial_mass, .z = com.vz - mvsum.z/initial_mass};
+    struct reb_vec3d voff = {.x = com.vx - mvsum.x/initial_mass, .y = com.vy - mvsum.y/initial_mass, .z = com.vz - mvsum.z/initial_mass};
 
     // Reassign new position and velocity to target (who is replaced by the largest remnant) to account for offsets:
+    // Re-assign target, because new particles have been added and this way we make sure we are poionting to the right particle.
+
+    target = &(sim->particles[target_idx]);
     target -> x +=  xoff.x*target->m/initial_mass;
     target -> y += xoff.y*target->m/initial_mass; 
     target -> z += xoff.z*target->m/initial_mass; 
     target -> vx += voff.x*target->m/initial_mass; 
     target -> vy += voff.y*target->m/initial_mass; 
     target -> vz += voff.z*target->m/initial_mass; 
+    
+
+    /*
+    target->x += xoff.x; 
+    target->y += xoff.y; 
+    target->z += xoff.z; 
+    target->vx += voff.x; 
+    target->vy += voff.y; 
+    target->vz += voff.z;
+    */
 
     // Reassign position and velocity to fragments to correct for offsets.
     for (int i = sim->N - n_frag; i < sim->N; i++){ 
         // mass fraction of fragment versus total initial mass
         double mass_fraction = sim->particles[i].m/initial_mass;
-
+        
         sim->particles[i].x += xoff.x*mass_fraction;
         sim->particles[i].y += xoff.y*mass_fraction;
         sim->particles[i].z += xoff.z*mass_fraction;
@@ -523,6 +557,16 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
         sim->particles[i].vx += voff.x*mass_fraction;
         sim->particles[i].vy += voff.y*mass_fraction;
         sim->particles[i].vz += voff.z*mass_fraction;
+        
+        /*
+        sim->particles[i].x += xoff.x;
+        sim->particles[i].y += xoff.y;
+        sim->particles[i].z += xoff.z;
+
+        sim->particles[i].vx += voff.x;
+        sim->particles[i].vy += voff.y;
+        sim->particles[i].vz += voff.z;
+        */
     }
 
     return outcome;
@@ -720,7 +764,7 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
             double gamma_g = beta * target->m/projectile->m;
 
             // Chambers Eq. 10
-            double Q_star_g = (pow(1+gamma_g, 2)/4*gamma_g)* Q0_g; 
+            double Q_star_g = (pow(1+gamma_g, 2)/(4*gamma_g))* Q0_g;
 
             // Chambers Eq. 13
             double mu_g = (beta * target->m*projectile->m)/(beta * target->m+projectile->m);  
