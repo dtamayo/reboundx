@@ -246,6 +246,10 @@ static enum REB_COLLISION_RESOLVE_OUTCOME make_fragments(struct reb_simulation* 
     struct reb_particle com = reb_particle_com_of_pair(*target, *projectile); // Center of mass (COM) of target and projectile
     printf("com.x = %e, com.y = %e, com.z = %e\n", com.x, com.y, com.z);
     printf("com.vx = %e, com.vy = %e, com.vz = %e\n", com.vx, com.vy, com.vz);
+    printf("target.x = %e, target.y = %e, target.z = %e\n", target->x, target->y, target->z);
+    printf("target.vx = %e, target.vy = %e, target.vz = %e\n", target->vx, target->vy, target->vz);
+    printf("proj.x = %e, proj.y = %e, proj.z = %e\n", projectile->x, projectile->y, projectile->z);
+    printf("proj.vx = %e, proj.vy = %e, proj.vz = %e\n", projectile->vx, projectile->vy, projectile->vz);
 
     double target_initial_mass = target->m; // Will use later for printing
     double targ_rho = target->m / (4.0/3.0 * M_PI * pow(target->r, 3)); // We need target's density to find radii for objects.
