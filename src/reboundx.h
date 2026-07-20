@@ -33,11 +33,20 @@
 #include <limits.h>
 #include <stdio.h>
 #include "rebound.h"
-#include "rebxtools.h"
 #ifndef REBXGITHASH
 #define REBXGITHASH notavailable0000000000000000000000000001
 #endif // REBXGITHASH
 
+/**
+ * @brief Macro for the common task of getting and casting a pointer to a particle's additional-parameters
+ *
+ * Casts `&p.ap` (a `void**`) to `struct rebx_node**` as expected by several functions like
+ * the various `rebx_set_param` and `rebx_get_param` functions.
+ *
+ * @param p A `struct reb_particle`
+ */
+
+#define AP_PTR(p) ((struct rebx_node**)&(p).ap) //
 extern const char* rebx_build_str;      ///< Date and time build string.
 extern const char* rebx_version_str;    ///< Version string.
 extern const char* rebx_githash_str;    ///< Current git hash.

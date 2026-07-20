@@ -26,14 +26,7 @@
 #ifndef _REBXTOOLS_H
 #define _REBXTOOLS_H
 
-struct reb_simulation;
-struct rebx_extras;
-struct reb_particle;
-struct reb_orbit;
-struct reb_vec3d;
-struct rebx_force;
-struct rebx_operator;
-enum REBX_COORDINATES;
+#include "reboundx.h"
 
 void rebx_com_force(struct reb_simulation* const sim, struct rebx_force* const force, const enum REBX_COORDINATES coordinates, const int back_reactions_inclusive, const char* reference_name, struct reb_vec3d (*calculate_force) (struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* p, struct reb_particle* source), struct reb_particle* const particles, const int N);
 
@@ -50,10 +43,4 @@ const double rebx_calculate_planet_trap(const double r, const double dedge, cons
 
 // TLu 11/8/22
 struct reb_vec3d rebx_tools_spin_and_orbital_angular_momentum(const struct rebx_extras* const rebx);
-/*
-void compute_transformation_angles(struct reb_simulation* sim, struct rebx_extras* rebx, double* theta1, double* theta2);
-struct reb_vec3d EulerAnglesTransform(struct reb_vec3d xyz, const double Omega, const double I, const double omega);
-void align_simulation(struct reb_simulation* sim, struct rebx_extras* rebx);
-struct reb_vec3d rebx_transform_inv_to_planet(double inc, double omega, struct reb_vec3d spin_inv);
-*/
 #endif
