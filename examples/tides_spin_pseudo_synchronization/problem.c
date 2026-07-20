@@ -35,7 +35,7 @@ int main(int argc, char* argv[]){
     reb_simulation_add_fmt(sim, "m a e inc r", p1_mass, 0.04072, p1_e, p1_inc, p1_rad); // Planet 1
 
     sim->N_active = 2;
-    sim->integrator = REB_INTEGRATOR_WHFAST;
+    reb_simulation_set_integrator(sim, "whfast");
     sim->dt = 1e-3;
     sim->heartbeat = heartbeat;
 
