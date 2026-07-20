@@ -6,6 +6,9 @@ This changelog only includes the most important changes in recent updates. For a
 * Updated to match REBOUND 5.0.0.
 * New string datatype. 
 
+### Version 4.6.2
+* Updated to require REBOUND < 5.0
+
 ### Version 4.6.1
 * Updated to match REBOUND 4.6.0 (merging of internal part1 and part2 functions in integrators)
 
