@@ -50,3 +50,31 @@ from .tools import coordinates, install_test
 from .params import Params
 
 __all__ = ["__version__", "__build__", "__githash__", "Extras", "Simulationarchive", "Param", "Interpolator", "Params", "coordinates", "integrators"]
+
+from ctypes import c_int, c_double, c_void_p, c_char_p, POINTER
+ 
+clibreboundx.rebx_geopotential_create.restype = c_void_p
+clibreboundx.rebx_geopotential_create.argtypes = [
+    POINTER(c_double),
+    POINTER(c_double),
+    c_double,
+    c_double,
+]
+ 
+clibreboundx.rebx_geopotential_free.restype = None
+clibreboundx.rebx_geopotential_free.argtypes = [c_void_p]
+ 
+# Extras ya debería estar definida en este mismo __init__.py o en extras.py;
+# si está en extras.py, mueve estas 3 líneas después de "from .extras import Extras"
+clibreboundx.rebx_set_param_pointer.restype = None
+clibreboundx.rebx_set_param_pointer.argtypes = [
+    POINTER(Extras),
+    c_void_p,   # dirección de particle.ap (obtenida con byref(particle, Particle.ap.offset))
+    c_char_p,
+    c_void_p,
+]
+ 
+ 
+
+from .geopotential import GeopotentialModel
+__all__ += ["GeopotentialModel"]

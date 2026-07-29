@@ -59,6 +59,10 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "max_iterations", REBX_TYPE_INT);
     rebx_register_param(rebx, "J2", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "J4", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "J6", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "J8", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "J10", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "geopotential_model", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "R_eq", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "coordinates", REBX_TYPE_INT);
     rebx_register_param(rebx, "p", REBX_TYPE_DOUBLE);
