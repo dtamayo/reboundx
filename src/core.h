@@ -26,17 +26,9 @@
 #ifndef _REBX_CORE_H
 #define _REBX_CORE_H
 
-//struct rebx_extras;
-//struct rebx_param;
-//enum rebx_param_type;
-//struct rebx_step;
-//struct rebx_node;
-
 #include <stdint.h>
 #include "rebound.h"
 #include "reboundx.h"
-
-
 
 /*****************************
  Internal initialization routine.
