@@ -6,18 +6,19 @@
 #include "reboundx.h"
 
 
-char TITLE[100] = "embryo_trace_";
-char TITLE_FAMTREE[100] = "famtree_";
-char TITLE_HEARTBEAT[100] = "heartbeat_";
+char TITLE[100] = "embryo_trace_particle";
+char TITLE_FAMTREE[100] = "famtree_particle_";
+char TITLE_HEARTBEAT[100] = "heartbeat_particle_";
 double RHO = 5.05e6; //3 g/cm^3
 
 double get_radii(double m, double rho){
     return pow((3*m)/(4*M_PI*rho),1./3.);
 }
 
+
 void heartbeat(struct reb_simulation* sim){
-    if (reb_simulation_output_check(sim, 10)){
-        FILE *fp = fopen("heartbeat_output.txt", "a");  // append mode
+    if (reb_simulation_output_check(sim, 6./365.)){
+        FILE *fp = fopen("heartbeat_particle_3.txt", "a");  // append mode
         if (fp == NULL){
             perror("Error opening file");
             return;
@@ -34,12 +35,20 @@ void heartbeat(struct reb_simulation* sim){
         fprintf(fp, "%e, ", angular_momentum.x);
         fprintf(fp, "%e, ", angular_momentum.y);
         fprintf(fp, "%e, ", angular_momentum.z);
-        fprintf(fp, "%e\n", reb_simulation_energy(sim));
+        fprintf(fp, "%e, ", reb_simulation_energy(sim));
+        fprintf(fp, "%e, ", sim->particles[3].m);
+        fprintf(fp, "%e, ", sim->particles[3].r);
+        fprintf(fp, "%e, ", sim->particles[3].x);
+        fprintf(fp, "%e, ", sim->particles[3].y);
+        fprintf(fp, "%e, ", sim->particles[3].z);
+        fprintf(fp, "%e, ", sim->particles[3].vx);
+        fprintf(fp, "%e, ", sim->particles[3].vy);
+        fprintf(fp, "%e \n ", sim->particles[3].vz);
 
         fclose(fp);
     }
-    
 }
+    
 
 int main(int argc, char* argv[]){
     struct reb_simulation* r = reb_simulation_create();
@@ -57,7 +66,7 @@ int main(int argc, char* argv[]){
     r->G = 39.476926421373;
     r->dt = 6./365.;
     r->exact_finish_time = 0;
-    //r->heartbeat = heartbeat;
+    r->heartbeat = heartbeat;
 
     //Setting the collision resolve module
     struct rebx_extras* rebx = rebx_attach(r);
