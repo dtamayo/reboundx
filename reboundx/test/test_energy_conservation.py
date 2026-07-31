@@ -1,7 +1,7 @@
 import numpy as np
 import rebound as rb
 import reboundx as rbx
-from test_utils import geopotential_value
+from test_utils import spherical_harmonics_value
 
 
 def idx(n, m):
@@ -21,7 +21,7 @@ def total_energy(sim, model):
     lam = np.arctan2(dy, dx)
 
 
-    U_pert = geopotential_value(model, phi, r, lam)
+    U_pert = spherical_harmonics_value(model, phi, r, lam)
     E_pert = -sat.m * U_pert 
     return E_newtonian + E_pert
 
@@ -49,11 +49,11 @@ def test_energy_conservation_long_orbit():
     C[idx(2, 0)] = -J2 / np.sqrt(5)
     C[idx(4, 0)] = -J4 / 3
 
-    model = rbx.GeopotentialModel(C, S, sim.G * m_earth, 6378.137e3)
-    sim.particles["Earth"].params["geopotential_model"] = model
+    model = rbx.spherical_harmonics_model(C, S, sim.G * m_earth, 6378.137e3)
+    sim.particles["Earth"].params["spherical_harmonics_model"] = model
 
     sim._gh_force = gh
-    sim._geopotential_model = model
+    sim._spherical_harmonics_model = model
     sim._C_coeffs = C
     sim._S_coeffs = S
     sim._rebx = rebx_ext

@@ -3,12 +3,12 @@ from . import clibreboundx
 from rebound import Particle
 
 
-class GeopotentialModel(object):
+class spherical_harmonics_model(object):
     """
-    Geopotential Model for REBOUNDx.
+    Spherical Harmonics Model for REBOUNDx.
 
     The user only interacts with this class - internally returns 
-    the calls of rebx_geopotential_create / rebx_geopotential_free /
+    the calls of rebx_spherical_harmonics_create / rebx_spherical_harmonics_free /
     rebx_set_param_pointer via ctypes.
 
     Parameters
@@ -20,7 +20,7 @@ class GeopotentialModel(object):
 
     Example
     -------
-    >>> model = rbx.GeopotentialModel(N, C, S, GM, R_eq)
+    >>> model = rbx.spherical_harmonics_model(N, C, S, GM, R_eq)
     >>> model.attach(central_particle)
     """
 
@@ -44,11 +44,11 @@ class GeopotentialModel(object):
             C_arr[i] = C[i]
             S_arr[i] = S[i]
 
-        self._ptr = clibreboundx.rebx_geopotential_create(
+        self._ptr = clibreboundx.rebx_spherical_harmonics_create(
             C_arr, S_arr, c_double(GM), c_double(R_eq)
         )
         if not self._ptr:
-            raise RuntimeError("rebx_geopotential_create returned NULL")
+            raise RuntimeError("rebx_spherical_harmonics_create returned NULL")
 
         self._freed = False
 
@@ -58,7 +58,7 @@ class GeopotentialModel(object):
             return
         if getattr(self, "_ptr", None):
             try:
-                clibreboundx.rebx_geopotential_free(self._ptr)
+                clibreboundx.rebx_spherical_harmonics_free(self._ptr)
             except Exception:
                 pass
             self._freed = True
@@ -66,9 +66,9 @@ class GeopotentialModel(object):
     def attach(self, particle):
 
         if self._freed or self._ptr is None:
-            raise RuntimeError("Can not attach a GeopotentialModel already freed")
+            raise RuntimeError("Can not attach a spherical_harmonics_model already freed")
 
-        particle.params["geopotential_model"] = self._ptr
+        particle.params["spherical_harmonics_model"] = self._ptr
 
         sim = particle.sim
         if sim is None:

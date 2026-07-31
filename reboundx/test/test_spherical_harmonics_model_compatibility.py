@@ -62,19 +62,19 @@ def add_general_model(sim):
 
 
 
-    model = rbx.GeopotentialModel(
+    model = rbx.spherical_harmonics_model(
         C,
         S,
         G*m_earth,
         R_eq,
     )
 
-    sim.particles["Earth"].params["geopotential_model"] = model
+    sim.particles["Earth"].params["spherical_harmonics_model"] = model
     sim.particles["Earth"].params["Omega"] = [0.0, 0.0, 7.292115e-5]
     
     # Given the model made in a function, we need to save different elements as long as the simulation lasts
     sim._gh_force = gh
-    sim._geopotential_model = model
+    sim._spherical_harmonics_model = model
     sim._C_coeffs = C   # if the model only saves the pointer to buffer numpy
     sim._S_coeffs = S
     sim._rebx = rebx

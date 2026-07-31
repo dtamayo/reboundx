@@ -1,15 +1,15 @@
-#ifndef GEOPOTENTIAL_H
-#define GEOPOTENTIAL_H
+#ifndef spherical_harmonics_H
+#define spherical_harmonics_H
 
 #include "legendre.h"
 
 
 /*
- * WARNING: rebx_geopotential_model is NOT thread-safe.
+ * WARNING: rebx_spherical_harmonics_model is NOT thread-safe.
  *
  * The internal scratch buffers (P, dP, cosml, sinml) are owned by the model
- * and are overwritten on every call to rebx_geopotential_acceleration() /
- * rebx_geopotential_potential(). If this force loop is ever parallelized
+ * and are overwritten on every call to rebx_spherical_harmonics_acceleration() /
+ * rebx_spherical_harmonics_potential(). If this force loop is ever parallelized
  * (e.g. with OpenMP over particles or particle pairs), two threads calling
  * these functions on the SAME model concurrently will race on these buffers
  * and produce incorrect, non-deterministic results.
@@ -38,18 +38,18 @@ typedef struct {
 
     rebx_active_coeff *active;
     int n_active;
-} rebx_geopotential_model;
+} rebx_spherical_harmonics_model;
 
 
 /**
- * @brief Create a spherical harmonics (geopotential) gravity model.
+ * @brief Create a spherical harmonics (spherical_harmonics) gravity model.
  *
  * C and S are dense, 4pi fully-normalized coefficient arrays indexed by
  * idx(n,m) = n*(n+1)/2 + m, for 0 <= m <= n <= N (length (N+1)(N+2)/2
  * each). This dense, zero-padded layout is scanned once here to build an
  * internal sparse list of only the non-zero (n,m,C,S) terms; every
- * subsequent call to rebx_geopotential_acceleration() or
- * rebx_geopotential_potential() iterates over that sparse list instead of
+ * subsequent call to rebx_spherical_harmonics_acceleration() or
+ * rebx_spherical_harmonics_potential() iterates over that sparse list instead of
  * the full dense triangle, so passing a large N with mostly-zero
  * coefficients costs almost nothing per timestep (the O(N^2) scan happens
  * only once, here). The effective working degree model->N is the highest
@@ -66,27 +66,27 @@ typedef struct {
  *
  * @return Newly allocated model, or NULL on allocation failure. Caller
  *         owns the returned pointer and must release it with
- *         rebx_geopotential_free().
+ *         rebx_spherical_harmonics_free().
  */
 
 
 
-rebx_geopotential_model* rebx_geopotential_create(const double *C, const double *S, double GM, double R_eq);
+rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(const double *C, const double *S, double GM, double R_eq);
 
 /**
- * @brief Free all memory owned by a geopotential model. Safe on NULL.
+ * @brief Free all memory owned by a spherical_harmonics model. Safe on NULL.
  */
 
-void rebx_geopotential_free(rebx_geopotential_model *model);
+void rebx_spherical_harmonics_free(rebx_spherical_harmonics_model *model);
 
 
 /**
- * @brief Evaluate the geopotential acceleration at a body-fixed position.
+ * @brief Evaluate the spherical_harmonics acceleration at a body-fixed position.
  *
  * NOT thread-safe: mutates the model's internal scratch buffers (P, dP,
  * cosml, sinml, rho) in place.
  *
- * @param model       Geopotential model.
+ * @param model       spherical_harmonics model.
  * @param phi         Body-fixed latitude, radians.
  * @param r           Radial distance from the body's center, same length
  *                     units as R_eq.
@@ -98,17 +98,17 @@ void rebx_geopotential_free(rebx_geopotential_model *model);
  * @param cosphi_out  [out, optional] cos(phi); NULL if not needed.
 */
 
-void rebx_geopotential_acceleration(rebx_geopotential_model *model,
+void rebx_spherical_harmonics_acceleration(rebx_spherical_harmonics_model *model,
                                      double phi, double r,
                                      double lambda_body, 
                                      double *a_r, double *a_phi, double *a_lambda, double *sinphi_out, double *cosphi_out);
 
 
 /**
- * @brief Evaluate the geopotential (gravitational potential) at a
+ * @brief Evaluate the spherical_harmonics (gravitational potential) at a
  * body-fixed position.
  *
- * @param model       Geopotential model.
+ * @param model       spherical_harmonics model.
  * @param phi         Body-fixed latitude, radians.
  * @param r           Radial distance from the body's center, same length
  *                     units as R_eq.
@@ -117,8 +117,8 @@ void rebx_geopotential_acceleration(rebx_geopotential_model *model,
  */
 
 
-double rebx_geopotential_potential(rebx_geopotential_model *model,
+double rebx_spherical_harmonics_potential(rebx_spherical_harmonics_model *model,
                                     double phi, double r, double lambda_body);
                             
 
-#endif GEOPOTENTIAL_H
+#endif 

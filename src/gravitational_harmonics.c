@@ -23,19 +23,19 @@
  *
  * **Particle Parameters**
  *
- * ============================ ================================= ==================================================================
- * Field (C type)               Required                          Description
- * ============================ ================================= ==================================================================
- * J2 (double)                   No                               J2 coefficient
- * J4 (double)                   No                               J4 coefficient
- * J6 (double)                   No                               J6 coefficient
- * J8 (double)                   No                               J8 coefficient
- * J10 (double)                  No                               J10 coefficient
- * geopotential_model (pointer)  Yes (marks particle as central)  Pointer to rebx_geopotential_model created with rebx_geopotential_create()
- * R_eq (double)                 No                               Equatorial radius of nonspherical body used for calculating Jn harmonics
- * Omega (reb_vec3d)             No                               Angular rotation frequency (Omega_x, Omega_y, Omega_z)
- * theta0 (double)               No                               Length of the body's reference meridian at t=0
- * ============================ ================================= ==================================================================
+ * ============================         ================================= ==================================================================
+ * Field (C type)                       Required                          Description
+ * ============================         ================================= ==================================================================
+ * J2 (double)                          No                               J2 coefficient
+ * J4 (double)                          No                               J4 coefficient
+ * J6 (double)                          No                               J6 coefficient
+ * J8 (double)                          No                               J8 coefficient
+ * J10 (double)                         No                               J10 coefficient
+ * spherical_harmonics_model (pointer)  Yes (marks particle as central)  Pointer to rebx_spherical_harmonics_model created with rebx_spherical_harmonics_create()
+ * R_eq (double)                        No                               Equatorial radius of nonspherical body used for calculating Jn harmonics
+ * Omega (reb_vec3d)                    No                               Angular rotation frequency (Omega_x, Omega_y, Omega_z)
+ * theta0 (double)                      No                               Length of the body's reference meridian at t=0
+ * ============================         ================================= ==================================================================
  *
  * 
  * In difference to the J2/J4 original, this generalized model aims to handle 
@@ -45,7 +45,7 @@
  * HIGHER-ORDER ZONAL HARMONICS (J6, J8, J10)
  * =============================================================================
  * The acceleration vectors (au, av, aw) are obtained by taking the analytical 
- * negative gradient of the zonal geopotential U_n in Cartesian coordinates:
+ * negative gradient of the zonal potential U_n in Cartesian coordinates:
  * 
  *     a_n = -\nabla U_n(x, y, z)
  * 
@@ -80,7 +80,7 @@
 #include <float.h>
 #include "rebound.h"
 #include "reboundx.h"
-#include "geopotential.h"
+#include "spherical_harmonics.h"
 
 #define DEFAULTOMEGA {0.0, 0.0, 0.0}
 
@@ -126,7 +126,7 @@ static inline void j4_func(double G, double m, const double* J4, const double* R
  * following the same closed-form pattern as the pre-existing j2_func/
  * j4_func. See the file-level doc comment for the derivation approach
  * (explicit expansion in costheta2 = (z/r)^2, verified symbolically in
- * test_symbolic_geopotential.py). j8_func and j10_func follow the
+ * test_symbolic__spherical_harmonics.py). j8_func and j10_func follow the
  * identical pattern for J8 and J10.
  *
  * @param G, m     Standard gravitational parameter pieces (G, central
@@ -345,8 +345,8 @@ static inline void uvw(struct reb_vec3d Omega, struct reb_vec3d* hatu, struct re
  * @return Current rotation angle theta0 + |Omega| * t, radians.
  */
 
-static double rebx_geopotential_read_orientation(struct rebx_extras* const rebx, const struct reb_particle* pi,
-                                                  double t, struct reb_vec3d *hatu, struct reb_vec3d *hatv, struct reb_vec3d *hatw) {
+static double rebx_spherical_harmonics_read_orientation(struct rebx_extras* const rebx, const struct reb_particle* pi,
+                                                        double t, struct reb_vec3d *hatu, struct reb_vec3d *hatv, struct reb_vec3d *hatw) {
     struct reb_vec3d Omega = DEFAULTOMEGA;
     const struct reb_vec3d* Omegaptr = rebx_get_param(rebx, pi->ap, "Omega");
     if (Omegaptr != NULL){
@@ -370,13 +370,13 @@ static double rebx_geopotential_read_orientation(struct rebx_extras* const rebx,
  *                          axis (hatw), from uvw().
  * @param theta    Current rotation angle of the body's reference
  *                 meridian about hatw (theta0 + |Omega| * t), from
- *                 rebx_geopotential_read_orientation().
+ *                 rebx_spherical_harmonics_read_orientation().
  * @param phi         [out] Body-fixed latitude, radians.
  * @param r           [out] Distance between pi and pj.
  * @param lambda_body [out] Body-fixed (co-rotating) longitude, radians.
  */
 
-static void rebx_geopotential_geometry(const struct reb_particle* pi, const struct reb_particle* pj,
+static void rebx_spherical_harmonics_geometry(const struct reb_particle* pi, const struct reb_particle* pj,
                                         struct reb_vec3d hatu, struct reb_vec3d hatv, struct reb_vec3d hatw,
                                         double theta,
                                         double *phi, double *r, double *lambda_body) {
@@ -400,7 +400,7 @@ static void rebx_geopotential_geometry(const struct reb_particle* pi, const stru
  * along the (u, v, w) frame.
  *
  * @param a_r, a_phi, a_lambda  Spherical acceleration components, from
- *                              rebx_geopotential_acceleration().
+ *                              rebx_harmonics__acceleration().
  * @param sinphi, cosphi  sin/cos of the body-fixed latitude.
  * @param sinlam, coslam  sin/cos of the longitude in the (u, v) plane
  *                        (inertial-frame longitude, i.e. lambda_body +
@@ -432,14 +432,14 @@ void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_
 
     for (int i=0; i<N; i++){
 
-        rebx_geopotential_model* const model = (rebx_geopotential_model*) rebx_get_param(rebx, particles[i].ap, "geopotential_model");
+        rebx_spherical_harmonics_model* const model = (rebx_spherical_harmonics_model*) rebx_get_param(rebx, particles[i].ap, "spherical_harmonics_model");
         if (model != NULL) {
             /* ---------- general root---------- */
 
             const struct reb_particle pi = particles[i];
  
             struct reb_vec3d hatu = {0}, hatv = {0}, hatw = {0};
-            const double theta = rebx_geopotential_read_orientation(rebx, &pi, t, &hatu, &hatv, &hatw);
+            const double theta = rebx_spherical_harmonics_read_orientation(rebx, &pi, t, &hatu, &hatv, &hatw);
  
             const double costheta = cos(theta);
             const double sintheta = sin(theta);
@@ -451,11 +451,11 @@ void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_
                 const struct reb_particle pj = particles[j];
  
                 double phi, r, lambda_body;
-                rebx_geopotential_geometry(&pi, &pj, hatu, hatv, hatw, theta, &phi, &r, &lambda_body);
+                rebx_spherical_harmonics_geometry(&pi, &pj, hatu, hatv, hatw, theta, &phi, &r, &lambda_body);
  
                 double a_r, a_phi, a_lambda;
                 double sinphi, cosphi;
-                rebx_geopotential_acceleration(model, phi, r, lambda_body, &a_r, &a_phi, &a_lambda, &sinphi, &cosphi);
+                rebx_spherical_harmonics_acceleration(model, phi, r, lambda_body, &a_r, &a_phi, &a_lambda, &sinphi, &cosphi);
  
                 const double coslam_body = model->cosml[1];
                 const double sinlam_body = model->sinml[1];
@@ -569,7 +569,7 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx){
  
     for (int i=0; i<N; i++){
  
-        rebx_geopotential_model* const model = rebx_get_param(rebx, particles[i].ap, "geopotential_model");
+        rebx_spherical_harmonics_model* const model = rebx_get_param(rebx, particles[i].ap, "spherical_harmonics_model");
  
         if (model != NULL){
             /* ---------- ruta general ---------- */
@@ -577,7 +577,7 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx){
             const struct reb_particle pi = particles[i];
  
             struct reb_vec3d hatu = {0}, hatv = {0}, hatw = {0};
-            const double theta = rebx_geopotential_read_orientation(rebx, &pi, sim->t, &hatu, &hatv, &hatw);
+            const double theta = rebx_spherical_harmonics_read_orientation(rebx, &pi, sim->t, &hatu, &hatv, &hatw);
  
             for (int j=0; j<N; j++){
                 if (j == i){
@@ -586,9 +586,9 @@ double rebx_gravitational_harmonics_potential(struct rebx_extras* const rebx){
                 const struct reb_particle pj = particles[j];
  
                 double phi, r, lambda_body;
-                rebx_geopotential_geometry(&pi, &pj, hatu, hatv, hatw, theta, &phi, &r, &lambda_body);
+                rebx_spherical_harmonics_geometry(&pi, &pj, hatu, hatv, hatw, theta, &phi, &r, &lambda_body);
  
-                const double U_pert = rebx_geopotential_potential(model, phi, r, lambda_body);
+                const double U_pert = rebx_spherical_harmonics_potential(model, phi, r, lambda_body);
                 H -= pj.m * U_pert;
             }
             continue;

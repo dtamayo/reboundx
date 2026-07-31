@@ -53,16 +53,16 @@ __all__ = ["__version__", "__build__", "__githash__", "Extras", "Simulationarchi
 
 from ctypes import c_int, c_double, c_void_p, c_char_p, POINTER
  
-clibreboundx.rebx_geopotential_create.restype = c_void_p
-clibreboundx.rebx_geopotential_create.argtypes = [
+clibreboundx.rebx_spherical_harmonics_create.restype = c_void_p
+clibreboundx.rebx_spherical_harmonics_create.argtypes = [
     POINTER(c_double),
     POINTER(c_double),
     c_double,
     c_double,
 ]
  
-clibreboundx.rebx_geopotential_free.restype = None
-clibreboundx.rebx_geopotential_free.argtypes = [c_void_p]
+clibreboundx.rebx_spherical_harmonics_free.restype = None
+clibreboundx.rebx_spherical_harmonics_free.argtypes = [c_void_p]
  
 # Extras ya debería estar definida en este mismo __init__.py o en extras.py;
 # si está en extras.py, mueve estas 3 líneas después de "from .extras import Extras"
@@ -76,5 +76,5 @@ clibreboundx.rebx_set_param_pointer.argtypes = [
  
  
 
-from .geopotential import GeopotentialModel
-__all__ += ["GeopotentialModel"]
+from .spherical_harmonics import spherical_harmonics_model
+__all__ += ["spherical_harmonics_model"]

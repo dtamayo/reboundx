@@ -1,14 +1,14 @@
 import numpy as np
 from scipy.special import assoc_legendre_p_all, factorial
 import reboundx as rbx
-from test_utils import geopotential_value
+from test_utils import spherical_harmonics_value
 
 
 def idx(n, m):
     return n * (n + 1) // 2 + m
 
 
-def independent_geopotential(r, phi, lam, N, C, S, GM, R_eq):
+def independent_potential(r, phi, lam, N, C, S, GM, R_eq):
 
     x = np.sin(phi)
     V = 0.0
@@ -41,7 +41,7 @@ def test_potential_matches_independent_reference():
     C[idx(2, 0)] = -J2 / np.sqrt(5)
     C[idx(4, 0)] = -J4 / 3
 
-    model = rbx.GeopotentialModel(N, C, S, GM, R_eq)
+    model = rbx.spherical_harmonics_model(C, S, GM, R_eq)
 
     test_points = [
         (np.deg2rad(20), 7000e3, np.deg2rad(10)),
@@ -50,8 +50,8 @@ def test_potential_matches_independent_reference():
     ]
 
     for phi, r, lam in test_points:
-        V_model = geopotential_value(model, phi, r, lam)
-        V_ref = independent_geopotential(r, phi, lam, N, C, S, GM, R_eq)
+        V_model = spherical_harmonics_value(model, phi, r, lam)
+        V_ref = independent_potential(r, phi, lam, N, C, S, GM, R_eq)
         rel_err = abs((V_model - V_ref) / V_ref)
         print(f"phi={np.rad2deg(phi):.1f} r={r:.0f}: model={V_model:.6e} ref={V_ref:.6e} rel_err={rel_err:.2e}")
         assert rel_err < 1e-9, f"Divergence in phi={phi}, r={r}: {V_model} vs {V_ref}"

@@ -1,12 +1,12 @@
-#include "geopotential.h"
+#include "spherical_harmonics.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-rebx_geopotential_model* rebx_geopotential_create(const double *C, const double *S, double GM, double R_eq) {
+rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(const double *C, const double *S, double GM, double R_eq) {
 
-    rebx_geopotential_model *model = malloc(sizeof(*model));
+    rebx_spherical_harmonics_model *model = malloc(sizeof(*model));
     if (!model) return NULL;
 
     int count = 0;
@@ -23,7 +23,7 @@ rebx_geopotential_model* rebx_geopotential_create(const double *C, const double 
     }
 
     model->active = malloc(count * sizeof(rebx_active_coeff));
-    if (!model->active) { rebx_geopotential_free(model); return NULL; }
+    if (!model->active) { rebx_spherical_harmonics_free(model); return NULL; }
     model->n_active = count;
 
     int a = 0;
@@ -59,7 +59,7 @@ rebx_geopotential_model* rebx_geopotential_create(const double *C, const double 
 
     if (!model->A || !model->B || !model->D || !model->E || !model->F ||
         !model->P || !model->dP || !model->cosml || !model->sinml) {
-        rebx_geopotential_free(model);
+        rebx_spherical_harmonics_free(model);
         return NULL;
     }
 
@@ -68,7 +68,7 @@ rebx_geopotential_model* rebx_geopotential_create(const double *C, const double 
     return model;
 }
 
-static inline void rebx_geopotential_compute_trig(rebx_geopotential_model *model, double lambda_body) {
+static inline void rebx_spherical_harmonics_compute_trig(rebx_spherical_harmonics_model *model, double lambda_body) {
     const double c = cos(lambda_body);
     const double s = sin(lambda_body);
 
@@ -87,7 +87,7 @@ static inline void rebx_geopotential_compute_trig(rebx_geopotential_model *model
 }
 
 
-void rebx_geopotential_free(rebx_geopotential_model *model) {
+void rebx_spherical_harmonics_free(rebx_spherical_harmonics_model *model) {
     if (!model) return;
     free(model->A);
     free(model->B);
@@ -102,9 +102,9 @@ void rebx_geopotential_free(rebx_geopotential_model *model) {
     free(model);
 }
 
-/* NOT thread-safe: see warning in geopotential.h. Mutates model->P, model->dP,
+/* NOT thread-safe: see warning in spherical_harmonics.h. Mutates model->P, model->dP,
  * model->cosml, model->sinml in place. */
-void rebx_geopotential_acceleration(rebx_geopotential_model *model,
+void rebx_spherical_harmonics_acceleration(rebx_spherical_harmonics_model *model,
                                      double phi, double r,
                                      double lambda_body,
                                      double *a_r, double *a_phi, double *a_lambda, double *sinphi_out, double *cosphi_out) {
@@ -117,7 +117,7 @@ void rebx_geopotential_acceleration(rebx_geopotential_model *model,
     compute_normalized_legendre(sinphi, model->N, model->A, model->B, model->D, model->E, model->P);
     compute_normalized_legendre_derivative(phi, model->N, model->A, model->B, model->D, model->E, model->F, model->P, model->dP);
 
-    rebx_geopotential_compute_trig(model, lambda_body);
+    rebx_spherical_harmonics_compute_trig(model, lambda_body);
 
     double Vr = 0.0, Vphi = 0.0, Vlambda = 0.0;
 
@@ -160,7 +160,7 @@ void rebx_geopotential_acceleration(rebx_geopotential_model *model,
 
 
 
-static void rebx_geopotential_evaluate_basis(rebx_geopotential_model *model,
+static void rebx_spherical_harmonics_evaluate_basis(rebx_spherical_harmonics_model *model,
                                               double phi, double lambda_body,
                                               int need_derivative) {
     const double sinphi = sin(phi);
@@ -169,16 +169,16 @@ static void rebx_geopotential_evaluate_basis(rebx_geopotential_model *model,
     if (need_derivative) {
         compute_normalized_legendre_derivative(phi, model->N, model->A, model->B, model->D, model->E, model->F, model->P, model->dP);
     }
-    rebx_geopotential_compute_trig(model, lambda_body);
+    rebx_spherical_harmonics_compute_trig(model, lambda_body);
 }
 
-double rebx_geopotential_potential(rebx_geopotential_model *model,
+double rebx_spherical_harmonics_potential(rebx_spherical_harmonics_model *model,
                                     double phi, double r, double lambda_body) {
  
     const double GM   = model->GM;
     const double R_eq = model->R_eq;
  
-    rebx_geopotential_evaluate_basis(model, phi, lambda_body, 0);
+    rebx_spherical_harmonics_evaluate_basis(model, phi, lambda_body, 0);
  
     double Vsum = 0.0;
     const double q = R_eq / r;

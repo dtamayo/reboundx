@@ -35,11 +35,11 @@ def build_sim_with_degree(N, seed=42):
             if m > 0:
                 S[idx(n, m)] = rng.normal(0, scale)
 
-    model = rbx.GeopotentialModel(C, S, sim.G * m_earth, 6378.137e3)
-    sim.particles["Earth"].params["geopotential_model"] = model
+    model = rbx.spherical_harmonics_model(C, S, sim.G * m_earth, 6378.137e3)
+    sim.particles["Earth"].params["spherical_harmonics_model"] = model
 
     sim._gh_force = gh
-    sim._geopotential_model = model
+    sim._spherical_harmonics_model = model
     sim._C_coeffs = C
     sim._S_coeffs = S
     sim._rebx = rebx_ext
