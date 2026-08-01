@@ -13,22 +13,6 @@
 #include "reboundx.h"
 #include "spherical_harmonics.h"
 
-double factorial(int n) {
-    double f = 1.0;
-    for (int i = 1; i <= n; i++) {
-        f *= i;
-    }
-    return f;
-}
-
-// Normalitation factor
-double N_nm(int n, int m) {
-    int delta_0m = 0;
-    if (m == 0) {
-        delta_0m = 1;
-    }
-    return sqrt((2.0 - delta_0m) * (2.0 * n + 1.0) * factorial(n - m) / factorial(n + m));
-}
 
 int main(int argc, char* argv[]) {
     // 1. Create the REBOUND simulation
@@ -98,8 +82,9 @@ int main(int argc, char* argv[]) {
     double* S = (double*)calloc(size, sizeof(double));
     
     // Insert the unnormalized C22 and S22 coefficients 
-    C[idx(2, 2)] = 1.574615e-6/N_nm(2,2);
-    S[idx(2, 2)] = -0.903872e-6/N_nm(2,2);
+    // The idx(n,m) function converts the two inputs into the correct index for the dense triangular array.
+    C[idx(2, 2)] = 1.574615e-6;
+    S[idx(2, 2)] = -0.903872e-6;
     
     // Create the model structure. 
     // Notice that in C, we pass pointers to the C and S arrays.

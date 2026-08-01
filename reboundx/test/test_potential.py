@@ -8,6 +8,7 @@ def idx(n, m):
     return n * (n + 1) // 2 + m
 
 
+
 def independent_potential(r, phi, lam, N, C, S, GM, R_eq):
 
     x = np.sin(phi)
@@ -18,13 +19,22 @@ def independent_potential(r, phi, lam, N, C, S, GM, R_eq):
 
     for n in range(2, N + 1):
         for m in range(0, n + 1):
+            # 1. Usamos directamente el polinomio DESNORMALIZADO
             Pnm_raw = P_all[0, n, m]
-            k = 2 if m > 0 else 1
-            norm = np.sqrt((2 * n + 1) * k * factorial(n - m) / factorial(n + m))
-            Pnm = norm * Pnm_raw
+            
             i = idx(n, m)
-            V += (R_eq / r) ** n * Pnm * (C[i] * np.cos(m * lam) + S[i] * np.sin(m * lam))
+            
+            # 2. Aplicamos la convención de signos correcta para los zonales (C_n0 = -J_n)
+            # Como el usuario pasó J2, lo convertimos al coeficiente físico real
+            C_unnorm = -C[i] if m == 0 else C[i]
+            S_unnorm = S[i]
+            
+            # 3. Potencial = Polinomio crudo * Coeficiente crudo
+            V += (R_eq / r) ** n * Pnm_raw * (C_unnorm * np.cos(m * lam) + S_unnorm * np.sin(m * lam))
+            
     return GM / r * V
+
+
 
 
 def test_potential_matches_independent_reference():
@@ -38,8 +48,8 @@ def test_potential_matches_independent_reference():
 
     C = np.zeros(size, dtype=np.float64)
     S = np.zeros(size, dtype=np.float64)
-    C[idx(2, 0)] = -J2 / np.sqrt(5)
-    C[idx(4, 0)] = -J4 / 3
+    C[idx(2, 0)] = J2 
+    C[idx(4, 0)] = J4 
 
     model = rbx.spherical_harmonics_model(C, S, GM, R_eq)
 

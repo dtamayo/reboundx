@@ -55,8 +55,8 @@ def add_general_model(sim):
     S = np.zeros(size, dtype=np.float64)
 
     # The relation between the coefficients and its normalization are a /np.sqrt(2n+1), with a - for Jn.
-    C[idx(2,0)] = -J2/np.sqrt(5) # Equal to [2,0]
-    C[idx(4,0)] = -J4/3         # Equal to [4,0]
+    C[idx(2,0)] = J2        # Equal to [2,0]
+    C[idx(4,0)] = J4        # Equal to [4,0]
 
 
     model = rbx.spherical_harmonics_model(

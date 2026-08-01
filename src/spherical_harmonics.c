@@ -4,6 +4,28 @@
 #include <string.h>
 #include <stdio.h>
 
+
+
+static inline double factorial(int n) {
+    double f = 1.0;
+    for (int i = 1; i <= n; i++) {
+        f *= i;
+    }
+    return f;
+}
+
+// Normalitation factor
+static inline double N_nm(int n, int m) {
+    int delta_0m = 0;
+    int sign = 1;
+    if (m == 0) {
+        delta_0m = 1;
+        sign = -1;
+    }
+    return sign * sqrt((2.0 - delta_0m) * (2.0 * n + 1.0) * factorial(n - m) / factorial(n + m));
+}
+
+
 rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(int N, const double *C, const double *S, double GM, double R_eq) {
 
     rebx_spherical_harmonics_model *model = malloc(sizeof(*model));
@@ -31,10 +53,11 @@ rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(int N, const dou
         for (int m = 0; m <= n; m++) {
             const int k = idx(n, m);
             if (C[k] != 0.0 || S[k] != 0.0) {
+                double norm_factor = N_nm(n, m);
                 model->active[a].n = n;
                 model->active[a].m = m;
-                model->active[a].C = C[k];
-                model->active[a].S = S[k];
+                model->active[a].C = C[k]/norm_factor;
+                model->active[a].S = S[k]/norm_factor;
                 a++;
             }
         }
@@ -101,6 +124,7 @@ void rebx_spherical_harmonics_free(rebx_spherical_harmonics_model *model) {
     free(model->active);
     free(model);
 }
+
 
 /* NOT thread-safe: see warning in spherical_harmonics.h. Mutates model->P, model->dP,
  * model->cosml, model->sinml in place. */
