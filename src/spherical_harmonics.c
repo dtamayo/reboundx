@@ -4,14 +4,14 @@
 #include <string.h>
 #include <stdio.h>
 
-rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(const double *C, const double *S, double GM, double R_eq) {
+rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(int N, const double *C, const double *S, double GM, double R_eq) {
 
     rebx_spherical_harmonics_model *model = malloc(sizeof(*model));
     if (!model) return NULL;
 
     int count = 0;
     int Nreal = 1;
-    int N = 50;
+
     for (int n = 2; n <= N; n++){
         for (int m = 0; m <= n; m++){
             const int k = idx(n,m);

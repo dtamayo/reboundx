@@ -54,6 +54,12 @@ typedef struct {
  * coefficients costs almost nothing per timestep (the O(N^2) scan happens
  * only once, here). The effective working degree model->N is the highest
  * degree with a non-zero coefficient, and may be smaller than the input N.
+ * It's worth pointing out that in C, the arrays C and S cannot be hard-coded
+ * as are in Python, so in C, the user must pass the lenght of C and S whilst 
+ * in Python, the lenght of C and S is inferred from the length of the list.
+ * 
+ * 
+ * @param N     Maximum degree of the spherical harmonics model. Must be >= 2.
  *
  * @param C     4pi fully-normalized cosine coefficients C_nm, dense
  *              triangular array indexed by idx(n,m). Dimensionless.
@@ -71,7 +77,7 @@ typedef struct {
 
 
 
-rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(const double *C, const double *S, double GM, double R_eq);
+rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(int N, const double *C, const double *S, double GM, double R_eq);
 
 /**
  * @brief Free all memory owned by a spherical_harmonics model. Safe on NULL.

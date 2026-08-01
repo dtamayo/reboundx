@@ -55,6 +55,7 @@ from ctypes import c_int, c_double, c_void_p, c_char_p, POINTER
  
 clibreboundx.rebx_spherical_harmonics_create.restype = c_void_p
 clibreboundx.rebx_spherical_harmonics_create.argtypes = [
+    c_int,
     POINTER(c_double),
     POINTER(c_double),
     c_double,
@@ -64,16 +65,15 @@ clibreboundx.rebx_spherical_harmonics_create.argtypes = [
 clibreboundx.rebx_spherical_harmonics_free.restype = None
 clibreboundx.rebx_spherical_harmonics_free.argtypes = [c_void_p]
  
-# Extras ya debería estar definida en este mismo __init__.py o en extras.py;
-# si está en extras.py, mueve estas 3 líneas después de "from .extras import Extras"
+
 clibreboundx.rebx_set_param_pointer.restype = None
 clibreboundx.rebx_set_param_pointer.argtypes = [
     POINTER(Extras),
-    c_void_p,   # dirección de particle.ap (obtenida con byref(particle, Particle.ap.offset))
+    c_void_p,   
     c_char_p,
     c_void_p,
 ]
- 
+
  
 
 from .spherical_harmonics import spherical_harmonics_model
