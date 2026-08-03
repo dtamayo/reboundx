@@ -19,17 +19,17 @@ def independent_potential(r, phi, lam, N, C, S, GM, R_eq):
 
     for n in range(2, N + 1):
         for m in range(0, n + 1):
-            # 1. Usamos directamente el polinomio DESNORMALIZADO
+            # 1. We use directly the raw associated Legendre polynomial 
             Pnm_raw = P_all[0, n, m]
             
             i = idx(n, m)
             
-            # 2. Aplicamos la convención de signos correcta para los zonales (C_n0 = -J_n)
-            # Como el usuario pasó J2, lo convertimos al coeficiente físico real
+            # 2. We apply the correct sign convention for the zonals (C_n0 = -J_n)
+            # As the user passed J2, we convert it to the actual physical coefficient
             C_unnorm = -C[i] if m == 0 else C[i]
             S_unnorm = S[i]
             
-            # 3. Potencial = Polinomio crudo * Coeficiente crudo
+            # 3. Potential = Raw Polynomial * Raw Coefficient
             V += (R_eq / r) ** n * Pnm_raw * (C_unnorm * np.cos(m * lam) + S_unnorm * np.sin(m * lam))
             
     return GM / r * V
@@ -66,7 +66,7 @@ def test_potential_matches_independent_reference():
         print(f"phi={np.rad2deg(phi):.1f} r={r:.0f}: model={V_model:.6e} ref={V_ref:.6e} rel_err={rel_err:.2e}")
         assert rel_err < 1e-9, f"Divergence in phi={phi}, r={r}: {V_model} vs {V_ref}"
 
-    print("Model's Potencial is the same as the independent reference.")
+    print("Model's Potential is the same as the independent reference.")
 
 
 if __name__ == "__main__":

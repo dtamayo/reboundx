@@ -1,8 +1,6 @@
-from ctypes import c_int, c_double, c_void_p, POINTER, byref
+from ctypes import c_int, c_double
 import numpy as np
-from matplotlib.pylab import size
 from . import clibreboundx
-from rebound import Particle
 
 
 class spherical_harmonics_model(object):
@@ -15,10 +13,10 @@ class spherical_harmonics_model(object):
 
     Parameters
     ----------
-    N : int -> Hard-coded to 50. 
     C, S : list or float array
     GM : float
     R_eq : float
+    is_normalized : bool, optional
 
     Example
     -------
@@ -26,13 +24,13 @@ class spherical_harmonics_model(object):
     >>> model.attach(central_particle)
     """
 
-    def __init__(self, C, S, GM, R_eq):
+    def __init__(self, C, S, GM, R_eq, is_normalized=False):
         
         self._ptr = None
         self._freed = True
 
         size = len(C)
-        N = int((-3 + np.sqrt(1 + 8 * size)) // 2)
+        N = int(round((-3 + np.sqrt(1 + 8 * size)) / 2))
 
         if (N + 1) * (N + 2) // 2 != size:
             raise ValueError(
@@ -40,9 +38,6 @@ class spherical_harmonics_model(object):
                 "Expected (N+1)(N+2)/2 elements."
             )
         
-        if len(C) > size or len(S) > size:
-            raise ValueError("C and S cannot contain coefficients beyond degree 50.")
-
         if len(C) != len(S):
             raise ValueError("C and S must have the same length.")
 
@@ -54,8 +49,9 @@ class spherical_harmonics_model(object):
             S_arr[i] = S[i]
 
         self._ptr = clibreboundx.rebx_spherical_harmonics_create(
-            c_int(N), C_arr, S_arr, c_double(GM), c_double(R_eq)
+            c_int(N), C_arr, S_arr, c_double(GM), c_double(R_eq), c_int(1 if is_normalized else 0)
         )
+
         if not self._ptr:
             raise RuntimeError("rebx_spherical_harmonics_create returned NULL")
 

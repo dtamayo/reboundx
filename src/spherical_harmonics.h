@@ -69,6 +69,8 @@ typedef struct {
  *              in simulation units.
  * @param R_eq  Equatorial reference radius of the central body, in
  *              simulation length units.
+ * 
+ * @param is_normalized  If true, the input C and S are assumed to be fully-normalized.
  *
  * @return Newly allocated model, or NULL on allocation failure. Caller
  *         owns the returned pointer and must release it with
@@ -77,7 +79,7 @@ typedef struct {
 
 
 
-rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(int N, const double *C, const double *S, double GM, double R_eq);
+rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(int N, const double *C, const double *S, double GM, double R_eq, int is_normalized);
 
 /**
  * @brief Free all memory owned by a spherical_harmonics model. Safe on NULL.

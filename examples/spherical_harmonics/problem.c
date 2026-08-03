@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
     // Create the model structure. 
     // Notice that in C, we pass pointers to the C and S arrays.
     // It's necessary to pass the lenght of C ans S: N
-    rebx_spherical_harmonics_model* model = rebx_spherical_harmonics_create(N, C, S, sim->G * m_earth, R_eq);
+    rebx_spherical_harmonics_model* model = rebx_spherical_harmonics_create(N, C, S, sim->G * m_earth, R_eq, 0); // 0 indicates that the coefficients are not normalized
     
     // Assign the model to the central particle (Earth)
     rebx_set_param_pointer(rebx, (struct rebx_node**)&sim->particles[0].ap, "spherical_harmonics_model", model);

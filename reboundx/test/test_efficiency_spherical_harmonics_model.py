@@ -67,7 +67,8 @@ def add_general_model(sim):
     )
 
     sim.particles["Earth"].params["spherical_harmonics_model"] = model
-    
+    sim.particles["Earth"].params["Omega"] = [0, 0, 7.2921159e-5] # rad/s
+    sim.particles["Earth"].params["theta0"] = 0.0 # rad
     # Given the model made in a function, we need to save different elements as long as the simulation lasts
     sim._gh_force = gh
     sim._spherical_harmonics_model = model

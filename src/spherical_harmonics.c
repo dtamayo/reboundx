@@ -14,7 +14,7 @@ static inline double factorial(int n) {
     return f;
 }
 
-// Normalitation factor
+// Normalization factor
 static inline double N_nm(int n, int m) {
     int delta_0m = 0;
     int sign = 1;
@@ -26,7 +26,7 @@ static inline double N_nm(int n, int m) {
 }
 
 
-rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(int N, const double *C, const double *S, double GM, double R_eq) {
+rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(int N, const double *C, const double *S, double GM, double R_eq, int is_normalized) {
 
     rebx_spherical_harmonics_model *model = malloc(sizeof(*model));
     if (!model) return NULL;
@@ -53,11 +53,19 @@ rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(int N, const dou
         for (int m = 0; m <= n; m++) {
             const int k = idx(n, m);
             if (C[k] != 0.0 || S[k] != 0.0) {
-                double norm_factor = N_nm(n, m);
                 model->active[a].n = n;
                 model->active[a].m = m;
-                model->active[a].C = C[k]/norm_factor;
-                model->active[a].S = S[k]/norm_factor;
+
+                if (is_normalized) {
+                    model->active[a].C = C[k];
+                    model->active[a].S = S[k];
+                }
+                
+                else{
+                    double norm_factor = N_nm(n, m);
+                    model->active[a].C = C[k]/norm_factor;
+                    model->active[a].S = S[k]/norm_factor;
+                }
                 a++;
             }
         }
