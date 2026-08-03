@@ -82,8 +82,25 @@ class Params(MutableMapping):
                 raise AttributeError("REBOUNDx Error: Parameter '{0}' must be assigned a rebound.ODE object.".format(key))
             clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))
         if ctype == c_void_p:
-            clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))
+            # Objetos Python que encapsulan un puntero C
+            if hasattr(value, "_ptr"):
+                clibreboundx.rebx_set_param_pointer(
+                    self.rebx,
+                    byref(self.ap),
+                    c_char_p(key.encode("ascii")),
+                    value._ptr,
+                )
 
+            # Comportamiento original
+            else:
+                clibreboundx.rebx_set_param_pointer(
+                    self.rebx,
+                    byref(self.ap),
+                    c_char_p(key.encode("ascii")),
+                    byref(value),
+                )
+
+                
     def __delitem__(self, key):
         raise AttributeError("REBOUNDx Error: Removing particle params not implemented.")
 
