@@ -46,8 +46,8 @@ def test_energy_conservation_long_orbit():
     size = (N + 1) * (N + 2) // 2
     C = np.zeros(size); S = np.zeros(size)
     J2, J4 = 1.0826e-3, -1.6196e-6
-    C[idx(2, 0)] = J2 
-    C[idx(4, 0)] = J4 
+    C[idx(2, 0)] = -J2 
+    C[idx(4, 0)] = -J4 
 
     model = rbx.spherical_harmonics_model(C, S, sim.G * m_earth, 6378.137e3)
     sim.particles["Earth"].params["spherical_harmonics_model"] = model

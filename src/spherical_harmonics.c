@@ -17,12 +17,10 @@ static inline double factorial(int n) {
 // Normalization factor
 static inline double N_nm(int n, int m) {
     int delta_0m = 0;
-    int sign = 1;
     if (m == 0) {
         delta_0m = 1;
-        sign = -1;
     }
-    return sign * sqrt((2.0 - delta_0m) * (2.0 * n + 1.0) * factorial(n - m) / factorial(n + m));
+    return sqrt((2.0 - delta_0m) * (2.0 * n + 1.0) * factorial(n - m) / factorial(n + m));
 }
 
 
