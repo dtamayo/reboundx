@@ -732,7 +732,9 @@ enum REB_COLLISION_RESOLVE_OUTCOME rebx_fragmenting_collisions(struct reb_simula
     }else{
         lr_mass = 0.1 * initial_mass * pow(qratio/1.8, -1.5);  
     }
-
+    if (lr_mass < min_frag_mass){
+        lr_mass = min_frag_mass;
+    }
     enum COLLISION_TYPE collision_type;
     enum REB_COLLISION_RESOLVE_OUTCOME outcome = REB_COLLISION_RESOLVE_OUTCOME_REMOVE_NONE;
 
