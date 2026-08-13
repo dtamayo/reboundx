@@ -317,12 +317,14 @@ class Force(Structure):
         return params
 
 FORCEFUNCPTR = CFUNCTYPE(None, POINTER(rebound.Simulation), POINTER(Force), POINTER(rebound.Particle), c_int)
+FREEFUNCPTR = CFUNCTYPE(None, POINTER(Extras), POINTER(Force))
 
 Force._fields_ = [  ("name", c_char_p),
                     ("ap", POINTER(Node)),
                     ("_sim", POINTER(rebound.Simulation)),
                     ("_force_type", c_int),
-                    ("_update_accelerations", FORCEFUNCPTR)]
+                    ("_update_accelerations", FORCEFUNCPTR),
+                    ("_free_memory", FREEFUNCPTR)]
 
 # Need to put fields after class definition because of self-referencing
 Extras._fields_ =  [("_sim", POINTER(rebound.Simulation)),

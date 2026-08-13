@@ -207,6 +207,22 @@ struct rebx_param{
 };
 
 /**
+ * @brief Main REBOUNDx structure.
+ * @details These fields are used internally by REBOUNDx and generally should not be changed manually by the user. Use the API instead.
+ */
+struct rebx_extras {
+	struct reb_simulation* sim;					    ///< Pointer to the simulation REBOUNDx is linked to.
+
+    struct rebx_node* additional_forces;            ///< Linked list of extra forces
+    struct rebx_node* pre_timestep_modifications;   ///< Linked list of rebx_steps to apply before each timestep
+	struct rebx_node* post_timestep_modifications;  ///< Linked list of rebx_steps to apply after each timestep
+
+    struct rebx_node* registered_params;            ///< Linked list of rebx_params with all the parameter names registered with their type (for type safety)
+    struct rebx_node* allocated_forces;             ///< For memory management
+    struct rebx_node* allocated_operators;          ///< For memory management
+};
+
+/**
  * @brief Structure for REBOUNDx forces.
  */
 struct rebx_force{
@@ -216,6 +232,7 @@ struct rebx_force{
     // See comments in params.py in __init__
     enum rebx_force_type force_type;    ///< Force type for internal logic
     void (*update_accelerations) (struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N); ///< Function pointer to add additional accelerations
+    void (*free_memory) (struct rebx_extras* const rebx, struct rebx_force* const force); ///< Optional function pointer to free memory the force allocated internally. Called by rebx_free_force
 };
 
 /**
@@ -255,22 +272,6 @@ struct rebx_interpolator{
     double* y2;
     int klo;
 };
-/**
- * @brief Main REBOUNDx structure.
- * @details These fields are used internally by REBOUNDx and generally should not be changed manually by the user. Use the API instead.
- */
-struct rebx_extras {
-	struct reb_simulation* sim;					    ///< Pointer to the simulation REBOUNDx is linked to.
-
-    struct rebx_node* additional_forces;            ///< Linked list of extra forces
-    struct rebx_node* pre_timestep_modifications;   ///< Linked list of rebx_steps to apply before each timestep
-	struct rebx_node* post_timestep_modifications;  ///< Linked list of rebx_steps to apply after each timestep
-
-    struct rebx_node* registered_params;            ///< Linked list of rebx_params with all the parameter names registered with their type (for type safety)
-    struct rebx_node* allocated_forces;             ///< For memory management
-    struct rebx_node* allocated_operators;          ///< For memory management
-};
-
 /****************************************
   General REBOUNDx Functions
 *****************************************/

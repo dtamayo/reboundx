@@ -94,7 +94,6 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "tctl_k2", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tctl_tau", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "integrator", REBX_TYPE_INT);
-    rebx_register_param(rebx, "free_arrays", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "im_ps_final", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "im_ps_prev", REBX_TYPE_POINTER);
     rebx_register_param(rebx, "im_ps_avg", REBX_TYPE_POINTER);
@@ -267,6 +266,7 @@ struct rebx_force* rebx_create_force(struct rebx_extras* const rebx, const char*
     force->sim = rebx->sim;
     force->force_type = REBX_FORCE_NONE;
     force->update_accelerations = NULL;
+    force->free_memory = NULL;
     force->name = NULL;
     if(name != NULL)
     {
@@ -901,9 +901,8 @@ void rebx_free_particle_ap(struct reb_particle* p){
 }
 
 void rebx_free_force(struct rebx_extras* rebx, struct rebx_force* force){
-    void (*free_arrays)(struct rebx_extras* rebx, struct rebx_force* force) = rebx_get_param(rebx, force->ap, "free_arrays");
-    if (free_arrays){
-        free_arrays(rebx, force);
+    if (force->free_memory){
+        force->free_memory(rebx, force);
     }
     if(force->name){
         free(force->name);

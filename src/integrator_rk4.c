@@ -30,7 +30,7 @@
 #include "reboundx.h"
 #include "core.h"
 
-void rebx_rk4_free_arrays(struct rebx_extras* rebx, struct rebx_force* force){
+static void rebx_rk4_free_memory(struct rebx_extras* const rebx, struct rebx_force* const force){
     struct reb_particle* const k2 = rebx_get_param(rebx, force->ap, "rk4_k2");
     free(k2);
     struct reb_particle* const k3 = rebx_get_param(rebx, force->ap, "rk4_k3");
@@ -47,8 +47,7 @@ void rebx_integrator_rk4_integrate(struct reb_simulation* const sim, const doubl
         struct reb_particle* k3 = malloc(N*sizeof(*k3));
         rebx_set_param_pointer(rebx, &force->ap, "rk4_k2", k2);
         rebx_set_param_pointer(rebx, &force->ap, "rk4_k3", k3);
-        rebx_set_param_pointer(rebx, &force->ap, "free_arrays", rebx_rk4_free_arrays);
-        
+        force->free_memory = rebx_rk4_free_memory;
     }
     struct reb_particle* k3 = rebx_get_param(rebx, force->ap, "rk4_k3");
     memcpy(k2, sim->particles, N*sizeof(*k2));
