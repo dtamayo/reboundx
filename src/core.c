@@ -195,32 +195,10 @@ struct rebx_extras* rebx_attach(struct reb_simulation* sim){  // reboundx.h
 }
 
 void rebx_extras_cleanup(struct reb_simulation* sim){
+    // Called by REBOUND when sim is freed. We set to NULL so we have a way to check if sim still exists from REBOUNDx
     struct rebx_extras* rebx = sim->extras;
     rebx->sim = NULL;
 }
-
-void rebx_detach(struct reb_simulation* sim, struct rebx_extras* rebx){
-    if (sim == NULL){
-        return;
-    }
-    rebx->sim = NULL;
-
-    if (sim->extras == rebx){
-        if (sim->additional_forces == rebx_additional_forces){
-            sim->additional_forces = NULL;
-        }
-        if (sim->pre_timestep_modifications == rebx_pre_timestep_modifications){
-            sim->pre_timestep_modifications = NULL;
-        }
-        if (sim->post_timestep_modifications == rebx_post_timestep_modifications){
-            sim->post_timestep_modifications = NULL;
-        }
-        if (sim->free_particle_ap == rebx_free_particle_ap){
-            sim->free_particle_ap = NULL;
-        }
-    }
-}
-
 
 void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
     rebx->sim = sim; // python checks for rebx->sim = NULL so set 1st
@@ -245,7 +223,11 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
 }
 
 void rebx_free(struct rebx_extras* rebx){
+// In C, we don't know whether this is called by user before or after the user frees the sim
+// Each of first two functions are set up for either case
+// In python __del__ calls the first two functions (the rebx memory is owned by Python and gc'ed)
     rebx_free_pointers(rebx);
+    rebx_detach(rebx);
     free(rebx);
 }
 
@@ -894,6 +876,7 @@ void rebx_free_ap(struct rebx_node** ap){
         free(current);
         current = next;
     }
+    *ap = NULL; // so this is safe to call twice, and particles are left with a clean ap list
 }
 
 void rebx_free_particle_ap(struct reb_particle* p){
@@ -930,11 +913,43 @@ void rebx_free_reg_param(struct rebx_param* param){
     free(param);
 }
 
+void rebx_detach(struct rebx_extras* rebx){
+    struct reb_simulation* sim = rebx->sim;
+    if (sim == NULL){ // sim already freed, nothing to do
+        return;
+    }
+
+    if (sim->extras == rebx){
+        if (sim->additional_forces == rebx_additional_forces){
+            sim->additional_forces = NULL;
+        }
+        if (sim->pre_timestep_modifications == rebx_pre_timestep_modifications){
+            sim->pre_timestep_modifications = NULL;
+        }
+        if (sim->post_timestep_modifications == rebx_post_timestep_modifications){
+            sim->post_timestep_modifications = NULL;
+        }
+        if (sim->extras_cleanup == rebx_extras_cleanup){
+            sim->extras_cleanup = NULL;
+        }
+        if (sim->free_particle_ap == rebx_free_particle_ap){
+            sim->free_particle_ap = NULL;
+        }
+        sim->extras = NULL;
+    }
+}
+
 void rebx_free_pointers(struct rebx_extras* rebx){
     if (rebx == NULL){
         return;
     }
-    rebx_detach(rebx->sim, rebx);
+    // if sim has already been freed, so have ap linked lists (this is always the order in Python)
+    // if not, then the user has freed rebx first, so we should free particles ap
+    if (rebx->sim != NULL){ 
+        for (size_t i=0; i<rebx->sim->N; i++){
+            rebx_free_particle_ap(&rebx->sim->particles[i]);
+        }
+    }
     struct rebx_node* current;
     struct rebx_node* next;
 
@@ -960,7 +975,6 @@ void rebx_free_pointers(struct rebx_extras* rebx){
         free(current);
         current = next;
     }
-
 
     current = rebx->pre_timestep_modifications;
     while (current != NULL){

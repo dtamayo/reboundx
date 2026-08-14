@@ -24,43 +24,7 @@ def droprebx():
     sim, rebx = makegr()
     return sim
 
-def effect(reb_sim):
-    reb_sim.contents.particles[0].params['c'] = 1.
-    
 class TestSegFaults(unittest.TestCase):
-    def test_detach_preserves_force(self):
-        sim, rebx = make()
-        sim.additional_forces = effect
-        addmass = rebx.load_operator('modify_mass')
-        rebx.add_operator(addmass, dtfraction=1.,  timing="pre")
-        rebx.detach(sim)
-        sim.steps(1)
-        self.assertEqual(sim.particles[0].params['c'], 1)
-    
-    def test_detach_preserves_pretm(self):
-        sim, rebx = make()
-        sim.pre_timestep_modifications = effect
-        addmass = rebx.load_operator('modify_mass')
-        rebx.add_operator(addmass, dtfraction=1.,  timing="post")
-        rebx.detach(sim)
-        sim.steps(1)
-        self.assertEqual(sim.particles[0].params['c'], 1)
-    
-    def test_detach_preserves_pretm(self):
-        sim, rebx = make()
-        sim.post_timestep_modifications = effect
-        gr = rebx.load_force('gr')
-        rebx.add_force(gr)
-        rebx.detach(sim)
-        sim.steps(1)
-        self.assertEqual(sim.particles[0].params['c'], 1)
-
-    def test_detach(self):
-        sim, rebx = makegr()
-        rebx.detach(sim)
-        sim.integrate(10)
-        self.assertLess(sim.particles[1].pomega, 1.e-10) # should be 0
-
     def test_create_in_function(self):
         sim, rebx = makegr()
         sim.integrate(10)

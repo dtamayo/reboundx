@@ -63,10 +63,7 @@ class Extras(Structure):
     def __del__(self):
         if self._b_needsfree_ == 1:
             clibreboundx.rebx_free_pointers(byref(self))
-
-    def detach(self, sim):
-        sim._extras_ref = None # remove reference to rebx so it can be garbage collected
-        clibreboundx.rebx_detach(byref(sim), byref(self))
+            clibreboundx.rebx_detach(byref(self))
 
     #######################################
     # Functions for manipulating REBOUNDx effects

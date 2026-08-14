@@ -292,12 +292,8 @@ struct rebx_interpolator{
  */
 struct rebx_extras* rebx_attach(struct reb_simulation* sim);
 
-/**
- * @brief Detaches REBOUNDx from simulation, resetting all the simulation's function pointers that REBOUNDx has set.
- * @details This does not free the memory allocated by REBOUNDx (call rebx_free).
- * @param sim Pointer to the simulation from which to remove REBOUNDx
- */
-void rebx_detach(struct reb_simulation* sim, struct rebx_extras* rebx);
+// internal functions
+void rebx_detach(struct rebx_extras* rebx);
 void rebx_extras_cleanup(struct reb_simulation* sim);
 /**
  * @brief Frees all memory allocated by REBOUNDx instance.
