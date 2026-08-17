@@ -11,26 +11,22 @@ jobs:
         python-version: ["3.10", "3.11"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           path: reboundx
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: hannorein/rebound
           path: rebound
           ref: rebound5
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install pip 
         run: python -m pip install --upgrade pip
       - name: Install external python packages 
-        run: pip install pytest wheel setuptools numpy matplotlib scipy 
-      - name: Install REBOUND requirements
-        run: pip install -r rebound/requirements.txt
-      - name: Install REBOUNDx requirements
-        run: pip install -r reboundx/requirements.txt
+        run: pip install pytest wheel setuptools numpy matplotlib scipy
       - name: Build REBOUND package
         run: pip install ./rebound
       - name: Build REBOUNDx package
