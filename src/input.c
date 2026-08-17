@@ -608,7 +608,6 @@ static int rebx_load_list(struct rebx_extras* rebx, enum rebx_binary_field_type 
 }
 
 static void rebx_input_read_header(FILE* inf, enum rebx_input_binary_messages* warnings){
-    long objects = 0;
     // Input header.
     const char str[] = "REBOUNDx Binary File. Version: ";
     const char zero = '\0';
@@ -617,10 +616,16 @@ static void rebx_input_read_header(FILE* inf, enum rebx_input_binary_messages* w
     memcpy(curvbuf+strlen(curvbuf)+1,rebx_githash_str,sizeof(char)*(62-strlen(curvbuf)));
     curvbuf[63] = zero;
     
-    objects += fread(readbuf,sizeof(*str),64,inf);
+    size_t objects = fread(readbuf,sizeof(*str),64,inf);
+    if (objects < 64){
+        *warnings |= REBX_INPUT_BINARY_ERROR_CORRUPT;
+        return;
+    }
+    readbuf[64] = zero;
     // Note: following compares version, but ignores githash.
     if(strcmp(readbuf,curvbuf)!=0){
         *warnings |= REBX_INPUT_BINARY_WARNING_VERSION;
+        return;
     }
 }
 
