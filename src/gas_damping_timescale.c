@@ -29,8 +29,8 @@
  *
  * ======================= ===============================================
  * Authors                 Phoebe Sandhaus
- * Implementation Paper    `Sandhaus et al. in prep`
- * Based on                `Dawson et al. 2016 <https://ui.adsabs.harvard.edu/abs/2016ApJ...822...54D/abstract>; Kominami & Ida 2002 <https://ui.adsabs.harvard.edu/abs/2002Icar..157...43K/abstract>`_
+ * Implementation Paper    `Sandhaus et al. 2025 <https://ui.adsabs.harvard.edu/abs/2025ApJ...990...61S/abstract>`_
+ * Based on                `Dawson et al. 2016 <https://ui.adsabs.harvard.edu/abs/2016ApJ...822...54D/abstract>`_, `Kominami & Ida 2002 <https://ui.adsabs.harvard.edu/abs/2002Icar..157...43K/abstract>`_
  * C Example               :ref:`c_example_gas_damping_timescale`
  * Python Example          `GasDampingTimescale.ipynb <https://github.com/PhoebeSandhaus/reboundx_gas_damping/tree/main/ipython_examples/GasDampingTimescale.ipynb>`_
  * ======================= ===============================================
