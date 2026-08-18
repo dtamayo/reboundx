@@ -5,6 +5,9 @@ class Simulationarchive(rebound.Simulationarchive):
     """
     Simulationarchive Class.
     """
+    def __new__(cls, filename, rebxfilename, *args, **kwargs):
+        return super(Simulationarchive, cls).__new__(cls, filename, *args, **kwargs)
+
     def __init__(self, filename, rebxfilename, *args, **kwargs):
         """
         Arguments
