@@ -1,9 +1,9 @@
 /**
  * Adding gravitational harmonics (J2, J4) to particles
- * See the J2.ipynb ipython_example for more details on setting tilted spins,
- * and on manipulating the outputs for analysis.
  * 
  * This example shows how to add a J2 and J4 harmonic to particles.
+ * See the J2.ipynb ipython_example for more details on setting tilted spins,
+ * and on manipulating the outputs for analysis.
  * If you have GLUT installed for the visualization, press 'w' and/or 'c' for a clearer view of
  * the whole orbit.
  */

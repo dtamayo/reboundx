@@ -42,6 +42,10 @@ class Params(MutableMapping):
         elif ctype == rebound.Vec3d:
             # Special case 
             valptr = cast(valptr, POINTER(rebound.Vec3dBasic))
+        elif ctype == c_char_p: # Convert strings to python strings
+            if valptr is None:
+                raise AttributeError("REBOUNDx Error: Parameter '{0}' not found on object.".format(key))
+            return cast(valptr, c_char_p).value.decode("ascii")
         else:
             valptr = cast(valptr, POINTER(ctype))
 
@@ -83,6 +87,13 @@ class Params(MutableMapping):
             clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))
         if ctype == c_void_p:
             clibreboundx.rebx_set_param_pointer(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')), byref(value))
+        if ctype == c_char_p:
+            if isinstance(value,str):
+                value = c_char_p(value.encode('ascii'))
+                clibreboundx.rebx_set_param_string(self.rebx, byref(self.ap), c_char_p(key.encode('ascii')),value)
+            else:
+                raise AttributeError("REBOUNDx Error: Parameter '{0}' must be a string.".format(key))
+
 
     def __delitem__(self, key):
         raise AttributeError("REBOUNDx Error: Removing particle params not implemented.")

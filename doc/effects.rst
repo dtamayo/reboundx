@@ -1,7 +1,7 @@
 .. _effects:
 
-Implemented Effects
-===================
+Astrophysical Effects
+=====================
 
 Below are descriptions for each of the effects included in REBOUNDx.
 Different implementations for the same effect are grouped together.
@@ -472,7 +472,7 @@ tau_mass (double)            Yes         e-folding mass loss (<0) or growth (>0)
 
 
 Tides
-^^^^^^^^^^^^^^^^^^
+^^^^^
 
 .. _tides_spin:
 
@@ -529,7 +529,7 @@ Python Example          `TidesConstantTimeLag.ipynb <https://github.com/dtamayo/
 ======================= ===============================================
 
 This adds constant time lag tidal interactions between orbiting bodies in the simulation and the primary, both from tides raised on the primary and on the other bodies.
-In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' physical radius particles[i].r, k2 (potential Love number of degree 2), constant time lag tau, and rotation rate Omega. See Baronett et al. (2022), Hut (1981), and Bolmont et al. 2015 above.
+In all cases, we need to set masses for all the particles that will feel these tidal forces. After that, we can choose to include tides raised on the primary, on the "planets", or both, by setting the respective bodies' physical radius particles[i].r, k2 (potential Love number of degree 2), constant time lag tau, and rotation rate Omega. See Baronett et al. (2021), Hut (1981), and Bolmont et al. 2015 above.
 
 If tau is not set, it will default to zero and yield the conservative piece of the tidal potential.
 
@@ -550,7 +550,7 @@ OmegaMag (float)             No          Angular rotation frequency. If not set 
 
 
 Central Force
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
 
 .. _central_force:
 
@@ -584,7 +584,7 @@ gammacentral (double)         Yes         Power index for central acceleration.
 
 
 Gravity Fields
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 
 .. _gravitational_harmonics:
 
@@ -592,14 +592,21 @@ gravitational_harmonics
 ***********************
 
 ======================= ===============================================
-Authors                 D. Tamayo
+Authors                 M. Broz
 Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_. 
 Based on                None
-C Example               :ref:`c_example_J2`
+C Example               :ref:`c_example_j2`
 Python Example          `J2.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/J2.ipynb>`_.
 ======================= ===============================================
 
-Adds azimuthally symmetric gravitational harmonics (J2, J4) to bodies in the simulation. Current implementation assumes everything is planar, i.e. spin pole of body aligned with z axis of simulation.
+Allows the user to add azimuthally symmetric gravitational harmonics (J2, J4) to bodies in the simulation. 
+These interact with all other bodies in the simulation (treated as point masses). 
+The implementation allows the user to specify an arbitrary spin axis orientation for each oblate body, which defines the axis of symmetry.
+This is specified through the angular rotation rate vector Omega.
+The rotation rate Omega is not currently used other than to specify the spin axis orientation.
+In particular, the current implementation applies the appropriate torque from the body's oblateness to the orbits of all the other planets, but does not account for the equal and opposite torque on the body's spin angular momentum.
+The bodies spins therefore remain constant in the current implementation.
+This is a good approximation in the limit where the bodies' spin angular momenta are much greater than the orbital angular momenta involved.
 
 **Effect Parameters**
 
@@ -613,12 +620,12 @@ Field (C type)               Required    Description
 J2 (double)                  No          J2 coefficient
 J4 (double)                  No          J4 coefficient
 R_eq (double)                No          Equatorial radius of nonspherical body used for calculating Jn harmonics
+Omega (reb_vec3d)            No          Angular rotation frequency (Omega_x, Omega_y, Omega_z)
 ============================ =========== ==================================================================
 
 
 Gas Effects
-^^^^^^^^^^^^^^^^^^
-
+^^^^^^^^^^^
 .. _gas_dynamical_friction:
 
 gas_dynamical_friction
@@ -629,7 +636,7 @@ Authors                 A. Generozov, H. Perets
 Implementation Paper    `Generozov and Perets 2022 <https://arxiv.org/abs/2212.11301>`_
 Based on                `Ostriker 1999 (with simplifications) <https://ui.adsabs.harvard.edu/abs/1999ApJ...513..252O/abstract>`_, `Just et al 2012 <https://ui.adsabs.harvard.edu/abs/2012ApJ...758...51J/abstract>`_.
 C Example               :ref:`c_example_gas_dynamical_friction`
-Python Example          `gas_dynamical_friction.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/gas_dynamical_friction.ipynb>`_
+Python Example          `GasDynamicalFriction.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/GasDynamicalFriction.ipynb>`_
                        
 
 ======================= ===============================================
@@ -655,96 +662,37 @@ Qd (double)                  Yes         Prefactor for geometric drag
 None.
 
 
-Integration Steppers
-^^^^^^^^^^^^^^^^^^^^
+.. _gas_damping_timescale:
 
-These are wrapper functions to taking steps with several of REBOUND's integrators in order to build custom splitting schemes.
-
-.. _steppers:
-
-steppers
-********
+gas_damping_timescale
+*********************
 
 ======================= ===============================================
-Authors                 D. Tamayo, H. Rein
-Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
-Based on                `Rein and Liu, 2012 <https://ui.adsabs.harvard.edu/abs/2012A%26A...537A.128R/abstract>`_.
-C Example               None
-Python Example          `CustomSplittingIntegrationSchemes.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/CustomSplittingIntegrationSchemes.ipynb>`_.
+Authors                 Phoebe Sandhaus
+Implementation Paper    `Sandhaus et al. in prep`
+Based on                `Dawson et al. 2016 <https://ui.adsabs.harvard.edu/abs/2016ApJ...822...54D/abstract>; Kominami & Ida 2002 <https://ui.adsabs.harvard.edu/abs/2002Icar..157...43K/abstract>`_
+C Example               :ref:`c_example_gas_damping_timescale`
+Python Example          `GasDampingTimescale.ipynb <https://github.com/PhoebeSandhaus/reboundx_gas_damping/tree/main/ipython_examples/GasDampingTimescale.ipynb>`_
 ======================= ===============================================
 
-These are wrapper functions to taking steps with several of REBOUND's integrators in order to build custom splitting schemes.
+This updates particles' positions and velocities between timesteps by first calculating a damping timescale for each individual particle, and then applying the timescale to damp both the eccentricity and inclination of the particle. Note: The timescale of damping should be much greater than a particle's orbital period. The damping force should also be small as compared to the gravitational forces on the particle.
 
 **Effect Parameters**
 
-None
+============================ =========== ==================================================================
+Field (C type)               Required    Description
+============================ =========== ==================================================================
+None                         -           -
+============================ =========== ==================================================================
 
 **Particle Parameters**
 
-None
-
-
-Parameter Interpolation
-^^^^^^^^^^^^^^^^^^^^^^^
-
-This isn't an effect that's loaded like the others, but an object that facilitates machine-independent interpolation of parameters that can be shared by both the C and Python versions. See the examples below for how to use them.
-
-.. _interpolation:
-
-interpolation
-*************
-
-======================= ===============================================
-Authors                 S.A. Baronett, D. Tamayo, N. Ferich
-Implementation Paper `Baronett et al., 2022 <https://ui.adsabs.harvard.edu/abs/2022MNRAS.510.6001B/abstract>`_.
-Based on                `Press et al., 1992 <https://ui.adsabs.harvard.edu/abs/1992nrca.book.....P/abstract>`_. 
-C Example               :ref:`c_example_parameter_interpolation`
-Python Example          `ParameterInterpolation.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ParameterInterpolation.ipynb>`_.
-======================= ===============================================
-
-**Effect Parameters**
-
-Not applicable. See examples.
-
-**Particle Parameters**
-
-Not applicable. See examples.
-
-Miscellaneous Utilities
-^^^^^^^^^^^^^^^^^^^^^^^
-.. _track_min_distance:
-
-track_min_distance
-******************
-
-======================= ===============================================
-Authors                 D. Tamayo
-Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_.
-Based on                None
-C Example               :ref:`c_example_track_min_distance`
-Python Example          `TrackMinDistance.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/TrackMinDistance.ipynb>`_.
-======================= ===============================================
-
-For a given particle, this keeps track of that particle's minimum distance from another body in the simulation.  User
-should add parameters to the particular particle whose distance should be tracked.
-
-**Effect Parameters**
-
-*None*
-
-**Particle Parameters**
-
-Only particles with their ``min_distance`` parameter set initially will track their minimum distance. The effect will
-update this parameter when the particle gets closer than the value of ``min_distance``, so the user has to set it
-initially.  By default, distance is measured from sim->particles[0], but you can specify a different particle by setting
-the ``min_distance_from`` parameter to the hash of the target particle.
-
-================================ =========== =======================================================
-Name (C type)                    Required    Description
-================================ =========== =======================================================
-min_distance (double)            Yes         Particle's mininimum distance.
-min_distance_from (uint32)       No          Hash for particle from which to measure distance
-min_distance_orbit (reb_orbit)   No          Parameter to store orbital elements at moment corresponding to min_distance (heliocentric)
-================================ =========== =======================================================
+============================ =========== ==============================================================================
+Field (C type)               Required    Description
+============================ =========== ==============================================================================
+d_factor (double)            Yes         Depletion factor d in Equation 16 from Dawson et al. 2016; d=1 corresponds roughly to the full minimum mass solar nebula with Sigma_gas (surface gas density) = 1700 g cm^-2 at 1 AU [for d=1]; d>1 corresponds to a more depleted nebula
+cs_coeff (double)            Yes         Sound speed coefficient; Changing the value will change assumed units; Example: If you are using the units: AU, M_sun, yr -->  cs_coeff = 0.272  # AU^(3/4) yr^-1
+tau_coeff (double)           Yes         Timescale coefficient;   Changing the value will change assumed units; Example: If you are using the units: AU, M_sun, yr --> tau_coeff = 0.003  #  yr AU^-2
+============================ =========== ==============================================================================
 
 

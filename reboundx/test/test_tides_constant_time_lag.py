@@ -37,7 +37,7 @@ class TestTides(unittest.TestCase):
         ps = self.sim.particles
         ps[1].params['tctl_k2'] = 0.04
         self.do_test_conservation()
-    
+
     def test_conservation_star(self):
         ps = self.sim.particles
         ps[0].params['tctl_k2'] = 0.04
@@ -47,16 +47,16 @@ class TestTides(unittest.TestCase):
         ps = self.sim.particles
         ps[1].params['tctl_k2'] = 0.4
         self.do_test_conservation()
-    
+
     def test_conservation_star_movecom(self):
         # if you go much larger, IAS15 starts giving errors due to roundoff
-        self.sim.particles[0].vy += 0.01 
-        self.sim.particles[1].vy += 0.01 
+        self.sim.particles[0].vy += 0.01
+        self.sim.particles[1].vy += 0.01
         self.test_conservation_star()
-    
+
     def test_conservation_planet_movecom(self):
-        self.sim.particles[0].vy += 0.01 
-        self.sim.particles[1].vy += 0.01 
+        self.sim.particles[0].vy += 0.01
+        self.sim.particles[1].vy += 0.01
         self.test_conservation_planet()
 
     def do_test_conservation(self):
@@ -69,7 +69,7 @@ class TestTides(unittest.TestCase):
 class TestTidesAnalytic(unittest.TestCase):
     def setUp(self):
         self.sim = rebound.Simulation()
-        self.sim.add(m=0.86, r = 0.78)   
+        self.sim.add(m=0.86, r = 0.78)
         self.sim.add(m=3.e-6, a=1., e=0.05)
         self.sim.move_to_com()
         ps = self.sim.particles
@@ -79,7 +79,7 @@ class TestTidesAnalytic(unittest.TestCase):
         self.rebx.add_force(self.tides)
         ps[0].params["tctl_k2"] = 0.023 # in AU
         ps[0].params["tctl_tau"] = 0.3
-        ps[0].params["Omega"] = [0.,0.,0.]
+        ps[0].params["OmegaMag"] = 0 # test that we can set, but not needed (default=0)
 
         self.q = (ps[1].m/ps[0].m)
         self.T = ps[0].r**3/self.sim.G/ps[0].m/ps[0].params["tctl_tau"]
@@ -92,7 +92,7 @@ class TestTidesAnalytic(unittest.TestCase):
 
         self.sim.integrate(tmax)
         self.assertLess(abs((ps[1].a-apred)/apred), 1.e-2) # 1%
-    
+
     def test_linear_adamping(self):
         ps = self.sim.particles
         tmax = self.taua/1000
@@ -100,7 +100,7 @@ class TestTidesAnalytic(unittest.TestCase):
 
         self.sim.integrate(tmax)
         self.assertLess(abs((ps[1].a-apred)/apred), 0.1) # 10%
-    
+
     def test_linear_edamping(self):
         ps = self.sim.particles
         tmax = self.taua/1000
@@ -108,20 +108,20 @@ class TestTidesAnalytic(unittest.TestCase):
 
         self.sim.integrate(tmax)
         self.assertLess(abs((ps[1].e-epred)/epred), 0.1) # 10%
-    
+
     def test_adamping_movecom(self):
-        self.sim.particles[0].vy += 0.01 
-        self.sim.particles[1].vy += 0.01 
+        self.sim.particles[0].vy += 0.01
+        self.sim.particles[1].vy += 0.01
         self.test_adamping()
-    
+
     def test_linear_adamping_movecom(self):
-        self.sim.particles[0].vy += 0.01 
-        self.sim.particles[1].vy += 0.01 
+        self.sim.particles[0].vy += 0.01
+        self.sim.particles[1].vy += 0.01
         self.test_linear_adamping()
-    
+
     def test_linear_edamping_movecom(self):
-        self.sim.particles[0].vy += 0.01 
-        self.sim.particles[1].vy += 0.01 
+        self.sim.particles[0].vy += 0.01
+        self.sim.particles[1].vy += 0.01
         self.test_linear_edamping()
 
 if __name__ == '__main__':

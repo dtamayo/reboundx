@@ -29,6 +29,7 @@ jobs:
       - name: Running jupyter notebooks
         run: |
           cd ipython_examples
+          python ipynb2py.py TidesDynamical.ipynb
           python ipynb2py.py CentralForce.ipynb
           python ipynb2py.py CustomSplittingIntegrationSchemes.ipynb
           python ipynb2py.py Custom_Effects.ipynb

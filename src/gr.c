@@ -66,7 +66,8 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
     struct reb_particle* const ps = malloc(N*sizeof(*ps));
     struct reb_particle* const ps_j = malloc(N*sizeof(*ps_j));
     memcpy(ps, particles, N*sizeof(*ps));
-    
+   
+    const int N_active = sim->N_active > 0 ? sim->N_active : N; // additional_forces passes N=N-N_var. Think about this if adding variational particles
     // Calculate Newtonian accelerations 
     for(int i=0; i<N; i++){
         ps[i].ax = 0.;
@@ -74,7 +75,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
         ps[i].az = 0.;
     }
 
-    for(int i=0; i<N; i++){
+    for(int i=0; i<N_active; i++){
         const struct reb_particle pi = ps[i];
         for(int j=i+1; j<N; j++){
             const struct reb_particle pj = ps[j];
@@ -96,7 +97,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
     // Transform to Jacobi coordinates
     const struct reb_particle source = ps[0];
 	const double mu = G*source.m;
-    reb_particles_transform_inertial_to_jacobi_posvelacc(ps, ps_j, ps, N, N);
+    reb_particles_transform_inertial_to_jacobi_posvelacc(ps, ps_j, ps, N, N_active);
     
     for (int i=1; i<N; i++){
         struct reb_particle p = ps_j[i];
@@ -150,7 +151,7 @@ static void rebx_calculate_gr(struct reb_simulation* const sim, struct reb_parti
     ps_j[0].ay = 0.;
     ps_j[0].az = 0.;
 
-    reb_particles_transform_jacobi_to_inertial_acc(ps, ps_j, ps, N, N);
+    reb_particles_transform_jacobi_to_inertial_acc(ps, ps_j, ps, N, N_active);
     for (int i=0; i<N; i++){
         particles[i].ax += ps[i].ax;
         particles[i].ay += ps[i].ay;
@@ -243,10 +244,6 @@ double rebx_gr_hamiltonian(struct rebx_extras* const rebx, const struct rebx_for
         return 0;
     }
     const double C2 = (*c)*(*c);
-    if (rebx->sim == NULL){
-        rebx_error(rebx, ""); // rebx_error gives meaningful err
-        return 0;
-    }
     return rebx_calculate_gr_hamiltonian(rebx, rebx->sim, C2);
 }
 

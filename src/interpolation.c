@@ -25,7 +25,7 @@
  * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
- * $Parameter Interpolation$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
+ * $Misc$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
  *
  * ======================= ===============================================
  * Authors                 S.A. Baronett, D. Tamayo, N. Ferich
@@ -35,6 +35,8 @@
  * Python Example          `ParameterInterpolation.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/ParameterInterpolation.ipynb>`_.
  * ======================= ===============================================
  * 
+ * This isn't an effect that's loaded like the others, but an object that facilitates machine-independent interpolation of parameters that can be shared by both the C and Python versions. See the examples for how to use them.
+ *
  * **Effect Parameters**
  * 
  * Not applicable. See examples.

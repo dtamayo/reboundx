@@ -270,7 +270,8 @@ double rebx_gr_full_hamiltonian(struct rebx_extras* const rebx, const struct reb
     struct reb_simulation* sim = rebx->sim;
     double* c = rebx_get_param(rebx, force->ap, "c");
     if (c == NULL){
-        reb_simulation_error(sim, "Need to set speed of light in gr effect.  See examples in documentation.\n");
+        rebx_error(rebx, "REBOUNDx Error: Need to set speed of light in gr effect.  See examples in documentation.\n");
+        return 0;
     }
     const double C2 = (*c)*(*c);
     const int N = sim->N - sim->N_var;

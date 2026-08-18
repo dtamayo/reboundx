@@ -64,10 +64,13 @@ If you have problems, please open an issue on the GitHub page at `https://github
 .. toctree::
     :numbered:
     :hidden:
+    :maxdepth: 2
 
-    effects
     python_quickstart
     c_quickstart
+    effects
+    collisions
+    misc
     c_api
     c_examples
     add_effect

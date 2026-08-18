@@ -52,7 +52,7 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-int rebx_merging_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
+enum REB_COLLISION_RESOLVE_OUTCOME rebx_merging_collisions(struct reb_simulation* const sim, struct rebx_collision_resolve* const collision_resolve, struct reb_collision c){
     struct reb_particle* pi = &(sim->particles[c.p1]);
     struct reb_particle* pj = &(sim->particles[c.p2]);
 
@@ -69,6 +69,6 @@ int rebx_merging_collisions(struct reb_simulation* const sim, struct rebx_collis
     pi->r  = cbrt(pi->r*pi->r*pi->r + pj->r*pj->r*pj->r);
     pi->last_collision = sim->t;
 
-    return 2; // Remove 2 particle from simulation
+    return REB_COLLISION_RESOLVE_OUTCOME_REMOVE_P2; // Remove 2 particle from simulation
 }
 

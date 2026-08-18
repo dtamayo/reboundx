@@ -23,7 +23,7 @@
  * 
  * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  *
- * $Miscellaneous Utilities$     // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script). 
+ * $Misc$     // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script). 
  * 
  * ======================= ===============================================
  * Authors                 D. Tamayo

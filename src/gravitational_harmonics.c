@@ -30,7 +30,7 @@
  * Authors                 M. Broz
  * Implementation Paper    `Tamayo, Rein, Shi and Hernandez, 2019 <https://ui.adsabs.harvard.edu/abs/2020MNRAS.491.2885T/abstract>`_. 
  * Based on                None
- * C Example               :ref:`c_example_J2`
+ * C Example               :ref:`c_example_j2`
  * Python Example          `J2.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/J2.ipynb>`_.
  * ======================= ===============================================
  * 
@@ -69,7 +69,7 @@
 
 #define DEFAULTOMEGA {0.0, 0.0, 1.0}
 
-inline void j2_func(double G, double m, const double* J2, const double* R_eq, double r, double r2, double costheta2, double du, double dv, double dw, double* au, double* av, double* aw) {
+static inline void j2_func(double G, double m, const double* J2, const double* R_eq, double r, double r2, double costheta2, double du, double dv, double dw, double* au, double* av, double* aw) {
 
     if (J2 == NULL) { return; }
     if (*J2 == 0.0) { return; }
@@ -85,7 +85,7 @@ inline void j2_func(double G, double m, const double* J2, const double* R_eq, do
     return;
 }
 
-inline void j4_func(double G, double m, const double* J4, const double* R_eq, double r, double r2, double costheta2, double du, double dv, double dw, double* au, double* av, double* aw) {
+static inline void j4_func(double G, double m, const double* J4, const double* R_eq, double r, double r2, double costheta2, double du, double dv, double dw, double* au, double* av, double* aw) {
 
     if (J4 == NULL) { return; }
     if (*J4 == 0.0) { return; }
@@ -101,7 +101,7 @@ inline void j4_func(double G, double m, const double* J4, const double* R_eq, do
     return;
 }
 
-inline void uvw(struct reb_vec3d Omega, struct reb_vec3d* hatu, struct reb_vec3d* hatv, struct reb_vec3d* hatw) {
+static inline void uvw(struct reb_vec3d Omega, struct reb_vec3d* hatu, struct reb_vec3d* hatv, struct reb_vec3d* hatw) {
 
     const double omega2 = Omega.x*Omega.x + Omega.y*Omega.y + Omega.z*Omega.z;
     const double omega = sqrt(omega2);
@@ -225,7 +225,7 @@ void rebx_gravitational_harmonics(struct reb_simulation* const sim, struct rebx_
     }
 }
 
-inline void j2_potential_func(double G, double mi, double mj, const double* J2, const double* R_eq, double r, double r2, double costheta2, double* H) {
+static inline void j2_potential_func(double G, double mi, double mj, const double* J2, const double* R_eq, double r, double r2, double costheta2, double* H) {
 
     if (J2 == NULL) { return; }
     if (*J2 == 0.0) { return; }
@@ -238,7 +238,7 @@ inline void j2_potential_func(double G, double mi, double mj, const double* J2, 
     return;
 }
 
-inline void j4_potential_func(double G, double mi, double mj, const double* J4, const double* R_eq, double r, double r2, double costheta2, double* H) {
+static inline void j4_potential_func(double G, double mi, double mj, const double* J4, const double* R_eq, double r, double r2, double costheta2, double* H) {
 
     if (J4 == NULL) { return; }
     if (*J4 == 0.0) { return; }

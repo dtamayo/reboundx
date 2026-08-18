@@ -45,3 +45,6 @@ Untitled*
 .eggs/*
 _changelog.tmp
 *.whl
+
+
+examples/fragmenting_collisions_untracked
