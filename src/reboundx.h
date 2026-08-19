@@ -232,7 +232,7 @@ struct rebx_force{
     // See comments in params.py in __init__
     enum rebx_force_type force_type;    ///< Force type for internal logic
     void (*update_accelerations) (struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N); ///< Function pointer to add additional accelerations
-    void (*free_memory) (struct rebx_extras* const rebx, struct rebx_force* const force); ///< Optional function pointer to free memory the force allocated internally. Called by rebx_free_force
+    void (*free_memory) (struct rebx_extras* rebx, struct rebx_force* const force); ///< Optional function pointer to free memory the force allocated internally. Called by rebx_free_force
 };
 
 /**
@@ -245,6 +245,7 @@ struct rebx_operator{
     // See comments in params.py in __init__
     enum rebx_operator_type operator_type;  ///< Operator type for internal logic
     void (*step_function) (struct reb_simulation* sim, struct rebx_operator* operator, const double dt);       ///< Function pointer to execute step
+    void (*free_memory) (struct rebx_extras* rebx, struct rebx_operator* const operator); ///< Optional function pointer to free memory the force allocated internally. Called by rebx_free_force
 };
 
 /**

@@ -372,11 +372,12 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
     operator->sim = rebx->sim;
     operator->operator_type = REBX_OPERATOR_NONE;
     operator->step_function = NULL;
+    operator->free_memory = NULL;
     operator->name = NULL;
     if(name != NULL){
         operator->name = rebx_malloc(rebx, strlen(name) + 1); // +1 for \0 at end
         if (operator->name == NULL){
-            rebx_free_operator(operator);
+            rebx_free_operator(rebx, operator);
             return NULL;
         }
         else{
@@ -387,7 +388,7 @@ struct rebx_operator* rebx_create_operator(struct rebx_extras* const rebx, const
     // Add operator to allocated_operators list for later freeing
     struct rebx_node* node = rebx_create_node(rebx);
     if (node == NULL){
-        rebx_free_operator(operator);
+        rebx_free_operator(rebx, operator);
         return NULL;
     }
     node->object = operator;
@@ -814,7 +815,7 @@ static int rebx_remove_step_node(struct rebx_node** head, struct rebx_operator* 
 int rebx_remove_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
     int allocated = rebx_remove_node(&rebx->allocated_operators, operator);
     if(allocated){
-        rebx_free_operator(operator);
+        rebx_free_operator(rebx, operator);
 
     }
 
@@ -894,7 +895,10 @@ void rebx_free_force(struct rebx_extras* rebx, struct rebx_force* force){
     free(force);
 }
 
-void rebx_free_operator(struct rebx_operator* operator){
+void rebx_free_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
+    if (operator->free_memory){
+        operator->free_memory(rebx, operator);
+    }
     if(operator->name){
         free(operator->name);
     }
@@ -964,7 +968,7 @@ void rebx_free_pointers(struct rebx_extras* rebx){
     current = rebx->allocated_operators;
     while (current != NULL){
         next = current->next;
-        rebx_free_operator(current->object);
+        rebx_free_operator(rebx, current->object);
         free(current);
         current = next;
     }
