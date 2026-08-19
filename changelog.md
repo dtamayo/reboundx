@@ -2,6 +2,10 @@
 
 This changelog only includes the most important changes in recent updates. For a full log of all changes, please refer to git.
 
+### Version 5.0.1 
+* fixed bug saving binaries with tides_spin
+* removed %matplotlib inline from notebooks
+
 ### Version 5.0.0
 * Updated to match REBOUND 5.0.0.
 * New string datatype, replaces hashes. 
