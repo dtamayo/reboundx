@@ -4,7 +4,9 @@ This changelog only includes the most important changes in recent updates. For a
 
 ### Version 5.0.0
 * Updated to match REBOUND 5.0.0.
-* New string datatype. 
+* New string datatype, replaces hashes. 
+* Added free_memory function pointers to force and operator structs to clean up memory they allocate
+* Updated build process and Github CI runners
 
 ### Version 4.6.2
 * Updated to require REBOUND < 5.0
