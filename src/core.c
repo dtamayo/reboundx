@@ -1025,7 +1025,7 @@ void rebx_additional_forces(struct reb_simulation* sim){
     struct rebx_node* current = rebx->additional_forces;
     while(current != NULL){
         if(sim->force_is_velocity_dependent && strcmp(sim->integrator.name, "whfast")==0){
-            reb_simulation_warning(sim, "REBOUNDx: Passing a velocity-dependent force to WHFAST. Need to apply as an operator. See REBOUNDx paper sec 5.1.");
+            reb_simulation_warning(sim, "REBOUNDx: Passing a velocity-dependent force to WHFAST, will accumulate errors proportional to the force. If forces get big, consider using IAS15 or applying force as an operator. See REBOUNDx paper sec 5.1 and ipython_examples/IntegrateForce.ipynb.");
         }
         struct rebx_force* force = current->object;
         const double N = sim->N;

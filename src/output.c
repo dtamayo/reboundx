@@ -133,7 +133,7 @@ static void rebx_write_force_param(struct rebx_extras* rebx, struct rebx_param* 
 }
 
 static void rebx_write_param(struct rebx_extras* rebx, struct rebx_param* param, FILE* of){
-    if (param->type == REBX_TYPE_POINTER){ // Don't write pointers because we won't know how to load them when we read binary. Need to add type to store in binaries.
+    if (param->type == REBX_TYPE_POINTER || param->type == REBX_TYPE_ODE){ // Don't write pointers because we won't know how to load them when we read binary. Need to add type to store in binaries.
         return;
     }
     

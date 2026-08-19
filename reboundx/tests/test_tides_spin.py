@@ -13,8 +13,34 @@ class TestTides(unittest.TestCase):
         self.rebx = reboundx.Extras(self.sim)
         self.force = self.rebx.load_force("tides_spin")
         self.rebx.add_force(self.force)
+
+    def test_save(self):
+        ps = self.sim.particles
+        ps[1].params['I'] = 0.4
+        ps[1].params['k2'] = 0.04
+        ps[1].params['Omega'] = rebound.spherical_to_xyz(magnitude=2*np.pi/(3/365), theta=np.radians(0), phi=np.radians(30))
         self.rebx.initialize_spin_ode(self.force)
-        self.sim.particles[0].params['Omega'] = rebound.spherical_to_xyz(magnitude=2*np.pi/(3/365), theta=np.radians(0), phi=np.radians(30))
+        self.sim.integrate(1e3*ps[1].P, exact_finish_time=0)
+        x0 = ps[1].x
+
+        self.setUp()
+        ps = self.sim.particles
+        ps[1].params['I'] = 0.4
+        ps[1].params['k2'] = 0.04
+        ps[1].params['Omega'] = rebound.spherical_to_xyz(magnitude=2*np.pi/(3/365), theta=np.radians(0), phi=np.radians(30))
+        self.rebx.initialize_spin_ode(self.force)
+        self.sim.integrate(1e1*ps[1].P, exact_finish_time=0)
+
+        self.sim.save_to_file("sim.bin")
+        self.rebx.save("rebx.bin")
+
+        sim = rebound.Simulation("sim.bin")
+        rebx = reboundx.Extras(sim, "rebx.bin")
+        rebx.initialize_spin_ode(self.force)
+        self.sim.integrate(1e3*ps[1].P, exact_finish_time=0)
+        x1 = ps[1].x
+
+        self.assertEqual(x0, x1)
 
     def test_conservation_star_highmratio(self):
         self.sim = rebound.Simulation()
@@ -24,10 +50,11 @@ class TestTides(unittest.TestCase):
         self.rebx = reboundx.Extras(self.sim)
         self.force = self.rebx.load_force("tides_spin")
         self.rebx.add_force(self.force)
-        self.rebx.initialize_spin_ode(self.force)
         ps = self.sim.particles
+        ps[0].params['I'] = 0.4
         ps[0].params['k2'] = 0.04
-        self.sim.particles[0].params['Omega'] = rebound.spherical_to_xyz(magnitude=2*np.pi/(3/365), theta=np.radians(0), phi=np.radians(30))
+        ps[0].params['Omega'] = rebound.spherical_to_xyz(magnitude=2*np.pi/(3/365), theta=np.radians(0), phi=np.radians(30))
+        self.rebx.initialize_spin_ode(self.force)
         self.do_test_conservation()
 
     def test_conservation_planet_highmratio(self):
@@ -38,33 +65,48 @@ class TestTides(unittest.TestCase):
         self.rebx = reboundx.Extras(self.sim)
         self.force = self.rebx.load_force("tides_spin")
         self.rebx.add_force(self.force)
-        self.rebx.initialize_spin_ode(self.force)
         ps = self.sim.particles
+        ps[1].params['I'] = 0.4
         ps[1].params['k2'] = 0.04
-        self.sim.particles[1].params['Omega'] = rebound.spherical_to_xyz(magnitude=2*np.pi/(3/365), theta=np.radians(0), phi=np.radians(30))
+        ps[1].params['Omega'] = rebound.spherical_to_xyz(magnitude=2*np.pi/(3/365), theta=np.radians(0), phi=np.radians(30))
+        self.rebx.initialize_spin_ode(self.force)
         self.do_test_conservation()
 
     def test_conservation_star(self):
         ps = self.sim.particles
         ps[0].params['k2'] = 0.04
-        ps[0].params['Omega'] = [1e-10, 0, 0]
+        ps[0].params['I'] = 0.4
+        ps[0].params['Omega'] = [1e-2, 0, 0]
+        self.rebx.initialize_spin_ode(self.force)
         self.do_test_conservation()
 
     def test_conservation_planet(self):
         ps = self.sim.particles
         ps[1].params['k2'] = 0.4
+        ps[1].params['I'] = 0.4
         ps[1].params['Omega'] = [1e-10, 0, 0]
+        self.rebx.initialize_spin_ode(self.force)
         self.do_test_conservation()
 
     def test_conservation_star_movecom(self):
         # if you go much larger, IAS15 starts giving errors due to roundoff
+        ps = self.sim.particles
+        ps[0].params['k2'] = 0.04
+        ps[0].params['I'] = 0.4
+        ps[0].params['Omega'] = [1e-2, 0, 0]
         self.sim.particles[0].vy += 0.01
-        self.sim.particles[1].vy += 0.01
+        self.sim.particles[0].vy += 0.01
+        self.rebx.initialize_spin_ode(self.force)
         self.test_conservation_star()
 
     def test_conservation_planet_movecom(self):
-        self.sim.particles[0].vy += 0.01
+        ps = self.sim.particles
+        ps[1].params['k2'] = 0.4
+        ps[1].params['I'] = 0.4
+        ps[1].params['Omega'] = [1e-10, 0, 0]
         self.sim.particles[1].vy += 0.01
+        self.sim.particles[1].vy += 0.01
+        self.rebx.initialize_spin_ode(self.force)
         self.test_conservation_planet()
 
     def do_test_conservation(self):
