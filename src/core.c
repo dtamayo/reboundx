@@ -453,6 +453,11 @@ struct rebx_operator* rebx_load_operator(struct rebx_extras* const rebx, const c
 }
 
 int rebx_add_force(struct rebx_extras* rebx, struct rebx_force* force){
+    struct reb_simulation* const sim = rebx->sim;
+    if (strcmp(sim->integrator.name, "whfast512")==0){
+        reb_simulation_error(sim, "REBOUNDx Error: WHFast512 has been optimized for speed with options stripped out. This integrator will never be compatible with REBOUNDx.\n");
+        return 0;
+    }
     if (rebx->sim == NULL){
         rebx_error(rebx, ""); // rebx_error gives meaningful err
         return 0;
@@ -561,31 +566,32 @@ int rebx_add_operator(struct rebx_extras* rebx, struct rebx_operator* operator){
         int success = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST);
         return success;
     }
+    
+    reb_simulation_warning(sim, "REBOUNDx Warning: Do not change the integrator after adding an operator (function assumed the current integrator when adding)");
 
-   if (!sim->integrator.name || !strlen(sim->integrator.name)){
-       reb_simulation_error(sim, "REBOUNDx Error: Must set integrator before adding operators.");
-       return 0;
-   }
-   if (strcmp(sim->integrator.name, "ias15")==0){
-       // don't add pre-timestep b/c don't know what IAS will choose as dt
-       dt_fraction = 1.;
-       int success = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST);
-       return success;
-   }
-   if (strcmp(sim->integrator.name, "whfast")==0){
-       // half step pre and post
-       dt_fraction = 1./2.;
-       int success1 = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_PRE);
-       int success2 = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST);
-       return (success1 && success2);
-   }
-   if (strcmp(sim->integrator.name, "mercurius")==0){
-       // half step pre and post
-       // TODO: Not yet implemented.
-       if (operator->operator_type == REBX_OPERATOR_UPDATER){
-           reb_simulation_error(sim, "REBOUNDx Error: Operators that affect particle trajectories are not supported with Mercurius. Must add as forces.\n");
-           return 0;
-       }
+    if (strcmp(sim->integrator.name, "ias15")==0 || strcmp(sim->integrator.name, "bs")==0){
+        // don't add pre-timestep b/c don't know what IAS/BS will choose as dt
+        dt_fraction = 1.;
+        int success = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST);
+        return success;
+    }
+    if (strcmp(sim->integrator.name, "whfast")==0 || strcmp(sim->integrator.name, "saba")==0 || strcmp(sim->integrator.name, "leapfrog")==0 || strcmp(sim->integrator.name, "eos")==0){ 
+        // half step pre and post
+        dt_fraction = 1./2.;
+        int success1 = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_PRE);
+        int success2 = rebx_add_operator_step(rebx, operator, dt_fraction, REBX_TIMING_POST);
+        return (success1 && success2);
+    }
+    if (strcmp(sim->integrator.name, "mercurius")==0 || strcmp(sim->integrator.name, "trace")==0 || strcmp(sim->integrator.name, "janus")==0 || strcmp(sim->integrator.name, "sei")==0){
+        // TODO: Not yet implemented.
+        if (operator->operator_type == REBX_OPERATOR_UPDATER){
+            reb_simulation_error(sim, "REBOUNDx Error: Operators that affect particle trajectories are not supported with MERCURIUS, TRACE, SEI or Janus. Can only add forces.\n");
+            return 0;
+        }
+     }
+    if (strcmp(sim->integrator.name, "whfast512")==0){
+        reb_simulation_error(sim, "REBOUNDx Error: WHFast512 has been optimized for speed with options stripped out. This integrator will never be compatible with REBOUNDx.\n");
+        return 0;
     }
     return 0; // didn't reach a successful outcome
 }
