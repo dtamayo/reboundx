@@ -89,6 +89,8 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "stochastic_force_y", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "stochastic_force_z", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "beta", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "shadow_model", REBX_TYPE_INT);
+    rebx_register_param(rebx, "shadow_creator", REBX_TYPE_INT);
     rebx_register_param(rebx, "tides_primary", REBX_TYPE_INT);
     rebx_register_param(rebx, "R_tides", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "tctl_k2", REBX_TYPE_DOUBLE);
