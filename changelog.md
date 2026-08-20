@@ -2,6 +2,11 @@
 
 This changelog only includes the most important changes in recent updates. For a full log of all changes, please refer to git.
 
+### Version 5.1.0
+* Added operator support for integrators SABA, EOS, leapfrog, and BS
+* Fixed bug in operator timestep for adaptive integrators (IAS15, BS)
+* Output from IAS15 with operators will differ slightly from prev versions
+
 ### Version 5.0.1 
 * fixed bug saving binaries with tides_spin
 * removed %matplotlib inline from notebooks
