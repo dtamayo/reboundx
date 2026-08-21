@@ -61,3 +61,4 @@ void compute_normalized_legendre_derivative(double phi, int N,
                                             double *dP);
 
 #endif
+

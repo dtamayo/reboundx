@@ -20,7 +20,6 @@ int main(int argc, char* argv[]) {
     
     // Set units implicitly by providing G and values in SI
     sim->G = 6.67430e-11;       // m^3 / (kg s^2)
-    sim->integrator = REB_INTEGRATOR_IAS15;
 
     // 2. Constants for Earth and GEO
     double m_earth = 5.9722e24; // kg
@@ -33,7 +32,7 @@ int main(int argc, char* argv[]) {
     struct reb_particle earth = {0};
     earth.m = m_earth;
     earth.r = r_earth;
-    earth.hash = reb_hash("Earth");
+    earth.name = "Earth";
     reb_simulation_add(sim, earth);
 
     // 4. Calculate GEO radius and velocity
@@ -50,7 +49,7 @@ int main(int argc, char* argv[]) {
     sat.vx = -v_circ * sin(lon0);
     sat.vy =  v_circ * cos(lon0);
     sat.vz = 0.0;
-    sat.hash = reb_hash("Sat");
+    sat.name = "Sat";
     reb_simulation_add(sim, sat);
     
     reb_simulation_move_to_com(sim);
@@ -114,3 +113,4 @@ int main(int argc, char* argv[]) {
     
     return 0;
 }
+
