@@ -75,8 +75,6 @@ def add_general_model(sim):
     # Given the model made in a function, we need to save different elements as long as the simulation lasts
     rebx._gh_force = gh
     rebx._spherical_harmonics_model = model
-    rebx._C_coeffs = C   # if the model only saves the pointer to buffer numpy
-    rebx._S_coeffs = S
 
     rebx.add_force(gh)
 
