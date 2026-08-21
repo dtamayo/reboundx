@@ -32,12 +32,12 @@ def test_energy_conservation_long_orbit():
 
     sim = rb.Simulation()
     sim.units = ('m', 's', 'kg')
-    sim.add(m=m_earth, r=r_earth, hash="Earth")
+    sim.add(m=m_earth, r=r_earth, name="Earth")
 
     r0 = 7000e3
     mu = sim.G * m_earth
     v0 = np.sqrt(mu / r0)
-    sim.add(m=1000.0, x=r0, y=0, z=0, vx=0, vy=v0, vz=v0*0.3, hash="Sat")  
+    sim.add(m=1000.0, x=r0, y=0, z=0, vx=0, vy=v0, vz=v0*0.3, name="Sat")  
 
     rebx_ext = rbx.Extras(sim)
     gh = rebx_ext.load_force("gravitational_harmonics")
@@ -52,11 +52,10 @@ def test_energy_conservation_long_orbit():
     model = rbx.spherical_harmonics_model(C, S, sim.G * m_earth, 6378.137e3)
     sim.particles["Earth"].params["spherical_harmonics_model"] = model
 
-    sim._gh_force = gh
-    sim._spherical_harmonics_model = model
-    sim._C_coeffs = C
-    sim._S_coeffs = S
-    sim._rebx = rebx_ext
+    rebx_ext._gh_force = gh
+    rebx_ext._spherical_harmonics_model = model
+    rebx_ext._C_coeffs = C
+    rebx_ext._S_coeffs = S
 
     rebx_ext.add_force(gh)
     sim.integrator = "ias15"
@@ -74,8 +73,8 @@ def test_energy_conservation_long_orbit():
         rel_drift = abs((E - E0) / E0)
         max_rel_drift = max(max_rel_drift, rel_drift)
 
-    print(f"Max relative energy drift over {n_orbits} orbits: {max_rel_drift:.3e} Jules")
-    assert max_rel_drift < 1e-8, f"Energy drift too large: {max_rel_drift} Jules"
+    print(f"Max relative energy drift over {n_orbits} orbits: {max_rel_drift:.3e}")
+    assert max_rel_drift < 1e-8, f"Energy drift too large: {max_rel_drift}"
 
 
 if __name__ == "__main__":

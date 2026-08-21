@@ -14,12 +14,12 @@ def build_sim_with_degree(N, seed=42):
 
     sim = rb.Simulation()
     sim.units = ('m', 's', 'kg')
-    sim.add(m=m_earth, r=r_earth, hash="Earth")
+    sim.add(m=m_earth, r=r_earth, name="Earth")
 
     r0 = 7000e3
     mu = sim.G * m_earth
     v0 = np.sqrt(mu / r0)
-    sim.add(m=1000.0, x=r0, y=0, z=0, vx=0, vy=v0, vz=0, hash="Sat")
+    sim.add(m=1000.0, x=r0, y=0, z=0, vx=0, vy=v0, vz=0, name="Sat")
 
     rebx_ext = rbx.Extras(sim)
     gh = rebx_ext.load_force("gravitational_harmonics")
@@ -38,14 +38,12 @@ def build_sim_with_degree(N, seed=42):
     model = rbx.spherical_harmonics_model(C, S, sim.G * m_earth, 6378.137e3)
     sim.particles["Earth"].params["spherical_harmonics_model"] = model
 
-    sim._gh_force = gh
-    sim._spherical_harmonics_model = model
-    sim._C_coeffs = C
-    sim._S_coeffs = S
-    sim._rebx = rebx_ext
+    rebx_ext._gh_force = gh
+    rebx_ext._spherical_harmonics_model = model
+    rebx_ext._C_coeffs = C
+    rebx_ext._S_coeffs = S
 
     rebx_ext.add_force(gh)
-    sim.integrator = "ias15"
     return sim
 
 

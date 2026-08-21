@@ -17,7 +17,7 @@ def create_sim():
     sim = rb.Simulation()
     sim.units = ('m', 's', 'kg') 
 
-    sim.add(m=m_earth, r=r_earth, hash=str("Earth"))
+    sim.add(m=m_earth, r=r_earth, name="Earth")
     
     lon = np.deg2rad(45)
     lat = np.deg2rad(45)
@@ -28,7 +28,7 @@ def create_sim():
     z_sat = r*np.sin(lat)
     mu = sim.G * m_earth
     v = np.sqrt(mu/r)
-    sim.add(m=1000.0, x = x_sat, y = y_sat, z = z_sat, vx = 0, vy = v, vz = 0, hash='Sat')
+    sim.add(m=1000.0, x = x_sat, y = y_sat, z = z_sat, vx = 0, vy = v, vz = 0, name='Sat')
 
     return sim
 
@@ -70,17 +70,12 @@ def add_general_model(sim):
     sim.particles["Earth"].params["Omega"] = [0, 0, 7.2921159e-5] # rad/s
     sim.particles["Earth"].params["theta0"] = 0.0 # rad
     # Given the model made in a function, we need to save different elements as long as the simulation lasts
-    sim._gh_force = gh
-    sim._spherical_harmonics_model = model
-    sim._C_coeffs = C   # if the model only saves the pointer to buffer numpy
-    sim._S_coeffs = S
-    sim._rebx = rebx
+    rebx._gh_force = gh
+    rebx._spherical_harmonics_model = model
+    rebx._C_coeffs = C   # if the model only saves the pointer to buffer numpy
+    rebx._S_coeffs = S
 
     rebx.add_force(gh)
-
-
-
-
 
 def add_J2_J4(sim):
 
@@ -99,15 +94,10 @@ def add_J2_J4(sim):
     #sim.particles["Earth"].params["J10"] = J10
 
     sim.particles["Earth"].params["R_eq"] = 6378.137e3 # m: Ecuatorial
-    
+
     rebx.add_force(gh)
 
-    sim._gh_force = gh
-    sim._rebx = rebx
-
-
-
-
+    rebx._gh_force = gh
 
 def test_consistency():
 
@@ -194,7 +184,7 @@ def test_efficiency():
 
     print(f"J2/J4 legacy:    {mean_J2*1e3:.3f} +/- {std_J2*1e3:.3f} ms")
     print(f"General model:   {mean_model*1e3:.3f} +/- {std_model*1e3:.3f} ms")
-    print(f"Speedup factor: {mean_model/mean_J2:.2f}x")
+    print(f"Slowdown factor: {mean_model/mean_J2:.2f}x")
 
 
 if __name__ == "__main__":
