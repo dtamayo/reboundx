@@ -50,3 +50,32 @@ from .tools import coordinates, install_test
 from .params import Params
 
 __all__ = ["__version__", "__build__", "__githash__", "Extras", "Simulationarchive", "Param", "Interpolator", "Params", "coordinates", "integrators"]
+
+from ctypes import c_int, c_double, c_void_p, c_char_p, POINTER
+ 
+clibreboundx.rebx_spherical_harmonics_create.restype = c_void_p
+clibreboundx.rebx_spherical_harmonics_create.argtypes = [
+    c_int,
+    POINTER(c_double),
+    POINTER(c_double),
+    c_double,
+    c_double,
+    c_int,
+]
+ 
+clibreboundx.rebx_spherical_harmonics_free.restype = None
+clibreboundx.rebx_spherical_harmonics_free.argtypes = [c_void_p]
+ 
+
+clibreboundx.rebx_set_param_pointer.restype = None
+clibreboundx.rebx_set_param_pointer.argtypes = [
+    POINTER(Extras),
+    c_void_p,   
+    c_char_p,
+    c_void_p,
+]
+
+ 
+
+from .spherical_harmonics import spherical_harmonics_model
+__all__ += ["spherical_harmonics_model"]
