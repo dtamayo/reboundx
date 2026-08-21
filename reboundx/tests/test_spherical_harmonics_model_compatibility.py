@@ -16,7 +16,7 @@ def create_sim():
     sim = rb.Simulation()
     sim.units = ('m', 's', 'kg') 
 
-    sim.add(m=m_earth, r=r_earth, hash=str("Earth"))
+    sim.add(m=m_earth, r=r_earth, name=str("Earth"))
     
     lon = np.deg2rad(45)
     lat = np.deg2rad(45)
@@ -27,7 +27,7 @@ def create_sim():
     z_sat = r*np.sin(lat)
     mu = sim.G * m_earth
     v = np.sqrt(mu/r)
-    sim.add(m=10.0, x = x_sat, y = y_sat, z = z_sat, vx = 0, vy = v, vz = 0, hash='Sat')
+    sim.add(m=10.0, x = x_sat, y = y_sat, z = z_sat, vx = 0, vy = v, vz = 0, name='Sat')
 
     return sim
 
@@ -73,11 +73,10 @@ def add_general_model(sim):
     sim.particles["Earth"].params["Omega"] = [0.0, 0.0, 7.292115e-5]
     
     # Given the model made in a function, we need to save different elements as long as the simulation lasts
-    sim._gh_force = gh
-    sim._spherical_harmonics_model = model
-    sim._C_coeffs = C   # if the model only saves the pointer to buffer numpy
-    sim._S_coeffs = S
-    sim._rebx = rebx
+    rebx._gh_force = gh
+    rebx._spherical_harmonics_model = model
+    rebx._C_coeffs = C   # if the model only saves the pointer to buffer numpy
+    rebx._S_coeffs = S
 
     rebx.add_force(gh)
 
