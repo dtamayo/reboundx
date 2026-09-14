@@ -38,6 +38,7 @@ typedef struct {
 
     rebx_active_coeff *active;
     int n_active;
+    int is_normalized;
 } rebx_spherical_harmonics_model;
 
 
@@ -80,6 +81,41 @@ typedef struct {
 
 
 rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(int N, const double *C, const double *S, double GM, double R_eq, int is_normalized);
+
+
+/**
+ * @brief Re-read C and S at every (n,m) that is currently active in the
+ * model, and update the model's internal coefficients in place.
+ *
+ * C and S must have the SAME dense layout, size, and convention (raw
+ * C_nm/S_nm, is_normalized as set at creation) as the arrays originally
+ * passed to rebx_spherical_harmonics_create(). Only entries at (n,m) pairs
+ * that were already non-zero at creation time are read; this function
+ * does NOT resize model->active, so:
+ *
+ *   - A coefficient that is zero here but was non-zero at creation is
+ *     read as zero (contributes no force) -- this is fine, no special case.
+ *   - A coefficient that was zero at creation (so never entered
+ *     model->active) is NOT picked up here, even if it's non-zero in this
+ *     call, and is silently ignored. If you need it later, seed it with a
+ *     tiny non-zero placeholder value at create() time.
+ *
+ * Cheap: O(n_active), not O(N^2) -- safe to call every timestep from a
+ * REBOUND heartbeat if needed.
+ *
+ * @param model  spherical_harmonics model, previously returned by
+ *               rebx_spherical_harmonics_create().
+ * @param C      Updated dense C array, same layout/size as at creation.
+ * @param S      Updated dense S array, same layout/size as at creation.
+ * @return       Number of coefficients updated (== model->n_active).
+ */
+int rebx_spherical_harmonics_update(rebx_spherical_harmonics_model *model,
+                                     const double *C, const double *S);
+
+
+
+
+
 
 /**
  * @brief Free all memory owned by a spherical_harmonics model. Safe on NULL.

@@ -62,7 +62,14 @@ clibreboundx.rebx_spherical_harmonics_create.argtypes = [
     c_double,
     c_int,
 ]
- 
+
+clibreboundx.rebx_spherical_harmonics_update.restype = c_int
+clibreboundx.rebx_spherical_harmonics_update.argtypes = [
+    c_void_p,
+    POINTER(c_double),
+    POINTER(c_double),
+]
+
 clibreboundx.rebx_spherical_harmonics_free.restype = None
 clibreboundx.rebx_spherical_harmonics_free.argtypes = [c_void_p]
  

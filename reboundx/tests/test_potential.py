@@ -26,7 +26,7 @@ def independent_potential(r, phi, lam, N, C, S, GM, R_eq):
             
             # 2. We apply the correct sign convention for the zonals (C_n0 = -J_n)
             # As the user passed J2, we convert it to the actual physical coefficient
-            C_unnorm = -C[i] if m == 0 else C[i]
+            C_unnorm = C[i]
             S_unnorm = S[i]
             
             # 3. Potential = Raw Polynomial * Raw Coefficient
@@ -48,8 +48,8 @@ def test_potential_matches_independent_reference():
 
     C = np.zeros(size, dtype=np.float64)
     S = np.zeros(size, dtype=np.float64)
-    C[idx(2, 0)] = J2 
-    C[idx(4, 0)] = J4 
+    C[idx(2, 0)] = -J2 
+    C[idx(4, 0)] = -J4 
 
     model = rbx.spherical_harmonics_model(C, S, GM, R_eq)
 

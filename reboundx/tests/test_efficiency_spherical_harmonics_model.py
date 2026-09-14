@@ -115,8 +115,6 @@ def test_consistency():
     for t in times:
         sim2.integrate(t)
 
-
-
     sat1 = sim1.particles["Sat"]
     sat2 = sim2.particles["Sat"]
 

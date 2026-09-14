@@ -23,11 +23,29 @@ static inline double N_nm(int n, int m) {
     return sqrt((2.0 - delta_0m) * (2.0 * n + 1.0) * factorial(n - m) / factorial(n + m));
 }
 
+/* Single source of truth for the input-array -> internal (C,S) conversion.
+ * C/S are taken as the actual physical C_nm/S_nm coefficients; no sign
+ * flip is applied. Only normalizes if is_normalized == 0. Used by both
+ * create() and update() so they can never drift apart. */
+static inline void rebx_normalize_coeff(int n, int m, double C_in, double S_in,
+                                      int is_normalized,
+                                      double *C_out, double *S_out) {
+    if (is_normalized) {
+        *C_out = C_in;
+        *S_out = S_in;
+    } else {
+        const double norm_factor = N_nm(n, m);
+        *C_out = C_in / norm_factor;
+        *S_out = S_in / norm_factor;
+    }
+}
 
 rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(int N, const double *C, const double *S, double GM, double R_eq, int is_normalized) {
 
     rebx_spherical_harmonics_model *model = malloc(sizeof(*model));
     if (!model) return NULL;
+
+    model->is_normalized = is_normalized;
 
     int count = 0;
     int Nreal = 1;
@@ -53,17 +71,7 @@ rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(int N, const dou
             if (C[k] != 0.0 || S[k] != 0.0) {
                 model->active[a].n = n;
                 model->active[a].m = m;
-
-                if (is_normalized) {
-                    model->active[a].C = C[k];
-                    model->active[a].S = S[k];
-                }
-                
-                else{
-                    double norm_factor = N_nm(n, m);
-                    model->active[a].C = C[k]/norm_factor;
-                    model->active[a].S = S[k]/norm_factor;
-                }
+                rebx_normalize_coeff(n, m, C[k], S[k], is_normalized, &model->active[a].C, &model->active[a].S);
                 a++;
             }
         }
@@ -96,6 +104,22 @@ rebx_spherical_harmonics_model* rebx_spherical_harmonics_create(int N, const dou
 
     return model;
 }
+
+
+int rebx_spherical_harmonics_update(rebx_spherical_harmonics_model *model,
+                                     const double *C, const double *S) {
+    for (int a = 0; a < model->n_active; a++) {
+        const int n = model->active[a].n;
+        const int m = model->active[a].m;
+        const int k = idx(n, m);
+
+        rebx_normalize_coeff(n, m, C[k], S[k], model->is_normalized,
+                           &model->active[a].C, &model->active[a].S);
+    }
+    return model->n_active;
+}
+
+
 
 static inline void rebx_spherical_harmonics_compute_trig(rebx_spherical_harmonics_model *model, double lambda_body) {
     const double c = cos(lambda_body);
