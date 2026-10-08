@@ -135,7 +135,7 @@ struct reb_vec3d rebx_calculate_spin_orbit_accelerations(struct reb_particle* so
       const double vec2_y = comp_2_z * dx - comp_2_x * dz;
       const double vec2_z = comp_2_x * dy - comp_2_y * dx;
 
-      const double prefactor = (-9. * sigma * mt * mt * big_a * big_a) / (2. * mu_ij * (d2 * d2 * d2 * d2 * d2));
+      const double prefactor = (-9. * sigma * mt * mt * big_a * big_a) / (4. * mu_ij * (d2 * d2 * d2 * d2 * d2));
 
       tot_force.x += (prefactor * (vec1_x + vec2_x));
       tot_force.y += (prefactor * (vec1_y + vec2_y));
