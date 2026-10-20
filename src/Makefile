@@ -1,5 +1,5 @@
 ifndef REB_DIR
-	
+
 ifneq ($(wildcard ../../rebound/.*),) # Check for REBOUND in default location
 REB_DIR=../../rebound
 endif
@@ -22,13 +22,13 @@ ifndef REBXGITHASH
 	PREDEF+= -DREBXGITHASH=$(REBXGITHASH)
 endif
 
-SOURCES=central_force.c core.c exponential_migration.c gas_damping_timescale.c gas_dynamical_friction.c gr.c gravitational_harmonics.c gr_full.c gr_potential.c inner_disk_edge.c input.c integrate_force.c integrator_euler.c integrator_implicit_midpoint.c integrator_rk2.c integrator_rk4.c interpolation.c lense_thirring.c linkedlist.c modify_mass.c modify_orbits_direct.c modify_orbits_forces.c output.c radiation_forces.c rebxtools.c steppers.c stochastic_forces.c tides_constant_time_lag.c tides_dynamical.c tides_spin.c track_min_distance.c type_I_migration.c yarkovsky_effect.c 
+SOURCES=central_force.c core.c exponential_migration.c galactic_tide.c gas_damping_timescale.c gas_dynamical_friction.c gr.c gravitational_harmonics.c gr_full.c gr_potential.c inner_disk_edge.c input.c integrate_force.c integrator_euler.c integrator_implicit_midpoint.c integrator_rk2.c integrator_rk4.c interpolation.c lense_thirring.c linkedlist.c modify_mass.c modify_orbits_direct.c modify_orbits_forces.c output.c radiation_forces.c rebxtools.c steppers.c stochastic_forces.c tides_constant_time_lag.c tides_dynamical.c tides_spin.c track_min_distance.c type_I_migration.c yarkovsky_effect.c
 
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=rebxtools.h reboundx.h linkedlist.h
 
 all: $(SOURCES) librebound.so libreboundx.so
-	
+
 %.o: %.c $(HEADERS)
 	@echo "Compiling source file $< ..."
 	$(CC) -c $(OPT) $(PREDEF) -I$(REB_DIR)/src -o $@ $<
@@ -41,12 +41,12 @@ librebound.so:
 	@ln -s $(REB_DIR)/src/librebound.so .
 
 libreboundx.so: librebound.so $(OBJECTS)
-	@echo ""        
+	@echo ""
 	@echo "Linking shared library $@ ..."
-	$(CC) $(OPT) -shared $(OBJECTS) $(LIB) -lrebound -L$(REB_DIR)/src -o $@ 
-	@echo ""        
+	$(CC) $(OPT) -shared $(OBJECTS) $(LIB) -lrebound -L$(REB_DIR)/src -o $@
+	@echo ""
 	@echo "The shared library $@ has been created successfully."
-	
+
 clean:
 	@echo "Cleaning up shared library librebound.so ..."
 	@-rm -f librebound.so
@@ -54,4 +54,3 @@ clean:
 	@echo "Cleaning up shared library libreboundx.so ..."
 	@-rm -f libreboundx.so
 	@-rm -f *.o
-	

@@ -305,6 +305,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
         force->update_accelerations = rebx_exponential_migration;
         force->force_type = REBX_FORCE_VEL;
     }
+    else if (strcmp(name, "galactic_tide") == 0){
+        force->update_accelerations = rebx_galactic_tide;
+        force->force_type = REBX_FORCE_POS;
+    }
     else if (strcmp(name, "gr_full") == 0){
         force->update_accelerations = rebx_gr_full;
         force->force_type = REBX_FORCE_VEL;
