@@ -156,6 +156,12 @@ void rebx_register_default_params(struct rebx_extras* rebx){
     rebx_register_param(rebx, "td_last_apoapsis", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_drag_coef", REBX_TYPE_DOUBLE);
     rebx_register_param(rebx, "td_disruption_flag", REBX_TYPE_INT);
+    rebx_register_param(rebx, "gt_omega", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "gt_rho", REBX_TYPE_DOUBLE);
+    rebx_register_param(rebx, "gt_ex", REBX_TYPE_VEC3D);
+    rebx_register_param(rebx, "gt_ey", REBX_TYPE_VEC3D);
+    rebx_register_param(rebx, "gt_sgp", REBX_TYPE_VEC3D);
+    rebx_register_param(rebx, "gt_horizontal", REBX_TYPE_INT);
 }
 
 void rebx_register_param(struct rebx_extras* const rebx, const char* name, enum rebx_param_type type){
@@ -298,6 +304,10 @@ struct rebx_force* rebx_load_force(struct rebx_extras* const rebx, const char* n
     else if (strcmp(name, "exponential_migration") == 0){
         force->update_accelerations = rebx_exponential_migration;
         force->force_type = REBX_FORCE_VEL;
+    }
+    else if (strcmp(name, "galactic_tide") == 0){
+        force->update_accelerations = rebx_galactic_tide;
+        force->force_type = REBX_FORCE_POS;
     }
     else if (strcmp(name, "gr_full") == 0){
         force->update_accelerations = rebx_gr_full;

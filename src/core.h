@@ -56,6 +56,7 @@ void rebx_reset_accelerations(struct reb_particle* const ps, const int N);
 /****************************************
 Force prototypes
 *****************************************/
+void rebx_galactic_tide(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_gr(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_gr_full(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
 void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_force* const force, struct reb_particle* const particles, const int N);
